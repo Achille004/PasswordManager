@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch4jConfig>
+  <dontWrapJar>false</dontWrapJar>
+  <headerType>gui</headerType>
+  <jar>C:\Users\FrA\Desktop\Altro\Progetti\PasswordManager\Files\PasswordManager.jar</jar>
+  <outfile>C:\Users\FrA\Desktop\Altro\Progetti\PasswordManager\PasswordManager.exe</outfile>
+  <errTitle>You need a 17.0.1 jdk to run!</errTitle>
+  <cmdLine></cmdLine>
+  <chdir>.</chdir>
+  <priority>normal</priority>
+  <downloadUrl>https://www.oracle.com/java/technologies/downloads/</downloadUrl>
+  <supportUrl></supportUrl>
+  <stayAlive>false</stayAlive>
+  <restartOnCrash>true</restartOnCrash>
+  <manifest></manifest>
+  <icon>C:\Users\FrA\Desktop\Altro\Progetti\PasswordManager\Files\locker.ico</icon>
+  <singleInstance>
+    <mutexName>PasswordManager</mutexName>
+    <windowTitle></windowTitle>
+  </singleInstance>
+  <jre>
+    <path></path>
+    <bundledJre64Bit>false</bundledJre64Bit>
+    <bundledJreAsFallback>false</bundledJreAsFallback>
+    <minVersion>17.0.1</minVersion>
+    <maxVersion></maxVersion>
+    <jdkPreference>preferJdk</jdkPreference>
+    <runtimeBits>64/32</runtimeBits>
+  </jre>
+  <versionInfo>
+    <fileVersion>0.2.0.1</fileVersion>
+    <txtFileVersion>2.0.1</txtFileVersion>
+    <fileDescription>Password Manager</fileDescription>
+    <copyright>GNU GENERAL PUBLIC LICENSE, Version 3, 29 June 2007</copyright>
+    <productVersion>0.2.0.1</productVersion>
+    <txtProductVersion>2.0.1</txtProductVersion>
+    <productName>Password Manager</productName>
+    <companyName></companyName>
+    <internalName>Password Manager</internalName>
+    <originalFilename>PasswordManager.exe</originalFilename>
+    <trademarks></trademarks>
+    <language>ENGLISH_US</language>
+  </versionInfo>
+</launch4jConfig>
