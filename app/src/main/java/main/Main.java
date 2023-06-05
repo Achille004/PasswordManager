@@ -175,7 +175,7 @@ public class Main extends javax.swing.JFrame {
     }
 
     private void LoginButtonActionPerformed(java.awt.event.ActionEvent evt) {
-        loginPassword = String.valueOf(LoginPasswordField.getPassword());
+        loginPassword = new String(LoginPasswordField.getPassword());
         LoginPasswordField.setText("");
         LoginPasswordField.repaint();
 
