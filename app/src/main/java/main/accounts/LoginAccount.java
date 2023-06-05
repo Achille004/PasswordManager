@@ -67,9 +67,6 @@ public class LoginAccount implements Serializable {
             random.nextBytes(salt);
 
             hashedPassword = Encrypter.hash(password, salt);
-
-            // PROVA
-            System.out.println("Password: " + hashedPassword);
         } catch (InvalidKeySpecException e) {
             e.printStackTrace();
         }

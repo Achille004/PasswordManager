@@ -120,7 +120,7 @@ public class Utils {
         public static String hash(String password, byte[] salt) throws InvalidKeySpecException {
             KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITERATIONS, KEY_LENGTH);
             byte[] hashedPasswordBytes = keyFactory.generateSecret(spec).getEncoded();
-            return String.valueOf(hashedPasswordBytes);
+            return Base64.getEncoder().encodeToString(hashedPasswordBytes);
         }
 
         public static byte[] getKey(String loginPassword, byte[] salt) throws InvalidKeySpecException {
@@ -154,7 +154,7 @@ public class Utils {
             byte[] password = cipher.doFinal(encryptedPassword);
 
             // Convert it to String
-            return String.valueOf(password);
+            return new String(password);
         }
     }
 }
