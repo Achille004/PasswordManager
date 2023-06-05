@@ -49,10 +49,10 @@ public class Main extends javax.swing.JFrame {
     private final Logger logger;
 
     private LoginAccount loginAccount;
-    private ActionListener timer_task;
+    private ActionListener timerTask;
     private ArrayList<Account> accountList;
-    private byte login_counter;
-    private boolean delete_counter;
+    private byte loginCounter;
+    private boolean deleteCounter;
     private int delay;
     private String filePath = "";
 
@@ -68,9 +68,9 @@ public class Main extends javax.swing.JFrame {
 
         // initialize objects
         accountList = new ArrayList<>();
-        delete_counter = false;
-        delay = login_counter = 0;
-        timer_task = null;
+        deleteCounter = false;
+        delay = loginCounter = 0;
+        timerTask = null;
 
         MenuBar.setVisible(false);
 
@@ -188,7 +188,7 @@ public class Main extends javax.swing.JFrame {
             LoginUnsuccesfulLabel.repaint();
 
             delay = 800;
-            timer_task = (ActionEvent e) -> {
+            timerTask = (ActionEvent e) -> {
                 LoginButton.setEnabled(true);
                 LoginUnsuccesfulLabel.setText("");
                 LoginUnsuccesfulLabel.repaint();
@@ -238,9 +238,9 @@ public class Main extends javax.swing.JFrame {
         }
 
         // adds a failed attempt
-        login_counter++;
+        loginCounter++;
 
-        if (login_counter == 3) {
+        if (loginCounter == 3) {
             switch (language) {
                 case "e" -> LoginUnsuccesfulLabel
                         .setText("A wrong password has been insterted three times, program sutting down...");
@@ -253,7 +253,7 @@ public class Main extends javax.swing.JFrame {
             logger.addInfo("Unsccessful Login");
 
             delay = 2000;
-            timer_task = (ActionEvent e) -> {
+            timerTask = (ActionEvent e) -> {
                 LoginButton.setEnabled(true);
                 LoginUnsuccesfulLabel.setText("");
                 LoginUnsuccesfulLabel.repaint();
@@ -267,7 +267,7 @@ public class Main extends javax.swing.JFrame {
             LoginUnsuccesfulLabel.repaint();
 
             delay = 800;
-            timer_task = (ActionEvent e) -> {
+            timerTask = (ActionEvent e) -> {
                 LoginButton.setEnabled(true);
                 LoginUnsuccesfulLabel.setText("");
                 LoginUnsuccesfulLabel.repaint();
@@ -277,7 +277,7 @@ public class Main extends javax.swing.JFrame {
         LoginUnsuccesfulLabel.repaint();
         LoginButton.setEnabled(false);
 
-        Timer timer = new Timer(delay, timer_task);
+        Timer timer = new Timer(delay, timerTask);
         timer.setRepeats(false);
         timer.start();
     }
@@ -324,7 +324,7 @@ public class Main extends javax.swing.JFrame {
         DecrypterUsernameLabel.repaint();
 
         // to make sure the decrypter delete button is in its first state
-        delete_counter = false;
+        deleteCounter = false;
 
         updateDecrypterAccountSelector();
 
@@ -428,11 +428,16 @@ public class Main extends javax.swing.JFrame {
         String password = EncrypterPasswordTextField.getText();
 
         if (!(software.isBlank() || username.isBlank() || password.isBlank())) {
-            Account account = Account.createAccount(software, username, password, loginPassword);
-            this.accountList.add(account);
-            resortAccountList();
+            Account account;
+            try {
+                account = Account.of(software, username, password, loginPassword);
+                this.accountList.add(account);
+                resortAccountList();
 
-            logger.addInfo("Account added");
+                logger.addInfo("Account added");
+            } catch (Exception e) {
+                logger.addError(e);
+            }
 
             EncrypterSoftwareTextField.setText("");
             EncrypterSoftwareTextField.repaint();
@@ -450,7 +455,7 @@ public class Main extends javax.swing.JFrame {
     }
 
     private void DecrypterAccountSelectorActionPerformed(java.awt.event.ActionEvent evt) {
-        delete_counter = false;
+        deleteCounter = false;
         switch (language) {
             case "e" -> DecrypterDeleteButton.setText("Delete");
             case "i" -> DecrypterDeleteButton.setText("Elimina");
@@ -493,9 +498,14 @@ public class Main extends javax.swing.JFrame {
 
             if (!(software.isBlank() && username.isBlank() && password.isBlank())) {
                 // save the new attributes of the account
-                accountList.get(selectedItemInComboBox(DecrypterAccountSelector)).setSoftware(software);
-                accountList.get(selectedItemInComboBox(DecrypterAccountSelector)).setUsername(username);
-                accountList.get(selectedItemInComboBox(DecrypterAccountSelector)).setPassword(password, password);
+                Account account = accountList.get(selectedItemInComboBox(DecrypterAccountSelector));
+                try {
+                    account.setSoftware(software);
+                    account.setUsername(username);
+                    account.setPassword(password, loginPassword);
+                } catch (Exception e) {
+                    logger.addError(e);
+                }
 
                 logger.addInfo("Account edited");
 
@@ -505,40 +515,41 @@ public class Main extends javax.swing.JFrame {
     }
 
     private void DecrypterDeleteButtonActionPerformed(java.awt.event.ActionEvent evt) {
-        if (selectedItemInComboBox(DecrypterAccountSelector) >= 0) {
-            // when the deleteCounter is true it means that the user has confirmed the
-            // elimination
-            if (delete_counter) {
-                delete_counter = false;
-                switch (language) {
-                    case "e" -> DecrypterDeleteButton.setText("Delete");
-                    case "i" -> DecrypterDeleteButton.setText("Elimina");
-                }
-                DecrypterDeleteButton.setBackground(new java.awt.Color(38, 38, 38));
-                DecrypterDeleteButton.repaint();
-
-                // removes the selected account from the list
-                accountList.remove(selectedItemInComboBox(DecrypterAccountSelector));
-
-                updateDecrypterAccountSelector();
-
-                if (accountList.isEmpty()) {
-                    MenuBar.setVisible(false);
-                }
-
-                logger.addInfo("Account deleted");
-            } else {
-                delete_counter = true;
-
-                switch (language) {
-                    case "e" -> DecrypterDeleteButton.setText("Sure?");
-                    case "i" -> DecrypterDeleteButton.setText("Sicuro?");
-                }
-
-                DecrypterDeleteButton.setBackground(new java.awt.Color(219, 67, 67));
-                DecrypterDeleteButton.repaint();
-            }
+        if (selectedItemInComboBox(DecrypterAccountSelector) == -1) {
+            return;
         }
+
+        // when the deleteCounter is true it means that the user has confirmed the
+        // elimination
+        if (deleteCounter) {
+            switch (language) {
+                case "e" -> DecrypterDeleteButton.setText("Delete");
+                case "i" -> DecrypterDeleteButton.setText("Elimina");
+            }
+            DecrypterDeleteButton.setBackground(new java.awt.Color(38, 38, 38));
+            DecrypterDeleteButton.repaint();
+
+            // removes the selected account from the list
+            accountList.remove(selectedItemInComboBox(DecrypterAccountSelector));
+
+            updateDecrypterAccountSelector();
+
+            if (accountList.isEmpty()) {
+                MenuBar.setVisible(false);
+            }
+
+            logger.addInfo("Account deleted");
+        } else {
+            switch (language) {
+                case "e" -> DecrypterDeleteButton.setText("Sure?");
+                case "i" -> DecrypterDeleteButton.setText("Sicuro?");
+            }
+
+            DecrypterDeleteButton.setBackground(new java.awt.Color(219, 67, 67));
+            DecrypterDeleteButton.repaint();
+        }
+
+        deleteCounter = !deleteCounter;
     }
 
     private void SettingsSaveButtonActionPerformed(java.awt.event.ActionEvent evt) {

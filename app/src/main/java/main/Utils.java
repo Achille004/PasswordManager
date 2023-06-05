@@ -107,7 +107,8 @@ public class Utils {
         private static SecretKeyFactory keyFactory;
 
         private static final int ITERATIONS = 65536;
-        private static final int KEY_LENGTH = 512;
+        private static final int HASH_KEY_LENGTH = 512;
+        private static final int AES_KEY_LENGTH = 256;
 
         static {
             try {
@@ -118,13 +119,13 @@ public class Utils {
         }
 
         public static String hash(String password, byte[] salt) throws InvalidKeySpecException {
-            KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITERATIONS, KEY_LENGTH);
+            KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITERATIONS, HASH_KEY_LENGTH);
             byte[] hashedPasswordBytes = keyFactory.generateSecret(spec).getEncoded();
             return Base64.getEncoder().encodeToString(hashedPasswordBytes);
         }
 
         public static byte[] getKey(String loginPassword, byte[] salt) throws InvalidKeySpecException {
-            KeySpec spec = new PBEKeySpec(loginPassword.toCharArray(), salt, ITERATIONS, KEY_LENGTH);
+            KeySpec spec = new PBEKeySpec(loginPassword.toCharArray(), salt, ITERATIONS, AES_KEY_LENGTH);
             SecretKey secretKey = keyFactory.generateSecret(spec);
             SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getEncoded(), "AES");
             return secretKeySpec.getEncoded();

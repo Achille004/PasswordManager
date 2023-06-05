@@ -37,8 +37,9 @@ public class Account implements Serializable {
      * @param software The software.
      * @param username The username.
      * @param password The password.
+     * @throws Exception
      */
-    public Account(String software, String username, String password, String loginPassword) {
+    public Account(String software, String username, String password, String loginPassword) throws Exception {
         this.software = software;
         this.username = username;
 
@@ -99,10 +100,6 @@ public class Account implements Serializable {
      */
     public String getPassword(String loginPassword) {
         try {
-            // Generate IV
-            SecureRandom random = new SecureRandom();
-            random.nextBytes(iv);
-
             byte[] key = Encrypter.getKey(loginPassword, getSalt());
             return Encrypter.decryptAES(encryptedPassword, key, iv);
         } catch (Exception e) {
@@ -117,25 +114,21 @@ public class Account implements Serializable {
      *
      * @param software The new password.
      */
-    public void setPassword(String password, String loginPassword) {
-        try {
-            // Generate IV
-            SecureRandom random = new SecureRandom();
-            random.nextBytes(iv);
+    public void setPassword(String password, String loginPassword) throws Exception {
+        // Generate IV
+        SecureRandom random = new SecureRandom();
+        random.nextBytes(iv);
 
-            byte[] key = Encrypter.getKey(loginPassword, getSalt());
-            this.encryptedPassword = Encrypter.encryptAES(password, key, iv);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        byte[] key = Encrypter.getKey(loginPassword, getSalt());
+        this.encryptedPassword = Encrypter.encryptAES(password, key, iv);
     }
 
-    public Account password(String password, String loginPassword) {
+    public Account password(String password, String loginPassword) throws Exception {
         setPassword(password, loginPassword);
         return this;
     }
 
-    public static Account createAccount(String software, String username, String password, String loginPassword) {
+    public static Account of(String software, String username, String password, String loginPassword) throws Exception {
         // creates the account, adding its attributes by constructor
         return new Account(software, username, password, loginPassword);
     }
