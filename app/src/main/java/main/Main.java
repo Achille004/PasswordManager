@@ -55,7 +55,7 @@ public class Main extends javax.swing.JFrame {
     private boolean delete_counter;
     private int delay;
     private String filePath = "";
-    
+
     private String language;
     private String loginPassword;
 
@@ -124,7 +124,7 @@ public class Main extends javax.swing.JFrame {
         if (selectedItemInComboBox(FirstRunLanguageSelector) >= 0
                 && selectedItemInComboBox(FirstRunSavingorderSelector) >= 0 && !(loginPassword.isBlank())
                 && FirstRunAccepteulaCheckBox.isSelected()) {
-            String saveOrder = "";
+            String savingOrder = "";
 
             // translates the index into the actual language
             switch (selectedItemInComboBox(FirstRunLanguageSelector)) {
@@ -134,15 +134,15 @@ public class Main extends javax.swing.JFrame {
 
             // translates the index into the actual saving order
             switch (selectedItemInComboBox(FirstRunSavingorderSelector)) {
-                case 0 -> saveOrder = "s";
-                case 1 -> saveOrder = "u";
+                case 0 -> savingOrder = "s";
+                case 1 -> savingOrder = "u";
             }
 
             // saves all in the new login account
             try {
-                loginAccount = LoginAccount.createAccount(language, saveOrder, loginPassword);
+                loginAccount = LoginAccount.createAccount(savingOrder, language, loginPassword);
             } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
+                logger.addError(e);
             }
 
             logger.addInfo("First Run successful, accepted EULA)");
@@ -567,29 +567,7 @@ public class Main extends javax.swing.JFrame {
             logger.addInfo("Settings changed");
 
             // reloads Program Panel
-            switch (language) {
-                case "e" -> {
-                    EncrypterButton.setText("Encrypter");
-                    DecrypterButton.setText("Decrypter");
-                    SettingsButton.setText("Settings");
-                    LogHistoryButton.setText("Log History");
-                    EulaAndCreditsButton.setText("EULA and Credits");
-                }
-
-                case "i" -> {
-                    EncrypterButton.setText("Crittografa");
-                    DecrypterButton.setText("Decifra");
-                    SettingsButton.setText("Impostazioni");
-                    LogHistoryButton.setText("Cronologia Registro");
-                    EulaAndCreditsButton.setText("Termini e Crediti");
-                }
-            }
-            EncrypterButton.repaint();
-            DecrypterButton.repaint();
-            SettingsButton.repaint();
-            LogHistoryButton.repaint();
-            EulaAndCreditsButton.repaint();
-            Utils.replacePanel(DialogPanel, DialogBlankPanel);
+            SettingsButtonActionPerformed(evt);
         }
     }
 
