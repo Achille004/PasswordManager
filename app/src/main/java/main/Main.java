@@ -53,7 +53,6 @@ public class Main extends javax.swing.JFrame {
     private ArrayList<Account> accountList;
     private byte loginCounter;
     private boolean deleteCounter;
-    private int delay;
     private String filePath = "";
 
     private String language;
@@ -69,7 +68,7 @@ public class Main extends javax.swing.JFrame {
         // initialize objects
         accountList = new ArrayList<>();
         deleteCounter = false;
-        delay = loginCounter = 0;
+        loginCounter = 0;
         timerTask = null;
 
         MenuBar.setVisible(false);
@@ -120,58 +119,38 @@ public class Main extends javax.swing.JFrame {
         // gets the login password
         loginPassword = FirstRunLoginpasswordTextField.getText();
 
-        // checks if all is inserted and EULA are accepted
-        if (selectedItemInComboBox(FirstRunLanguageSelector) >= 0
-                && selectedItemInComboBox(FirstRunSavingorderSelector) >= 0 && !(loginPassword.isBlank())
-                && FirstRunAccepteulaCheckBox.isSelected()) {
-            String savingOrder = "";
-
-            // translates the index into the actual language
-            switch (selectedItemInComboBox(FirstRunLanguageSelector)) {
-                case 0 -> language = "e";
-                case 1 -> language = "i";
-            }
-
-            // translates the index into the actual saving order
-            switch (selectedItemInComboBox(FirstRunSavingorderSelector)) {
-                case 0 -> savingOrder = "s";
-                case 1 -> savingOrder = "u";
-            }
-
-            // saves all in the new login account
-            try {
-                loginAccount = LoginAccount.createAccount(savingOrder, language, loginPassword);
-            } catch (NoSuchAlgorithmException e) {
-                logger.addError(e);
-            }
-
-            logger.addInfo("First Run successful, accepted EULA)");
-
-            switch (language) {
-                case "e" -> {
-                    EncrypterButton.setText("Encrypter");
-                    DecrypterButton.setText("Decrypter");
-                    SettingsButton.setText("Settings");
-                    LogHistoryButton.setText("Log History");
-                    EulaAndCreditsButton.setText("EULA and Credits");
-                }
-
-                case "i" -> {
-                    EncrypterButton.setText("Crittografa");
-                    DecrypterButton.setText("Decifra");
-                    SettingsButton.setText("Impostazioni");
-                    LogHistoryButton.setText("Cronologia Registro");
-                    EulaAndCreditsButton.setText("Termini e Crediti");
-                }
-            }
-            EncrypterButton.repaint();
-            DecrypterButton.repaint();
-            SettingsButton.repaint();
-            LogHistoryButton.repaint();
-            EulaAndCreditsButton.repaint();
-
-            Utils.replacePanel(MainPanel, ProgramPanel);
+        // checks if all is inserted and EULA is accepted
+        if (selectedItemInComboBox(FirstRunLanguageSelector) == -1
+                || selectedItemInComboBox(FirstRunSavingorderSelector) == -1
+                || loginPassword.isBlank()
+                || !FirstRunAccepteulaCheckBox.isSelected()) {
+            return;
         }
+
+        String savingOrder = "";
+
+        // translates the index into the actual language
+        switch (selectedItemInComboBox(FirstRunLanguageSelector)) {
+            case 0 -> language = "e";
+            case 1 -> language = "i";
+        }
+
+        // translates the index into the actual saving order
+        switch (selectedItemInComboBox(FirstRunSavingorderSelector)) {
+            case 0 -> savingOrder = "s";
+            case 1 -> savingOrder = "u";
+        }
+
+        // saves all in the new login account
+        try {
+            loginAccount = LoginAccount.createAccount(savingOrder, language, loginPassword);
+        } catch (NoSuchAlgorithmException e) {
+            logger.addError(e);
+        }
+
+        logger.addInfo("First Run successful, accepted EULA)");
+
+        switchToMainPanel();
     }
 
     private void LoginButtonActionPerformed(java.awt.event.ActionEvent evt) {
@@ -179,107 +158,97 @@ public class Main extends javax.swing.JFrame {
         LoginPasswordField.setText("");
         LoginPasswordField.repaint();
 
+        String errorMessage = "";
+        // To work around the closure capture error the array should be final or
+        // effectively final so that the array doesn't change over time and doesn't
+        // trigger the error, but yet still being able to modify its content.
+        final boolean[] shouldExit = { false };
+
         if (loginPassword.isBlank()) {
             switch (language) {
-                case "e" -> LoginUnsuccesfulLabel.setText("Password field empty.");
-                case "i" -> LoginUnsuccesfulLabel.setText("Password non inserita.");
+                case "e" -> errorMessage = "No password entered.";
+                case "i" -> errorMessage = "Nessuna password inserita.";
             }
-
-            LoginUnsuccesfulLabel.repaint();
-
-            delay = 800;
-            timerTask = (ActionEvent e) -> {
-                LoginButton.setEnabled(true);
-                LoginUnsuccesfulLabel.setText("");
-                LoginUnsuccesfulLabel.repaint();
-            };
-
-            return;
-        }
-
-        if (loginAccount.verifyPassword(loginPassword)) {
-            logger.addInfo("Successful Login");
-
-            switch (language) {
-                case "e" -> {
-                    ExportAsMenu.setText("Export as");
-                    EncrypterButton.setText("Encrypter");
-                    DecrypterButton.setText("Decrypter");
-                    SettingsButton.setText("Settings");
-                    LogHistoryButton.setText("Log History");
-                    EulaAndCreditsButton.setText("EULA and Credits");
-                }
-
-                case "i" -> {
-                    ExportAsMenu.setText("Esporta come");
-                    EncrypterButton.setText("Crittografa");
-                    DecrypterButton.setText("Decifra");
-                    SettingsButton.setText("Impostazioni");
-                    LogHistoryButton.setText("Cronologia Registro");
-                    EulaAndCreditsButton.setText("Termini e Crediti");
-                }
-            }
-
-            ExportAsMenu.repaint();
-            EncrypterButton.repaint();
-            DecrypterButton.repaint();
-            SettingsButton.repaint();
-            LogHistoryButton.repaint();
-            EulaAndCreditsButton.repaint();
-
-            if (!accountList.isEmpty()) {
-                MenuBar.setVisible(true);
-            }
-
-            // redirects to main panel
-            Utils.replacePanel(MainPanel, ProgramPanel);
-
-            return;
-        }
-
-        // adds a failed attempt
-        loginCounter++;
-
-        if (loginCounter == 3) {
-            switch (language) {
-                case "e" -> LoginUnsuccesfulLabel
-                        .setText("A wrong password has been insterted three times, program sutting down...");
-
-                case "i" -> LoginUnsuccesfulLabel
-                        .setText("È stata inserita una passowrd errata tre volte, programma in arresto...");
-            }
-            LoginUnsuccesfulLabel.repaint();
-
-            logger.addInfo("Unsccessful Login");
-
-            delay = 2000;
-            timerTask = (ActionEvent e) -> {
-                LoginButton.setEnabled(true);
-                LoginUnsuccesfulLabel.setText("");
-                LoginUnsuccesfulLabel.repaint();
-                System.exit(0);
-            };
         } else {
-            switch (language) {
-                case "e" -> LoginUnsuccesfulLabel.setText("Wrong password.");
-                case "i" -> LoginUnsuccesfulLabel.setText("Passowrd errata.");
-            }
-            LoginUnsuccesfulLabel.repaint();
+            if (loginAccount.verifyPassword(loginPassword)) {
+                logger.addInfo("Successful Login");
+                if (!accountList.isEmpty()) {
+                    MenuBar.setVisible(true);
+                }
 
-            delay = 800;
-            timerTask = (ActionEvent e) -> {
-                LoginButton.setEnabled(true);
-                LoginUnsuccesfulLabel.setText("");
-                LoginUnsuccesfulLabel.repaint();
-            };
+                switchToMainPanel();
+                return;
+            }
+
+            // adds a failed attempt
+            loginCounter++;
+
+            if (loginCounter == 3) {
+                switch (language) {
+                    case "e" ->
+                        errorMessage = "A wrong password has been inserted three times, program shutting down...";
+                    case "i" ->
+                        errorMessage = "È stata inserita una password errata tre volte, programma in arresto...";
+                }
+                shouldExit[0] = true;
+
+                logger.addInfo("Unsccessful Login");
+            } else {
+                switch (language) {
+                    case "e" -> errorMessage = "Wrong password.";
+                    case "i" -> errorMessage = "Password errata.";
+                }
+            }
         }
 
+        LoginUnsuccesfulLabel.setText(errorMessage);
         LoginUnsuccesfulLabel.repaint();
         LoginButton.setEnabled(false);
 
-        Timer timer = new Timer(delay, timerTask);
+        timerTask = (ActionEvent e) -> {
+            LoginButton.setEnabled(true);
+            LoginUnsuccesfulLabel.setText("");
+            LoginUnsuccesfulLabel.repaint();
+
+            if (shouldExit[0]) {
+                System.exit(0);
+            }
+        };
+
+        Timer timer = new Timer(shouldExit[0] ? 2000 : 800, timerTask);
         timer.setRepeats(false);
         timer.start();
+    }
+
+    private void switchToMainPanel() {
+        switch (language) {
+            case "e" -> {
+                ExportAsMenu.setText("Export as");
+                EncrypterButton.setText("Encrypter");
+                DecrypterButton.setText("Decrypter");
+                SettingsButton.setText("Settings");
+                LogHistoryButton.setText("Log History");
+                EulaAndCreditsButton.setText("EULA and Credits");
+            }
+
+            case "i" -> {
+                ExportAsMenu.setText("Esporta come");
+                EncrypterButton.setText("Cripta");
+                DecrypterButton.setText("Decifra");
+                SettingsButton.setText("Impostazioni");
+                LogHistoryButton.setText("Cronologia Registro");
+                EulaAndCreditsButton.setText("Termini e Crediti");
+            }
+        }
+        ExportAsMenu.repaint();
+        EncrypterButton.repaint();
+        DecrypterButton.repaint();
+        SettingsButton.repaint();
+        LogHistoryButton.repaint();
+        EulaAndCreditsButton.repaint();
+
+        // redirects to main panel
+        Utils.replacePanel(MainPanel, ProgramPanel);
     }
 
     // #region App navigation
@@ -509,6 +478,7 @@ public class Main extends javax.swing.JFrame {
 
                 logger.addInfo("Account edited");
 
+                resortAccountList();
                 updateDecrypterAccountSelector();
             }
         }
@@ -623,6 +593,7 @@ public class Main extends javax.swing.JFrame {
      * Redirects to the login or first run procedure, based on the password file
      * existence.
      */
+    @SuppressWarnings("unchecked")
     private void run() {
         File data_file = new File(filePath + "passwords.psmg");
         if (data_file.getParentFile().mkdirs()) {
@@ -687,31 +658,15 @@ public class Main extends javax.swing.JFrame {
      */
     private void resortAccountList() {
         switch (loginAccount.getSavingOrder()) {
-            case "s" -> {
-                this.accountList.sort((Account acc1, Account acc2) -> {
-                    var software = acc1.getSoftware().compareTo(acc2.getSoftware());
-                    var username = acc1.getUsername().compareTo(acc2.getUsername());
+            case "s" -> this.accountList.sort((acc1, acc2) -> {
+                int software = acc1.getSoftware().compareTo(acc2.getSoftware());
+                return (software == 0) ? acc1.getUsername().compareTo(acc2.getUsername()) : software;
+            });
 
-                    if (software == 0) {
-                        return username;
-                    } else {
-                        return software;
-                    }
-                });
-            }
-
-            case "u" -> {
-                this.accountList.sort((Account acc1, Account acc2) -> {
-                    var software = acc1.getSoftware().compareTo(acc2.getSoftware());
-                    var username = acc1.getUsername().compareTo(acc2.getUsername());
-
-                    if (username == 0) {
-                        return software;
-                    } else {
-                        return username;
-                    }
-                });
-            }
+            case "u" -> this.accountList.sort((acc1, acc2) -> {
+                int username = acc1.getUsername().compareTo(acc2.getUsername());
+                return (username == 0) ? acc1.getSoftware().compareTo(acc2.getSoftware()) : username;
+            });
         }
     }
 
@@ -733,11 +688,16 @@ public class Main extends javax.swing.JFrame {
         DecrypterAccountSelector.removeAllItems();
         DecrypterAccountSelector.addItem("");
 
+        final int listSize = accountList.size();
         for (int i = 0; i < this.accountList.size(); i++) {
-            DecrypterAccountSelector.addItem((i + 1) + ") " + this.accountList.get(i).getSoftware() + " / "
-                    + this.accountList.get(i).getUsername());
+            Account account = this.accountList.get(i);
+            String item = Utils.addZerosToIndex(listSize, i + 1) + ") ";
+            switch (loginAccount.getSavingOrder()) {
+                case "s" -> item += account.getSoftware() + " / " + account.getUsername();
+                case "u" -> item += account.getUsername() + " / " + account.getSoftware();
+            }
+            DecrypterAccountSelector.addItem(item);
         }
-
         DecrypterAccountSelector.repaint();
 
         // clears the text fields of the decrypter

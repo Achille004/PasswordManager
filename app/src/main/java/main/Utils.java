@@ -35,6 +35,11 @@ public class Utils {
         actingPanel.revalidate();
     }
 
+    public static String addZerosToIndex(int listSize, int ìndex) {
+        int cifreLista = (int) Math.log10(listSize) + 1;
+        return String.format("%0" + cifreLista + "d", ìndex);
+    }
+
     public static class Exporter {
         public static String exportHtml(ArrayList<Account> accountList, String language, String loginPassword) {
             StringBuilder stb = new StringBuilder();
@@ -45,16 +50,17 @@ public class Utils {
             stb.append("""
                     body {
                         background-color: rgb(51,51,51);
-                        color: rgb(204,204,204)
+                        color: rgb(204,204,204);
+                        margin: 1em;
                     }
 
                     table, th, td {
                         border: 0.1em solid rgb(204,204,204);
-                        border-collapse: collapse
+                        border-collapse: collapse;
                     }
 
                     th, td {
-                        padding: 1em
+                        padding: 1em;
                     }
                     """);
 
@@ -72,10 +78,11 @@ public class Utils {
                 }
             }
 
+            final int listSize = accountList.size();
             int counter = 0;
             for (Account currentAccount : accountList) {
                 counter++;
-                stb.append("<tr>\n<td>" + counter +
+                stb.append("<tr>\n<td>" + addZerosToIndex(listSize, counter) +
                         "</td>\n<td>" + currentAccount.getSoftware() +
                         "</td>\n<td>" + currentAccount.getUsername() +
                         "</td>\n<td>" + currentAccount.getPassword(loginPassword) +
@@ -90,10 +97,11 @@ public class Utils {
         public static String exportCsv(ArrayList<Account> accountList, String language, String loginPassword) {
             StringBuilder stb = new StringBuilder();
 
+            final int listSize = accountList.size();
             int counter = 0;
             for (Account currentAccount : accountList) {
                 counter++;
-                stb.append(counter + "," +
+                stb.append(addZerosToIndex(listSize, counter) + "," +
                         currentAccount.getSoftware() + "," +
                         currentAccount.getUsername() + "," +
                         currentAccount.getPassword(loginPassword) + "\n");
