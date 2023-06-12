@@ -580,7 +580,7 @@ public class Main extends javax.swing.JFrame {
 
     private void csvMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
         try (FileWriter file = new FileWriter(System.getProperty("user.home") + "\\Desktop\\Passswords.csv")) {
-            file.write(Exporter.exportCsv(accountList, language, loginPassword));
+            file.write(Exporter.exportCsv(accountList, loginPassword));
             file.flush();
         } catch (IOException e) {
             logger.addError(e);
@@ -674,7 +674,8 @@ public class Main extends javax.swing.JFrame {
      * Returns the selected index in a Combo Box with a first blank option. If
      * the value is -1, the selected index is the blank one.
      *
-     * @return the index of the current selected index
+     * @param comboBox The combo box to extract the index from.
+     * @return The index of the current selected item.
      */
     private int selectedItemInComboBox(JComboBox<String> comboBox) {
         return (comboBox.getSelectedIndex() - 1);

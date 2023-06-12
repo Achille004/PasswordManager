@@ -22,23 +22,12 @@ import java.security.SecureRandom;
 
 import main.Utils.Encrypter;
 
-/**
- * @author FrA
- */
 public class Account implements Serializable {
     private String software;
     private String username;
     private String encryptedPassword;
     private byte[] iv;
 
-    /**
-     * Constructor that directly sets account iformations.
-     *
-     * @param software The software.
-     * @param username The username.
-     * @param password The password.
-     * @throws Exception
-     */
     public Account(String software, String username, String password, String loginPassword) throws Exception {
         this.software = software;
         this.username = username;
@@ -47,20 +36,10 @@ public class Account implements Serializable {
         setPassword(password, loginPassword);
     }
 
-    /**
-     * Gets the Account's software.
-     *
-     * @return The software.
-     */
     public String getSoftware() {
         return software;
     }
 
-    /**
-     * Sets the Account's software.
-     *
-     * @param software The new software.
-     */
     public void setSoftware(String software) {
         this.software = software;
     }
@@ -70,20 +49,10 @@ public class Account implements Serializable {
         return this;
     }
 
-    /**
-     * Gets the Account's username.
-     *
-     * @return The username.
-     */
     public String getUsername() {
         return this.username;
     }
 
-    /**
-     * Sets the Account's username.
-     *
-     * @param software The new username.
-     */
     public void setUsername(String username) {
         this.username = username;
     }
@@ -93,11 +62,6 @@ public class Account implements Serializable {
         return this;
     }
 
-    /**
-     * Gets the Account's password.
-     *
-     * @param software The new password.
-     */
     public String getPassword(String loginPassword) {
         try {
             byte[] key = Encrypter.getKey(loginPassword, getSalt());
@@ -109,11 +73,6 @@ public class Account implements Serializable {
         return "";
     }
 
-    /**
-     * Sets the Account's password.
-     *
-     * @param software The new password.
-     */
     public void setPassword(String password, String loginPassword) throws Exception {
         // Generate IV
         SecureRandom random = new SecureRandom();
