@@ -7,5 +7,5 @@ The data files will be saved under "user.home / AppData / Local / Password Manag
 The software is also capable of exporting to a passwords.html or passwords.csv file, saved on the desktop.
 
 
-Note: html and csv files, which are not encrypted, are extremely vulnerable.  
+Note: html and csv files, which are not encrypted, are extremely vulnerable.
 The program will be protected with a password that the user must remember.  
