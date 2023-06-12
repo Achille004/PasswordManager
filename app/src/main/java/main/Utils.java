@@ -35,12 +35,28 @@ public class Utils {
         actingPanel.revalidate();
     }
 
+    /**
+     * Returns a string containing the index, preceeded by zero to match up the same
+     * number of digits of the size of the list.
+     *
+     * @param listSize The size of the list.
+     * @param index    The index of the element.
+     * @return The index.
+     */
     public static String addZerosToIndex(int listSize, int ìndex) {
         int cifreLista = (int) Math.log10(listSize) + 1;
         return String.format("%0" + cifreLista + "d", ìndex);
     }
 
     public static class Exporter {
+        /**
+         * Exports a list of accounts in HTML.
+         * 
+         * @param accountList   The list of accounts.
+         * @param language      The language of the header.
+         * @param loginPassword The password used to decrypt.
+         * @return The whole HTML text.
+         */
         public static String exportHtml(ArrayList<Account> accountList, String language, String loginPassword) {
             StringBuilder stb = new StringBuilder();
 
@@ -94,7 +110,14 @@ public class Utils {
             return stb.toString();
         }
 
-        public static String exportCsv(ArrayList<Account> accountList, String language, String loginPassword) {
+        /**
+         * Exports a list of accounts in CSV.
+         * 
+         * @param accountList   The list of accounts.
+         * @param loginPassword The password used to decrypt.
+         * @return The whole CSV text.
+         */
+        public static String exportCsv(ArrayList<Account> accountList, String loginPassword) {
             StringBuilder stb = new StringBuilder();
 
             final int listSize = accountList.size();
@@ -126,12 +149,29 @@ public class Utils {
             }
         }
 
+        /**
+         * Hashes the given password with salt using PBKDF2 hasing.
+         * 
+         * @param password The password to encrypt.
+         * @param salt     The salt used to encrypt.
+         * @return The hashed password.
+         * @throws InvalidKeySpecException
+         */
         public static String hash(String password, byte[] salt) throws InvalidKeySpecException {
             KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITERATIONS, HASH_KEY_LENGTH);
             byte[] hashedPasswordBytes = keyFactory.generateSecret(spec).getEncoded();
             return Base64.getEncoder().encodeToString(hashedPasswordBytes);
         }
 
+        /**
+         * Derives an AES key from the login password (used as method to keep the key
+         * secret) and salt (used to add randomness).
+         * 
+         * @param loginPassword The login password to generate the key from.
+         * @param salt          The salt used to encrypt.
+         * @return The hashed password.
+         * @throws InvalidKeySpecException
+         */
         public static byte[] getKey(String loginPassword, byte[] salt) throws InvalidKeySpecException {
             KeySpec spec = new PBEKeySpec(loginPassword.toCharArray(), salt, ITERATIONS, AES_KEY_LENGTH);
             SecretKey secretKey = keyFactory.generateSecret(spec);
@@ -139,6 +179,15 @@ public class Utils {
             return secretKeySpec.getEncoded();
         }
 
+        /**
+         * Uses AES to encrypt a password.
+         * 
+         * @param password The password to encrypt.
+         * @param key      The AES key.
+         * @param iv       The initialization vector.
+         * @return The encrypted, base64-encoded password.
+         * @throws Exception
+         */
         public static String encryptAES(String password, byte[] key, byte[] iv) throws Exception {
             // Create Cipher object to encrypt
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
@@ -151,6 +200,16 @@ public class Utils {
             return Base64.getEncoder().encodeToString(encryptedPassword);
         }
 
+        /**
+         * Decrypts and AES-encrypted password.
+         * 
+         * @param encryptedPasswordBase64 The encrypted, base64-encoded password to
+         *                                decrypt.
+         * @param key                     The AES key.
+         * @param iv                      The initialization vector.
+         * @return The decrypted password.
+         * @throws Exception
+         */
         public static String decryptAES(String encryptedPasswordBase64, byte[] key, byte[] iv) throws Exception {
             // Create Cipher object to decrypt
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
