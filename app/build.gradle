@@ -41,6 +41,12 @@ tasks.named('test') {
 
 configurations.implementation.canBeResolved = true
 
+jar {
+    manifest {
+        attributes 'Main-Class': 'main.Main'
+    }
+}
+
 task signExe {
     doLast {
         jsign(
