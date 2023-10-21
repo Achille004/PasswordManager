@@ -21,6 +21,7 @@ package main;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -28,16 +29,16 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
-import main.Utils.Exporter;
-import main.accounts.Account;
-import main.accounts.LoginAccount;
+import main.security.Account;
+import main.security.LoginAccount;
+import main.utils.Exporter;
+import main.utils.Utils;
 
 /**
  * Main class.
@@ -55,7 +56,6 @@ public class Main extends javax.swing.JFrame {
     private boolean deleteCounter;
     private String filePath = "";
 
-    private String language;
     private String loginPassword;
 
     /**
@@ -127,36 +127,33 @@ public class Main extends javax.swing.JFrame {
             return;
         }
 
-        String savingOrder = "";
+        String language = "", savingOrder = "";
 
         // translates the index into the actual language
         switch (selectedItemInComboBox(FirstRunLanguageSelector)) {
             case 0 -> language = "e";
             case 1 -> language = "i";
+            default -> throw new IllegalArgumentException("Invalid language.");
         }
 
         // translates the index into the actual saving order
         switch (selectedItemInComboBox(FirstRunSavingorderSelector)) {
             case 0 -> savingOrder = "s";
             case 1 -> savingOrder = "u";
+            default -> throw new IllegalArgumentException("Invalid saving order.");
         }
 
         // saves all in the new login account
-        try {
-            loginAccount = LoginAccount.createAccount(savingOrder, language, loginPassword);
-        } catch (NoSuchAlgorithmException e) {
-            logger.addError(e);
-        }
+        loginAccount = LoginAccount.of(savingOrder, language, loginPassword);
 
         logger.addInfo("First Run successful, accepted EULA)");
 
-        switchToMainPanel();
+        switchToProgramPanel();
     }
 
     private void LoginButtonActionPerformed(java.awt.event.ActionEvent evt) {
         loginPassword = new String(LoginPasswordField.getPassword());
         LoginPasswordField.setText("");
-        LoginPasswordField.repaint();
 
         String errorMessage = "";
         // To work around the closure capture error the array should be final or
@@ -165,9 +162,10 @@ public class Main extends javax.swing.JFrame {
         final boolean[] shouldExit = { false };
 
         if (loginPassword.isBlank()) {
-            switch (language) {
+            switch (loginAccount.getLanguage()) {
                 case "e" -> errorMessage = "No password entered.";
                 case "i" -> errorMessage = "Nessuna password inserita.";
+                default -> throw new IllegalArgumentException("Invalid language: " + loginAccount.getLanguage());
             }
         } else {
             if (loginAccount.verifyPassword(loginPassword)) {
@@ -176,7 +174,7 @@ public class Main extends javax.swing.JFrame {
                     MenuBar.setVisible(true);
                 }
 
-                switchToMainPanel();
+                switchToProgramPanel();
                 return;
             }
 
@@ -184,31 +182,31 @@ public class Main extends javax.swing.JFrame {
             loginCounter++;
 
             if (loginCounter == 3) {
-                switch (language) {
+                switch (loginAccount.getLanguage()) {
                     case "e" ->
                         errorMessage = "A wrong password has been inserted three times, program shutting down...";
                     case "i" ->
                         errorMessage = "È stata inserita una password errata tre volte, programma in arresto...";
+                    default -> throw new IllegalArgumentException("Invalid language: " + loginAccount.getLanguage());
                 }
                 shouldExit[0] = true;
 
                 logger.addInfo("Unsccessful Login");
             } else {
-                switch (language) {
+                switch (loginAccount.getLanguage()) {
                     case "e" -> errorMessage = "Wrong password.";
                     case "i" -> errorMessage = "Password errata.";
+                    default -> throw new IllegalArgumentException("Invalid language: " + loginAccount.getLanguage());
                 }
             }
         }
 
         LoginUnsuccesfulLabel.setText(errorMessage);
-        LoginUnsuccesfulLabel.repaint();
         LoginButton.setEnabled(false);
 
         timerTask = (ActionEvent e) -> {
             LoginButton.setEnabled(true);
             LoginUnsuccesfulLabel.setText("");
-            LoginUnsuccesfulLabel.repaint();
 
             if (shouldExit[0]) {
                 System.exit(0);
@@ -220,8 +218,8 @@ public class Main extends javax.swing.JFrame {
         timer.start();
     }
 
-    private void switchToMainPanel() {
-        switch (language) {
+    private void switchToProgramPanel() {
+        switch (loginAccount.getLanguage()) {
             case "e" -> {
                 ExportAsMenu.setText("Export as");
                 EncrypterButton.setText("Encrypter");
@@ -239,21 +237,17 @@ public class Main extends javax.swing.JFrame {
                 LogHistoryButton.setText("Cronologia Registro");
                 EulaAndCreditsButton.setText("Termini e Crediti");
             }
-        }
-        ExportAsMenu.repaint();
-        EncrypterButton.repaint();
-        DecrypterButton.repaint();
-        SettingsButton.repaint();
-        LogHistoryButton.repaint();
-        EulaAndCreditsButton.repaint();
 
-        // redirects to main panel
+            default -> throw new IllegalArgumentException("Invalid language: " + loginAccount.getLanguage());
+        }
+
+        // redirects to program panel
         Utils.replacePanel(MainPanel, ProgramPanel);
     }
 
     // #region App navigation
     private void EncrypterButtonActionPerformed(java.awt.event.ActionEvent evt) {
-        switch (language) {
+        switch (loginAccount.getLanguage()) {
             case "e" -> {
                 EncrypterSaveButton.setText("Save");
                 EncrypterUsernameLabel.setText("Username:");
@@ -263,17 +257,16 @@ public class Main extends javax.swing.JFrame {
                 EncrypterSaveButton.setText("Salva");
                 EncrypterUsernameLabel.setText("Nome utente:");
             }
-        }
 
-        EncrypterSaveButton.repaint();
-        EncrypterUsernameLabel.repaint();
+            default -> throw new IllegalArgumentException("Invalid language: " + loginAccount.getLanguage());
+        }
 
         // redirects to encrypter panel
         Utils.replacePanel(DialogPanel, EncrypterPanel);
     }
 
     private void DecrypterButtonActionPerformed(java.awt.event.ActionEvent evt) {
-        switch (language) {
+        switch (loginAccount.getLanguage()) {
             case "e" -> {
                 DecrypterDeleteButton.setText("Delete");
                 DecrypterSaveButton.setText("Save");
@@ -285,12 +278,11 @@ public class Main extends javax.swing.JFrame {
                 DecrypterSaveButton.setText("Salva");
                 DecrypterUsernameLabel.setText("Nome utente:");
             }
-        }
 
+            default -> throw new IllegalArgumentException("Invalid language: " + loginAccount.getLanguage());
+        }
         DecrypterDeleteButton.setBackground(new java.awt.Color(51, 51, 51));
         DecrypterDeleteButton.repaint();
-        DecrypterSaveButton.repaint();
-        DecrypterUsernameLabel.repaint();
 
         // to make sure the decrypter delete button is in its first state
         deleteCounter = false;
@@ -305,7 +297,7 @@ public class Main extends javax.swing.JFrame {
         SettingsLanguageSelector.removeAllItems();
         SettingsSavingorderSelector.removeAllItems();
 
-        switch (language) {
+        switch (loginAccount.getLanguage()) {
             case "e" -> {
                 SettingsLanguageSelector.addItem("English");
                 SettingsLanguageSelector.addItem("Italian");
@@ -333,17 +325,11 @@ public class Main extends javax.swing.JFrame {
 
                 SettingsLanguageSelector.setSelectedIndex(1);
             }
+
+            default -> throw new IllegalArgumentException("Invalid language: " + loginAccount.getLanguage());
         }
 
-        SettingsLanguageSelector.repaint();
-        SettingsSavingorderSelector.repaint();
-        SettingsLanguageLabel.repaint();
-        SettingsSavingorderLabel.repaint();
-        SettingsLoginpassowrdLabel.repaint();
-        SettingsSaveButton.repaint();
-
         // sets the current saving order
-        SettingsSavingorderSelector.repaint();
         if (loginAccount.getSavingOrder().equals("s")) {
             SettingsSavingorderSelector.setSelectedIndex(0);
         } else if (loginAccount.getSavingOrder().equals("u")) {
@@ -353,6 +339,9 @@ public class Main extends javax.swing.JFrame {
         // sets the current login password
         SettingsLoginPasswordTextField.setText(loginPassword);
 
+        Utils.repaintAll(SettingsLanguageSelector, SettingsSavingorderSelector, SettingsLoginPasswordTextField);
+
+        switchToProgramPanel();
         // redirects to settings panel
         Utils.replacePanel(DialogPanel, SettingsPanel);
     }
@@ -360,7 +349,7 @@ public class Main extends javax.swing.JFrame {
     private void LogHistoryButtonActionPerformed(java.awt.event.ActionEvent evt) {
         logger.addInfo("Log history showed");
 
-        switch (language) {
+        switch (loginAccount.getLanguage()) {
             case "e" -> {
                 LogHystoryLabel.setText("Log History:");
                 LogLegendLabel.setText("[Actions]    {Errors}");
@@ -370,10 +359,9 @@ public class Main extends javax.swing.JFrame {
                 LogHystoryLabel.setText("Cronologia del Registro:");
                 LogLegendLabel.setText("[Azioni]    {Errori}");
             }
-        }
 
-        LogHystoryLabel.repaint();
-        LogLegendLabel.repaint();
+            default -> throw new IllegalArgumentException("Invalid language: " + loginAccount.getLanguage());
+        }
 
         // writes the log history to its text area
         LogHistoryTextArea.setText(logger.getLogHistory());
@@ -409,53 +397,42 @@ public class Main extends javax.swing.JFrame {
             }
 
             EncrypterSoftwareTextField.setText("");
-            EncrypterSoftwareTextField.repaint();
-
             EncrypterUsernameTextField.setText("");
-            EncrypterUsernameTextField.repaint();
-
             EncrypterPasswordTextField.setText("");
-            EncrypterPasswordTextField.repaint();
+            Utils.repaintAll(EncrypterSoftwareTextField, EncrypterUsernameTextField, EncrypterPasswordTextField);
 
             MenuBar.setVisible(true);
         }
-
-        MenuBar.setVisible(true);
     }
 
     private void DecrypterAccountSelectorActionPerformed(java.awt.event.ActionEvent evt) {
         deleteCounter = false;
-        switch (language) {
+        switch (loginAccount.getLanguage()) {
             case "e" -> DecrypterDeleteButton.setText("Delete");
             case "i" -> DecrypterDeleteButton.setText("Elimina");
+            default -> throw new IllegalArgumentException("Invalid language: " + loginAccount.getLanguage());
         }
         DecrypterDeleteButton.setBackground(new java.awt.Color(38, 38, 38));
-        DecrypterDeleteButton.repaint();
 
         if (selectedItemInComboBox(DecrypterAccountSelector) >= 0) {
             // shows the software, username and account of the selected item
             DecrypterSoftwareTextField
                     .setText(accountList.get(selectedItemInComboBox(DecrypterAccountSelector)).getSoftware());
-            DecrypterSoftwareTextField.repaint();
 
             DecrypterUsernameTextField
                     .setText(accountList.get(selectedItemInComboBox(DecrypterAccountSelector)).getUsername());
-            DecrypterUsernameTextField.repaint();
 
             DecrypterPasswordTextField
                     .setText(accountList.get(selectedItemInComboBox(DecrypterAccountSelector))
                             .getPassword(loginPassword));
-            DecrypterPasswordTextField.repaint();
         } else {
             DecrypterSoftwareTextField.setText("");
-            DecrypterSoftwareTextField.repaint();
-
             DecrypterUsernameTextField.setText("");
-            DecrypterUsernameTextField.repaint();
-
             DecrypterPasswordTextField.setText("");
-            DecrypterPasswordTextField.repaint();
         }
+
+        Utils.repaintAll(DecrypterDeleteButton, DecrypterSoftwareTextField, DecrypterUsernameTextField,
+                DecrypterPasswordTextField);
     }
 
     private void DecrypterSaveButtonActionPerformed(java.awt.event.ActionEvent evt) {
@@ -469,8 +446,8 @@ public class Main extends javax.swing.JFrame {
                 // save the new attributes of the account
                 Account account = accountList.get(selectedItemInComboBox(DecrypterAccountSelector));
                 try {
-                    account.setSoftware(software);
-                    account.setUsername(username);
+                    account.setSoftware(software, loginPassword);
+                    account.setUsername(username, loginPassword);
                     account.setPassword(password, loginPassword);
                 } catch (Exception e) {
                     logger.addError(e);
@@ -492,12 +469,12 @@ public class Main extends javax.swing.JFrame {
         // when the deleteCounter is true it means that the user has confirmed the
         // elimination
         if (deleteCounter) {
-            switch (language) {
+            switch (loginAccount.getLanguage()) {
                 case "e" -> DecrypterDeleteButton.setText("Delete");
                 case "i" -> DecrypterDeleteButton.setText("Elimina");
+                default -> throw new IllegalArgumentException("Invalid language: " + loginAccount.getLanguage());
             }
             DecrypterDeleteButton.setBackground(new java.awt.Color(38, 38, 38));
-            DecrypterDeleteButton.repaint();
 
             // removes the selected account from the list
             accountList.remove(selectedItemInComboBox(DecrypterAccountSelector));
@@ -510,29 +487,29 @@ public class Main extends javax.swing.JFrame {
 
             logger.addInfo("Account deleted");
         } else {
-            switch (language) {
+            switch (loginAccount.getLanguage()) {
                 case "e" -> DecrypterDeleteButton.setText("Sure?");
                 case "i" -> DecrypterDeleteButton.setText("Sicuro?");
+                default -> throw new IllegalArgumentException("Invalid language: " + loginAccount.getLanguage());
             }
 
             DecrypterDeleteButton.setBackground(new java.awt.Color(219, 67, 67));
-            DecrypterDeleteButton.repaint();
         }
+        DecrypterDeleteButton.repaint();
 
         deleteCounter = !deleteCounter;
     }
 
     private void SettingsSaveButtonActionPerformed(java.awt.event.ActionEvent evt) {
-        loginPassword = SettingsLoginPasswordTextField.getText();
+        String newLoginPassword = SettingsLoginPasswordTextField.getText();
 
-        if (!loginPassword.isBlank()) {
+        if (!newLoginPassword.isBlank()) {
             // translates the index into the actual language
             if (SettingsLanguageSelector.getSelectedIndex() == 0) {
                 loginAccount.setLanguage("e");
             } else if (SettingsLanguageSelector.getSelectedIndex() == 1) {
                 loginAccount.setLanguage("i");
             }
-            language = loginAccount.getLanguage();
 
             // translates the index into the actual saving order
             if (SettingsSavingorderSelector.getSelectedIndex() == 0) {
@@ -542,8 +519,12 @@ public class Main extends javax.swing.JFrame {
             }
             resortAccountList();
 
-            // gets and saves the new login password
-            loginAccount.setPassword(loginPassword);
+            if (!newLoginPassword.equals(loginPassword)) {
+                accountList.forEach(account -> account.changeLoginPassword(loginPassword, newLoginPassword));
+
+                loginAccount.setPasswordVerified(loginPassword, newLoginPassword);
+                loginPassword = newLoginPassword;
+            }
 
             logger.addInfo("Settings changed");
 
@@ -571,11 +552,13 @@ public class Main extends javax.swing.JFrame {
     // #region Exporters
     private void htmlMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
         try (FileWriter file = new FileWriter(System.getProperty("user.home") + "\\Desktop\\Passswords.html")) {
-            file.write(Exporter.exportHtml(accountList, language, loginPassword));
+            file.write(Exporter.exportHtml(accountList, loginAccount.getLanguage(), loginPassword));
             file.flush();
         } catch (IOException e) {
             logger.addError(e);
         }
+
+        ExportAsMenu.dispatchEvent(new KeyEvent(ExportAsMenu, KeyEvent.KEY_PRESSED, 0, 0, KeyEvent.VK_ESCAPE, '←'));
     }
 
     private void csvMenuItemActionPerformed(java.awt.event.ActionEvent evt) {
@@ -585,6 +568,8 @@ public class Main extends javax.swing.JFrame {
         } catch (IOException e) {
             logger.addError(e);
         }
+
+        ExportAsMenu.dispatchEvent(new KeyEvent(ExportAsMenu, KeyEvent.KEY_PRESSED, 0, 0, KeyEvent.VK_ESCAPE, '←'));
     }
     // #endregion
 
@@ -606,8 +591,6 @@ public class Main extends javax.swing.JFrame {
                 ObjectInputStream fIN = new ObjectInputStream(f);
 
                 loginAccount = (LoginAccount) fIN.readObject();
-                language = loginAccount.getLanguage();
-
                 accountList = (ArrayList<Account>) fIN.readObject();
             } catch (IOException | ClassNotFoundException e) {
                 logger.addError(e);
@@ -618,7 +601,7 @@ public class Main extends javax.swing.JFrame {
             // gets the log history
             logger.readFile();
 
-            switch (language) {
+            switch (loginAccount.getLanguage()) {
                 case "e" -> {
                     LoginLabel.setText("Login");
                     LoginButton.setText("Login");
@@ -628,10 +611,9 @@ public class Main extends javax.swing.JFrame {
                     LoginLabel.setText("Accesso");
                     LoginButton.setText("Accesso");
                 }
-            }
 
-            LoginLabel.repaint();
-            LoginButton.repaint();
+                default -> throw new IllegalArgumentException("Invalid language: " + loginAccount.getLanguage());
+            }
 
             // redirects to login panel
             Utils.replacePanel(MainPanel, LoginPanel);
@@ -640,14 +622,13 @@ public class Main extends javax.swing.JFrame {
             FirstRunLanguageSelector.addItem("");
             FirstRunLanguageSelector.addItem("English");
             FirstRunLanguageSelector.addItem("Italian");
-            FirstRunLanguageSelector.repaint();
 
             FirstRunSavingorderSelector.removeAllItems();
             FirstRunSavingorderSelector.addItem("");
             FirstRunSavingorderSelector.addItem("Software");
             FirstRunSavingorderSelector.addItem("Username");
-            FirstRunSavingorderSelector.repaint();
 
+            Utils.repaintAll(FirstRunLanguageSelector, FirstRunSavingorderSelector);
             // redirects to first run panel
             Utils.replacePanel(MainPanel, FirstRunPanel);
         }
@@ -667,6 +648,8 @@ public class Main extends javax.swing.JFrame {
                 int username = acc1.getUsername().compareTo(acc2.getUsername());
                 return (username == 0) ? acc1.getSoftware().compareTo(acc2.getSoftware()) : username;
             });
+
+            default -> throw new IllegalArgumentException("Invalid saving order: " + loginAccount.getSavingOrder());
         }
     }
 
@@ -696,20 +679,20 @@ public class Main extends javax.swing.JFrame {
             switch (loginAccount.getSavingOrder()) {
                 case "s" -> item += account.getSoftware() + " / " + account.getUsername();
                 case "u" -> item += account.getUsername() + " / " + account.getSoftware();
+                default -> throw new IllegalArgumentException("Invalid saving order: " + loginAccount.getSavingOrder());
             }
             DecrypterAccountSelector.addItem(item);
         }
-        DecrypterAccountSelector.repaint();
 
         // clears the text fields of the decrypter
         DecrypterSoftwareTextField.setText("");
-        DecrypterSoftwareTextField.repaint();
 
         DecrypterUsernameTextField.setText("");
-        DecrypterUsernameTextField.repaint();
 
         DecrypterPasswordTextField.setText("");
-        DecrypterPasswordTextField.repaint();
+
+        Utils.repaintAll(DecrypterAccountSelector, DecrypterSoftwareTextField, DecrypterUsernameTextField,
+                DecrypterPasswordTextField);
     }
     // #endregion
 

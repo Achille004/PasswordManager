@@ -1,9 +1,8 @@
-package main.accounts;
+package main.security;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
-import java.util.Base64;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -35,10 +34,9 @@ public class Encrypter {
      * @return The hashed password.
      * @throws InvalidKeySpecException
      */
-    public static String hash(String password, byte[] salt) throws InvalidKeySpecException {
+    public static byte[] hash(String password, byte[] salt) throws InvalidKeySpecException {
         KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITERATIONS, HASH_KEY_LENGTH);
-        byte[] hashedPasswordBytes = keyFactory.generateSecret(spec).getEncoded();
-        return Base64.getEncoder().encodeToString(hashedPasswordBytes);
+        return keyFactory.generateSecret(spec).getEncoded();
     }
 
     /**
@@ -63,38 +61,31 @@ public class Encrypter {
      * @param password The password to encrypt.
      * @param key      The AES key.
      * @param iv       The initialization vector.
-     * @return The encrypted, base64-encoded password.
+     * @return The encrypted password.
      * @throws Exception
      */
-    public static String encryptAES(String password, byte[] key, byte[] iv) throws Exception {
+    public static byte[] encryptAES(String password, byte[] key, byte[] iv) throws Exception {
         // Create Cipher object to encrypt
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"), new IvParameterSpec(iv));
 
         // Encrypt the password
-        byte[] encryptedPassword = cipher.doFinal(password.getBytes());
-
-        // Base64-encode the encrypted password for a readable representation
-        return Base64.getEncoder().encodeToString(encryptedPassword);
+        return cipher.doFinal(password.getBytes());
     }
 
     /**
      * Decrypts and AES-encrypted password.
      * 
-     * @param encryptedPasswordBase64 The encrypted, base64-encoded password to
-     *                                decrypt.
+     * @param encryptedPasswordBase64 The encrypted password to decrypt.
      * @param key                     The AES key.
      * @param iv                      The initialization vector.
      * @return The decrypted password.
      * @throws Exception
      */
-    public static String decryptAES(String encryptedPasswordBase64, byte[] key, byte[] iv) throws Exception {
+    public static String decryptAES(byte[] encryptedPassword, byte[] key, byte[] iv) throws Exception {
         // Create Cipher object to decrypt
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new IvParameterSpec(iv));
-
-        // Base64-decode the encoded encrpted password for a decryptable form
-        byte[] encryptedPassword = Base64.getDecoder().decode(encryptedPasswordBase64);
 
         // Decrypt the password
         byte[] password = cipher.doFinal(encryptedPassword);

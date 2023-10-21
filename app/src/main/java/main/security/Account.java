@@ -15,20 +15,18 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
-package main.accounts;
+package main.security;
 
 import java.io.Serializable;
 import java.security.SecureRandom;
 
-import main.Utils.Encrypter;
-
 public class Account implements Serializable {
     private String software;
     private String username;
-    private String encryptedPassword;
+    private byte[] encryptedPassword;
     private byte[] iv;
 
-    public Account(String software, String username, String password, String loginPassword) throws Exception {
+    public Account(String software, String username, String password, String loginPassword) {
         this.software = software;
         this.username = username;
 
@@ -40,26 +38,20 @@ public class Account implements Serializable {
         return software;
     }
 
-    public void setSoftware(String software) {
+    public void setSoftware(String software, String loginPassword) {
+        String password = getPassword(loginPassword);
         this.software = software;
-    }
-
-    public Account software(String software) {
-        setSoftware(software);
-        return this;
+        setPassword(password, loginPassword);
     }
 
     public String getUsername() {
         return this.username;
     }
 
-    public void setUsername(String username) {
+    public void setUsername(String username, String loginPassword) {
+        String password = getPassword(loginPassword);
         this.username = username;
-    }
-
-    public Account username(String username) {
-        setUsername(username);
-        return this;
+        setPassword(password, loginPassword);
     }
 
     public String getPassword(String loginPassword) {
@@ -73,21 +65,24 @@ public class Account implements Serializable {
         return "";
     }
 
-    public void setPassword(String password, String loginPassword) throws Exception {
+    public void setPassword(String password, String loginPassword) {
         // Generate IV
         SecureRandom random = new SecureRandom();
         random.nextBytes(iv);
 
-        byte[] key = Encrypter.getKey(loginPassword, getSalt());
-        this.encryptedPassword = Encrypter.encryptAES(password, key, iv);
+        try {
+            byte[] key = Encrypter.getKey(loginPassword, getSalt());
+            this.encryptedPassword = Encrypter.encryptAES(password, key, iv);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    public Account password(String password, String loginPassword) throws Exception {
-        setPassword(password, loginPassword);
-        return this;
+    public void changeLoginPassword(String oldLoginPassword, String newLoginPassword) {
+        setPassword(getPassword(oldLoginPassword), newLoginPassword);
     }
 
-    public static Account of(String software, String username, String password, String loginPassword) throws Exception {
+    public static Account of(String software, String username, String password, String loginPassword) {
         // creates the account, adding its attributes by constructor
         return new Account(software, username, password, loginPassword);
     }

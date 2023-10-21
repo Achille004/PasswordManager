@@ -9,7 +9,7 @@ import java.security.SecureRandom;
 
 import org.junit.jupiter.api.Test;
 
-import main.Utils.Encrypter;
+import main.security.Encrypter;
 
 class AppTest {
     @Test
@@ -27,7 +27,7 @@ class AppTest {
 
         byte[] key = Encrypter.getKey(loginPassword, salt);
 
-        String e = Encrypter.encryptAES(p, key, iv);
+        byte[] e = Encrypter.encryptAES(p, key, iv);
         String d = Encrypter.decryptAES(e, key, iv);
         assertEquals(p, d, "Crittografia fallita");
     }

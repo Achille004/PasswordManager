@@ -1,6 +1,7 @@
 package main.utils;
 
 import java.awt.Component;
+import java.util.Base64;
 
 import javax.swing.JPanel;
 
@@ -37,8 +38,18 @@ public class Utils {
     }
 
     public static void repaintAll(Component... components) {
-        for (Component component: components) {
+        for (Component component : components) {
             component.repaint();
         }
+    }
+
+    public static String byteToBase64(byte[] src) {
+        // Base64-encode the encrypted password for a readable representation
+        return Base64.getEncoder().encodeToString(src);
+    }
+
+    public static byte[] base64ToByte(String src) {
+        // Base64-encode the encrypted password for a readable representation
+        return Base64.getDecoder().decode(src);
     }
 }
