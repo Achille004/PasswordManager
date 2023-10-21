@@ -47,6 +47,7 @@ jar {
     }
 }
 
+/*
 task signExe {
     doLast {
         jsign(
@@ -56,3 +57,4 @@ task signExe {
         )
     }
 }
+*/
