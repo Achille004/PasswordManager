@@ -7,6 +7,8 @@ plugins {
     id 'org.javamodularity.moduleplugin' version '1.8.12'
 }
 
+project.version = '2.2.1'
+
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
@@ -50,19 +52,42 @@ jlink {
         requires 'java.xml'
     }
     launcher{
-        name = 'PasswordManager'
+        name = 'PasswordManager-' + project.version
         jvmArgs = ['-Dlog4j.configurationFile=./log4j2.xml']
-    }
-    jpackage {
-        if (org.gradle.internal.os.OperatingSystem.current().windows) {
-            installerOptions += ['--win-per-user-install', '--win-dir-chooser', '--win-menu', '--win-shortcut']
-            imageOptions += ['--win-console']
-        }
     }
     tasks.jlink.doLast {
         copy {
-            from('src/main/resources')
+            from("$projectDir/src/main/resources")
             into("$buildDir/image/bin")
+        }
+    }
+
+    jpackage {
+        installerType = null // exe/msi
+        installerOutputDir = file("$rootDir/compiled")
+        installerName = 'PasswordManager'
+        appVersion = project.version
+        icon =  file("$projectDir/src/main/resources/locker.ico")
+        vendor = 'Francesco Marras'
+
+        // '--description "Password Manager is an application able to add, modify and delete locally saved accounts, characterized by a software, a username and an AES-encrypted password."',
+        // '--copyright "Copyright (C) 2022-2023  Francesco Marras  GNU GPLv3"',
+        // '--license-file ./src/main/resources/license.txt',
+        // '--about-url "https://github.com/Achille004/PasswordManager"'
+
+        if (org.gradle.internal.os.OperatingSystem.current().windows) {
+            installerOptions += [
+                '--win-per-user-install',
+                '--win-dir-chooser',
+                '--win-menu',
+                '--win-shortcut']
+            imageOptions += ['--win-console']
+        }
+    }
+    tasks.jpackage.doLast {
+        copy {
+            from("$buildDir/libs")
+            into("$rootDir/compiled")
         }
     }
 }
