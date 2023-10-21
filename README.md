@@ -4,7 +4,7 @@ The program will be protected with a password that the user must remember.
 Two languages are available: English and Italian. If you want to help translating, contact me at my email.
 
 
-**The JAR, Windows Executable and Windows Installer are available [here](https://github.com/Achille004/PasswordManager/tree/main/compile/compiled "Compiled stuff folder.").**  
+**The JAR and Windows Installers (exe and msi) are available [here](https://github.com/Achille004/PasswordManager/tree/main/compiled "Compiled stuff folder.").**  
 To execute the program is reccomended jdk 17.0.1 or higher.
 
 
