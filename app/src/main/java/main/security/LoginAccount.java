@@ -1,19 +1,17 @@
-package main.accounts;
+package main.security;
 
 import java.io.Serializable;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
-
-import main.Utils.Encrypter;
+import java.util.Arrays;
 
 public class LoginAccount implements Serializable {
     private String savingOrder;
     private String language;
-    private String hashedPassword;
+    private byte[] hashedPassword;
     private byte[] salt;
 
-    public LoginAccount(String savingOrder, String language, String password) throws NoSuchAlgorithmException {
+    public LoginAccount(String savingOrder, String language, String password) {
         this.savingOrder = savingOrder;
         this.language = language;
 
@@ -29,11 +27,6 @@ public class LoginAccount implements Serializable {
         this.savingOrder = savingOrder;
     }
 
-    public LoginAccount savingOrder(String savingOrder) {
-        setSavingOrder(savingOrder);
-        return this;
-    }
-
     public String getLanguage() {
         return this.language;
     }
@@ -42,16 +35,11 @@ public class LoginAccount implements Serializable {
         this.language = language;
     }
 
-    public LoginAccount language(String language) {
-        setLanguage(language);
-        return this;
-    }
-
     public boolean verifyPassword(String passwordToVerify) {
         try {
-            String hashedPasswordToVerify = Encrypter.hash(passwordToVerify, salt);
+            byte[] hashedPasswordToVerify = Encrypter.hash(passwordToVerify, salt);
 
-            if (hashedPassword.equals(hashedPasswordToVerify)) {
+            if (Arrays.equals(hashedPassword, hashedPasswordToVerify)) {
                 return true;
             }
         } catch (InvalidKeySpecException e) {
@@ -61,7 +49,16 @@ public class LoginAccount implements Serializable {
         return false;
     }
 
-    public void setPassword(String password) {
+    public boolean setPasswordVerified(String oldPassword, String newPassword) {
+        if (!verifyPassword(oldPassword)) {
+            return false;
+        }
+
+        setPassword(newPassword);
+        return true;
+    }
+
+    private void setPassword(String password) {
         try {
             SecureRandom random = new SecureRandom();
             random.nextBytes(salt);
@@ -72,13 +69,7 @@ public class LoginAccount implements Serializable {
         }
     }
 
-    public LoginAccount password(String hashedPassword) {
-        setPassword(hashedPassword);
-        return this;
-    }
-
-    public static LoginAccount createAccount(String savingOrder, String language, String password)
-            throws NoSuchAlgorithmException {
+    public static LoginAccount of(String savingOrder, String language, String password) {
         // creates the account, adding its attributes by constructor
         return new LoginAccount(savingOrder, language, password);
     }

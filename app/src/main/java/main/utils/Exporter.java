@@ -2,7 +2,7 @@ package main.utils;
 
 import java.util.ArrayList;
 
-import main.accounts.Account;
+import main.security.Account;
 
 public class Exporter {
     /**
@@ -48,6 +48,8 @@ public class Exporter {
                 stb.append(
                         "<tr>\n<th>Account</th>\n<th>Software</th>\n<th>Nome Utente</th>\n<th>Password</th>\n</tr>");
             }
+
+            default -> throw new IllegalArgumentException("Invalid language: " + language);
         }
 
         final int listSize = accountList.size();
