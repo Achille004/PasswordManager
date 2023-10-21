@@ -1,6 +1,6 @@
 /*
     Password Manager: Manages accounts given by user with encrypted password.
-    Copyright (C) 2022  Francesco Marras
+    Copyright (C) 2022-2023  Francesco Marras
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -922,7 +922,7 @@ public class Main extends javax.swing.JFrame {
         firstRunEULATextArea.setForeground(new java.awt.Color(38, 38, 38));
         firstRunEULATextArea.setRows(5);
         firstRunEULATextArea.setText(
-                "Password Manager: manages accounts given by user with encrypted password.\nCopyright (C) 2022  Francesco Marras\n\nThis program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License \nas published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.\n\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied \nwarranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for \nmore details.\n\nYou should have received a copy of the GNU General Public License along with this program.\nIf not, see https://www.gnu.org/licenses/gpl-3.0.html.");
+                "Password Manager: manages accounts given by user with encrypted password.\nCopyright (C) 2022-2023  Francesco Marras\n\nThis program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License \nas published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.\n\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied \nwarranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for \nmore details.\n\nYou should have received a copy of the GNU General Public License along with this program.\nIf not, see https://www.gnu.org/licenses/gpl-3.0.html.");
         firstRunEULATextArea.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(115, 41, 41)));
 
         javax.swing.GroupLayout FirstRunPanelLayout = new javax.swing.GroupLayout(FirstRunPanel);
@@ -1594,7 +1594,7 @@ public class Main extends javax.swing.JFrame {
         EULATextArea.setForeground(new java.awt.Color(38, 38, 38));
         EULATextArea.setRows(5);
         EULATextArea.setText(
-                "Password Manager: manages accounts given by user with encrypted password.\nCopyright (C) 2022  Francesco Marras\n\nThis program is free software: you can redistribute it and/or modify\nit under the terms of the GNU General Public License as published by\nthe Free Software Foundation, either version 3 of the License, or\n(at your option) any later version.\n\nThis program is distributed in the hope that it will be useful,\nbut WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\nGNU General Public License for more details.\n\nYou should have received a copy of the GNU General Public License\nalong with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.html.");
+                "Password Manager: manages accounts given by user with encrypted password.\nCopyright (C) 2022-2023  Francesco Marras\n\nThis program is free software: you can redistribute it and/or modify\nit under the terms of the GNU General Public License as published by\nthe Free Software Foundation, either version 3 of the License, or\n(at your option) any later version.\n\nThis program is distributed in the hope that it will be useful,\nbut WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\nGNU General Public License for more details.\n\nYou should have received a copy of the GNU General Public License\nalong with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.html.");
         EULATextArea.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(115, 41, 41)));
 
         javax.swing.GroupLayout EulaAndCreditsPanelLayout = new javax.swing.GroupLayout(EulaAndCreditsPanel);

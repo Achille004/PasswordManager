@@ -1,6 +1,6 @@
 /*
     Password Manager: Manages accounts given by user with encrypted password.
-    Copyright (C) 2022  Francesco Marras
+    Copyright (C) 2022-2023  Francesco Marras
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
