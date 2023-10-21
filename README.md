@@ -4,7 +4,7 @@ The program will be protected with a password that the user must remember.
 Two languages are available: English and Italian. If you want to help translating, contact me at my email.
 
 
-**The JAR and Windows Installers (exe and msi) are available both [here](https://github.com/Achille004/PasswordManager/releases/tag/2.2.2 "Release page."). and [here](https://github.com/Achille004/PasswordManager/tree/main/compiled "Compiled files folder.") (these might be newer but unstable or bugged).** 
+**The JAR and Windows Installers (exe and msi) are available both [here](https://github.com/Achille004/PasswordManager/releases "Releases page.") and [here](https://github.com/Achille004/PasswordManager/tree/main/compiled "Compiled files folder.") (these might be newer but unstable or bugged).** 
 The Windows Installers do not need any JRE as they come with a bundled one.
 
 
