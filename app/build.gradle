@@ -1,6 +1,10 @@
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     id 'application'
+
+    // Badass-jlink plugin for creating custom runtime images for modular applications with minimal effort
+    id 'org.beryx.jlink' version '3.0.0'
+    id 'org.javamodularity.moduleplugin' version '1.8.12'
 }
 
 repositories {
@@ -16,11 +20,14 @@ dependencies {
 
     // This dependency is used by the application.
     implementation 'com.google.guava:guava:31.0.1-jre'
+    
+    implementation 'javax.xml.bind:jaxb-api:2.3.1'
 }
 
 application {
     // Define the main class for the application.
     mainClass = 'main.Main'
+    mainModule = 'main'
 }
 
 tasks.named('test') {
@@ -32,7 +39,30 @@ configurations.implementation.canBeResolved = true
 
 jar {
     manifest {
-        attributes 'Main-Class': 'main.Main'
+        attributes 'Implementation-Title': "Password Manager", 'Main-Class': 'main.Main'
     }
     archiveBaseName.set(rootProject.name)
+}
+
+jlink {
+    mergedModule {
+        requires 'java.naming'
+        requires 'java.xml'
+    }
+    launcher{
+        name = 'PasswordManager'
+        jvmArgs = ['-Dlog4j.configurationFile=./log4j2.xml']
+    }
+    jpackage {
+        if (org.gradle.internal.os.OperatingSystem.current().windows) {
+            installerOptions += ['--win-per-user-install', '--win-dir-chooser', '--win-menu', '--win-shortcut']
+            imageOptions += ['--win-console']
+        }
+    }
+    tasks.jlink.doLast {
+        copy {
+            from('src/main/resources')
+            into("$buildDir/image/bin")
+        }
+    }
 }
