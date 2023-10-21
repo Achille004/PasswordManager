@@ -1,5 +1,5 @@
 # PasswordManager
-Password Manager is a application able to add, modify and delete locally saved accounts, characterized by a software, a username and an [AES](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard "AES explanation.")-encrypted password.  
+Password Manager is an application able to add, modify and delete locally saved accounts, characterized by a software, a username and an [AES](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard "AES explanation.")-encrypted password.  
 The program will be protected with a password that the user must remember.  
 Two languages are available: English and Italian. If you want to help translating, contact me at my email.
 
