@@ -1,5 +1,5 @@
 module main {
-    requires java.desktop;
-    requires java.logging;
+    requires transitive java.desktop;
+    requires transitive java.logging;
     exports main;
 }

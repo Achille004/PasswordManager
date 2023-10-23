@@ -7,7 +7,9 @@ plugins {
     id 'org.javamodularity.moduleplugin' version '1.8.12'
 }
 
-project.version = '2.2.2'
+sourceCompatibility  = 18
+group = 'org.Achille004.PasswordManager'
+version = '2.2.2'
 
 repositories {
     // Use Maven Central for resolving dependencies.
@@ -15,10 +17,9 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.jetbrains:annotations:20.1.0'
-
     // Use JUnit Jupiter for testing.
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     // This dependency is used by the application.
     implementation 'com.google.guava:guava:31.0.1-jre'
@@ -66,7 +67,7 @@ jlink {
         installerType = null // exe/msi
         installerOutputDir = file("$rootDir/compiled")
         installerName = 'PasswordManager'
-        appVersion = project.version
+        appVersion = version
         icon =  file("$projectDir/src/main/resources/locker.ico")
         vendor = 'Francesco Marras'
 
