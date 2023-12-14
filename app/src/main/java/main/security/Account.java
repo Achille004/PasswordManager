@@ -24,7 +24,7 @@ public class Account implements Serializable {
     private String software;
     private String username;
     private byte[] encryptedPassword;
-    private byte[] iv;
+    private final byte[] iv;
 
     public Account(String software, String username, String password, String loginPassword) {
         this.software = software;

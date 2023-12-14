@@ -22,6 +22,8 @@ import java.util.ArrayList;
 
 import main.security.Account;
 
+import static main.utils.Utils.*;
+
 public class Exporter {
     /**
      * Exports a list of accounts in HTML.
@@ -74,7 +76,7 @@ public class Exporter {
         int counter = 0;
         for (Account currentAccount : accountList) {
             counter++;
-            stb.append("<tr>\n<td>" + Utils.addZerosToIndex(listSize, counter) +
+            stb.append("<tr>\n<td>" + addZerosToIndex(listSize, counter) +
                     "</td>\n<td>" + currentAccount.getSoftware() +
                     "</td>\n<td>" + currentAccount.getUsername() +
                     "</td>\n<td>" + currentAccount.getPassword(loginPassword) +
@@ -100,7 +102,7 @@ public class Exporter {
         int counter = 0;
         for (Account currentAccount : accountList) {
             counter++;
-            stb.append(Utils.addZerosToIndex(listSize, counter) + "," +
+            stb.append(addZerosToIndex(listSize, counter) + "," +
                     currentAccount.getSoftware() + "," +
                     currentAccount.getUsername() + "," +
                     currentAccount.getPassword(loginPassword) + "\n");

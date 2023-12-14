@@ -21,6 +21,7 @@ package main.utils;
 import java.awt.Component;
 import java.util.Base64;
 
+import javax.swing.JComboBox;
 import javax.swing.JPanel;
 
 public class Utils {
@@ -33,13 +34,31 @@ public class Utils {
     public static void replacePanel(JPanel actingPanel, JPanel showPanel) {
         // removing old panel
         actingPanel.removeAll();
-        actingPanel.repaint();
-        actingPanel.revalidate();
 
         // adding new panel
         actingPanel.add(showPanel);
+
         actingPanel.repaint();
         actingPanel.revalidate();
+    }
+
+    /**
+     * Returns the selected index in a Combo Box with a first blank option. If
+     * the value is -1, the selected index is the blank one.
+     *
+     * @param comboBox The combo box to extract the index from.
+     * @return The index of the current selected item.
+     */
+    public static int selectedItemInComboBox(JComboBox<String> comboBox) {
+        return comboBox.getSelectedIndex() - 1;
+    }
+
+    public static void setComboBoxItems(JComboBox<String> comboBox, String... items) {
+        comboBox.removeAllItems();
+        
+        for (String item : items) {
+            comboBox.addItem(item);   
+        }
     }
 
     /**
