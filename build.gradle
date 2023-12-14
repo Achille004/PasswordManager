@@ -28,8 +28,8 @@ dependencies {
 
 application {
     // Define the main class for the application.
+    mainModule = 'PasswordManager.main'
     mainClass = 'main.Main'
-    mainModule = 'main'
 }
 
 tasks.named('test') {

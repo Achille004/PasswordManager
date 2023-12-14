@@ -1,4 +1,4 @@
-module main {
+module PasswordManager.main {
     requires transitive java.desktop;
     requires java.logging;
     
