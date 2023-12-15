@@ -29,9 +29,9 @@ public class LoginPanel extends JPanel {
         initComponents();
     }
 
-    public void load(String formButtonText, String formLabeltext) {
+    public void load(String formButtonText, String formLabelText) {
         FormButton.setText(formButtonText);
-        FormLabel.setText(formLabeltext);
+        FormLabel.setText(formLabelText);
     }
 
     private void FormButtonActionPerformed(ActionEvent evt) {
@@ -54,7 +54,7 @@ public class LoginPanel extends JPanel {
             };
         } else {
             if (loginAccount.verifyPassword(loginPassword)) {
-                appInstance.getLogger().addInfo("Successful Login");
+                appInstance.getLogger().addInfo("Successful login");
 
                 appInstance.switchToProgramPanel(loginPassword);
                 return;
@@ -71,7 +71,8 @@ public class LoginPanel extends JPanel {
                 };
                 shouldExit[0] = true;
 
-                appInstance.getLogger().addInfo("Unsccessful Login");
+                appInstance.getLogger().addInfo("Unsuccessful login");
+                appInstance.getLogger().save();
             } else {
                 errorMessage = switch (loginAccount.getLanguage()) {
                     case "e" -> "Wrong password.";

@@ -17,6 +17,9 @@
  */
 package main.security;
 
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+
 import java.io.Serializable;
 import java.security.SecureRandom;
 
@@ -82,7 +85,8 @@ public class Account implements Serializable {
         setPassword(getPassword(oldLoginPassword), newLoginPassword);
     }
 
-    public static Account of(String software, String username, String password, String loginPassword) {
+    @Contract("_, _, _, _ -> new")
+    public static @NotNull Account of(String software, String username, String password, String loginPassword) {
         // creates the account, adding its attributes by constructor
         return new Account(software, username, password, loginPassword);
     }
@@ -92,7 +96,8 @@ public class Account implements Serializable {
      * 
      * @return The salt.
      */
-    private byte[] getSalt() {
+    @Contract(value = " -> new", pure = true)
+    private byte @NotNull [] getSalt() {
         return (software + username).getBytes();
     }
 }

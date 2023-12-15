@@ -18,6 +18,8 @@
 
 package main.utils;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.awt.Component;
 import java.util.Base64;
 
@@ -31,7 +33,7 @@ public class Utils {
      * @param actingPanel The panel on which will be done the replacement
      * @param showPanel   The new panel
      */
-    public static void replacePanel(JPanel actingPanel, JPanel showPanel) {
+    public static void replacePanel(@NotNull JPanel actingPanel, JPanel showPanel) {
         // removing old panel
         actingPanel.removeAll();
 
@@ -49,11 +51,11 @@ public class Utils {
      * @param comboBox The combo box to extract the index from.
      * @return The index of the current selected item.
      */
-    public static int selectedItemInComboBox(JComboBox<String> comboBox) {
+    public static int selectedItemInComboBox(@NotNull JComboBox<String> comboBox) {
         return comboBox.getSelectedIndex() - 1;
     }
 
-    public static void setComboBoxItems(JComboBox<String> comboBox, String... items) {
+    public static void setComboBoxItems(@NotNull JComboBox<String> comboBox, String @NotNull ... items) {
         comboBox.removeAllItems();
         
         for (String item : items) {
@@ -62,19 +64,19 @@ public class Utils {
     }
 
     /**
-     * Returns a string containing the index, preceeded by zero to match up the same
+     * Returns a string containing the index, preceded by zero to match up the same
      * number of digits of the size of the list.
      *
      * @param listSize The size of the list.
      * @param index    The index of the element.
      * @return The index.
      */
-    public static String addZerosToIndex(int listSize, int ìndex) {
-        int cifreLista = (int) Math.log10(listSize) + 1;
-        return String.format("%0" + cifreLista + "d", ìndex);
+    public static String addZerosToIndex(int listSize, int index) {
+        int listDigits = (int) Math.log10(listSize) + 1;
+        return String.format("%0" + listDigits + "d", index);
     }
 
-    public static void repaintAll(Component... components) {
+    public static void repaintAll(Component @NotNull ... components) {
         for (Component component : components) {
             component.repaint();
         }

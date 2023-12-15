@@ -49,21 +49,21 @@ public class FirstRunPanel extends JPanel {
                 return;
             }
 
-            String language = "", savingOrder = "";
+
 
             // translates the index into the actual language
-            switch (languageSelectorIndex) {
-                case 0 -> language = "e";
-                case 1 -> language = "i";
+            String language = switch (languageSelectorIndex) {
+                case 0 ->  "e";
+                case 1 ->  "i";
                 default -> throw new IllegalArgumentException("Invalid language.");
-            }
+            };
 
             // translates the index into the actual saving order
-            switch (savingOrderSelectorIndex) {
-                case 0 -> savingOrder = "s";
-                case 1 -> savingOrder = "u";
+            String savingOrder = switch (savingOrderSelectorIndex) {
+                case 0 -> "s";
+                case 1 -> "u";
                 default -> throw new IllegalArgumentException("Invalid saving order.");
-            }
+            };
 
             // saves all in the new login account
             appInstance.setLoginAccount(savingOrder, language, loginPassword);
