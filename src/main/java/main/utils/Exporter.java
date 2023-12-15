@@ -21,6 +21,9 @@ package main.utils;
 import java.util.ArrayList;
 
 import main.security.Account;
+import org.jetbrains.annotations.NotNull;
+
+import static main.utils.Utils.*;
 
 public class Exporter {
     /**
@@ -31,7 +34,7 @@ public class Exporter {
      * @param loginPassword The password used to decrypt.
      * @return The whole HTML text.
      */
-    public static String exportHtml(ArrayList<Account> accountList, String language, String loginPassword) {
+    public static @NotNull String exportHtml(ArrayList<Account> accountList, String language, String loginPassword) {
         StringBuilder stb = new StringBuilder();
 
         stb.append("<!DOCTYPE html>\n<html>\n<style>\n");
@@ -56,29 +59,22 @@ public class Exporter {
 
         stb.append("\n</style>\n\n<body>\n<table style=\"width:100%\">");
 
-        switch (language) {
-            case "e" -> {
-                stb.append(
-                        "<tr>\n<th>Account</th>\n<th>Software</th>\n<th>Username</th>\n<th>Password</th>\n</tr>");
-            }
-
-            case "i" -> {
-                stb.append(
-                        "<tr>\n<th>Account</th>\n<th>Software</th>\n<th>Nome Utente</th>\n<th>Password</th>\n</tr>");
-            }
-
+        stb.append(switch (language) {
+            case "e" -> "<tr>\n<th>Account</th>\n<th>Software</th>\n<th>Username</th>\n<th>Password</th>\n</tr>";
+            case "i" -> "<tr>\n<th>Account</th>\n<th>Software</th>\n<th>Nome Utente</th>\n<th>Password</th>\n</tr>";
             default -> throw new IllegalArgumentException("Invalid language: " + language);
-        }
+        });
 
         final int listSize = accountList.size();
         int counter = 0;
         for (Account currentAccount : accountList) {
             counter++;
-            stb.append("<tr>\n<td>" + Utils.addZerosToIndex(listSize, counter) +
-                    "</td>\n<td>" + currentAccount.getSoftware() +
-                    "</td>\n<td>" + currentAccount.getUsername() +
-                    "</td>\n<td>" + currentAccount.getPassword(loginPassword) +
-                    "</td>\n</tr>");
+            stb
+                    .append("<tr>\n<td>")
+                    .append(addZerosToIndex(listSize, counter)).append("</td>\n<td>")
+                    .append(currentAccount.getSoftware()).append("</td>\n<td>")
+                    .append(currentAccount.getUsername()).append("</td>\n<td>")
+                    .append(currentAccount.getPassword(loginPassword)).append("</td>\n</tr>");
         }
 
         stb.append("</table>\n</body>\n</html>");
@@ -93,17 +89,18 @@ public class Exporter {
      * @param loginPassword The password used to decrypt.
      * @return The whole CSV text.
      */
-    public static String exportCsv(ArrayList<Account> accountList, String loginPassword) {
+    public static @NotNull String exportCsv(@NotNull ArrayList<Account> accountList, String loginPassword) {
         StringBuilder stb = new StringBuilder();
 
         final int listSize = accountList.size();
         int counter = 0;
         for (Account currentAccount : accountList) {
             counter++;
-            stb.append(Utils.addZerosToIndex(listSize, counter) + "," +
-                    currentAccount.getSoftware() + "," +
-                    currentAccount.getUsername() + "," +
-                    currentAccount.getPassword(loginPassword) + "\n");
+            stb
+                    .append(addZerosToIndex(listSize, counter)).append(",")
+                    .append(currentAccount.getSoftware()).append(",")
+                    .append(currentAccount.getUsername()).append(",")
+                    .append(currentAccount.getPassword(loginPassword)).append("\n");
         }
 
         return stb.toString();

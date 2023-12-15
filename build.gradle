@@ -7,9 +7,7 @@ plugins {
     id 'org.javamodularity.moduleplugin' version '1.8.12'
 }
 
-sourceCompatibility  = 18
-group = 'org.Achille004.PasswordManager'
-version = '2.2.2'
+project.version = '2.3.0'
 
 repositories {
     // Use Maven Central for resolving dependencies.
@@ -17,6 +15,8 @@ repositories {
 }
 
 dependencies {
+    implementation 'org.jetbrains:annotations:20.1.0'
+
     // Use JUnit Jupiter for testing.
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -29,8 +29,8 @@ dependencies {
 
 application {
     // Define the main class for the application.
+    mainModule = 'PasswordManager.main'
     mainClass = 'main.Main'
-    mainModule = 'main'
 }
 
 tasks.named('test') {

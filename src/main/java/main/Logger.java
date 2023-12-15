@@ -17,6 +17,8 @@
  */
 package main;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -28,30 +30,36 @@ public class Logger {
     private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
     private final File logFile;
-    private String logHistory;
+    private final StringBuilder logHistory;
 
     public Logger(String filePath) {
         logFile = new File(filePath + "report.log");
-        logHistory = "";
+        logHistory = new StringBuilder();
     }
 
     public void addInfo(String str) {
-        logHistory += dtf.format(LocalDateTime.now()) + " >>> [" + str + "]\n";
+        logHistory
+                .append(dtf.format(LocalDateTime.now()))
+                .append(" >>> [")
+                .append(str)
+                .append("]\n");
     }
 
-    public void addError(Exception e) {
-        logHistory += dtf.format(LocalDateTime.now()) + " >>> {" + e.getMessage() + "}\n";
+    public void addError(@NotNull Exception e) {
+        logHistory
+                .append(dtf.format(LocalDateTime.now()))
+                .append(" >>> {")
+                .append(e.getMessage())
+                .append("}\n");
     }
 
     public String getLogHistory() {
-        return logHistory;
+        return logHistory.toString();
     }
 
     public boolean readFile() {
         try (Scanner scanner = new Scanner(logFile)) {
-            while (scanner.hasNextLine()) {
-                logHistory += scanner.nextLine() + "\n";
-            }
+            logHistory.append(scanner.useDelimiter("\\Z").next()).append("\n");
             scanner.close();
             return true;
         } catch (IOException e) {
@@ -61,7 +69,7 @@ public class Logger {
 
     public boolean save() {
         try (FileWriter w = new FileWriter(logFile)) {
-            w.write(logHistory);
+            w.write(logHistory.toString());
             w.flush();
             w.close();
             return true;

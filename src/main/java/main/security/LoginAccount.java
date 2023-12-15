@@ -18,6 +18,9 @@
 
 package main.security;
 
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+
 import java.io.Serializable;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
@@ -27,7 +30,7 @@ public class LoginAccount implements Serializable {
     private String savingOrder;
     private String language;
     private byte[] hashedPassword;
-    private byte[] salt;
+    private final byte[] salt;
 
     public LoginAccount(String savingOrder, String language, String password) {
         this.savingOrder = savingOrder;
@@ -87,7 +90,8 @@ public class LoginAccount implements Serializable {
         }
     }
 
-    public static LoginAccount of(String savingOrder, String language, String password) {
+    @Contract("_, _, _ -> new")
+    public static @NotNull LoginAccount of(String savingOrder, String language, String password) {
         // creates the account, adding its attributes by constructor
         return new LoginAccount(savingOrder, language, password);
     }

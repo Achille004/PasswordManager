@@ -18,6 +18,9 @@
 
 package main.security;
 
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
@@ -45,14 +48,14 @@ public class Encrypter {
     }
 
     /**
-     * Hashes the given password with salt using PBKDF2 hasing.
+     * Hashes the given password with salt using PBKDF2 hashing.
      * 
      * @param password The password to encrypt.
      * @param salt     The salt used to encrypt.
      * @return The hashed password.
      * @throws InvalidKeySpecException
      */
-    public static byte[] hash(String password, byte[] salt) throws InvalidKeySpecException {
+    public static byte[] hash(@NotNull String password, byte[] salt) throws InvalidKeySpecException {
         KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITERATIONS, HASH_KEY_LENGTH);
         return keyFactory.generateSecret(spec).getEncoded();
     }
@@ -66,7 +69,7 @@ public class Encrypter {
      * @return The hashed password.
      * @throws InvalidKeySpecException
      */
-    public static byte[] getKey(String loginPassword, byte[] salt) throws InvalidKeySpecException {
+    public static byte[] getKey(@NotNull String loginPassword, byte[] salt) throws InvalidKeySpecException {
         KeySpec spec = new PBEKeySpec(loginPassword.toCharArray(), salt, ITERATIONS, AES_KEY_LENGTH);
         SecretKey secretKey = keyFactory.generateSecret(spec);
         SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getEncoded(), "AES");
@@ -82,7 +85,7 @@ public class Encrypter {
      * @return The encrypted password.
      * @throws Exception
      */
-    public static byte[] encryptAES(String password, byte[] key, byte[] iv) throws Exception {
+    public static byte[] encryptAES(@NotNull String password, byte[] key, byte[] iv) throws Exception {
         // Create Cipher object to encrypt
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"), new IvParameterSpec(iv));
@@ -94,13 +97,14 @@ public class Encrypter {
     /**
      * Decrypts and AES-encrypted password.
      * 
-     * @param encryptedPasswordBase64 The encrypted password to decrypt.
+     * @param encryptedPassword The encrypted password to decrypt.
      * @param key                     The AES key.
      * @param iv                      The initialization vector.
      * @return The decrypted password.
      * @throws Exception
      */
-    public static String decryptAES(byte[] encryptedPassword, byte[] key, byte[] iv) throws Exception {
+    @Contract("_, _, _ -> new")
+    public static @NotNull String decryptAES(byte[] encryptedPassword, byte[] key, byte[] iv) throws Exception {
         // Create Cipher object to decrypt
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new IvParameterSpec(iv));
