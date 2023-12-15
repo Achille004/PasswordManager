@@ -7,7 +7,7 @@ plugins {
     id 'org.javamodularity.moduleplugin' version '1.8.12'
 }
 
-project.version = '2.2.2'
+project.version = '2.3.0'
 
 repositories {
     // Use Maven Central for resolving dependencies.

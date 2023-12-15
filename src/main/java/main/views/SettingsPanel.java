@@ -82,6 +82,7 @@ public class SettingsPanel extends JPanel {
             appInstance.getLogger().addInfo("Settings changed");
 
             // reloads Program Panel
+            appInstance.switchToProgramPanel();
             appInstance.SettingsButtonActionPerformed(evt);
         }
     }
@@ -101,8 +102,7 @@ public class SettingsPanel extends JPanel {
 
         LanguageSelector.setBackground(new Color(38, 38, 38));
         LanguageSelector.setForeground(new Color(242, 242, 242));
-        LanguageSelector.setModel(
-                new DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        LanguageSelector.setModel(new DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
         LanguageLabel.setBackground(new Color(38, 38, 38));
         LanguageLabel.setFont(new Font("Dialog", Font.PLAIN, 18)); // NOI18N
