@@ -1,0 +1,93 @@
+plugins {
+    // Apply the application plugin to add support for building a CLI application in Java.
+    id 'application'
+
+    // Badass-jlink plugin for creating custom runtime images for modular applications with minimal effort
+    id 'org.beryx.jlink' version '3.0.0'
+    id 'org.javamodularity.moduleplugin' version '1.8.12'
+}
+
+project.version = '2.3.0'
+
+repositories {
+    // Use Maven Central for resolving dependencies.
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.jetbrains:annotations:20.1.0'
+
+    // Use JUnit Jupiter for testing.
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // This dependency is used by the application.
+    implementation 'com.google.guava:guava:31.0.1-jre'
+    
+    implementation 'javax.xml.bind:jaxb-api:2.3.1'
+}
+
+application {
+    // Define the main class for the application.
+    mainModule = 'PasswordManager.main'
+    mainClass = 'main.Main'
+}
+
+tasks.named('test') {
+    // Use JUnit Platform for unit tests.
+    useJUnitPlatform()
+}
+
+configurations.implementation.canBeResolved = true
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': "Password Manager", 'Main-Class': 'main.Main'
+    }
+    archiveBaseName.set(rootProject.name)
+}
+
+jlink {
+    mergedModule {
+        requires 'java.naming'
+        requires 'java.xml'
+    }
+    launcher{
+        name = 'PasswordManager-' + project.version
+        jvmArgs = ['-Dlog4j.configurationFile=./log4j2.xml']
+    }
+    tasks.jlink.doLast {
+        copy {
+            from("$projectDir/src/main/resources")
+            into("$buildDir/image/bin")
+        }
+    }
+
+    jpackage {
+        installerType = null // exe/msi
+        installerOutputDir = file("$rootDir/compiled")
+        installerName = 'PasswordManager'
+        appVersion = version
+        icon =  file("$projectDir/src/main/resources/locker.ico")
+        vendor = 'Francesco Marras'
+
+        // '--description "Password Manager is an application able to add, modify and delete locally saved accounts, characterized by a software, a username and an AES-encrypted password."',
+        // '--copyright "Copyright (C) 2022-2023  Francesco Marras  GNU GPLv3"',
+        // '--license-file ./src/main/resources/license.txt',
+        // '--about-url "https://github.com/Achille004/PasswordManager"'
+
+        if (org.gradle.internal.os.OperatingSystem.current().windows) {
+            installerOptions += [
+                '--win-dir-chooser',
+                '--win-menu',
+                '--win-shortcut'
+            ]
+        }
+    }
+    tasks.jpackage.doLast {
+        copy {
+            from("$buildDir/libs")
+            into("$rootDir/compiled")
+        }
+    }
+}
