@@ -167,152 +167,8 @@ public class Main extends JFrame {
             logger.save();
         }
     }
-    // #endregion
 
-    // #region Exporters
-    private void htmlMenuItemActionPerformed(ActionEvent evt) {
-        try (FileWriter file = new FileWriter(System.getProperty("user.home") + "\\Desktop\\Passwords.html")) {
-            file.write(Exporter.exportHtml(accountList, loginAccount.getLanguage(), loginPassword));
-            file.flush();
-        } catch (IOException e) {
-            logger.addError(e);
-        }
-
-        ExportAsMenu.dispatchEvent(new KeyEvent(ExportAsMenu, KeyEvent.KEY_PRESSED, 0, 0, KeyEvent.VK_ESCAPE, '←'));
-    }
-
-    private void csvMenuItemActionPerformed(ActionEvent evt) {
-        try (FileWriter file = new FileWriter(System.getProperty("user.home") + "\\Desktop\\Passwords.csv")) {
-            file.write(Exporter.exportCsv(accountList, loginPassword));
-            file.flush();
-        } catch (IOException e) {
-            logger.addError(e);
-        }
-
-        ExportAsMenu.dispatchEvent(new KeyEvent(ExportAsMenu, KeyEvent.KEY_PRESSED, 0, 0, KeyEvent.VK_ESCAPE, '←'));
-    }
-    // #endregion
-
-    // #region Custom Methods
-    /**
-     * Redirects to the login or first run procedure, based on the password file
-     * existence.
-     */
-    @SuppressWarnings("unchecked")
-    private void run() {
-        File data_file = new File(filePath + "passwords.psmg");
-        if (data_file.getParentFile().mkdirs()) {
-            logger.addInfo("Created folder " + data_file.getParentFile().getAbsolutePath());
-        }
-
-        // if the data file exists, it will try to read its contents
-        if (data_file.exists()) {
-            try (FileInputStream f = new FileInputStream(data_file)) {
-                ObjectInputStream fIN = new ObjectInputStream(f);
-
-                loginAccount = (LoginAccount) fIN.readObject();
-                accountList = (ArrayList<Account>) fIN.readObject();
-            } catch (IOException | ClassNotFoundException e) {
-                logger.addError(e);
-            }
-        }
-
-        if (loginAccount != null) {
-            // gets the log history
-            logger.readFile();
-
-            switch (loginAccount.getLanguage()) {
-                case "e" -> LoginPanel.load("Login", "Login");
-                case "i" -> LoginPanel.load("Accedi", "Accesso");
-                default -> throw new IllegalArgumentException("Invalid language: " + loginAccount.getLanguage());
-            }
-
-            // redirects to login panel
-            replaceToMainPanel(LoginPanel);
-        } else {
-            // redirects to first run panel
-            replaceToMainPanel(FirstRunPanel);
-        }
-    }
-
-    /**
-     * Sorts the account list.
-     */
-    public void sortAccountList() {
-        switch (loginAccount.getSavingOrder()) {
-            case "s" -> this.accountList.sort((acc1, acc2) -> {
-                int software = acc1.getSoftware().compareTo(acc2.getSoftware());
-                return (software == 0) ? acc1.getUsername().compareTo(acc2.getUsername()) : software;
-            });
-
-            case "u" -> this.accountList.sort((acc1, acc2) -> {
-                int username = acc1.getUsername().compareTo(acc2.getUsername());
-                return (username == 0) ? acc1.getSoftware().compareTo(acc2.getSoftware()) : username;
-            });
-
-            default -> throw new IllegalArgumentException("Invalid saving order: " + loginAccount.getSavingOrder());
-        }
-    }
-
-    public void addAccount(String software, String username, String password) {
-        accountList.add(Account.of(software, username, password, loginPassword));
-        sortAccountList();
-
-        logger.addInfo("Account added");
-
-        MenuBar.setVisible(true);
-    }
-
-    public void replaceAccount(int index, String software, String username, String password) {
-        if (index >= 0 && index < accountList.size()) {
-            accountList.set(index, Account.of(software, username, password, loginPassword));
-            sortAccountList();
-
-            logger.addInfo("Account edited");
-
-            MenuBar.setVisible(true);
-        }
-    }
-
-    public void deleteAccount(int index) {
-        if (index >= 0 && index < accountList.size()) {
-            accountList.remove(index);
-
-            logger.addInfo("Account deleted");
-
-            if (accountList.isEmpty()) {
-                MenuBar.setVisible(false);
-            }
-        }
-    }
-
-    public String getAccountPassword(@NotNull Account account) {
-        return account.getPassword(loginPassword);
-    }
-
-    public Logger getLogger() {
-        return logger;
-    }
-
-    public LoginAccount getLoginAccount() {
-        return this.loginAccount;
-    }
-
-    public void setLoginAccount(String savingOrder, String language, String loginPassword) {
-        this.loginAccount = LoginAccount.of(savingOrder, language, loginPassword);
-
-        if (!accountList.isEmpty()) {
-            accountList.forEach(account -> account.changeLoginPassword(this.loginPassword, loginPassword));
-            sortAccountList();
-        }
-
-        this.loginPassword = loginPassword;
-    }
-
-    public ArrayList<Account> getAccountList() {
-        return this.accountList;
-    }
-
+    
     public void switchToProgramPanel(String @NotNull ... password) {
         if(password.length > 0) {
             this.loginPassword = password[0];
@@ -358,8 +214,156 @@ public class Main extends JFrame {
     }
     // #endregion
 
+    // #region Exporters
+    private void htmlMenuItemActionPerformed(ActionEvent evt) {
+        try (FileWriter file = new FileWriter(System.getProperty("user.home") + "\\Desktop\\Passwords.html")) {
+            file.write(Exporter.exportHtml(accountList, loginAccount.getLanguage(), loginPassword));
+            file.flush();
+        } catch (IOException e) {
+            logger.addError(e);
+        }
+
+        ExportAsMenu.dispatchEvent(new KeyEvent(ExportAsMenu, KeyEvent.KEY_PRESSED, 0, 0, KeyEvent.VK_ESCAPE, '←'));
+    }
+
+    private void csvMenuItemActionPerformed(ActionEvent evt) {
+        try (FileWriter file = new FileWriter(System.getProperty("user.home") + "\\Desktop\\Passwords.csv")) {
+            file.write(Exporter.exportCsv(accountList, loginPassword));
+            file.flush();
+        } catch (IOException e) {
+            logger.addError(e);
+        }
+
+        ExportAsMenu.dispatchEvent(new KeyEvent(ExportAsMenu, KeyEvent.KEY_PRESSED, 0, 0, KeyEvent.VK_ESCAPE, '←'));
+    }
+    // #endregion
+
+    /**
+     * Redirects to the login or first run procedure, based on the password file
+     * existence.
+     */
+    @SuppressWarnings("unchecked")
+    private void run() {
+        File data_file = new File(filePath + "passwords.psmg");
+        if (data_file.getParentFile().mkdirs()) {
+            logger.addInfo("Created folder " + data_file.getParentFile().getAbsolutePath());
+        }
+
+        // if the data file exists, it will try to read its contents
+        if (data_file.exists()) {
+            try (FileInputStream f = new FileInputStream(data_file)) {
+                ObjectInputStream fIN = new ObjectInputStream(f);
+
+                loginAccount = (LoginAccount) fIN.readObject();
+                accountList = (ArrayList<Account>) fIN.readObject();
+            } catch (IOException | ClassNotFoundException e) {
+                logger.addError(e);
+            }
+        }
+
+        if (loginAccount != null) {
+            // gets the log history
+            logger.readFile();
+
+            switch (loginAccount.getLanguage()) {
+                case "e" -> LoginPanel.load("Login", "Login");
+                case "i" -> LoginPanel.load("Accedi", "Accesso");
+                default -> throw new IllegalArgumentException("Invalid language: " + loginAccount.getLanguage());
+            }
+
+            // redirects to login panel
+            replaceToMainPanel(LoginPanel);
+        } else {
+            // redirects to first run panel
+            replaceToMainPanel(FirstRunPanel);
+        }
+    }
+
+    // #region AccountList methods
+    public ArrayList<Account> getAccountList() {
+        return this.accountList;
+    }
+
+    public void sortAccountList() {
+        switch (loginAccount.getSavingOrder()) {
+            case "s" -> this.accountList.sort((acc1, acc2) -> {
+                int software = acc1.getSoftware().compareTo(acc2.getSoftware());
+                return (software == 0) ? acc1.getUsername().compareTo(acc2.getUsername()) : software;
+            });
+
+            case "u" -> this.accountList.sort((acc1, acc2) -> {
+                int username = acc1.getUsername().compareTo(acc2.getUsername());
+                return (username == 0) ? acc1.getSoftware().compareTo(acc2.getSoftware()) : username;
+            });
+
+            default -> throw new IllegalArgumentException("Invalid saving order: " + loginAccount.getSavingOrder());
+        }
+    }
+    // #endregion
+
+    // #region Account methods
+    /**
+     * Sorts the account list.
+     */
+    public void addAccount(String software, String username, String password) {
+        accountList.add(Account.of(software, username, password, loginPassword));
+        sortAccountList();
+
+        logger.addInfo("Account added");
+
+        MenuBar.setVisible(true);
+    }
+
+    public void replaceAccount(int index, String software, String username, String password) {
+        if (index >= 0 && index < accountList.size()) {
+            accountList.set(index, Account.of(software, username, password, loginPassword));
+            sortAccountList();
+
+            logger.addInfo("Account edited");
+
+            MenuBar.setVisible(true);
+        }
+    }
+
+    public void deleteAccount(int index) {
+        if (index >= 0 && index < accountList.size()) {
+            accountList.remove(index);
+
+            logger.addInfo("Account deleted");
+
+            if (accountList.isEmpty()) {
+                MenuBar.setVisible(false);
+            }
+        }
+    }
+
+    public String getAccountPassword(@NotNull Account account) {
+        return account.getPassword(loginPassword);
+    }
+    // #endregion
+    
+    // #region LoginAccount methods
+    public LoginAccount getLoginAccount() {
+        return this.loginAccount;
+    }
+
+    public void setLoginAccount(String savingOrder, String language, String loginPassword) {
+        this.loginAccount = LoginAccount.of(savingOrder, language, loginPassword);
+
+        if (!accountList.isEmpty()) {
+            accountList.forEach(account -> account.changeLoginPassword(this.loginPassword, loginPassword));
+            sortAccountList();
+        }
+
+        this.loginPassword = loginPassword;
+    }
+    // #endregion
+
+    public Logger getLogger() {
+        return logger;
+    }
+
     // #region Generated Code
-    // #region Swing variables declaration
     private JButton DecrypterButton;
     private DecrypterPanel DecrypterPanel;
     private JPanel DialogPanel;
@@ -377,8 +381,7 @@ public class Main extends JFrame {
     private JPanel ProgramPanel;
     private JButton SettingsButton;
     private SettingsPanel SettingsPanel;
-    // #endregion
-
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
