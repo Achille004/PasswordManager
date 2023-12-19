@@ -40,17 +40,17 @@ public class Logger {
     public void addInfo(String str) {
         logHistory
                 .append(dtf.format(LocalDateTime.now()))
-                .append(" >>> [")
+                .append(" >>> ")
                 .append(str)
-                .append("]\n");
+                .append("\n");
     }
 
     public void addError(@NotNull Exception e) {
         logHistory
                 .append(dtf.format(LocalDateTime.now()))
-                .append(" >>> {")
+                .append(" !!! ")
                 .append(e.getMessage())
-                .append("}\n");
+                .append("\n");
     }
 
     public String getLogHistory() {
@@ -70,8 +70,8 @@ public class Logger {
     public boolean save() {
         try (FileWriter w = new FileWriter(logFile)) {
             w.write(logHistory.toString());
-            w.flush();
             w.close();
+
             return true;
         } catch (IOException ex) {
             return false;

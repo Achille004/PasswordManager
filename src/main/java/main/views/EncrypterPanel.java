@@ -26,7 +26,7 @@ public class EncrypterPanel extends JPanel {
 
     public void load(String saveButtonText, String usernameLabelText) {
         SaveButton.setText(saveButtonText);
-        UsernameLabel.setText(usernameLabelText);
+        UsernameLabel.setText(usernameLabelText + ":");
     }
 
     private void SaveButtonActionPerformed(ActionEvent evt) {

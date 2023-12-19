@@ -22,8 +22,8 @@ public class LogHistoryPanel extends JPanel {
     }
 
     public void load(String HistoryLabelText, String legendLabelText) {
-        HistoryLabel.setText(HistoryLabelText + ":");
-        LegendLabel.setText(legendLabelText + ":");
+        HistoryLabel.setText(HistoryLabelText);
+        LegendLabel.setText(legendLabelText);
 
         // writes the log history to its text area
         HistoryTextArea.setText(appInstance.getLogger().getLogHistory());
@@ -65,7 +65,7 @@ public class LogHistoryPanel extends JPanel {
         LegendLabel.setFont(new Font("Dialog", Font.BOLD, 36)); // NOI18N
         LegendLabel.setForeground(new Color(242, 242, 242));
         LegendLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-        LegendLabel.setText("[Actions]    {Errors}");
+        LegendLabel.setText(">>> Actions / !!! Errors");
         LegendLabel.setInheritsPopupMenu(false);
         LegendLabel.setName(""); // NOI18N
 
