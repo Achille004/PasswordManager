@@ -78,8 +78,8 @@ public class Main extends JFrame {
     // #region GUI methods
     public void EncrypterButtonActionPerformed(ActionEvent evt) {
         switch (loginAccount.getLanguage()) {
-            case "e" -> EncrypterPanel.load("Save", "Username:");
-            case "i" -> EncrypterPanel.load("Salva", "Nome utente:");
+            case "e" -> EncrypterPanel.load("Save", "Username");
+            case "i" -> EncrypterPanel.load("Salva", "Nome utente");
             default -> throw new IllegalArgumentException("Invalid language: " + loginAccount.getLanguage());
         }
 
@@ -133,11 +133,9 @@ public class Main extends JFrame {
     }
 
     public void LogHistoryButtonActionPerformed(ActionEvent evt) {
-        logger.addInfo("Log history showed");
-
         switch (loginAccount.getLanguage()) {
-            case "e" -> LogHistoryPanel.load("Log History", "[Actions]    {Errors}");
-            case "i" -> LogHistoryPanel.load("Cronologia del Registro", "[Azioni]    {Errori}");
+            case "e" -> LogHistoryPanel.load("Log History", ">>> Actions / !!! Errors");
+            case "i" -> LogHistoryPanel.load("Cronologia del Registro", ">>> Azioni / !!! Errori");
             default -> throw new IllegalArgumentException("Invalid language: " + loginAccount.getLanguage());
         }
 
@@ -146,8 +144,6 @@ public class Main extends JFrame {
     }
 
     public void EulaAndCreditsButtonActionPerformed(ActionEvent evt) {
-        logger.addInfo("EULA and Credits showed");
-
         // redirects to eula and credits panel
         replaceToDialogPanel(EulaAndCreditsPanel);
     }
@@ -158,19 +154,20 @@ public class Main extends JFrame {
             try (ObjectOutputStream fOUT = new ObjectOutputStream(new FileOutputStream(filePath + "passwords.psmg"))) {
                 fOUT.writeObject(this.loginAccount);
                 fOUT.writeObject(this.accountList);
-                fOUT.flush();
+                fOUT.close();
+
+                logger.addInfo("Files saved");
             } catch (IOException e) {
                 logger.addError(e);
             }
 
-            logger.addInfo("Files saved and program shut down");
+            logger.addInfo("Program shut down");
             logger.save();
         }
     }
 
-    
-    public void switchToProgramPanel(String @NotNull ... password) {
-        if(password.length > 0) {
+    public void switchToProgramPanel(String @NotNull... password) {
+        if (password.length > 0) {
             this.loginPassword = password[0];
         }
 
@@ -246,7 +243,7 @@ public class Main extends JFrame {
     private void run() {
         File data_file = new File(filePath + "passwords.psmg");
         if (data_file.getParentFile().mkdirs()) {
-            logger.addInfo("Created folder " + data_file.getParentFile().getAbsolutePath());
+            logger.addInfo("Created folder '" + data_file.getParentFile().getAbsolutePath() + "'");
         }
 
         // if the data file exists, it will try to read its contents
@@ -341,7 +338,7 @@ public class Main extends JFrame {
         return account.getPassword(loginPassword);
     }
     // #endregion
-    
+
     // #region LoginAccount methods
     public LoginAccount getLoginAccount() {
         return this.loginAccount;
@@ -353,6 +350,8 @@ public class Main extends JFrame {
         if (!accountList.isEmpty()) {
             accountList.forEach(account -> account.changeLoginPassword(this.loginPassword, loginPassword));
             sortAccountList();
+
+            logger.addInfo("Login account changed");
         }
 
         this.loginPassword = loginPassword;
@@ -381,7 +380,7 @@ public class Main extends JFrame {
     private JPanel ProgramPanel;
     private JButton SettingsButton;
     private SettingsPanel SettingsPanel;
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
