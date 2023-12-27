@@ -18,7 +18,6 @@
 
 package main.security;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.security.NoSuchAlgorithmException;
@@ -28,7 +27,7 @@ import java.security.spec.KeySpec;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -87,27 +86,26 @@ public class Encrypter {
      */
     public static byte[] encryptAES(@NotNull String password, byte[] key, byte[] iv) throws Exception {
         // Create Cipher object to encrypt
-        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"), new IvParameterSpec(iv));
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(128, iv));
 
         // Encrypt the password
         return cipher.doFinal(password.getBytes());
     }
 
     /**
-     * Decrypts and AES-encrypted password.
+     * Decrypts and AES encrypted password.
      * 
      * @param encryptedPassword The encrypted password to decrypt.
-     * @param key                     The AES key.
-     * @param iv                      The initialization vector.
+     * @param key               The AES key.
+     * @param iv                The initialization vector.
      * @return The decrypted password.
      * @throws Exception
      */
-    @Contract("_, _, _ -> new")
     public static @NotNull String decryptAES(byte[] encryptedPassword, byte[] key, byte[] iv) throws Exception {
         // Create Cipher object to decrypt
-        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new IvParameterSpec(iv));
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(128, iv));
 
         // Decrypt the password
         byte[] password = cipher.doFinal(encryptedPassword);
