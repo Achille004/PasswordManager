@@ -19,9 +19,13 @@ dependencies {
 
     // Use JUnit Jupiter for testing.
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     // This dependency is used by the application.
     implementation 'com.google.guava:guava:31.0.1-jre'
+
+    // https://mvnrepository.com/artifact/dev.sigstore/sigstore-java
+    implementation 'dev.sigstore:sigstore-java:0.6.0'
     
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
 }
@@ -66,7 +70,7 @@ jlink {
         installerType = null // exe/msi
         installerOutputDir = file("$rootDir/compiled")
         installerName = 'PasswordManager'
-        appVersion = project.version
+        appVersion = version
         icon =  file("$projectDir/src/main/resources/locker.ico")
         vendor = 'Francesco Marras'
 
@@ -89,4 +93,14 @@ jlink {
             into("$rootDir/compiled")
         }
     }
+}
+
+task(sign, dependsOn: 'classes', type: JavaExec) {
+    main = 'signer.Sign'
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+task(verify, dependsOn: 'classes', type: JavaExec) {
+    main = 'signer.Verify'
+    classpath = sourceSets.main.runtimeClasspath
 }
