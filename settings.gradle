@@ -7,3 +7,5 @@ pluginManagement {
 
 rootProject.name = 'PasswordManager'
 include('app')
+
+include 'signingSubproject'
