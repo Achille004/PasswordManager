@@ -53,7 +53,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.Controller">
+<VBox minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" stylesheets="@./styles.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.Controller">
     <children>
         <MenuBar VBox.vgrow="NEVER">
             <menus>
@@ -96,9 +96,9 @@
         </MenuBar>
         <BorderPane prefHeight="529.0" prefWidth="912.0" VBox.vgrow="ALWAYS">
             <left>
-                <VBox prefHeight="538.0" prefWidth="62.0" style="-fx-background-color: #202428; -fx-border-style: hidden solid hidden hidden; -fx-border-color: white;" BorderPane.alignment="CENTER">
+                <VBox prefHeight="538.0" prefWidth="54.0" style="-fx-background-color: #202428; -fx-border-style: hidden solid hidden hidden; -fx-border-color: white;" BorderPane.alignment="CENTER">
                     <children>
-                        <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" mnemonicParsing="false" onAction="#encryptSidebarButton" prefHeight="68.0" prefWidth="65.0" style="-fx-background-color: #202428; -fx-border-color: #202428; -fx-border-width: 4; -fx-border-radius: 90;" text="E" textFill="WHITE">
+                        <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" mnemonicParsing="false" onAction="#encryptSidebarButton" prefHeight="68.0" prefWidth="65.0" styleClass="sidebar" text="E" textFill="WHITE">
                             <font>
                                 <Font size="1.0" />
                             </font>
@@ -116,7 +116,7 @@
                                 <Cursor fx:constant="HAND" />
                             </cursor>
                         </Button>
-                        <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" mnemonicParsing="false" onAction="#decryptSidebarButton" prefHeight="60.0" prefWidth="60.0" style="-fx-background-color: #202428; -fx-border-color: #202428; -fx-border-width: 4; -fx-border-radius: 90;" text="D" textFill="WHITE">
+                        <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" mnemonicParsing="false" onAction="#decryptSidebarButton" prefHeight="60.0" prefWidth="60.0" styleClass="sidebar" text="D" textFill="WHITE">
                             <font>
                                 <Font size="1.0" />
                             </font>
@@ -135,7 +135,7 @@
                             </cursor>
                         </Button>
                         <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minHeight="10.0" minWidth="-Infinity" prefHeight="356.0" prefWidth="60.0" VBox.vgrow="ALWAYS" />
-                        <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" mnemonicParsing="false" onAction="#settingsSidebarButton" prefHeight="60.0" prefWidth="60.0" style="-fx-background-color: #202428; -fx-border-color: #202428; -fx-border-width: 4; -fx-border-radius: 90;" text="S" textFill="WHITE">
+                        <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" mnemonicParsing="false" onAction="#settingsSidebarButton" prefHeight="60.0" prefWidth="60.0" styleClass="sidebar" text="S" textFill="WHITE">
                             <font>
                                 <Font size="1.0" />
                             </font>
@@ -159,25 +159,6 @@
             <center>
                 <StackPane prefHeight="555.0" prefWidth="751.0" BorderPane.alignment="CENTER">
                     <children>
-                        <AnchorPane fx:id="homePane" prefHeight="445.0" prefWidth="89.0" style="-fx-background-color: #202428;" StackPane.alignment="CENTER">
-                            <children>
-                                <ImageView fitHeight="457.0" fitWidth="457.0" layoutX="191.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true">
-                                    <image>
-                                        <Image url="@../images/sfondo.png" />
-                                    </image>
-                                </ImageView>
-                                <Label layoutX="340.0" layoutY="457.0" prefHeight="35.0" prefWidth="160.0" text="Your Accounts." textFill="#0aba4d" AnchorPane.bottomAnchor="46.0" AnchorPane.leftAnchor="340.0" AnchorPane.rightAnchor="330.0" AnchorPane.topAnchor="457.0">
-                                    <font>
-                                        <Font size="24.0" />
-                                    </font>
-                                </Label>
-                                <Label layoutX="340.0" layoutY="492.0" prefHeight="35.0" prefWidth="159.0" text="In a Safe Place." textFill="#0aba4d" AnchorPane.bottomAnchor="11.0" AnchorPane.leftAnchor="340.0" AnchorPane.rightAnchor="331.0" AnchorPane.topAnchor="492.0">
-                                    <font>
-                                        <Font size="24.0" />
-                                    </font>
-                                </Label>
-                            </children>
-                        </AnchorPane>
                         <GridPane fx:id="encryptPane" prefHeight="423.0" prefWidth="838.0" style="-fx-background-color: #202428;">
                             <columnConstraints>
                                 <ColumnConstraints hgrow="SOMETIMES" maxWidth="748.0" minWidth="10.0" prefWidth="748.0" />
@@ -193,7 +174,7 @@
                             <children>
                                 <AnchorPane prefHeight="123.0" prefWidth="738.0">
                                     <children>
-                                        <TextField fx:id="encryptSoftware" layoutX="9.0" layoutY="45.0" prefHeight="25.0" prefWidth="720.0" style="-fx-background-color: #2e3136; -fx-border-color: #a7acb1; -fx-border-radius: 3; -fx-text-inner-color: white;" />
+                                        <TextField fx:id="encryptSoftware" layoutX="9.0" layoutY="45.0" prefHeight="25.0" prefWidth="720.0" styleClass="field" />
                                         <Label layoutX="9.0" layoutY="18.0" text="Software" textFill="WHITE">
                                             <font>
                                                 <Font size="18.0" />
@@ -203,7 +184,7 @@
                                 </AnchorPane>
                                 <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="1">
                                     <children>
-                                        <TextField fx:id="encryptUsername" layoutX="9.0" layoutY="45.0" prefHeight="25.0" prefWidth="720.0" style="-fx-background-color: #2e3136; -fx-border-color: #a7acb1; -fx-border-radius: 3; -fx-text-inner-color: white;" />
+                                        <TextField fx:id="encryptUsername" layoutX="9.0" layoutY="45.0" prefHeight="25.0" prefWidth="720.0" styleClass="field" />
                                         <Label layoutX="9.0" layoutY="18.0" text="Username" textFill="WHITE">
                                             <font>
                                                 <Font size="18.0" />
@@ -215,7 +196,7 @@
                                     <children>
                                         <AnchorPane prefHeight="200.0" prefWidth="200.0">
                                             <children>
-                                                <TextField fx:id="encryptPasswordVisible" layoutX="8.0" layoutY="45.0" prefHeight="25.0" prefWidth="722.0" style="-fx-background-color: #2e3136; -fx-border-color: #a7acb1; -fx-border-radius: 3; -fx-text-inner-color: white;" />
+                                                <TextField fx:id="encryptPasswordVisible" layoutX="8.0" layoutY="45.0" prefHeight="25.0" prefWidth="722.0" styleClass="field" />
                                                 <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="697.0" layoutY="47.0" onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
                                                     <image>
                                                         <Image url="@../images/icons/closed-eye.png" />
@@ -230,7 +211,7 @@
                                                         <Font size="18.0" />
                                                     </font>
                                                 </Label>
-                                                <PasswordField fx:id="encryptPasswordHidden" layoutX="8.0" layoutY="45.0" prefHeight="25.0" prefWidth="722.0" style="-fx-background-color: #2e3136; -fx-border-color: #a7acb1; -fx-border-radius: 3; -fx-text-inner-color: white;" />
+                                                <PasswordField fx:id="encryptPasswordHidden" layoutX="8.0" layoutY="45.0" prefHeight="25.0" prefWidth="722.0" styleClass="field" />
                                                 <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="697.0" layoutY="47.0" onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
                                                     <image>
                                                         <Image url="@../images/icons/open-eye.png" />
@@ -254,6 +235,25 @@
                                 <Insets bottom="80.0" left="50.0" right="50.0" top="20.0" />
                             </padding>
                         </GridPane>
+                        <AnchorPane fx:id="homePane" prefHeight="445.0" prefWidth="89.0" style="-fx-background-color: #202428;" StackPane.alignment="CENTER">
+                            <children>
+                                <ImageView fitHeight="457.0" fitWidth="457.0" layoutX="191.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true">
+                                    <image>
+                                        <Image url="@../images/sfondo.png" />
+                                    </image>
+                                </ImageView>
+                                <Label layoutX="340.0" layoutY="457.0" prefHeight="35.0" prefWidth="159.0" text="Your Accounts." textFill="#0aba4d" AnchorPane.bottomAnchor="46.0" AnchorPane.leftAnchor="340.0" AnchorPane.rightAnchor="339.0" AnchorPane.topAnchor="457.0">
+                                    <font>
+                                        <Font size="24.0" />
+                                    </font>
+                                </Label>
+                                <Label layoutX="339.0" layoutY="492.0" prefHeight="35.0" prefWidth="161.0" text="In a Safe Place." textFill="#0aba4d" AnchorPane.bottomAnchor="11.0" AnchorPane.leftAnchor="339.0" AnchorPane.rightAnchor="338.0" AnchorPane.topAnchor="492.0">
+                                    <font>
+                                        <Font size="24.0" />
+                                    </font>
+                                </Label>
+                            </children>
+                        </AnchorPane>
                     </children>
                 </StackPane>
             </center>

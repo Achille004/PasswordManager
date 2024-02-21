@@ -18,50 +18,44 @@
 
 package main.utils;
 
-import org.jetbrains.annotations.NotNull;
-
-import java.awt.Component;
 import java.util.Base64;
 
-import javax.swing.JComboBox;
-import javax.swing.JPanel;
-
 public class Utils {
-    /**
-     * Replaces a panel with another one.
-     *
-     * @param actingPanel The panel on which will be done the replacement
-     * @param showPanel   The new panel
-     */
-    public static void replacePanel(@NotNull JPanel actingPanel, JPanel showPanel) {
-        // removing old panel
-        actingPanel.removeAll();
+    // /**
+    //  * Replaces a panel with another one.
+    //  *
+    //  * @param actingPanel The panel on which will be done the replacement
+    //  * @param showPanel   The new panel
+    //  */
+    // public static void replacePanel(@NotNull JPanel actingPanel, JPanel showPanel) {
+    //     // removing old panel
+    //     actingPanel.removeAll();
 
-        // adding new panel
-        actingPanel.add(showPanel);
+    //     // adding new panel
+    //     actingPanel.add(showPanel);
 
-        actingPanel.repaint();
-        actingPanel.revalidate();
-    }
+    //     actingPanel.repaint();
+    //     actingPanel.revalidate();
+    // }
 
-    /**
-     * Returns the selected index in a Combo Box with a first blank option. If
-     * the value is -1, the selected index is the blank one.
-     *
-     * @param comboBox The combo box to extract the index from.
-     * @return The index of the current selected item.
-     */
-    public static int selectedItemInComboBox(@NotNull JComboBox<String> comboBox) {
-        return comboBox.getSelectedIndex() - 1;
-    }
+    // /**
+    //  * Returns the selected index in a Combo Box with a first blank option. If
+    //  * the value is -1, the selected index is the blank one.
+    //  *
+    //  * @param comboBox The combo box to extract the index from.
+    //  * @return The index of the current selected item.
+    //  */
+    // public static int selectedItemInComboBox(@NotNull JComboBox<String> comboBox) {
+    //     return comboBox.getSelectedIndex() - 1;
+    // }
 
-    public static void setComboBoxItems(@NotNull JComboBox<String> comboBox, String @NotNull ... items) {
-        comboBox.removeAllItems();
+    // public static void setComboBoxItems(@NotNull JComboBox<String> comboBox, String @NotNull ... items) {
+    //     comboBox.removeAllItems();
         
-        for (String item : items) {
-            comboBox.addItem(item);   
-        }
-    }
+    //     for (String item : items) {
+    //         comboBox.addItem(item);   
+    //     }
+    // }
 
     /**
      * Returns a string containing the index, preceded by zero to match up the same
@@ -76,11 +70,11 @@ public class Utils {
         return String.format("%0" + listDigits + "d", index);
     }
 
-    public static void repaintAll(Component @NotNull ... components) {
-        for (Component component : components) {
-            component.repaint();
-        }
-    }
+    // public static void repaintAll(Component @NotNull ... components) {
+    //     for (Component component : components) {
+    //         component.repaint();
+    //     }
+    // }
 
     public static String byteToBase64(byte[] src) {
         // Base64-encode the encrypted password for a readable representation
