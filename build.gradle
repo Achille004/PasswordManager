@@ -1,13 +1,14 @@
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
+    id 'java'
     id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+    id 'org.beryx.jlink' version '3.0.1'
 
-    // Badass-jlink plugin for creating custom runtime images for modular applications with minimal effort
-    id 'org.beryx.jlink' version '3.0.0'
-    id 'org.javamodularity.moduleplugin' version '1.8.12'
+    id 'org.javamodularity.moduleplugin' version '1.8.13'
 }
 
-project.version = '2.3.0'
+project.version = '3.0.0'
 
 repositories {
     // Use Maven Central for resolving dependencies.
@@ -24,16 +25,26 @@ dependencies {
     // This dependency is used by the application.
     implementation 'com.google.guava:guava:31.0.1-jre'
 
+    // https://mvnrepository.com/artifact/org.openjfx/javafx-web
+    implementation 'org.openjfx:javafx-web:21.0.1'
+
     // https://mvnrepository.com/artifact/dev.sigstore/sigstore-java
-    implementation 'dev.sigstore:sigstore-java:0.6.0'
+    implementation 'dev.sigstore:sigstore-java:0.7.0'
     
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
+}
+
+// Apply a specific Java toolchain to ease working on different environments.
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(18)
+    }
 }
 
 application {
     // Define the main class for the application.
     mainModule = 'PasswordManager.main'
-    mainClass = 'main.Main'
+    mainClass = 'main.App'
 }
 
 tasks.named('test') {
@@ -41,11 +52,16 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
+javafx {
+    version = "21.0.1"
+    modules = [ 'javafx.base', 'javafx.controls', 'javafx.fxml', 'javafx.graphics', 'javafx.web' ]
+}
+
 configurations.implementation.canBeResolved = true
 
 jar {
     manifest {
-        attributes 'Implementation-Title': "Password Manager", 'Main-Class': 'main.Main'
+        attributes 'Implementation-Title': "Password Manager", 'Main-Class': 'main.App'
     }
     archiveBaseName.set(rootProject.name)
 }

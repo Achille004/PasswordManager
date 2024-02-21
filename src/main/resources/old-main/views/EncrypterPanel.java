@@ -15,9 +15,9 @@ public class EncrypterPanel extends JPanel {
     private JLabel UsernameLabel;
     private JTextField UsernameTextField;
 
-    private final Main appInstance;
+    private final App appInstance;
 
-    public EncrypterPanel(Main appInstance) {
+    public EncrypterPanel(App appInstance) {
         super();
         this.appInstance = appInstance;
 
