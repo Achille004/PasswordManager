@@ -1,10 +1,14 @@
-Button.sidebar {
+.sidebarButton {
     -fx-background-color: #202428; 
-    -fx-background-radius: 90deg;
+    -fx-background-radius: 10deg;
 }
 
-TextField.field,
-PasswordField.field {
+.decryptButton {
+    -fx-background-color: #a7acb1;
+    -fx-background-radius: 10deg;
+}
+
+.field {
     -fx-background-color: #2e3136;
     -fx-border-color: #a7acb1;
     -fx-border-radius: 3deg;

@@ -3,14 +3,6 @@
  */
 package main;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.security.SecureRandom;
-
-import org.junit.jupiter.api.Test;
-
-import main.security.Encrypter;
-
 class AppTest {
     // @Test
     // void testAES() throws Exception {
