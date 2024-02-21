@@ -12,8 +12,6 @@ import static main.utils.Utils.*;
 
 public class DecrypterPanel extends JPanel {
 
-    private boolean deleteCounter;
-
     private JButton DeleteButton, SaveButton;
     private JComboBox<String> AccountSelector;
     private JLabel UsernameLabel;
@@ -21,106 +19,8 @@ public class DecrypterPanel extends JPanel {
 
     private final Main appInstance;
 
-    public DecrypterPanel(Main appInstance) {
-        super();
-        this.appInstance = appInstance;
-
-        deleteCounter = false;
-
-        initComponents();
-    }
-
-    public void load(String deleteButtonText, String saveButtonText, String usernameLabelText) {
-        DeleteButton.setText(deleteButtonText);
-        SaveButton.setText(saveButtonText);
-        UsernameLabel.setText(usernameLabelText + ":");
-
-        DeleteButton.setBackground(new Color(51, 51, 51));
-        DeleteButton.repaint();
-
-        // to make sure the decrypter delete button is in its first state
-        deleteCounter = false;
-
-        updateDecrypterAccountSelector();
-    }
-
-    private void DecrypterAccountSelectorActionPerformed(ActionEvent evt) {
-        deleteCounter = false;
-        switch (appInstance.getLoginAccount().getLanguage()) {
-            case "e" -> DeleteButton.setText("Delete");
-            case "i" -> DeleteButton.setText("Elimina");
-            default ->
-                throw new IllegalArgumentException("Invalid language: " + appInstance.getLoginAccount().getLanguage());
-        }
-        DeleteButton.setBackground(new Color(38, 38, 38));
-
-        if (selectedItemInComboBox(AccountSelector) >= 0) {
-            // gets the selected account
-            Account selectedAcc = appInstance.getAccountList().get(selectedItemInComboBox(AccountSelector));
-
-            // shows the software, username and account of the selected account
-            SoftwareTextField.setText(selectedAcc.getSoftware());
-            UsernameTextField.setText(selectedAcc.getUsername());
-            PasswordTextField.setText(appInstance.getAccountPassword(selectedAcc));
-        } else {
-            SoftwareTextField.setText("");
-            UsernameTextField.setText("");
-            PasswordTextField.setText("");
-        }
-
-        repaintAll(DeleteButton, SoftwareTextField, UsernameTextField, PasswordTextField);
-    }
-
-    private void SaveButtonActionPerformed(ActionEvent evt) {
-        if (selectedItemInComboBox(AccountSelector) >= 0) {
-            // get the new software, username and password
-            String software = SoftwareTextField.getText();
-            String username = UsernameTextField.getText();
-            String password = PasswordTextField.getText();
-
-            if (!(software.isBlank() && username.isBlank() && password.isBlank())) {
-                // save the new attributes of the account
-                int index = selectedItemInComboBox(AccountSelector);
-                appInstance.replaceAccount(index, software, username, password);
-
-                updateDecrypterAccountSelector();
-            }
-        }
-    }
-
     private void DeleteButtonActionPerformed(ActionEvent evt) {
-        if (selectedItemInComboBox(AccountSelector) == -1) {
-            return;
-        }
-
-        LoginAccount loginAccount = appInstance.getLoginAccount();
-
-        // when the deleteCounter is true it means that the user has confirmed the
-        // elimination
-        if (deleteCounter) {
-            switch (appInstance.getLoginAccount().getLanguage()) {
-                case "e" -> DeleteButton.setText("Delete");
-                case "i" -> DeleteButton.setText("Elimina");
-                default -> throw new IllegalArgumentException("Invalid language: " + loginAccount.getLanguage());
-            }
-            DeleteButton.setBackground(new Color(38, 38, 38));
-
-            // removes the selected account from the list
-            appInstance.deleteAccount(selectedItemInComboBox(AccountSelector));
-
-            updateDecrypterAccountSelector();
-        } else {
-            switch (loginAccount.getLanguage()) {
-                case "e" -> DeleteButton.setText("Sure?");
-                case "i" -> DeleteButton.setText("Sicuro?");
-                default -> throw new IllegalArgumentException("Invalid language: " + loginAccount.getLanguage());
-            }
-
-            DeleteButton.setBackground(new Color(219, 67, 67));
-        }
-        DeleteButton.repaint();
-
-        deleteCounter = !deleteCounter;
+        
     }
 
     /**

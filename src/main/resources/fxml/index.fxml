@@ -37,12 +37,8 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Menu?>
-<?import javafx.scene.control.MenuBar?>
-<?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
@@ -55,47 +51,8 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" stylesheets="@./styles.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.Controller">
+<VBox minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" stylesheets="@./styles.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
     <children>
-        <MenuBar VBox.vgrow="NEVER">
-            <menus>
-                <Menu mnemonicParsing="false" text="File">
-                    <items>
-                        <MenuItem mnemonicParsing="false" text="New" />
-                        <MenuItem mnemonicParsing="false" text="Open…" />
-                        <Menu mnemonicParsing="false" text="Open Recent" />
-                        <SeparatorMenuItem mnemonicParsing="false" />
-                        <MenuItem mnemonicParsing="false" text="Close" />
-                        <MenuItem mnemonicParsing="false" text="Save" />
-                        <MenuItem mnemonicParsing="false" text="Save As…" />
-                        <MenuItem mnemonicParsing="false" text="Revert" />
-                        <SeparatorMenuItem mnemonicParsing="false" />
-                        <MenuItem mnemonicParsing="false" text="Preferences…" />
-                        <SeparatorMenuItem mnemonicParsing="false" />
-                        <MenuItem mnemonicParsing="false" text="Quit" />
-                    </items>
-                </Menu>
-                <Menu mnemonicParsing="false" text="Edit">
-                    <items>
-                        <MenuItem mnemonicParsing="false" text="Undo" />
-                        <MenuItem mnemonicParsing="false" text="Redo" />
-                        <SeparatorMenuItem mnemonicParsing="false" />
-                        <MenuItem mnemonicParsing="false" text="Cut" />
-                        <MenuItem mnemonicParsing="false" text="Copy" />
-                        <MenuItem mnemonicParsing="false" text="Paste" />
-                        <MenuItem mnemonicParsing="false" text="Delete" />
-                        <SeparatorMenuItem mnemonicParsing="false" />
-                        <MenuItem mnemonicParsing="false" text="Select All" />
-                        <MenuItem mnemonicParsing="false" text="Unselect All" />
-                    </items>
-                </Menu>
-                <Menu mnemonicParsing="false" text="Help">
-                    <items>
-                        <MenuItem mnemonicParsing="false" text="About MyHelloApp" />
-                    </items>
-                </Menu>
-            </menus>
-        </MenuBar>
         <BorderPane prefHeight="529.0" prefWidth="912.0" VBox.vgrow="ALWAYS">
             <left>
                 <VBox prefHeight="538.0" prefWidth="54.0" style="-fx-background-color: #202428; -fx-border-style: hidden solid hidden hidden; -fx-border-color: #a7acb1;" BorderPane.alignment="CENTER">
@@ -117,6 +74,9 @@
                             <cursor>
                                 <Cursor fx:constant="HAND" />
                             </cursor>
+                     <VBox.margin>
+                        <Insets bottom="4.0" left="4.0" right="6.0" />
+                     </VBox.margin>
                         </Button>
                         <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" mnemonicParsing="false" onAction="#decryptSidebarButton" prefHeight="60.0" prefWidth="60.0" styleClass="sidebarButton" text="D" textFill="WHITE">
                             <font>
@@ -135,6 +95,9 @@
                             <cursor>
                                 <Cursor fx:constant="HAND" />
                             </cursor>
+                     <VBox.margin>
+                        <Insets bottom="4.0" left="4.0" right="6.0" top="4.0" />
+                     </VBox.margin>
                         </Button>
                         <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minHeight="10.0" minWidth="-Infinity" prefHeight="356.0" prefWidth="60.0" VBox.vgrow="ALWAYS" />
                         <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" mnemonicParsing="false" onAction="#settingsSidebarButton" prefHeight="60.0" prefWidth="60.0" styleClass="sidebarButton" text="S" textFill="WHITE">
@@ -154,6 +117,9 @@
                             <cursor>
                                 <Cursor fx:constant="HAND" />
                             </cursor>
+                     <VBox.margin>
+                        <Insets bottom="4.0" left="4.0" right="6.0" top="4.0" />
+                     </VBox.margin>
                         </Button>
                     </children>
                 </VBox>
@@ -196,7 +162,7 @@
                         </AnchorPane>
                         <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="4">
                            <children>
-                              <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="624.0" layoutY="11.0" mnemonicParsing="false" onAction="#decryptDelete" prefHeight="50.0" prefWidth="50.0" styleClass="decryptButton" text="S" textFill="WHITE">
+                              <Button fx:id="decryptDelete" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="624.0" layoutY="11.0" mnemonicParsing="false" onAction="#decryptDelete" prefHeight="50.0" prefWidth="50.0" styleClass="decryptButton" text="D" textFill="WHITE">
                                  <font>
                                     <Font size="1.0" />
                                  </font>
@@ -357,19 +323,19 @@
                         </GridPane>
                         <AnchorPane fx:id="homePane" prefHeight="445.0" prefWidth="89.0" style="-fx-background-color: #202428;" StackPane.alignment="CENTER">
                             <children>
-                                <ImageView fitHeight="457.0" fitWidth="457.0" layoutX="191.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true">
+                                <ImageView fitHeight="457.0" fitWidth="457.0" layoutX="186.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true">
                                     <image>
                                         <Image url="@../images/sfondo.png" />
                                     </image>
                                 </ImageView>
-                                <Label layoutX="340.0" layoutY="457.0" prefHeight="35.0" prefWidth="159.0" text="Your Accounts." textFill="#0aba4d" AnchorPane.bottomAnchor="46.0" AnchorPane.leftAnchor="340.0" AnchorPane.rightAnchor="339.0" AnchorPane.topAnchor="457.0">
+                                <Label layoutX="329.0" layoutY="457.0" prefHeight="54.0" prefWidth="171.0" text="Your Accounts." textFill="#0aba4d" AnchorPane.bottomAnchor="46.0" AnchorPane.leftAnchor="329.0" AnchorPane.rightAnchor="328.0" AnchorPane.topAnchor="457.0">
                                     <font>
-                                        <Font size="24.0" />
+                                        <Font name="System Bold Italic" size="24.0" />
                                     </font>
                                 </Label>
-                                <Label layoutX="339.0" layoutY="492.0" prefHeight="35.0" prefWidth="161.0" text="In a Safe Place." textFill="#0aba4d" AnchorPane.bottomAnchor="11.0" AnchorPane.leftAnchor="339.0" AnchorPane.rightAnchor="338.0" AnchorPane.topAnchor="492.0">
+                                <Label layoutX="328.0" layoutY="489.0" prefHeight="54.0" prefWidth="173.0" text="In a Safe Place." textFill="#0aba4d" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="328.0" AnchorPane.rightAnchor="327.0" AnchorPane.topAnchor="489.0">
                                     <font>
-                                        <Font size="24.0" />
+                                        <Font name="System Bold Italic" size="24.0" />
                                     </font>
                                 </Label>
                             </children>
@@ -378,14 +344,14 @@
                 </StackPane>
             </center>
             <top>
-                <AnchorPane minHeight="-Infinity" prefHeight="37.0" prefWidth="1070.0" style="-fx-background-color: #202428;" BorderPane.alignment="CENTER">
+                <AnchorPane minHeight="-Infinity" prefHeight="43.0" prefWidth="900.0" style="-fx-background-color: #202428;" BorderPane.alignment="CENTER">
                     <children>
-                        <Label fx:id="mainTitle" layoutX="6.0" layoutY="1.0" minWidth="60.0" prefHeight="35.0" prefWidth="843.0" style="&#10;" text="Password Manager" textFill="#0aba4d">
+                        <Label fx:id="mainTitle" layoutX="14.0" minWidth="60.0" prefHeight="43.0" prefWidth="827.0" style="&#10;" text="Password Manager" textFill="#0aba4d">
                             <font>
                                 <Font name="System Bold Italic" size="24.0" fx:id="x1" />
                             </font>
                         </Label>
-                        <Button fx:id="homeButton" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="860.0" layoutY="3.0" mnemonicParsing="false" onAction="#homeButton" prefHeight="35.0" prefWidth="35.0" style="-fx-background-color: #202428;" text="H" textFill="WHITE" visible="false">
+                        <Button fx:id="homeButton" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="857.0" mnemonicParsing="false" onAction="#homeButton" prefHeight="43.0" prefWidth="43.0" style="-fx-background-color: #202428;" text="H" textFill="WHITE" visible="false">
                             <font>
                                 <Font size="1.0" />
                             </font>

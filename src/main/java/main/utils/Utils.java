@@ -20,42 +20,27 @@ package main.utils;
 
 import java.util.Base64;
 
+import org.jetbrains.annotations.NotNull;
+
+import javafx.collections.FXCollections;
+import javafx.scene.control.ChoiceBox;
+
 public class Utils {
-    // /**
-    //  * Replaces a panel with another one.
-    //  *
-    //  * @param actingPanel The panel on which will be done the replacement
-    //  * @param showPanel   The new panel
-    //  */
-    // public static void replacePanel(@NotNull JPanel actingPanel, JPanel showPanel) {
-    //     // removing old panel
-    //     actingPanel.removeAll();
+    /**
+     * Returns the selected index in a Combo Box with a first blank option. If
+     * the value is -1, the selected index is the blank one.
+     *
+     * @param comboBox The combo box to extract the index from.
+     * @return The index of the current selected item.
+     */
+    public static <T> int selectedItemInChoiceBox(@NotNull ChoiceBox<T> comboBox) {
+        return comboBox.getSelectionModel().getSelectedIndex();
+    }
 
-    //     // adding new panel
-    //     actingPanel.add(showPanel);
-
-    //     actingPanel.repaint();
-    //     actingPanel.revalidate();
-    // }
-
-    // /**
-    //  * Returns the selected index in a Combo Box with a first blank option. If
-    //  * the value is -1, the selected index is the blank one.
-    //  *
-    //  * @param comboBox The combo box to extract the index from.
-    //  * @return The index of the current selected item.
-    //  */
-    // public static int selectedItemInComboBox(@NotNull JComboBox<String> comboBox) {
-    //     return comboBox.getSelectedIndex() - 1;
-    // }
-
-    // public static void setComboBoxItems(@NotNull JComboBox<String> comboBox, String @NotNull ... items) {
-    //     comboBox.removeAllItems();
-        
-    //     for (String item : items) {
-    //         comboBox.addItem(item);   
-    //     }
-    // }
+    @SafeVarargs
+    public static <T> void setChoiceBoxItems(@NotNull ChoiceBox<T> comboBox, T @NotNull ... items) {
+        comboBox.setItems(FXCollections.observableArrayList(items));
+    }
 
     /**
      * Returns a string containing the index, preceded by zero to match up the same
