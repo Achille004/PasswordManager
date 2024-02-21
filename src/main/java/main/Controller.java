@@ -100,12 +100,12 @@ public class Controller implements Initializable {
 
     private void highlightSidebarButton(ActionEvent event) {
         if (button != null) {
-            button.setStyle(button.getStyle().replace("-fx-border-color: #0aba4d", "-fx-border-color: #202428"));
+            button.setStyle("-fx-background-color: #202428;");
         }
 
         if (event != null) {
             button = (Button) event.getSource();
-            button.setStyle(button.getStyle().replace("-fx-border-color: #202428", "-fx-border-color: #0aba4d"));
+            button.setStyle("-fx-background-color: #42464a;");
         }
     }
 

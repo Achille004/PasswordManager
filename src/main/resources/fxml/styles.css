@@ -1,0 +1,12 @@
+Button.sidebar {
+    -fx-background-color: #202428; 
+    -fx-background-radius: 90deg;
+}
+
+TextField.field,
+PasswordField.field {
+    -fx-background-color: #2e3136;
+    -fx-border-color: #a7acb1;
+    -fx-border-radius: 3deg;
+    -fx-text-inner-color: white;
+}
