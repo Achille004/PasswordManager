@@ -13,9 +13,9 @@ module PasswordManager.main {
     requires jdk.jsobject;
     
     exports main;
-    opens main to javafx.fxml;
-
-    // exports main.security;
-    // exports main.utils;
+    exports main.security;
+    exports main.utils;
     // exports main.views;
+    
+    opens main to javafx.fxml;
 }

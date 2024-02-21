@@ -30,19 +30,7 @@ public class EncrypterPanel extends JPanel {
     }
 
     private void SaveButtonActionPerformed(ActionEvent evt) {
-        // gets software, username and password written by the user
-        String software = SoftwareTextField.getText();
-        String username = UsernameTextField.getText();
-        String password = PasswordTextField.getText();
-
-        if (!(software.isBlank() || username.isBlank() || password.isBlank())) {
-            appInstance.addAccount(software, username, password);
-
-            SoftwareTextField.setText("");
-            UsernameTextField.setText("");
-            PasswordTextField.setText("");
-            repaintAll(SoftwareTextField, UsernameTextField, PasswordTextField);
-        }
+        
     }
 
     private void initComponents() {

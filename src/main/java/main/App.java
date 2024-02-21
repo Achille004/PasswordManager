@@ -8,19 +8,32 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import main.utils.FileManager;
 
 public class App extends Application {
+    private FileManager fileManager;
+
     @Override
     public void start(Stage primaryStage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("/fxml/index.fxml"));
-        
+        fileManager = new FileManager();
 
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/index.fxml"));
+
+        Controller controller = new Controller(fileManager);
+        loader.setController(controller);
+
+        Parent root = loader.load();
         Scene scene = new Scene(root, 900, 600);
 
         primaryStage.setTitle("Password Manager");
         primaryStage.setResizable(false);
         primaryStage.setScene(scene);
         primaryStage.show();
+    }
+
+    @Override
+    public void stop(){
+        fileManager.saveAll();
     }
 
     public static void main(String[] args) {
