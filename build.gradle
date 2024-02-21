@@ -57,8 +57,6 @@ javafx {
     modules = [ 'javafx.base', 'javafx.controls', 'javafx.fxml', 'javafx.graphics', 'javafx.web' ]
 }
 
-configurations.implementation.canBeResolved = true
-
 jar {
     manifest {
         attributes 'Implementation-Title': "Password Manager", 'Main-Class': 'main.App'
@@ -112,11 +110,11 @@ jlink {
 }
 
 task(sign, dependsOn: 'classes', type: JavaExec) {
-    main = 'signer.Sign'
+    mainClass = 'signer.Sign'
     classpath = sourceSets.main.runtimeClasspath
 }
 
 task(verify, dependsOn: 'classes', type: JavaExec) {
-    main = 'signer.Verify'
+    mainClass = 'signer.Verify'
     classpath = sourceSets.main.runtimeClasspath
 }

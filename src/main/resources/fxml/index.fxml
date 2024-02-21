@@ -35,11 +35,13 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.Image?>
@@ -96,9 +98,9 @@
         </MenuBar>
         <BorderPane prefHeight="529.0" prefWidth="912.0" VBox.vgrow="ALWAYS">
             <left>
-                <VBox prefHeight="538.0" prefWidth="54.0" style="-fx-background-color: #202428; -fx-border-style: hidden solid hidden hidden; -fx-border-color: white;" BorderPane.alignment="CENTER">
+                <VBox prefHeight="538.0" prefWidth="54.0" style="-fx-background-color: #202428; -fx-border-style: hidden solid hidden hidden; -fx-border-color: #a7acb1;" BorderPane.alignment="CENTER">
                     <children>
-                        <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" mnemonicParsing="false" onAction="#encryptSidebarButton" prefHeight="68.0" prefWidth="65.0" styleClass="sidebar" text="E" textFill="WHITE">
+                        <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" mnemonicParsing="false" onAction="#encryptSidebarButton" prefHeight="68.0" prefWidth="65.0" styleClass="sidebarButton" text="E" textFill="WHITE">
                             <font>
                                 <Font size="1.0" />
                             </font>
@@ -116,7 +118,7 @@
                                 <Cursor fx:constant="HAND" />
                             </cursor>
                         </Button>
-                        <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" mnemonicParsing="false" onAction="#decryptSidebarButton" prefHeight="60.0" prefWidth="60.0" styleClass="sidebar" text="D" textFill="WHITE">
+                        <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" mnemonicParsing="false" onAction="#decryptSidebarButton" prefHeight="60.0" prefWidth="60.0" styleClass="sidebarButton" text="D" textFill="WHITE">
                             <font>
                                 <Font size="1.0" />
                             </font>
@@ -135,7 +137,7 @@
                             </cursor>
                         </Button>
                         <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minHeight="10.0" minWidth="-Infinity" prefHeight="356.0" prefWidth="60.0" VBox.vgrow="ALWAYS" />
-                        <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" mnemonicParsing="false" onAction="#settingsSidebarButton" prefHeight="60.0" prefWidth="60.0" styleClass="sidebar" text="S" textFill="WHITE">
+                        <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" mnemonicParsing="false" onAction="#settingsSidebarButton" prefHeight="60.0" prefWidth="60.0" styleClass="sidebarButton" text="S" textFill="WHITE">
                             <font>
                                 <Font size="1.0" />
                             </font>
@@ -159,6 +161,124 @@
             <center>
                 <StackPane prefHeight="555.0" prefWidth="751.0" BorderPane.alignment="CENTER">
                     <children>
+                  <GridPane fx:id="decryptPane" prefHeight="423.0" prefWidth="838.0" style="-fx-background-color: #202428;">
+                     <columnConstraints>
+                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="748.0" minWidth="10.0" prefWidth="748.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="184.0" minWidth="0.0" prefWidth="0.0" />
+                     </columnConstraints>
+                     <rowConstraints>
+                        <RowConstraints maxHeight="146.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="121.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="121.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="142.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="142.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
+                     </rowConstraints>
+                     <children>
+                        <AnchorPane prefHeight="123.0" prefWidth="738.0" GridPane.rowIndex="1">
+                           <children>
+                              <TextField fx:id="decryptSoftware" layoutX="9.0" layoutY="45.0" prefHeight="25.0" prefWidth="720.0" styleClass="field" />
+                              <Label layoutX="9.0" layoutY="18.0" text="Software" textFill="WHITE">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Label>
+                           </children>
+                        </AnchorPane>
+                        <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="2">
+                           <children>
+                              <TextField fx:id="decryptUsername" layoutX="9.0" layoutY="45.0" prefHeight="25.0" prefWidth="720.0" styleClass="field" />
+                              <Label layoutX="9.0" layoutY="18.0" text="Username" textFill="WHITE">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Label>
+                           </children>
+                        </AnchorPane>
+                        <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="4">
+                           <children>
+                              <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="624.0" layoutY="11.0" mnemonicParsing="false" onAction="#decryptDelete" prefHeight="50.0" prefWidth="50.0" styleClass="decryptButton" text="S" textFill="WHITE">
+                                 <font>
+                                    <Font size="1.0" />
+                                 </font>
+                                 <graphic>
+                                    <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../images/icons/delete.png" />
+                                       </image>
+                                    </ImageView>
+                                 </graphic>
+                                 <padding>
+                                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                 </padding>
+                                 <cursor>
+                                    <Cursor fx:constant="HAND" />
+                                 </cursor>
+                              </Button>
+                              <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="681.0" layoutY="11.0" mnemonicParsing="false" onAction="#decryptSave" prefHeight="50.0" prefWidth="50.0" styleClass="decryptButton" text="S" textFill="WHITE">
+                                 <font>
+                                    <Font size="1.0" />
+                                 </font>
+                                 <padding>
+                                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                 </padding>
+                                 <cursor>
+                                    <Cursor fx:constant="HAND" />
+                                 </cursor>
+                                 <graphic>
+                                    <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../images/icons/save.png" />
+                                       </image>
+                                    </ImageView>
+                                 </graphic>
+                              </Button>
+                           </children>
+                        </AnchorPane>
+                        <StackPane prefHeight="150.0" prefWidth="200.0" GridPane.rowIndex="3">
+                           <children>
+                              <AnchorPane prefHeight="200.0" prefWidth="200.0">
+                                 <children>
+                                    <TextField fx:id="decryptPasswordVisible" layoutX="8.0" layoutY="45.0" prefHeight="25.0" prefWidth="722.0" styleClass="field" />
+                                    <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="697.0" layoutY="47.0" onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../images/icons/closed-eye.png" />
+                                       </image>
+                                    </ImageView>
+                                 </children>
+                              </AnchorPane>
+                              <AnchorPane prefHeight="0.0" prefWidth="730.0">
+                                 <children>
+                                    <Label layoutX="8.0" layoutY="19.0" text="Password" textFill="WHITE">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font>
+                                    </Label>
+                                    <PasswordField fx:id="decryptPasswordHidden" layoutX="8.0" layoutY="45.0" prefHeight="25.0" prefWidth="722.0" styleClass="field" />
+                                    <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="697.0" layoutY="47.0" onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../images/icons/open-eye.png" />
+                                       </image>
+                                    </ImageView>
+                                 </children>
+                              </AnchorPane>
+                           </children>
+                        </StackPane>
+                        <AnchorPane prefHeight="200.0" prefWidth="200.0">
+                           <children>
+                              <ChoiceBox fx:id="decryptChoiceBox" layoutX="196.0" layoutY="32.0" prefHeight="27.0" prefWidth="528.0" styleClass="field" />
+                              <Separator layoutX="8.0" layoutY="87.0" prefHeight="0.0" prefWidth="723.0" />
+                              <Label layoutX="14.0" layoutY="28.0" prefHeight="29.0" prefWidth="170.0" text="Select Account:" textFill="WHITE">
+                                 <font>
+                                    <Font name="System Bold Italic" size="24.0" />
+                                 </font>
+                              </Label>
+                           </children>
+                        </AnchorPane>
+                     </children>
+                     <padding>
+                        <Insets bottom="80.0" left="50.0" right="50.0" top="20.0" />
+                     </padding>
+                  </GridPane>
                         <GridPane fx:id="encryptPane" prefHeight="423.0" prefWidth="838.0" style="-fx-background-color: #202428;">
                             <columnConstraints>
                                 <ColumnConstraints hgrow="SOMETIMES" maxWidth="748.0" minWidth="10.0" prefWidth="748.0" />
