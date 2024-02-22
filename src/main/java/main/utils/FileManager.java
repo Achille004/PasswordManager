@@ -32,11 +32,10 @@ public class FileManager {
         filePath = isWindows ? System.getProperty("user.home") + "\\AppData\\Local\\Password Manager\\" : "";
 
         logger = new Logger(filePath);
-        loadFiles();
     }
 
-    @SuppressWarnings("unchecked")
-    private void loadFiles () {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public void loadDataFile() {
         File data_file = new File(filePath + "passwords.psmg");
         if (data_file.getParentFile().mkdirs()) {
             logger.addInfo("Created folder '" + data_file.getParentFile().getAbsolutePath() + "'");
@@ -46,10 +45,34 @@ public class FileManager {
         if (data_file.exists()) {
             try (FileInputStream f = new FileInputStream(data_file)) {
                 ObjectInputStream fIN = new ObjectInputStream(f);
+                Object obj;
 
-                loginAccount = (LoginAccount) fIN.readObject();
-                accountList = (ArrayList<Account>) fIN.readObject();
-            } catch (IOException | ClassNotFoundException e) {
+                obj = fIN.readObject();
+                if (obj instanceof LoginAccount) {
+                    loginAccount = (LoginAccount) obj;
+                } else {
+                    throw new ClassNotFoundException(
+                            "Unexpected object class. Expecting: " + LoginAccount.class.toString());
+                }
+
+                obj = fIN.readObject();
+                if (obj instanceof ArrayList) {
+
+                    ArrayList list = (ArrayList) obj;
+                    if (list.get(0) instanceof Account) {
+                        accountList = (ArrayList<Account>) list;
+                    } else {
+                        throw new ClassNotFoundException(
+                                "Unexpected object class. Expecting: " + Account.class.toString());
+                    }
+                } else {
+                    throw new ClassNotFoundException(
+                            "Unexpected object class. Expecting: " + ArrayList.class.toString());
+                }
+            } catch (IOException e) {
+                logger.addError(e);
+            } catch (ClassNotFoundException e) {
+                // TODO ask to overwrite
                 logger.addError(e);
             }
         }
@@ -175,7 +198,7 @@ public class FileManager {
             logger.addError(e);
         }
     }
-    
+
     public void saveAll() {
         // when the user shuts down the program on the first run, it won't save
         if (loginAccount != null) {

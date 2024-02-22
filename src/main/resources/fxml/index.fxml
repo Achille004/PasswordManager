@@ -142,7 +142,7 @@
                      <children>
                         <AnchorPane prefHeight="123.0" prefWidth="738.0" GridPane.rowIndex="1">
                            <children>
-                              <TextField fx:id="decryptSoftware" layoutX="9.0" layoutY="45.0" prefHeight="25.0" prefWidth="720.0" styleClass="field" />
+                              <TextField fx:id="decryptSoftware" layoutX="9.0" layoutY="45.0" prefHeight="25.0" prefWidth="720.0" styleClass="textField" />
                               <Label layoutX="9.0" layoutY="18.0" text="Software" textFill="WHITE">
                                  <font>
                                     <Font size="18.0" />
@@ -152,7 +152,7 @@
                         </AnchorPane>
                         <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="2">
                            <children>
-                              <TextField fx:id="decryptUsername" layoutX="9.0" layoutY="45.0" prefHeight="25.0" prefWidth="720.0" styleClass="field" />
+                              <TextField fx:id="decryptUsername" layoutX="9.0" layoutY="45.0" prefHeight="25.0" prefWidth="720.0" styleClass="textField" />
                               <Label layoutX="9.0" layoutY="18.0" text="Username" textFill="WHITE">
                                  <font>
                                     <Font size="18.0" />
@@ -204,7 +204,7 @@
                            <children>
                               <AnchorPane prefHeight="200.0" prefWidth="200.0">
                                  <children>
-                                    <TextField fx:id="decryptPasswordVisible" layoutX="8.0" layoutY="45.0" prefHeight="25.0" prefWidth="722.0" styleClass="field" />
+                                    <TextField fx:id="decryptPasswordVisible" layoutX="8.0" layoutY="45.0" prefHeight="25.0" prefWidth="722.0" styleClass="textField" />
                                     <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="697.0" layoutY="47.0" onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
                                        <image>
                                           <Image url="@../images/icons/closed-eye.png" />
@@ -219,7 +219,7 @@
                                           <Font size="18.0" />
                                        </font>
                                     </Label>
-                                    <PasswordField fx:id="decryptPasswordHidden" layoutX="8.0" layoutY="45.0" prefHeight="25.0" prefWidth="722.0" styleClass="field" />
+                                    <PasswordField fx:id="decryptPasswordHidden" layoutX="8.0" layoutY="45.0" prefHeight="25.0" prefWidth="722.0" styleClass="textField" />
                                     <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="697.0" layoutY="47.0" onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
                                        <image>
                                           <Image url="@../images/icons/open-eye.png" />
@@ -231,7 +231,7 @@
                         </StackPane>
                         <AnchorPane prefHeight="200.0" prefWidth="200.0">
                            <children>
-                              <ChoiceBox fx:id="decryptChoiceBox" layoutX="196.0" layoutY="32.0" prefHeight="27.0" prefWidth="528.0" styleClass="field" />
+                              <ChoiceBox fx:id="decryptChoiceBox" layoutX="196.0" layoutY="32.0" prefHeight="27.0" prefWidth="528.0" styleClass="textField" />
                               <Separator layoutX="8.0" layoutY="87.0" prefHeight="0.0" prefWidth="723.0" />
                               <Label layoutX="14.0" layoutY="28.0" prefHeight="29.0" prefWidth="170.0" text="Select Account:" textFill="WHITE">
                                  <font>
@@ -260,7 +260,7 @@
                             <children>
                                 <AnchorPane prefHeight="123.0" prefWidth="738.0">
                                     <children>
-                                        <TextField fx:id="encryptSoftware" layoutX="9.0" layoutY="45.0" prefHeight="25.0" prefWidth="720.0" styleClass="field" />
+                                        <TextField fx:id="encryptSoftware" layoutX="9.0" layoutY="45.0" prefHeight="25.0" prefWidth="720.0" styleClass="textField" />
                                         <Label layoutX="9.0" layoutY="18.0" text="Software" textFill="WHITE">
                                             <font>
                                                 <Font size="18.0" />
@@ -270,7 +270,7 @@
                                 </AnchorPane>
                                 <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="1">
                                     <children>
-                                        <TextField fx:id="encryptUsername" layoutX="9.0" layoutY="45.0" prefHeight="25.0" prefWidth="720.0" styleClass="field" />
+                                        <TextField fx:id="encryptUsername" layoutX="9.0" layoutY="45.0" prefHeight="25.0" prefWidth="720.0" styleClass="textField" />
                                         <Label layoutX="9.0" layoutY="18.0" text="Username" textFill="WHITE">
                                             <font>
                                                 <Font size="18.0" />
@@ -282,7 +282,7 @@
                                     <children>
                                         <AnchorPane prefHeight="200.0" prefWidth="200.0">
                                             <children>
-                                                <TextField fx:id="encryptPasswordVisible" layoutX="8.0" layoutY="45.0" prefHeight="25.0" prefWidth="722.0" styleClass="field" />
+                                                <TextField fx:id="encryptPasswordVisible" layoutX="8.0" layoutY="45.0" prefHeight="25.0" prefWidth="722.0" styleClass="textField" />
                                                 <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="697.0" layoutY="47.0" onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
                                                     <image>
                                                         <Image url="@../images/icons/closed-eye.png" />
@@ -297,7 +297,7 @@
                                                         <Font size="18.0" />
                                                     </font>
                                                 </Label>
-                                                <PasswordField fx:id="encryptPasswordHidden" layoutX="8.0" layoutY="45.0" prefHeight="25.0" prefWidth="722.0" styleClass="field" />
+                                                <PasswordField fx:id="encryptPasswordHidden" layoutX="8.0" layoutY="45.0" prefHeight="25.0" prefWidth="722.0" styleClass="textField" />
                                                 <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="697.0" layoutY="47.0" onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
                                                     <image>
                                                         <Image url="@../images/icons/open-eye.png" />

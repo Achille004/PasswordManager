@@ -24,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javafx.collections.FXCollections;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.TextField;
 
 public class Utils {
     /**
@@ -38,8 +39,31 @@ public class Utils {
     }
 
     @SafeVarargs
-    public static <T> void setChoiceBoxItems(@NotNull ChoiceBox<T> comboBox, T @NotNull ... items) {
+    public static <T> void setChoiceBoxItems(@NotNull ChoiceBox<T> comboBox, @NotNull T... items) {
         comboBox.setItems(FXCollections.observableArrayList(items));
+    }
+
+    @SafeVarargs
+    public static <T extends TextField> boolean checkTextFields(@NotNull T... fields) {
+        boolean nonEmpty = true;
+
+        for(T field : fields) {
+            if(field.getText().isBlank()) {
+                nonEmpty = false;
+                field.setStyle("-fx-border-color: #ff5f5f;");
+            } else {
+                field.setStyle("-fx-border-color: #a7acb1;");
+            }
+        }
+
+        return nonEmpty;
+    }
+
+    @SafeVarargs
+    public static <T extends TextField> void clearTextFields(@NotNull T... fields) {
+        for(T field : fields) {
+            field.clear();
+        }
     }
 
     /**
