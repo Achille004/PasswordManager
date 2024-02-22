@@ -8,7 +8,7 @@
     -fx-background-radius: 9deg;
 }
 
-.field {
+.textField {
     -fx-background-color: #2e3136;
     -fx-border-color: #a7acb1;
     -fx-border-radius: 3deg;
