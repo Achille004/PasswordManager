@@ -19,6 +19,8 @@
 package main.utils;
 
 import java.util.Base64;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -40,6 +42,7 @@ public class Utils {
 
     @SafeVarargs
     public static <T> void setChoiceBoxItems(@NotNull ChoiceBox<T> comboBox, @NotNull T... items) {
+        comboBox.getSelectionModel().clearSelection();
         comboBox.setItems(FXCollections.observableArrayList(items));
     }
 
@@ -47,8 +50,8 @@ public class Utils {
     public static <T extends TextField> boolean checkTextFields(@NotNull T... fields) {
         boolean nonEmpty = true;
 
-        for(T field : fields) {
-            if(field.getText().isBlank()) {
+        for (T field : fields) {
+            if (field.getText().isBlank()) {
                 nonEmpty = false;
                 field.setStyle("-fx-border-color: #ff5f5f;");
             } else {
@@ -61,9 +64,19 @@ public class Utils {
 
     @SafeVarargs
     public static <T extends TextField> void clearTextFields(@NotNull T... fields) {
-        for(T field : fields) {
+        for (T field : fields) {
             field.clear();
         }
+    }
+
+    public static <T extends Enum<T>> String[] getEnumStringValues(Class<T> enumClass) {
+        return getEnumStringValuesWithStringExtractor(enumClass, Enum::name);
+    }
+
+    public static <T extends Enum<T>> String[] getEnumStringValuesWithStringExtractor(
+            Class<T> enumClass,
+            Function<? super T, String> extractor) {
+        return Stream.of(enumClass.getEnumConstants()).map(extractor).toArray(String[]::new);
     }
 
     /**
@@ -78,12 +91,6 @@ public class Utils {
         int listDigits = (int) Math.log10(listSize) + 1;
         return String.format("%0" + listDigits + "d", index);
     }
-
-    // public static void repaintAll(Component @NotNull ... components) {
-    //     for (Component component : components) {
-    //         component.repaint();
-    //     }
-    // }
 
     public static String byteToBase64(byte[] src) {
         // Base64-encode the encrypted password for a readable representation

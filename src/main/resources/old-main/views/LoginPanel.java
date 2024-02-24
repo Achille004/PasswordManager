@@ -48,8 +48,8 @@ public class LoginPanel extends JPanel {
 
         if (loginPassword.isBlank()) {
             errorMessage = switch (loginAccount.getLanguage()) {
-                case "e" -> "No password entered.";
-                case "i" -> "Nessuna password inserita.";
+                case "eng" -> "No password entered.";
+                case "ita" -> "Nessuna password inserita.";
                 default -> throw new IllegalArgumentException("Invalid language: " + loginAccount.getLanguage());
             };
         } else {
@@ -65,8 +65,8 @@ public class LoginPanel extends JPanel {
 
             if (loginCounter == 3) {
                 errorMessage = switch (loginAccount.getLanguage()) {
-                    case "e" -> "A wrong password has been inserted three times, program shutting down...";
-                    case "i" -> "È stata inserita una password errata tre volte, programma in arresto...";
+                    case "eng" -> "A wrong password has been inserted three times, program shutting down...";
+                    case "ita" -> "È stata inserita una password errata tre volte, programma in arresto...";
                     default -> throw new IllegalArgumentException("Invalid language: " + loginAccount.getLanguage());
                 };
                 shouldExit[0] = true;
@@ -75,8 +75,8 @@ public class LoginPanel extends JPanel {
                 appInstance.getLogger().save();
             } else {
                 errorMessage = switch (loginAccount.getLanguage()) {
-                    case "e" -> "Wrong password.";
-                    case "i" -> "Password errata.";
+                    case "eng" -> "Wrong password.";
+                    case "ita" -> "Password errata.";
                     default -> throw new IllegalArgumentException("Invalid language: " + loginAccount.getLanguage());
                 };
             }

@@ -21,18 +21,21 @@ package main.security;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import main.enums.Language;
+import main.enums.SavingOrder;
+
 import java.io.Serializable;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 
 public class LoginAccount implements Serializable {
-    private String savingOrder;
-    private String language;
+    private SavingOrder savingOrder;
+    private Language language;
     private byte[] hashedPassword;
     private final byte[] salt;
 
-    public LoginAccount(String savingOrder, String language, String password) {
+    public LoginAccount(SavingOrder savingOrder, Language language, String password) {
         this.savingOrder = savingOrder;
         this.language = language;
 
@@ -40,19 +43,19 @@ public class LoginAccount implements Serializable {
         setPassword(password);
     }
 
-    public String getSavingOrder() {
+    public SavingOrder getSavingOrder() {
         return this.savingOrder;
     }
 
-    public void setSavingOrder(String savingOrder) {
+    public void setSavingOrder(SavingOrder savingOrder) {
         this.savingOrder = savingOrder;
     }
 
-    public String getLanguage() {
+    public Language getLanguage() {
         return this.language;
     }
 
-    public void setLanguage(String language) {
+    public void setLanguage(Language language) {
         this.language = language;
     }
 
@@ -91,7 +94,7 @@ public class LoginAccount implements Serializable {
     }
 
     @Contract("_, _, _ -> new")
-    public static @NotNull LoginAccount of(String savingOrder, String language, String password) {
+    public static @NotNull LoginAccount of(SavingOrder savingOrder, Language language, String password) {
         // creates the account, adding its attributes by constructor
         return new LoginAccount(savingOrder, language, password);
     }

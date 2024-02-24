@@ -13,6 +13,7 @@ module PasswordManager.main {
     requires jdk.jsobject;
     
     exports main;
+    exports main.enums;
     exports main.security;
     exports main.utils;
     // exports main.views;
