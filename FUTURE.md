@@ -1,7 +1,11 @@
 # Future updates: 
 ### Add Linux support
 ### Add show password in login
-### Change lanuage system
-### Add xml and json export
+### Add character-checking from fields
+### Change language system
+### Add xml and json export + encrypted export
+### Google drive linking
 
-### ?? Encryption method: Photo ??
+# Ideas:
+### Multiple accounts
+### Animations (from javafx.animation package)
