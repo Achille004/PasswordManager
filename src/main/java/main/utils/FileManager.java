@@ -11,10 +11,14 @@ import java.util.ArrayList;
 
 import org.jetbrains.annotations.NotNull;
 
+import main.enums.Language;
+import main.enums.SavingOrder;
 import main.security.Account;
 import main.security.LoginAccount;
 
 public class FileManager {
+    private final String OS, USER_HOME;
+
     private final Logger logger;
 
     private LoginAccount loginAccount;
@@ -27,14 +31,17 @@ public class FileManager {
         // initialize objects
         accountList = new ArrayList<>();
 
+        // gets system paths
+        OS = System.getProperty("os.name");
+        USER_HOME = System.getProperty("user.home");
+
         // gets the filepath
-        boolean isWindows = System.getProperty("os.name").contains("Windows");
-        filePath = isWindows ? System.getProperty("user.home") + "\\AppData\\Local\\Password Manager\\" : "";
+        filePath = USER_HOME + (OS.contains("Windows") ? "\\AppData\\Local" : "") + "\\Password Manager\\";
 
         logger = new Logger(filePath);
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({ "unchecked" })
     public void loadDataFile() {
         File data_file = new File(filePath + "passwords.psmg");
         if (data_file.getParentFile().mkdirs()) {
@@ -57,14 +64,7 @@ public class FileManager {
 
                 obj = fIN.readObject();
                 if (obj instanceof ArrayList) {
-
-                    ArrayList list = (ArrayList) obj;
-                    if (list.get(0) instanceof Account) {
-                        accountList = (ArrayList<Account>) list;
-                    } else {
-                        throw new ClassNotFoundException(
-                                "Unexpected object class. Expecting: " + Account.class.toString());
-                    }
+                    accountList = (ArrayList<Account>) obj;
                 } else {
                     throw new ClassNotFoundException(
                             "Unexpected object class. Expecting: " + ArrayList.class.toString());
@@ -82,11 +82,11 @@ public class FileManager {
             logger.readFile();
         } else {
             // TODO remove when first run works
-            setLoginAccount("s", "e", "LoginPassword");
+            setLoginAccount(SavingOrder.Software, Language.English, "LoginPassword");
         }
-        loginPassword = "LoginPassword";
 
         // TODO if loginAccount == null, then it is first run, else just login
+        loginPassword = "LoginPassword";
     }
 
     // #region AccountList methods
@@ -96,17 +96,18 @@ public class FileManager {
 
     public void sortAccountList() {
         switch (loginAccount.getSavingOrder()) {
-            case "s" -> this.accountList.sort((acc1, acc2) -> {
+            case Software -> this.accountList.sort((acc1, acc2) -> {
                 int software = acc1.getSoftware().compareTo(acc2.getSoftware());
                 return (software == 0) ? acc1.getUsername().compareTo(acc2.getUsername()) : software;
             });
 
-            case "u" -> this.accountList.sort((acc1, acc2) -> {
+            case Username -> this.accountList.sort((acc1, acc2) -> {
                 int username = acc1.getUsername().compareTo(acc2.getUsername());
                 return (username == 0) ? acc1.getSoftware().compareTo(acc2.getSoftware()) : username;
             });
 
-            default -> throw new IllegalArgumentException("Invalid saving order: " + loginAccount.getSavingOrder());
+            default ->
+                throw new IllegalArgumentException("Invalid saving order: " + loginAccount.getSavingOrder().name());
         }
     }
     // #endregion
@@ -149,7 +150,7 @@ public class FileManager {
         return this.loginAccount;
     }
 
-    public void setLoginAccount(String savingOrder, String language, String loginPassword) {
+    public void setLoginAccount(SavingOrder savingOrder, Language language, String loginPassword) {
         this.loginAccount = LoginAccount.of(savingOrder, language, loginPassword);
 
         if (!accountList.isEmpty()) {
@@ -169,7 +170,7 @@ public class FileManager {
 
     // #region Exporters
     public void exportHtml() {
-        try (FileWriter file = new FileWriter(System.getProperty("user.home") + "\\Desktop\\Passwords.html")) {
+        try (FileWriter file = new FileWriter(USER_HOME + (OS.contains("Windows") ? "\\Desktop" : "") + "\\Passwords.html")) {
             file.write(Exporter.exportHtml(accountList, loginAccount.getLanguage(), loginPassword));
             file.flush();
         } catch (IOException e) {
@@ -178,7 +179,7 @@ public class FileManager {
     }
 
     public void csvMenuItemActionPerformed() {
-        try (FileWriter file = new FileWriter(System.getProperty("user.home") + "\\Desktop\\Passwords.csv")) {
+        try (FileWriter file = new FileWriter(USER_HOME + (OS.contains("Windows") ? "\\Desktop" : "") + "\\Passwords.csv")) { 
             file.write(Exporter.exportCsv(accountList, loginPassword));
             file.flush();
         } catch (IOException e) {

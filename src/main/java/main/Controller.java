@@ -1,12 +1,10 @@
 package main;
 
-import static main.utils.Utils.checkTextFields;
-import static main.utils.Utils.clearTextFields;
-import static main.utils.Utils.selectedItemInChoiceBox;
-import static main.utils.Utils.setChoiceBoxItems;
+import static main.utils.Utils.*;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.ResourceBundle;
 
 import javafx.event.ActionEvent;
@@ -21,6 +19,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import main.enums.Language;
+import main.enums.SavingOrder;
 import main.security.Account;
 import main.utils.FileManager;
 
@@ -47,22 +47,97 @@ public class Controller implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         fileManager.loadDataFile();
 
+        initializeEncrypt();
+        initializeDecrypt();
+        initializeSettings();
+    }
+
+    // #region Encrypt
+    @FXML
+    private GridPane encryptPane;
+
+    @FXML
+    private TextField encryptSoftware, encryptUsername, encryptPasswordVisible;
+
+    @FXML
+    private PasswordField encryptPasswordHidden;
+
+    private void initializeEncrypt() {
         encryptPasswordVisible.textProperty().addListener((observable, oldValue, newValue) -> {
             encryptPasswordHidden.setText(newValue);
         });
+
         encryptPasswordHidden.textProperty().addListener((observable, oldValue, newValue) -> {
             encryptPasswordVisible.setText(newValue);
         });
+    }
 
+    @FXML
+    public void encryptSidebarButton(ActionEvent event) {
+        encryptResetStyle();
+        encryptClear();
+
+        encryptPane.toFront();
+        setMainTitle("Encryption");
+
+        highlightSidebarButton(event);
+    }
+
+    private void encryptClear() {
+        clearTextFields(encryptSoftware, encryptUsername, encryptPasswordVisible, encryptPasswordHidden);
+    }
+
+    private void encryptResetStyle() {
+        encryptSoftware.setStyle("");
+        encryptUsername.setStyle("");
+        encryptPasswordVisible.setStyle("");
+        encryptPasswordHidden.setStyle("");
+    }
+
+    @FXML
+    public void encryptSave(ActionEvent event) {
+        if (checkTextFields(encryptSoftware, encryptUsername, encryptPasswordVisible, encryptPasswordHidden)) {
+            // gets software, username and password written by the user
+            String software = encryptSoftware.getText();
+            String username = encryptUsername.getText();
+            String password = encryptPasswordVisible.getText();
+            // save the new account
+            fileManager.addAccount(software, username, password);
+
+            encryptClear();
+        }
+    }
+    // #endregion
+
+    // #region Decrypt
+    @FXML
+    private GridPane decryptPane;
+
+    @FXML
+    private ChoiceBox<String> decryptCB;
+
+    @FXML
+    private TextField decryptSoftware, decryptUsername, decryptPasswordVisible;
+    @FXML
+    private PasswordField decryptPasswordHidden;
+
+    @FXML
+    private Button decryptDelete;
+    private boolean decryptDeleteCounter = false;
+
+    private void initializeDecrypt() {
         decryptPasswordVisible.textProperty().addListener((observable, oldValue, newValue) -> {
             decryptPasswordHidden.setText(newValue);
         });
+
         decryptPasswordHidden.textProperty().addListener((observable, oldValue, newValue) -> {
             decryptPasswordVisible.setText(newValue);
         });
-        decryptChoiceBox.getSelectionModel().selectedIndexProperty().addListener(
+
+        decryptCB.getSelectionModel().selectedIndexProperty().addListener(
                 (observableValue, oldIndex, newIndex) -> {
                     decryptDeleteCounter = false;
+                    decryptResetStyle();
 
                     int index = newIndex.intValue();
                     if (index >= 0) {
@@ -81,74 +156,9 @@ public class Controller implements Initializable {
                 });
     }
 
-    // #region Encrypter
-    @FXML
-    private GridPane encryptPane;
-
-    @FXML
-    private TextField encryptSoftware, encryptUsername, encryptPasswordVisible;
-
-    @FXML
-    private PasswordField encryptPasswordHidden;
-
-    @FXML
-    public void encryptSidebarButton(ActionEvent event) {
-        encryptSoftware.setStyle("-fx-border-color: #a7acb1;");
-        encryptUsername.setStyle("-fx-border-color: #a7acb1;");
-        encryptPasswordVisible.setStyle("-fx-border-color: #a7acb1;");
-        encryptPasswordHidden.setStyle("-fx-border-color: #a7acb1;");
-
-        encryptClear();
-
-        encryptPane.toFront();
-        setMainTitle("Encryption");
-
-        highlightSidebarButton(event);
-    }
-
-    public void encryptClear() {
-        clearTextFields(encryptSoftware, encryptUsername, encryptPasswordVisible, encryptPasswordHidden);
-    }
-
-    @FXML
-    public void encryptSave(ActionEvent event) {
-        if (checkTextFields(encryptSoftware, encryptUsername, encryptPasswordVisible, encryptPasswordHidden)) {
-            // gets software, username and password written by the user
-            String software = encryptSoftware.getText();
-            String username = encryptUsername.getText();
-            String password = encryptPasswordVisible.getText();
-            // save the new account
-            fileManager.addAccount(software, username, password);
-
-            encryptClear();
-        }
-    }
-    // #endregion
-
-    // #region Decrypter
-    @FXML
-    private GridPane decryptPane;
-
-    @FXML
-    private ChoiceBox<String> decryptChoiceBox;
-
-    @FXML
-    private TextField decryptSoftware, decryptUsername, decryptPasswordVisible;
-    @FXML
-    private PasswordField decryptPasswordHidden;
-
-    @FXML
-    private Button decryptDelete;
-    private boolean decryptDeleteCounter = false;
-
     @FXML
     public void decryptSidebarButton(ActionEvent event) {
-        decryptSoftware.setStyle("-fx-border-color: #a7acb1;");
-        decryptUsername.setStyle("-fx-border-color: #a7acb1;");
-        decryptPasswordVisible.setStyle("-fx-border-color: #a7acb1;");
-        decryptPasswordHidden.setStyle("-fx-border-color: #a7acb1;");
-        decryptDelete.setStyle("-fx-background-color: #a7acb1;");
-
+        decryptResetStyle();
         decryptChoiceBoxLoad();
 
         decryptPane.toFront();
@@ -157,7 +167,7 @@ public class Controller implements Initializable {
         highlightSidebarButton(event);
     }
 
-    public void decryptChoiceBoxLoad() {
+    private void decryptChoiceBoxLoad() {
         ArrayList<Account> accountList = fileManager.getAccountList();
 
         String[] items = new String[accountList.size()];
@@ -170,26 +180,34 @@ public class Controller implements Initializable {
 
             Account account = accountList.get(i);
             switch (fileManager.getLoginAccount().getSavingOrder()) {
-                case "s" -> strb.append(account.getSoftware()).append(" / ").append(account.getUsername());
-                case "u" -> strb.append(account.getUsername()).append(" / ").append(account.getSoftware());
-                default -> throw new IllegalArgumentException("Invalid language!");
+                case Software -> strb.append(account.getSoftware()).append(" / ").append(account.getUsername());
+                case Username -> strb.append(account.getUsername()).append(" / ").append(account.getSoftware());
+                default -> throw new IllegalArgumentException(
+                        "Invalid saving order: " + fileManager.getLoginAccount().getSavingOrder().name());
             }
 
             items[i] = strb.toString();
         }
 
-        setChoiceBoxItems(decryptChoiceBox, items);
+        setChoiceBoxItems(decryptCB, items);
         decryptClear();
     }
 
-    public void decryptClear() {
+    private void decryptClear() {
         clearTextFields(decryptSoftware, decryptUsername, decryptPasswordVisible, decryptPasswordHidden);
-        decryptChoiceBox.getSelectionModel().clearSelection();
+    }
+
+    private void decryptResetStyle() {
+        decryptSoftware.setStyle("");
+        decryptUsername.setStyle("");
+        decryptPasswordVisible.setStyle("");
+        decryptPasswordHidden.setStyle("");
+        decryptDelete.setStyle("");
     }
 
     @FXML
     public void decryptSave(ActionEvent event) {
-        int index = selectedItemInChoiceBox(decryptChoiceBox);
+        int index = selectedItemInChoiceBox(decryptCB);
         if (index >= 0) {
             if (checkTextFields(decryptSoftware, decryptUsername, decryptPasswordVisible, decryptPasswordHidden)) {
                 // get the new software, username and password
@@ -206,7 +224,7 @@ public class Controller implements Initializable {
 
     @FXML
     public void decryptDelete(ActionEvent event) {
-        int index = selectedItemInChoiceBox(decryptChoiceBox);
+        int index = selectedItemInChoiceBox(decryptCB);
         if (index < 0) {
             return;
         }
@@ -214,7 +232,7 @@ public class Controller implements Initializable {
         // when the deleteCounter is true it means that the user has confirmed the
         // elimination
         if (decryptDeleteCounter) {
-            decryptDelete.setStyle("-fx-background-color: #a7acb1;");
+            decryptDelete.setStyle("");
 
             // removes the selected account from the list
             fileManager.deleteAccount(index);
@@ -230,7 +248,51 @@ public class Controller implements Initializable {
 
     // #region Settings
     @FXML
+    private GridPane settingsPane;
+
+    @FXML
+    private ChoiceBox<String> settingsLangCB, settingsOrderCB;
+
+    @FXML
+    private Button settingsChangePassButton;
+
+    public void initializeSettings() {
+        // TODO Automate languages
+        final String[] languages = getEnumStringValues(Language.class);
+        setChoiceBoxItems(settingsLangCB, languages);
+
+        int langIndex = Arrays.asList(languages).indexOf(fileManager.getLoginAccount().getLanguage().name());
+        settingsLangCB.getSelectionModel().select(langIndex);
+
+        settingsLangCB.getSelectionModel().selectedIndexProperty().addListener(
+                (observableValue, oldIndex, newIndex) -> {
+                    String selectedItem = languages[newIndex.intValue()];
+                    Language lang = Language.valueOf(Language.class, selectedItem);
+                    fileManager.getLoginAccount().setLanguage(lang);
+
+                    // TODO reload language
+                });
+
+        final String[] savingOrders = getEnumStringValues(SavingOrder.class);
+        setChoiceBoxItems(settingsOrderCB, savingOrders);
+
+        int savingOrderIndex = Arrays.asList(savingOrders)
+                .indexOf(fileManager.getLoginAccount().getSavingOrder().name());
+        settingsOrderCB.getSelectionModel().select(savingOrderIndex);
+
+        settingsOrderCB.getSelectionModel().selectedIndexProperty().addListener(
+                (observableValue, oldIndex, newIndex) -> {
+                    String selectedItem = savingOrders[newIndex.intValue()];
+                    SavingOrder savingOrder = SavingOrder.valueOf(SavingOrder.class, selectedItem);
+                    fileManager.getLoginAccount().setSavingOrder(savingOrder);
+
+                    fileManager.sortAccountList();
+                });
+    }
+
+    @FXML
     public void settingsSidebarButton(ActionEvent event) {
+        settingsPane.toFront();
         setMainTitle("Settings");
 
         highlightSidebarButton(event);
@@ -248,8 +310,8 @@ public class Controller implements Initializable {
     @FXML
     public void showPassword(MouseEvent event) {
         Object obj = event.getSource();
-        
-        if(obj instanceof Node) {
+
+        if (obj instanceof Node) {
             ((Node) obj).getParent().toBack();
         }
     }

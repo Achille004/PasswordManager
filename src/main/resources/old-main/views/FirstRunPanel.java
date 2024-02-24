@@ -49,12 +49,10 @@ public class FirstRunPanel extends JPanel {
                 return;
             }
 
-
-
             // translates the index into the actual language
             String language = switch (languageSelectorIndex) {
-                case 0 ->  "e";
-                case 1 ->  "i";
+                case 0 ->  "eng";
+                case 1 ->  "ita";
                 default -> throw new IllegalArgumentException("Invalid language.");
             };
 

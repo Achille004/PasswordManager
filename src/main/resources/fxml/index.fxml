@@ -127,6 +127,69 @@
             <center>
                 <StackPane prefHeight="555.0" prefWidth="751.0" BorderPane.alignment="CENTER">
                     <children>
+                  <GridPane fx:id="settingsPane" prefHeight="423.0" prefWidth="838.0" style="-fx-background-color: #202428;">
+                     <columnConstraints>
+                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="748.0" minWidth="10.0" prefWidth="219.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="748.0" minWidth="10.0" prefWidth="509.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="184.0" minWidth="0.0" prefWidth="0.0" />
+                     </columnConstraints>
+                     <rowConstraints>
+                        <RowConstraints maxHeight="146.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="121.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="121.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="142.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="142.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
+                     </rowConstraints>
+                     <children>
+                        <AnchorPane prefHeight="123.0" prefWidth="738.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                           <children>
+                              <ChoiceBox fx:id="settingsOrderCB" layoutY="33.0" prefHeight="27.0" prefWidth="509.0" styleClass="textField" />
+                           </children>
+                        </AnchorPane>
+                        <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1">
+                           <children>
+                              <ChoiceBox fx:id="settingsLangCB" layoutY="33.0" prefHeight="27.0" prefWidth="509.0" styleClass="textField" />
+                           </children>
+                        </AnchorPane>
+                        <Label prefHeight="35.0" prefWidth="216.0" text="Saving Order:" textFill="WHITE" GridPane.rowIndex="1">
+                           <font>
+                              <Font name="System Bold Italic" size="24.0" />
+                           </font>
+                        </Label>
+                        <AnchorPane prefHeight="0.0" prefWidth="730.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                           <children>
+                              <Label layoutY="28.0" prefHeight="35.0" prefWidth="212.0" text="Work in progress..." textFill="WHITE">
+                                 <font>
+                                    <Font name="System Italic" size="24.0" />
+                                 </font>
+                              </Label>
+                           </children>
+                        </AnchorPane>
+                        <Label prefHeight="35.0" prefWidth="219.0" text="Language:" textFill="WHITE">
+                           <font>
+                              <Font name="System Bold Italic" size="24.0" />
+                           </font>
+                        </Label>
+                        <Label prefHeight="35.0" prefWidth="220.0" text="Login Password:" textFill="WHITE" GridPane.rowIndex="2">
+                           <font>
+                              <Font name="System Bold Italic" size="24.0" />
+                           </font>
+                        </Label>
+                        <Button fx:id="settingsChangePassButton" mnemonicParsing="false" style="-fx-background-color: none; -fx-border-color: #0aba4d; -fx-border-width: 3; -fx-border-radius: 10;" text="Change Login Password" textFill="WHITE" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                           <font>
+                              <Font name="System Bold" size="18.0" />
+                           </font>
+                        </Button>
+                        <Label prefHeight="35.0" prefWidth="215.0" text="Drive Connection:" textFill="WHITE" GridPane.rowIndex="3">
+                           <font>
+                              <Font name="System Bold Italic" size="24.0" />
+                           </font>
+                        </Label>
+                     </children>
+                     <padding>
+                        <Insets bottom="80.0" left="50.0" right="50.0" top="20.0" />
+                     </padding>
+                  </GridPane>
                   <GridPane fx:id="decryptPane" prefHeight="423.0" prefWidth="838.0" style="-fx-background-color: #202428;">
                      <columnConstraints>
                         <ColumnConstraints hgrow="SOMETIMES" maxWidth="748.0" minWidth="10.0" prefWidth="748.0" />
@@ -231,7 +294,7 @@
                         </StackPane>
                         <AnchorPane prefHeight="200.0" prefWidth="200.0">
                            <children>
-                              <ChoiceBox fx:id="decryptChoiceBox" layoutX="196.0" layoutY="32.0" prefHeight="27.0" prefWidth="528.0" styleClass="textField" />
+                              <ChoiceBox fx:id="decryptCB" layoutX="196.0" layoutY="32.0" prefHeight="27.0" prefWidth="528.0" styleClass="textField" />
                               <Separator layoutX="8.0" layoutY="87.0" prefHeight="0.0" prefWidth="723.0" />
                               <Label layoutX="14.0" layoutY="28.0" prefHeight="29.0" prefWidth="170.0" text="Select Account:" textFill="WHITE">
                                  <font>
