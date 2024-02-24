@@ -1,6 +1,6 @@
 /*
     Password Manager: Manages accounts given by user with encrypted password.
-    Copyright (C) 2022-2023  Francesco Marras
+    Copyright (C) 2022-2024  Francesco Marras
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,6 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
+
 package main.security;
 
 import org.jetbrains.annotations.Contract;

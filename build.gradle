@@ -89,7 +89,7 @@ jlink {
         vendor = 'Francesco Marras'
 
         // '--description "Password Manager is an application able to add, modify and delete locally saved accounts, characterized by a software, a username and an AES-encrypted password."',
-        // '--copyright "Copyright (C) 2022-2023  Francesco Marras  GNU GPLv3"',
+        // '--copyright "Copyright (C) 2022-2024  Francesco Marras  GNU GPLv3"',
         // '--license-file ./src/main/resources/license.txt',
         // '--about-url "https://github.com/Achille004/PasswordManager"'
 
