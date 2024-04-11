@@ -1,6 +1,5 @@
 # Future updates: 
-### Add Linux support
-### Add show password in login
+### Add path loader (+ Linux support)
 ### Add character-checking from fields
 ### Change language system
 ### Add xml and json export + encrypted export
