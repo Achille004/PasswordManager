@@ -306,6 +306,8 @@ public class Controller implements Initializable {
 
                     fileManager.sortAccountList();
                 });
+                
+        // TODO FIND BETTER METHOD
     }
 
     @FXML
