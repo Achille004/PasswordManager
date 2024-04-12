@@ -26,6 +26,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.Scanner;
 
+import java.nio.file.Path;
+
 import org.jetbrains.annotations.NotNull;
 
 public class Logger {
@@ -34,8 +36,8 @@ public class Logger {
     private final File logFile;
     private final StringBuilder logHistory;
 
-    public Logger(String filePath) {
-        logFile = new File(filePath + "report.log");
+    public Logger(Path filePath) {
+        logFile = filePath.resolve("report.log").toFile();
         logHistory = new StringBuilder();
     }
 
