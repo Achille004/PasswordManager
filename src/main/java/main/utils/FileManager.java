@@ -25,6 +25,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 
 import org.jetbrains.annotations.NotNull;
@@ -35,13 +36,18 @@ import main.security.Account;
 import main.security.LoginAccount;
 
 public class FileManager {
+    static final String WINDOWS_PATH;
+    static {
+        WINDOWS_PATH = Path.of("AppData", "Local", "Password Manager").toString();
+    }
+
     private final String OS, USER_HOME;
 
     private final Logger logger;
 
     private LoginAccount loginAccount;
     private ArrayList<Account> accountList;
-    private final String filePath;
+    private final Path filePath, desktopPath;
 
     private String loginPassword;
 
@@ -49,23 +55,24 @@ public class FileManager {
         // initialize objects
         accountList = new ArrayList<>();
 
-        // gets system paths
+        // gets system preoperties
         OS = System.getProperty("os.name");
         USER_HOME = System.getProperty("user.home");
 
-        // gets the filepath
-        filePath = USER_HOME + (OS.contains("Windows") ? "\\AppData\\Local" : "") + "\\Password Manager\\";
+        // gets the paths
+        filePath = Path.of(USER_HOME, OS.toLowerCase().contains("windows") ? WINDOWS_PATH : ".passwordmanager");
+        desktopPath = Path.of(USER_HOME, "Desktop");
 
         logger = new Logger(filePath);
     }
 
     @SuppressWarnings({ "unchecked" })
     public void loadDataFile() {
-        File data_file = new File(filePath + "passwords.psmg");
-        if (data_file.getParentFile().mkdirs()) {
-            logger.addInfo("Created folder '" + data_file.getParentFile().getAbsolutePath() + "'");
+        if (filePath.toFile().mkdirs()) {
+            logger.addInfo("Created folder '" + filePath.toAbsolutePath().toString() + "'");
         }
-
+        
+        File data_file = filePath.resolve("passwords.psmg").toFile();
         // if the data file exists, it will try to read its contents
         if (data_file.exists()) {
             try (FileInputStream f = new FileInputStream(data_file)) {
@@ -188,7 +195,8 @@ public class FileManager {
 
     // #region Exporters
     public void exportHtml() {
-        try (FileWriter file = new FileWriter(USER_HOME + (OS.contains("Windows") ? "\\Desktop" : "") + "\\Passwords.html")) {
+
+        try (FileWriter file = new FileWriter(desktopPath.resolve("Passwords.html").toFile())) {
             file.write(Exporter.exportHtml(accountList, loginAccount.getLanguage(), loginPassword));
             file.flush();
         } catch (IOException e) {
@@ -197,7 +205,7 @@ public class FileManager {
     }
 
     public void csvMenuItemActionPerformed() {
-        try (FileWriter file = new FileWriter(USER_HOME + (OS.contains("Windows") ? "\\Desktop" : "") + "\\Passwords.csv")) { 
+        try (FileWriter file = new FileWriter(desktopPath.resolve("Passwords.csv").toFile())) { 
             file.write(Exporter.exportCsv(accountList, loginPassword));
             file.flush();
         } catch (IOException e) {
@@ -207,7 +215,7 @@ public class FileManager {
     // #endregion
 
     private void saveAccountFile() {
-        try (ObjectOutputStream fOUT = new ObjectOutputStream(new FileOutputStream(filePath + "passwords.psmg"))) {
+        try (ObjectOutputStream fOUT = new ObjectOutputStream(new FileOutputStream(filePath.resolve("passwords.psmg").toFile()))) {
             fOUT.writeObject(this.loginAccount);
             fOUT.writeObject(this.accountList);
             fOUT.close();

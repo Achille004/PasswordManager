@@ -321,25 +321,6 @@
                                 <Insets bottom="80.0" left="50.0" right="50.0" top="20.0" />
                             </padding>
                         </GridPane>
-                        <AnchorPane fx:id="homePane" prefHeight="445.0" prefWidth="89.0" style="-fx-background-color: #202428;" StackPane.alignment="CENTER">
-                            <children>
-                                <ImageView fitHeight="457.0" fitWidth="457.0" layoutX="186.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true">
-                                    <image>
-                                        <Image url="@../images/sfondo.png" />
-                                    </image>
-                                </ImageView>
-                                <Label layoutX="329.0" layoutY="457.0" prefHeight="54.0" prefWidth="171.0" text="Your Accounts." textFill="#0aba4d" AnchorPane.bottomAnchor="46.0" AnchorPane.leftAnchor="329.0" AnchorPane.rightAnchor="328.0" AnchorPane.topAnchor="457.0">
-                                    <font>
-                                        <Font name="System Bold Italic" size="24.0" />
-                                    </font>
-                                </Label>
-                                <Label layoutX="328.0" layoutY="489.0" prefHeight="54.0" prefWidth="173.0" text="In a Safe Place." textFill="#0aba4d" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="328.0" AnchorPane.rightAnchor="327.0" AnchorPane.topAnchor="489.0">
-                                    <font>
-                                        <Font name="System Bold Italic" size="24.0" />
-                                    </font>
-                                </Label>
-                            </children>
-                        </AnchorPane>
                   <GridPane fx:id="settingsPane" prefHeight="423.0" prefWidth="838.0" style="-fx-background-color: #202428;">
                      <columnConstraints>
                         <ColumnConstraints hgrow="SOMETIMES" maxWidth="748.0" minWidth="10.0" prefWidth="219.0" />
@@ -403,6 +384,25 @@
                         <Insets bottom="80.0" left="50.0" right="50.0" top="20.0" />
                      </padding>
                   </GridPane>
+                        <AnchorPane fx:id="homePane" prefHeight="445.0" prefWidth="89.0" style="-fx-background-color: #202428;" StackPane.alignment="CENTER">
+                            <children>
+                                <ImageView fitHeight="457.0" fitWidth="457.0" layoutX="186.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true">
+                                    <image>
+                                        <Image url="@../images/sfondo.png" />
+                                    </image>
+                                </ImageView>
+                                <Label layoutX="329.0" layoutY="457.0" prefHeight="54.0" prefWidth="171.0" text="Your Accounts." textFill="#0aba4d" AnchorPane.bottomAnchor="46.0" AnchorPane.leftAnchor="329.0" AnchorPane.rightAnchor="328.0" AnchorPane.topAnchor="457.0">
+                                    <font>
+                                        <Font name="System Bold Italic" size="24.0" />
+                                    </font>
+                                </Label>
+                                <Label layoutX="328.0" layoutY="489.0" prefHeight="54.0" prefWidth="173.0" text="In a Safe Place." textFill="#0aba4d" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="328.0" AnchorPane.rightAnchor="327.0" AnchorPane.topAnchor="489.0">
+                                    <font>
+                                        <Font name="System Bold Italic" size="24.0" />
+                                    </font>
+                                </Label>
+                            </children>
+                        </AnchorPane>
                     </children>
                 </StackPane>
             </center>
