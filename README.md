@@ -8,6 +8,6 @@ Two languages are available: English and Italian. If you want to help translatin
 The Windows Installers do not need any JRE as they come with a bundled one.
 
 
-The data files will be saved under `$USER_HOME/AppData/Local/Password Manager` if running on Windows or under execution directory if running on any other operating system.  
+The data files will be saved under `$USER_HOME/AppData/Local/Password Manager` if running on Windows or under `$USER_HOME/.passwordmanager` if running on any other operating system.  
 The software is also capable of exporting to a `passwords.html` or `passwords.csv` file, saved on the desktop.  
 **NOTE**: html and csv files, which are not encrypted, are extremely vulnerable.
