@@ -81,11 +81,11 @@ public class Controller implements Initializable {
     private PasswordField encryptPasswordHidden;
 
     private void initializeEncrypt() {
-        encryptPasswordVisible.textProperty().addListener((observable, oldValue, newValue) -> {
+        encryptPasswordVisible.textProperty().addListener((options, oldValue, newValue) -> {
             encryptPasswordHidden.setText(newValue);
         });
 
-        encryptPasswordHidden.textProperty().addListener((observable, oldValue, newValue) -> {
+        encryptPasswordHidden.textProperty().addListener((options, oldValue, newValue) -> {
             encryptPasswordVisible.setText(newValue);
         });
     }
@@ -144,16 +144,16 @@ public class Controller implements Initializable {
     private boolean decryptDeleteCounter = false;
 
     private void initializeDecrypt() {
-        decryptPasswordVisible.textProperty().addListener((observable, oldValue, newValue) -> {
+        decryptPasswordVisible.textProperty().addListener((options, oldValue, newValue) -> {
             decryptPasswordHidden.setText(newValue);
         });
 
-        decryptPasswordHidden.textProperty().addListener((observable, oldValue, newValue) -> {
+        decryptPasswordHidden.textProperty().addListener((options, oldValue, newValue) -> {
             decryptPasswordVisible.setText(newValue);
         });
 
         decryptCB.getSelectionModel().selectedIndexProperty().addListener(
-                (observableValue, oldIndex, newIndex) -> {
+                (options, oldIndex, newIndex) -> {
                     decryptDeleteCounter = false;
                     decryptResetStyle();
 
@@ -283,7 +283,7 @@ public class Controller implements Initializable {
         settingsLangCB.getSelectionModel().select(langIndex);
 
         settingsLangCB.getSelectionModel().selectedIndexProperty().addListener(
-                (observableValue, oldIndex, newIndex) -> {
+                (options, oldIndex, newIndex) -> {
                     String selectedItem = languages[newIndex.intValue()];
                     Language lang = Language.valueOf(Language.class, selectedItem);
                     fileManager.getLoginAccount().setLanguage(lang);
@@ -299,15 +299,13 @@ public class Controller implements Initializable {
         settingsOrderCB.getSelectionModel().select(savingOrderIndex);
 
         settingsOrderCB.getSelectionModel().selectedIndexProperty().addListener(
-                (observableValue, oldIndex, newIndex) -> {
+                (options, oldIndex, newIndex) -> {
                     String selectedItem = savingOrders[newIndex.intValue()];
                     SavingOrder savingOrder = SavingOrder.valueOf(SavingOrder.class, selectedItem);
                     fileManager.getLoginAccount().setSavingOrder(savingOrder);
 
                     fileManager.sortAccountList();
                 });
-                
-        // TODO FIND BETTER METHOD
     }
 
     @FXML

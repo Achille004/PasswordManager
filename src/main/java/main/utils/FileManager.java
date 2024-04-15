@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.file.Path;
@@ -36,9 +37,11 @@ import main.security.Account;
 import main.security.LoginAccount;
 
 public class FileManager {
-    static final String WINDOWS_PATH;
+    static final String WINDOWS_PATH, DATA_FILE, LOG_FILE;
     static {
         WINDOWS_PATH = Path.of("AppData", "Local", "Password Manager").toString();
+        DATA_FILE = "passwords.psmg";
+        LOG_FILE = "report.log";
     }
 
     private final String OS, USER_HOME;
@@ -63,54 +66,64 @@ public class FileManager {
         filePath = Path.of(USER_HOME, OS.toLowerCase().contains("windows") ? WINDOWS_PATH : ".passwordmanager");
         desktopPath = Path.of(USER_HOME, "Desktop");
 
-        logger = new Logger(filePath);
+        logger = new Logger(filePath.resolve(LOG_FILE).toFile());
     }
 
     @SuppressWarnings({ "unchecked" })
     public void loadDataFile() {
-        if (filePath.toFile().mkdirs()) {
-            logger.addInfo("Created folder '" + filePath.toAbsolutePath().toString() + "'");
-        }
-        
-        File data_file = filePath.resolve("passwords.psmg").toFile();
-        // if the data file exists, it will try to read its contents
-        if (data_file.exists()) {
-            try (FileInputStream f = new FileInputStream(data_file)) {
-                ObjectInputStream fIN = new ObjectInputStream(f);
-                Object obj;
-
-                obj = fIN.readObject();
-                if (obj instanceof LoginAccount) {
-                    loginAccount = (LoginAccount) obj;
-                } else {
-                    throw new ClassNotFoundException(
-                            "Unexpected object class. Expecting: " + LoginAccount.class.toString());
-                }
-
-                obj = fIN.readObject();
-                if (obj instanceof ArrayList) {
-                    accountList = (ArrayList<Account>) obj;
-                } else {
-                    throw new ClassNotFoundException(
-                            "Unexpected object class. Expecting: " + ArrayList.class.toString());
-                }
-            } catch (IOException e) {
-                logger.addError(e);
-            } catch (ClassNotFoundException e) {
-                // TODO ask to overwrite
-                logger.addError(e);
-            }
-        }
-
-        if (loginAccount != null) {
+        boolean firstRun = true;
+        if (!filePath.toFile().mkdirs()) {
             // gets the log history
             logger.readFile();
+
+            logger.addInfo("os.name: '" + OS + "'");
+            logger.addInfo("user.home: '" + USER_HOME + "'");
+
+            File data_file = filePath.resolve(DATA_FILE).toFile();
+            // if the data file exists, it will try to read its contents
+            if (data_file.exists()) {
+                try (FileInputStream f = new FileInputStream(data_file)) {
+                    ObjectInputStream fIN = new ObjectInputStream(f);
+                    Object obj;
+
+                    obj = fIN.readObject();
+                    if (obj instanceof LoginAccount) {
+                        loginAccount = (LoginAccount) obj;
+                    } else {
+                        throw new InvalidClassException(
+                                "Unexpected object class. Expecting: " + LoginAccount.class.toString());
+                    }
+
+                    obj = fIN.readObject();
+                    if (obj instanceof ArrayList<?>) {  
+                        accountList = (ArrayList<Account>) obj;
+                    } else {
+                        throw new InvalidClassException(
+                                "Unexpected object class. Expecting: " + ArrayList.class.toString());
+                    }
+
+                    logger.addInfo("File loaded: '" + data_file.toString() + "'");
+
+                    // All the data was loaded successfully, so user can now login
+                    firstRun = false;
+                } catch (IOException | ClassNotFoundException e) {
+                    // TODO invalid file version: ask to overwrite (exit application in case of denial)
+                    // "There was a problem loading your passwords: ..."
+                    // if (e.getCause() instanceof InvalidClassException) -> probably is a different file version
+                    
+                    logger.addError(e);
+                }
+            } else {
+                logger.addInfo("File not found: '" + data_file.toString() + "'");
+            }
         } else {
-            // TODO remove when first run works
-            setLoginAccount(SavingOrder.Software, Language.English, "LoginPassword");
+            logger.addInfo("Directory '" + filePath.toString() + "' did not exist and was therefore created");
         }
 
-        // TODO if loginAccount == null, then it is first run, else just login
+        // TODO login and first run (remove everything following this comment)
+        if (firstRun) {
+            setLoginAccount(SavingOrder.Software, Language.English, "LoginPassword");
+        }
         loginPassword = "LoginPassword";
     }
 
@@ -205,7 +218,7 @@ public class FileManager {
     }
 
     public void csvMenuItemActionPerformed() {
-        try (FileWriter file = new FileWriter(desktopPath.resolve("Passwords.csv").toFile())) { 
+        try (FileWriter file = new FileWriter(desktopPath.resolve("Passwords.csv").toFile())) {
             file.write(Exporter.exportCsv(accountList, loginPassword));
             file.flush();
         } catch (IOException e) {
@@ -215,7 +228,8 @@ public class FileManager {
     // #endregion
 
     private void saveAccountFile() {
-        try (ObjectOutputStream fOUT = new ObjectOutputStream(new FileOutputStream(filePath.resolve("passwords.psmg").toFile()))) {
+        try (ObjectOutputStream fOUT = new ObjectOutputStream(
+                new FileOutputStream(filePath.resolve(DATA_FILE).toFile()))) {
             fOUT.writeObject(this.loginAccount);
             fOUT.writeObject(this.accountList);
             fOUT.close();
