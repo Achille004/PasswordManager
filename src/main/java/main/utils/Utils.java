@@ -19,6 +19,8 @@
 package main.utils;
 
 import java.util.Base64;
+import java.util.Base64.Decoder;
+import java.util.Base64.Encoder;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -29,6 +31,9 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextField;
 
 public class Utils {
+    public static final Encoder BASE64ENC = Base64.getEncoder();
+    public static final Decoder BASE64DEC = Base64.getDecoder();
+
     /**
      * Returns the selected index in a Combo Box with a first blank option. If
      * the value is -1, the selected index is the blank one.
@@ -94,11 +99,11 @@ public class Utils {
 
     public static String byteToBase64(byte[] src) {
         // Base64-encode the encrypted password for a readable representation
-        return Base64.getEncoder().encodeToString(src);
+        return BASE64ENC.encodeToString(src);
     }
 
     public static byte[] base64ToByte(String src) {
         // Base64-encode the encrypted password for a readable representation
-        return Base64.getDecoder().decode(src);
+        return BASE64DEC.decode(src);
     }
 }

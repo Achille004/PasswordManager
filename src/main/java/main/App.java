@@ -18,6 +18,8 @@
 
 package main;
 
+import java.io.IOException;
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -29,7 +31,7 @@ public class App extends Application {
     private FileManager fileManager;
 
     @Override
-    public void start(Stage primaryStage) throws Exception {
+    public void start(Stage primaryStage) {
         fileManager = new FileManager();
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/index.fxml"));
@@ -37,17 +39,25 @@ public class App extends Application {
         Controller controller = new Controller(fileManager);
         loader.setController(controller);
 
-        Parent root = loader.load();
-        Scene scene = new Scene(root, 900, 600);
+        Parent root = null;
+        try {
+            root = loader.load();
+        } catch (IOException e) {
+            fileManager.getLogger().addError(e);
+        }
 
-        primaryStage.setTitle("Password Manager");
-        primaryStage.setResizable(false);
-        primaryStage.setScene(scene);
-        primaryStage.show();
+        if (root != null) {
+            Scene scene = new Scene(root, 900, 600);
+
+            primaryStage.setTitle("Password Manager");
+            primaryStage.setResizable(false);
+            primaryStage.setScene(scene);
+            primaryStage.show();
+        }
     }
 
     @Override
-    public void stop(){
+    public void stop() {
         fileManager.saveAll();
     }
 

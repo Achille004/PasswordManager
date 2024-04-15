@@ -26,18 +26,17 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.Scanner;
 
-import java.nio.file.Path;
-
 import org.jetbrains.annotations.NotNull;
 
 public class Logger {
-    private static final DateTimeFormatter dtf = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.MEDIUM);
+    private static final DateTimeFormatter dtf = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT,
+            FormatStyle.MEDIUM);
 
     private final File logFile;
     private final StringBuilder logHistory;
 
-    public Logger(Path filePath) {
-        logFile = filePath.resolve("report.log").toFile();
+    public Logger(File logFile) {
+        this.logFile = logFile;
         logHistory = new StringBuilder();
     }
 
@@ -62,13 +61,22 @@ public class Logger {
     }
 
     public boolean readFile() {
-        try (Scanner scanner = new Scanner(logFile)) {
-            logHistory.append(scanner.useDelimiter("\\Z").next()).append("\n");
-            scanner.close();
-            return true;
-        } catch (IOException e) {
+        if (logFile == null || !logFile.exists()) {
+            addInfo("File not found: '" + logFile.toString() + "'");
             return false;
         }
+
+        try (Scanner scanner = new Scanner(logFile)) {
+            logHistory.append(scanner.useDelimiter("\\Z").next()).append("\n\n");
+
+            scanner.close();
+        } catch (IOException e) {
+            addError(e);
+            return false;
+        }
+
+        addInfo("File loaded: '" + logFile.toString() + "'");
+        return true;
     }
 
     public boolean save() {
