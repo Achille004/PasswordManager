@@ -18,13 +18,14 @@
 
 package main.utils;
 
-import java.util.ArrayList;
+import static main.utils.Utils.addZerosToIndex;
 
-import main.enums.Language;
-import main.security.Account;
+import java.util.ArrayList;
+import java.util.Locale;
+
 import org.jetbrains.annotations.NotNull;
 
-import static main.utils.Utils.*;
+import main.security.Account;
 
 public class Exporter {
     /**
@@ -35,7 +36,7 @@ public class Exporter {
      * @param loginPassword The password used to decrypt.
      * @return The whole HTML text.
      */
-    public static @NotNull String exportHtml(ArrayList<Account> accountList, Language language, String loginPassword) {
+    public static @NotNull String exportHtml(ArrayList<Account>  accountList, Locale language, String loginPassword) {
         StringBuilder stb = new StringBuilder();
 
         stb.append("<!DOCTYPE html>\n<html>\n<style>\n");
@@ -60,11 +61,12 @@ public class Exporter {
 
         stb.append("\n</style>\n\n<body>\n<table style=\"width:100%\">");
 
-        stb.append(switch (language) {
-            case English -> "<tr>\n<th>Account</th>\n<th>Software</th>\n<th>Username</th>\n<th>Password</th>\n</tr>";
-            case Italian -> "<tr>\n<th>Account</th>\n<th>Software</th>\n<th>Nome Utente</th>\n<th>Password</th>\n</tr>";
-            default -> throw new IllegalArgumentException("Invalid language: " + language.name());
-        });
+        // TODO fix
+        // stb.append(switch (locale) {
+        //     case English -> "<tr>\n<th>Account</th>\n<th>Software</th>\n<th>Username</th>\n<th>Password</th>\n</tr>";
+        //     case Italian -> "<tr>\n<th>Account</th>\n<th>Software</th>\n<th>Nome Utente</th>\n<th>Password</th>\n</tr>";
+        //     default -> throw new IllegalArgumentException("Invalid language: " + language.name());
+        // });
 
         final int listSize = accountList.size();
         int counter = 0;

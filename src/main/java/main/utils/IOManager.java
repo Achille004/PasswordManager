@@ -28,15 +28,16 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Locale;
 
 import org.jetbrains.annotations.NotNull;
 
-import main.enums.Language;
+import javafx.scene.control.TextInputControl;
 import main.enums.SavingOrder;
 import main.security.Account;
 import main.security.LoginAccount;
 
-public class FileManager {
+public class IOManager {
     static final String WINDOWS_PATH, DATA_FILE, LOG_FILE;
     static {
         WINDOWS_PATH = Path.of("AppData", "Local", "Password Manager").toString();
@@ -54,9 +55,11 @@ public class FileManager {
 
     private String loginPassword;
 
-    public FileManager() {
+    public IOManager() {
         // initialize objects
         accountList = new ArrayList<>();
+        loginAccount = null;
+        loginPassword = null;
 
         // gets system preoperties
         OS = System.getProperty("os.name");
@@ -95,7 +98,7 @@ public class FileManager {
                     }
 
                     obj = fIN.readObject();
-                    if (obj instanceof ArrayList<?>) {  
+                    if (obj instanceof ArrayList<?>) {
                         accountList = (ArrayList<Account>) obj;
                     } else {
                         throw new InvalidClassException(
@@ -110,7 +113,7 @@ public class FileManager {
                     // TODO invalid file version: ask to overwrite (exit application in case of denial)
                     // "There was a problem loading your passwords: ..."
                     // if (e.getCause() instanceof InvalidClassException) -> probably is a different file version
-                    
+
                     logger.addError(e);
                 }
             } else {
@@ -122,9 +125,8 @@ public class FileManager {
 
         // TODO login and first run (remove everything following this comment)
         if (firstRun) {
-            setLoginAccount(SavingOrder.Software, Language.English, "LoginPassword");
+            setLoginAccount(SavingOrder.Software, Locale.ENGLISH, "LoginPassword");
         }
-        loginPassword = "LoginPassword";
     }
 
     // #region AccountList methods
@@ -184,21 +186,59 @@ public class FileManager {
     // #endregion
 
     // #region LoginAccount methods
+    public boolean setLoginAccount(SavingOrder savingOrder, Locale locale, String loginPassword) {
+        if (loginAccount != null) {
+            return false;
+        }
+
+        this.loginAccount = LoginAccount.of(savingOrder, locale, loginPassword);
+        this.loginPassword = loginPassword;
+        logger.addInfo("Login account created.");
+
+        return true;
+    }
+
     public LoginAccount getLoginAccount() {
         return this.loginAccount;
     }
 
-    public void setLoginAccount(SavingOrder savingOrder, Language language, String loginPassword) {
-        this.loginAccount = LoginAccount.of(savingOrder, language, loginPassword);
+    public boolean changeLoginPassword(String loginPassword) {
+        if(!isAuthenticated()) {
+            return false;
+        }
+
+        loginAccount.setPasswordVerified(this.loginPassword, loginPassword);
 
         if (!accountList.isEmpty()) {
             accountList.forEach(account -> account.changeLoginPassword(this.loginPassword, loginPassword));
             sortAccountList();
+        }
+        
+        this.loginPassword = loginPassword;
+        logger.addInfo("Login password changed.");
 
-            logger.addInfo("Login account changed");
+        return true;
+    }
+
+    @SafeVarargs
+    public final <T extends TextInputControl> void displayLoginPassword(T... elements) {
+        for(T element : elements) {
+            element.setText(loginPassword);
+        }
+    }
+
+    public boolean authenticate(String loginPassword) {
+        if (isAuthenticated() || !loginAccount.verifyPassword(loginPassword)) {
+            return false;
         }
 
+        logger.addInfo("Successful login");
         this.loginPassword = loginPassword;
+        return true;
+    }
+
+    public boolean isAuthenticated() {
+        return loginPassword != null;
     }
     // #endregion
 
@@ -208,9 +248,8 @@ public class FileManager {
 
     // #region Exporters
     public void exportHtml() {
-
         try (FileWriter file = new FileWriter(desktopPath.resolve("Passwords.html").toFile())) {
-            file.write(Exporter.exportHtml(accountList, loginAccount.getLanguage(), loginPassword));
+            file.write(Exporter.exportHtml(accountList, loginAccount.getLocale(), loginPassword));
             file.flush();
         } catch (IOException e) {
             logger.addError(e);

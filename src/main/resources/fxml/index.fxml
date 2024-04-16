@@ -51,7 +51,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" stylesheets="@./styles.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+<VBox minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" stylesheets="@./style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
     <children>
         <BorderPane prefHeight="529.0" prefWidth="912.0" VBox.vgrow="ALWAYS">
             <left>
@@ -127,6 +127,93 @@
             <center>
                 <StackPane prefHeight="555.0" prefWidth="751.0" BorderPane.alignment="CENTER">
                     <children>
+                  <GridPane fx:id="settingsPane" prefHeight="423.0" prefWidth="838.0" style="-fx-background-color: #202428;">
+                     <columnConstraints>
+                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="748.0" minWidth="10.0" prefWidth="266.40001220703124" />
+                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="748.0" minWidth="10.0" prefWidth="462.39998779296883" />
+                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="184.0" minWidth="0.0" prefWidth="0.0" />
+                     </columnConstraints>
+                     <rowConstraints>
+                        <RowConstraints maxHeight="146.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="121.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="121.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="142.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="142.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
+                     </rowConstraints>
+                     <children>
+                        <AnchorPane prefHeight="123.0" prefWidth="738.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                           <children>
+                              <ChoiceBox fx:id="settingsOrderCB" layoutY="33.0" prefHeight="27.0" prefWidth="461.0" styleClass="textField" />
+                           </children>
+                        </AnchorPane>
+                        <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1">
+                           <children>
+                              <ChoiceBox fx:id="settingsLangCB" layoutY="33.0" prefHeight="27.0" prefWidth="461.0" styleClass="textField" />
+                           </children>
+                        </AnchorPane>
+                        <Label fx:id="settingsSavingOrderLbl" prefHeight="35.0" prefWidth="263.0" text="Saving Order:" textFill="WHITE" GridPane.rowIndex="1">
+                           <font>
+                              <Font name="System Bold Italic" size="24.0" />
+                           </font>
+                        </Label>
+                        <AnchorPane prefHeight="0.0" prefWidth="730.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                           <children>
+                              <Label fx:id="wip" layoutY="28.0" prefHeight="35.0" prefWidth="506.0" text="Work in progress..." textFill="WHITE">
+                                 <font>
+                                    <Font name="System Italic" size="24.0" />
+                                 </font>
+                              </Label>
+                           </children>
+                        </AnchorPane>
+                        <Label fx:id="settingsLangLbl" prefHeight="35.0" prefWidth="264.0" text="Language:" textFill="WHITE">
+                           <font>
+                              <Font name="System Bold Italic" size="24.0" />
+                           </font>
+                        </Label>
+                        <Label fx:id="settingsLoginPaswordLbl" prefHeight="35.0" prefWidth="264.0" text="Login Password:" textFill="WHITE" GridPane.rowIndex="2">
+                           <font>
+                              <Font name="System Bold Italic" size="24.0" />
+                           </font>
+                        </Label>
+                        <StackPane prefHeight="91.0" prefWidth="628.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                           <children>
+                              <AnchorPane prefHeight="91.0" prefWidth="256.0">
+                                 <children>
+                                    <TextField fx:id="settingsLoginPasswordVisible" layoutY="32.0" prefHeight="27.0" prefWidth="460.0" styleClass="textField" />
+                                    <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="428.0" layoutY="34.0" onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../images/icons/closed-eye.png" />
+                                       </image>
+                                    </ImageView>
+                                    <Label fx:id="settingsLoginPaswordDesc" alignment="CENTER_RIGHT" layoutX="128.0" layoutY="60.0" prefHeight="20.0" prefWidth="330.0" text="Press ENTER to confirm." textFill="WHITE">
+                                       <font>
+                                          <Font name="System Italic" size="14.0" />
+                                       </font>
+                                    </Label>
+                                 </children>
+                              </AnchorPane>
+                              <AnchorPane prefHeight="0.0" prefWidth="502.0">
+                                 <children>
+                                    <PasswordField fx:id="settingsLoginPasswordHidden" layoutY="32.0" prefHeight="27.0" prefWidth="460.0" styleClass="textField" />
+                                    <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="428.0" layoutY="34.0" onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../images/icons/open-eye.png" />
+                                       </image>
+                                    </ImageView>
+                                 </children>
+                              </AnchorPane>
+                           </children>
+                        </StackPane>
+                        <Label fx:id="settingsDriveConnLbl" prefHeight="35.0" prefWidth="269.0" text="Drive Connection:" textFill="WHITE" GridPane.rowIndex="3">
+                           <font>
+                              <Font name="System Bold Italic" size="24.0" />
+                           </font>
+                        </Label>
+                     </children>
+                     <padding>
+                        <Insets bottom="80.0" left="50.0" right="50.0" top="20.0" />
+                     </padding>
+                  </GridPane>
                   <GridPane fx:id="decryptPane" prefHeight="423.0" prefWidth="838.0" style="-fx-background-color: #202428;">
                      <columnConstraints>
                         <ColumnConstraints hgrow="SOMETIMES" maxWidth="748.0" minWidth="10.0" prefWidth="748.0" />
@@ -143,7 +230,7 @@
                         <AnchorPane prefHeight="123.0" prefWidth="738.0" GridPane.rowIndex="1">
                            <children>
                               <TextField fx:id="decryptSoftware" layoutX="5.0" layoutY="58.0" prefHeight="25.0" prefWidth="720.0" styleClass="textField" />
-                              <Label layoutX="5.0" layoutY="31.0" prefHeight="27.0" prefWidth="405.0" text="Software" textFill="WHITE">
+                              <Label fx:id="decryptSoftwareLbl" layoutX="5.0" layoutY="31.0" prefHeight="27.0" prefWidth="405.0" text="Software" textFill="WHITE">
                                  <font>
                                     <Font size="18.0" />
                                  </font>
@@ -153,7 +240,7 @@
                         <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="2">
                            <children>
                               <TextField fx:id="decryptUsername" layoutX="4.0" layoutY="58.0" prefHeight="25.0" prefWidth="720.0" styleClass="textField" />
-                              <Label layoutX="4.0" layoutY="30.0" prefHeight="27.0" prefWidth="375.0" text="Username" textFill="WHITE">
+                              <Label fx:id="decryptUsernameLbl" layoutX="4.0" layoutY="30.0" prefHeight="27.0" prefWidth="375.0" text="Username" textFill="WHITE">
                                  <font>
                                     <Font size="18.0" />
                                  </font>
@@ -214,7 +301,7 @@
                               </AnchorPane>
                               <AnchorPane prefHeight="0.0" prefWidth="730.0">
                                  <children>
-                                    <Label layoutX="4.0" layoutY="30.0" prefHeight="27.0" prefWidth="364.0" text="Password" textFill="WHITE">
+                                    <Label fx:id="decryptPasswordLbl" layoutX="4.0" layoutY="30.0" prefHeight="27.0" prefWidth="364.0" text="Password" textFill="WHITE">
                                        <font>
                                           <Font size="18.0" />
                                        </font>
@@ -231,9 +318,9 @@
                         </StackPane>
                         <AnchorPane prefHeight="200.0" prefWidth="200.0">
                            <children>
-                              <ChoiceBox fx:id="decryptCB" layoutX="196.0" layoutY="32.0" prefHeight="27.0" prefWidth="528.0" styleClass="textField" />
+                              <ChoiceBox fx:id="decryptCB" layoutX="224.0" layoutY="32.0" prefHeight="27.0" prefWidth="500.0" styleClass="textField" />
                               <Separator layoutX="2.0" layoutY="91.0" prefHeight="3.0" prefWidth="722.0" />
-                              <Label layoutX="1.0" layoutY="28.0" prefHeight="35.0" prefWidth="196.0" text="Select Account:" textFill="WHITE">
+                              <Label fx:id="decryptAccSelLbl" layoutX="1.0" layoutY="28.0" prefHeight="35.0" prefWidth="222.0" text="Select Account:" textFill="WHITE">
                                  <font>
                                     <Font name="System Bold Italic" size="24.0" />
                                  </font>
@@ -258,10 +345,19 @@
                                 <RowConstraints maxHeight="142.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
                             </rowConstraints>
                             <children>
+                                <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="3">
+                                    <children>
+                                        <Button fx:id="encryptSubmitBtn" layoutX="633.0" layoutY="21.0" mnemonicParsing="false" onAction="#encryptSave" style="-fx-background-color: none; -fx-border-color: #0aba4d; -fx-border-width: 3; -fx-border-radius: 10;" text="Submit" textFill="WHITE">
+                                            <font>
+                                                <Font name="System Bold" size="18.0" />
+                                            </font>
+                                        </Button>
+                                    </children>
+                                </AnchorPane>
                                 <AnchorPane prefHeight="123.0" prefWidth="738.0">
                                     <children>
                                         <TextField fx:id="encryptSoftware" layoutY="45.0" prefHeight="27.0" prefWidth="729.0" styleClass="textField" />
-                                        <Label layoutX="-1.0" layoutY="18.0" prefHeight="27.0" prefWidth="273.0" text="Software" textFill="WHITE">
+                                        <Label fx:id="encryptSoftwareLbl" layoutX="-1.0" layoutY="18.0" prefHeight="27.0" prefWidth="273.0" text="Software" textFill="WHITE">
                                             <font>
                                                 <Font size="18.0" />
                                             </font>
@@ -271,7 +367,7 @@
                                 <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="1">
                                     <children>
                                         <TextField fx:id="encryptUsername" layoutY="45.0" prefHeight="27.0" prefWidth="729.0" styleClass="textField" />
-                                        <Label layoutY="18.0" prefHeight="27.0" prefWidth="89.0" text="Username" textFill="WHITE">
+                                        <Label fx:id="encryptUsernameLbl" layoutY="18.0" prefHeight="27.0" prefWidth="250.0" text="Username" textFill="WHITE">
                                             <font>
                                                 <Font size="18.0" />
                                             </font>
@@ -292,7 +388,7 @@
                                         </AnchorPane>
                                         <AnchorPane prefHeight="0.0" prefWidth="730.0">
                                             <children>
-                                                <Label layoutY="19.0" prefHeight="27.0" prefWidth="83.0" text="Password" textFill="WHITE">
+                                                <Label fx:id="encryptPasswordLbl" layoutY="19.0" prefHeight="27.0" prefWidth="257.0" text="Password" textFill="WHITE">
                                                     <font>
                                                         <Font size="18.0" />
                                                     </font>
@@ -307,83 +403,11 @@
                                         </AnchorPane>
                                     </children>
                                 </StackPane>
-                                <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="3">
-                                    <children>
-                                        <Button layoutX="633.0" layoutY="21.0" mnemonicParsing="false" onAction="#encryptSave" style="-fx-background-color: none; -fx-border-color: #0aba4d; -fx-border-width: 3; -fx-border-radius: 10;" text="Submit" textFill="WHITE">
-                                            <font>
-                                                <Font name="System Bold" size="18.0" />
-                                            </font>
-                                        </Button>
-                                    </children>
-                                </AnchorPane>
                             </children>
                             <padding>
                                 <Insets bottom="80.0" left="50.0" right="50.0" top="20.0" />
                             </padding>
                         </GridPane>
-                  <GridPane fx:id="settingsPane" prefHeight="423.0" prefWidth="838.0" style="-fx-background-color: #202428;">
-                     <columnConstraints>
-                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="748.0" minWidth="10.0" prefWidth="219.0" />
-                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="748.0" minWidth="10.0" prefWidth="509.0" />
-                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="184.0" minWidth="0.0" prefWidth="0.0" />
-                     </columnConstraints>
-                     <rowConstraints>
-                        <RowConstraints maxHeight="146.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-                        <RowConstraints maxHeight="121.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-                        <RowConstraints maxHeight="121.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-                        <RowConstraints maxHeight="142.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-                        <RowConstraints maxHeight="142.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-                     </rowConstraints>
-                     <children>
-                        <AnchorPane prefHeight="123.0" prefWidth="738.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                           <children>
-                              <ChoiceBox fx:id="settingsOrderCB" layoutY="33.0" prefHeight="27.0" prefWidth="509.0" styleClass="textField" />
-                           </children>
-                        </AnchorPane>
-                        <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1">
-                           <children>
-                              <ChoiceBox fx:id="settingsLangCB" layoutY="33.0" prefHeight="27.0" prefWidth="509.0" styleClass="textField" />
-                           </children>
-                        </AnchorPane>
-                        <Label prefHeight="35.0" prefWidth="216.0" text="Saving Order:" textFill="WHITE" GridPane.rowIndex="1">
-                           <font>
-                              <Font name="System Bold Italic" size="24.0" />
-                           </font>
-                        </Label>
-                        <AnchorPane prefHeight="0.0" prefWidth="730.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
-                           <children>
-                              <Label layoutY="28.0" prefHeight="35.0" prefWidth="212.0" text="Work in progress..." textFill="WHITE">
-                                 <font>
-                                    <Font name="System Italic" size="24.0" />
-                                 </font>
-                              </Label>
-                           </children>
-                        </AnchorPane>
-                        <Label prefHeight="35.0" prefWidth="219.0" text="Language:" textFill="WHITE">
-                           <font>
-                              <Font name="System Bold Italic" size="24.0" />
-                           </font>
-                        </Label>
-                        <Label prefHeight="35.0" prefWidth="220.0" text="Login Password:" textFill="WHITE" GridPane.rowIndex="2">
-                           <font>
-                              <Font name="System Bold Italic" size="24.0" />
-                           </font>
-                        </Label>
-                        <Button fx:id="settingsChangePassButton" mnemonicParsing="false" style="-fx-background-color: none; -fx-border-color: #0aba4d; -fx-border-width: 3; -fx-border-radius: 10;" text="Change Login Password" textFill="WHITE" GridPane.columnIndex="1" GridPane.rowIndex="2">
-                           <font>
-                              <Font name="System Bold" size="18.0" />
-                           </font>
-                        </Button>
-                        <Label prefHeight="35.0" prefWidth="215.0" text="Drive Connection:" textFill="WHITE" GridPane.rowIndex="3">
-                           <font>
-                              <Font name="System Bold Italic" size="24.0" />
-                           </font>
-                        </Label>
-                     </children>
-                     <padding>
-                        <Insets bottom="80.0" left="50.0" right="50.0" top="20.0" />
-                     </padding>
-                  </GridPane>
                         <AnchorPane fx:id="homePane" prefHeight="445.0" prefWidth="89.0" style="-fx-background-color: #202428;" StackPane.alignment="CENTER">
                             <children>
                                 <ImageView fitHeight="457.0" fitWidth="457.0" layoutX="186.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true">
@@ -391,12 +415,12 @@
                                         <Image url="@../images/sfondo.png" />
                                     </image>
                                 </ImageView>
-                                <Label layoutX="329.0" layoutY="457.0" prefHeight="54.0" prefWidth="171.0" text="Your Accounts." textFill="#0aba4d" AnchorPane.bottomAnchor="46.0" AnchorPane.leftAnchor="329.0" AnchorPane.rightAnchor="328.0" AnchorPane.topAnchor="457.0">
+                                <Label fx:id="homeDescTop" alignment="CENTER" layoutX="207.0" layoutY="457.0" prefHeight="53.0" prefWidth="414.0" text="Your Accounts." textFill="#0aba4d" AnchorPane.bottomAnchor="46.19999999999999" AnchorPane.leftAnchor="207.0" AnchorPane.rightAnchor="208.20000000000005" AnchorPane.topAnchor="457.0">
                                     <font>
                                         <Font name="System Bold Italic" size="24.0" />
                                     </font>
                                 </Label>
-                                <Label layoutX="328.0" layoutY="489.0" prefHeight="54.0" prefWidth="173.0" text="In a Safe Place." textFill="#0aba4d" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="328.0" AnchorPane.rightAnchor="327.0" AnchorPane.topAnchor="489.0">
+                                <Label fx:id="homeDescBtm" alignment="CENTER" contentDisplay="CENTER" layoutX="205.0" layoutY="483.0" prefHeight="53.0" prefWidth="418.0" text="In a Safe Place." textAlignment="CENTER" textFill="#0aba4d" AnchorPane.bottomAnchor="20.200000000000045" AnchorPane.leftAnchor="205.0" AnchorPane.rightAnchor="205.39999999999998" AnchorPane.topAnchor="483.0">
                                     <font>
                                         <Font name="System Bold Italic" size="24.0" />
                                     </font>

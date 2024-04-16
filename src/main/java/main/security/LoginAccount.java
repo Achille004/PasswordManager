@@ -18,26 +18,26 @@
 
 package main.security;
 
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-
-import main.enums.Language;
-import main.enums.SavingOrder;
-
 import java.io.Serializable;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
+import java.util.Locale;
+
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+
+import main.enums.SavingOrder;
 
 public class LoginAccount implements Serializable {
     private SavingOrder savingOrder;
-    private Language language;
+    private Locale locale;
     private byte[] hashedPassword;
     private final byte[] salt;
 
-    public LoginAccount(SavingOrder savingOrder, Language language, String password) {
+    public LoginAccount(SavingOrder savingOrder, Locale locale, String password) {
         this.savingOrder = savingOrder;
-        this.language = language;
+        this.locale = locale;
 
         this.salt = new byte[16];
         setPassword(password);
@@ -51,12 +51,12 @@ public class LoginAccount implements Serializable {
         this.savingOrder = savingOrder;
     }
 
-    public Language getLanguage() {
-        return this.language;
+    public Locale getLocale() {
+        return this.locale;
     }
 
-    public void setLanguage(Language language) {
-        this.language = language;
+    public void setLocale(Locale locale) {
+        this.locale = locale;
     }
 
     public boolean verifyPassword(String passwordToVerify) {
@@ -94,8 +94,8 @@ public class LoginAccount implements Serializable {
     }
 
     @Contract("_, _, _ -> new")
-    public static @NotNull LoginAccount of(SavingOrder savingOrder, Language language, String password) {
+    public static @NotNull LoginAccount of(SavingOrder savingOrder, Locale locale, String password) {
         // creates the account, adding its attributes by constructor
-        return new LoginAccount(savingOrder, language, password);
+        return new LoginAccount(savingOrder, locale, password);
     }
 }
