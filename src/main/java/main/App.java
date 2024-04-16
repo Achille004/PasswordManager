@@ -25,40 +25,42 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import main.utils.FileManager;
 
 public class App extends Application {
-    private FileManager fileManager;
+    private Controller controller;
 
     @Override
     public void start(Stage primaryStage) {
-        fileManager = new FileManager();
-
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/index.fxml"));
 
-        Controller controller = new Controller(fileManager);
+        controller = new Controller();
         loader.setController(controller);
 
         Parent root = null;
         try {
             root = loader.load();
         } catch (IOException e) {
-            fileManager.getLogger().addError(e);
+            controller.getFileManager().getLogger().addError(e);
+            e.printStackTrace();
         }
 
-        if (root != null) {
+        try {
             Scene scene = new Scene(root, 900, 600);
 
             primaryStage.setTitle("Password Manager");
             primaryStage.setResizable(false);
             primaryStage.setScene(scene);
             primaryStage.show();
+        } catch (NullPointerException e) {
+            controller.getFileManager().getLogger().addError(e);
+        } finally {
+            stop();
         }
     }
 
     @Override
     public void stop() {
-        fileManager.saveAll();
+        controller.getFileManager().saveAll();
     }
 
     public static void main(String[] args) {

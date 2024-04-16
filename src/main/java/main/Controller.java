@@ -18,11 +18,15 @@
 
 package main;
 
-import static main.utils.Utils.*;
+import static main.utils.Utils.checkTextFields;
+import static main.utils.Utils.clearTextFields;
+import static main.utils.Utils.selectedItemInChoiceBox;
+import static main.utils.Utils.setChoiceBoxItems;
 
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.ResourceBundle;
 
 import javafx.event.ActionEvent;
@@ -37,20 +41,33 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
-import main.enums.Language;
+import javafx.util.StringConverter;
 import main.enums.SavingOrder;
 import main.security.Account;
-import main.utils.FileManager;
+import main.utils.IOManager;
+import main.utils.ObservableResourceFactory;
 
 public class Controller implements Initializable {
 
-    private final FileManager fileManager;
+    public static final Locale[] supportedLocales = { Locale.ENGLISH, Locale.ITALIAN };
 
-    public Controller(FileManager fileManager) {
-        this.fileManager = fileManager;
+    private final IOManager ioManager;
+    private final ObservableResourceFactory langResources;
+
+    public Controller() {
+        this.ioManager = new IOManager();
+        this.langResources = new ObservableResourceFactory();
     }
 
-    Button lastSidebarButton = null;
+    public IOManager getFileManager() {
+        return ioManager;
+    }
+
+    public ObservableResourceFactory getLangResources() {
+        return langResources;
+    }
+
+    private Button lastSidebarButton = null;
 
     @FXML
     private AnchorPane homePane;
@@ -59,15 +76,28 @@ public class Controller implements Initializable {
     private Button homeButton;
 
     @FXML
-    private Label mainTitle;
+    private Label mainTitle, homeDescTop, homeDescBtm;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        fileManager.loadDataFile();
+        ioManager.loadDataFile();
+
+        // If account
+        Locale locale = ioManager.getLoginAccount() != null ? ioManager.getLoginAccount().getLocale()
+                : Arrays.stream(supportedLocales).anyMatch(Locale.getDefault()::equals) ? Locale.getDefault()
+                        : Locale.ENGLISH;
+        langResources.setResources(ResourceBundle.getBundle("/bundles/Lang", locale));
+
+        homeDescTop.textProperty().bind(langResources.getStringBinding("home_desc.top"));
+        homeDescBtm.textProperty().bind(langResources.getStringBinding("home_desc.btm"));
 
         initializeEncrypt();
         initializeDecrypt();
         initializeSettings();
+
+        // TODO login and first run (remove everything following this comment)
+        ioManager.authenticate("LoginPassword");
+        System.out.println("User" + (ioManager.isAuthenticated() ? " " : " not ") + "authenticated");
     }
 
     // #region Encrypt
@@ -80,7 +110,18 @@ public class Controller implements Initializable {
     @FXML
     private PasswordField encryptPasswordHidden;
 
+    @FXML
+    private Button encryptSubmitBtn;
+
+    @FXML
+    private Label encryptSoftwareLbl, encryptUsernameLbl, encryptPasswordLbl;
+
     private void initializeEncrypt() {
+        encryptSubmitBtn.textProperty().bind(langResources.getStringBinding("submit"));
+        encryptSoftwareLbl.textProperty().bind(langResources.getStringBinding("software"));
+        encryptUsernameLbl.textProperty().bind(langResources.getStringBinding("username"));
+        encryptPasswordLbl.textProperty().bind(langResources.getStringBinding("password"));
+
         encryptPasswordVisible.textProperty().addListener((options, oldValue, newValue) -> {
             encryptPasswordHidden.setText(newValue);
         });
@@ -96,7 +137,7 @@ public class Controller implements Initializable {
         encryptClear();
 
         encryptPane.toFront();
-        setMainTitle("Encryption");
+        setMainTitle(langResources.getValue("encryption"));
 
         highlightSidebarButton(event);
     }
@@ -120,7 +161,7 @@ public class Controller implements Initializable {
             String username = encryptUsername.getText();
             String password = encryptPasswordVisible.getText();
             // save the new account
-            fileManager.addAccount(software, username, password);
+            ioManager.addAccount(software, username, password);
 
             encryptClear();
         }
@@ -143,7 +184,15 @@ public class Controller implements Initializable {
     private Button decryptDelete;
     private boolean decryptDeleteCounter = false;
 
+    @FXML
+    private Label decryptAccSelLbl, decryptSoftwareLbl, decryptUsernameLbl, decryptPasswordLbl;
+
     private void initializeDecrypt() {
+        decryptAccSelLbl.textProperty().bind(langResources.getStringBinding("select_acc"));
+        decryptSoftwareLbl.textProperty().bind(langResources.getStringBinding("software"));
+        decryptUsernameLbl.textProperty().bind(langResources.getStringBinding("username"));
+        decryptPasswordLbl.textProperty().bind(langResources.getStringBinding("password"));
+
         decryptPasswordVisible.textProperty().addListener((options, oldValue, newValue) -> {
             decryptPasswordHidden.setText(newValue);
         });
@@ -160,8 +209,8 @@ public class Controller implements Initializable {
                     int index = newIndex.intValue();
                     if (index >= 0) {
                         // gets the selected account
-                        Account selectedAcc = fileManager.getAccountList().get(index);
-                        String password = fileManager.getAccountPassword(selectedAcc);
+                        Account selectedAcc = ioManager.getAccountList().get(index);
+                        String password = ioManager.getAccountPassword(selectedAcc);
 
                         // shows the software, username and account of the selected account
                         decryptSoftware.setText(selectedAcc.getSoftware());
@@ -180,13 +229,13 @@ public class Controller implements Initializable {
         decryptChoiceBoxLoad();
 
         decryptPane.toFront();
-        setMainTitle("Decryption");
+        setMainTitle(langResources.getValue("decryption"));
 
         highlightSidebarButton(event);
     }
 
     private void decryptChoiceBoxLoad() {
-        ArrayList<Account> accountList = fileManager.getAccountList();
+        ArrayList<Account> accountList = ioManager.getAccountList();
 
         String[] items = new String[accountList.size()];
         StringBuilder strb;
@@ -197,11 +246,11 @@ public class Controller implements Initializable {
             strb.append(i + 1).append(") ");
 
             Account account = accountList.get(i);
-            switch (fileManager.getLoginAccount().getSavingOrder()) {
+            switch (ioManager.getLoginAccount().getSavingOrder()) {
                 case Software -> strb.append(account.getSoftware()).append(" / ").append(account.getUsername());
                 case Username -> strb.append(account.getUsername()).append(" / ").append(account.getSoftware());
                 default -> throw new IllegalArgumentException(
-                        "Invalid saving order: " + fileManager.getLoginAccount().getSavingOrder().name());
+                        "Invalid saving order: " + ioManager.getLoginAccount().getSavingOrder().name());
             }
 
             items[i] = strb.toString();
@@ -233,7 +282,7 @@ public class Controller implements Initializable {
                 String username = decryptUsername.getText();
                 String password = decryptPasswordVisible.getText();
                 // save the new attributes of the account
-                fileManager.replaceAccount(index, software, username, password);
+                ioManager.replaceAccount(index, software, username, password);
 
                 decryptChoiceBoxLoad();
             }
@@ -253,7 +302,7 @@ public class Controller implements Initializable {
             decryptDelete.setStyle("");
 
             // removes the selected account from the list
-            fileManager.deleteAccount(index);
+            ioManager.deleteAccount(index);
 
             decryptChoiceBoxLoad();
         } else {
@@ -269,49 +318,93 @@ public class Controller implements Initializable {
     private GridPane settingsPane;
 
     @FXML
-    private ChoiceBox<String> settingsLangCB, settingsOrderCB;
+    private ChoiceBox<Locale> settingsLangCB;
+    @FXML
+    private ChoiceBox<SavingOrder> settingsOrderCB;
+
+    @FXML
+    private TextField settingsLoginPasswordVisible;
+    @FXML
+    private PasswordField settingsLoginPasswordHidden;
 
     @FXML
     private Button settingsChangePassButton;
 
+    @FXML
+    private Label settingsLangLbl, settingsSavingOrderLbl, settingsLoginPaswordLbl, settingsLoginPaswordDesc,
+            settingsDriveConnLbl, wip;
+
     public void initializeSettings() {
-        // TODO Automate languages
-        final String[] languages = getEnumStringValues(Language.class);
-        setChoiceBoxItems(settingsLangCB, languages);
+        settingsLangLbl.textProperty().bind(langResources.getStringBinding("language"));
+        settingsSavingOrderLbl.textProperty().bind(langResources.getStringBinding("saving_ord"));
+        settingsLoginPaswordLbl.textProperty().bind(langResources.getStringBinding("login_pas"));
+        settingsLoginPaswordDesc.textProperty().bind(langResources.getStringBinding("login_pas.desc"));
+        settingsDriveConnLbl.textProperty().bind(langResources.getStringBinding("drive_con"));
+        wip.textProperty().bind(langResources.getStringBinding("wip"));
 
-        int langIndex = Arrays.asList(languages).indexOf(fileManager.getLoginAccount().getLanguage().name());
-        settingsLangCB.getSelectionModel().select(langIndex);
+        setChoiceBoxItems(settingsLangCB, supportedLocales);
+        settingsLangCB.setConverter(new StringConverter<Locale>() {
+            @Override
+            public String toString(Locale locale) {
+                String str = locale.getDisplayLanguage();
+                return str.substring(0, 1).toUpperCase() + str.substring(1);
+            }
 
-        settingsLangCB.getSelectionModel().selectedIndexProperty().addListener(
-                (options, oldIndex, newIndex) -> {
-                    String selectedItem = languages[newIndex.intValue()];
-                    Language lang = Language.valueOf(Language.class, selectedItem);
-                    fileManager.getLoginAccount().setLanguage(lang);
+            @Override
+            public Locale fromString(String string) {
+                return null;
+            }
+        });
+        settingsLangCB.getSelectionModel().select(ioManager.getLoginAccount().getLocale());
+        settingsLangCB.setOnAction(event -> {
+            Locale locale = settingsLangCB.getSelectionModel().getSelectedItem();
+            langResources.setResources(ResourceBundle.getBundle("/bundles/Lang", locale));
+            ioManager.getLoginAccount().setLocale(locale);
+            setMainTitle(langResources.getValue("settings"));
+        });
 
-                    // TODO reload language
-                });
+        setChoiceBoxItems(settingsOrderCB, SavingOrder.class.getEnumConstants());
+        settingsOrderCB.setConverter(new StringConverter<SavingOrder>() {
+            @Override
+            public String toString(SavingOrder savingOrder) {
+                return savingOrder.name();
+            }
 
-        final String[] savingOrders = getEnumStringValues(SavingOrder.class);
-        setChoiceBoxItems(settingsOrderCB, savingOrders);
+            @Override
+            public SavingOrder fromString(String string) {
+                return null;
+            }
+        });
+        settingsOrderCB.getSelectionModel().select(ioManager.getLoginAccount().getSavingOrder());
+        settingsOrderCB.setOnAction(event -> {
+            SavingOrder savingOrder = settingsOrderCB.getSelectionModel().getSelectedItem();
+            ioManager.getLoginAccount().setSavingOrder(savingOrder);
+            ioManager.sortAccountList();
+        });
 
-        int savingOrderIndex = Arrays.asList(savingOrders)
-                .indexOf(fileManager.getLoginAccount().getSavingOrder().name());
-        settingsOrderCB.getSelectionModel().select(savingOrderIndex);
+        settingsLoginPasswordVisible.textProperty().addListener((options, oldValue, newValue) -> {
+            settingsLoginPasswordHidden.setText(newValue);
+        });
+        settingsLoginPasswordVisible.setOnAction(event -> {
+            ioManager.changeLoginPassword(settingsLoginPasswordVisible.getText());
+        });
 
-        settingsOrderCB.getSelectionModel().selectedIndexProperty().addListener(
-                (options, oldIndex, newIndex) -> {
-                    String selectedItem = savingOrders[newIndex.intValue()];
-                    SavingOrder savingOrder = SavingOrder.valueOf(SavingOrder.class, selectedItem);
-                    fileManager.getLoginAccount().setSavingOrder(savingOrder);
+        settingsLoginPasswordHidden.textProperty().addListener((options, oldValue, newValue) -> {
+            settingsLoginPasswordVisible.setText(newValue);
+        });
+        settingsLoginPasswordHidden.setOnAction(event -> {
+            ioManager.changeLoginPassword(settingsLoginPasswordHidden.getText());
+        });
 
-                    fileManager.sortAccountList();
-                });
+        // TODO ACTION
     }
 
     @FXML
     public void settingsSidebarButton(ActionEvent event) {
+        ioManager.displayLoginPassword(settingsLoginPasswordVisible, settingsLoginPasswordHidden);
+
         settingsPane.toFront();
-        setMainTitle("Settings");
+        setMainTitle(langResources.getValue("settings"));
 
         highlightSidebarButton(event);
     }
