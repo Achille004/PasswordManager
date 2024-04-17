@@ -395,8 +395,6 @@ public class Controller implements Initializable {
         settingsLoginPasswordHidden.setOnAction(event -> {
             ioManager.changeLoginPassword(settingsLoginPasswordHidden.getText());
         });
-
-        // TODO ACTION
     }
 
     @FXML
