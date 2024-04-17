@@ -202,7 +202,7 @@ public class IOManager {
         return this.loginAccount;
     }
 
-    public boolean changeLoginPassword(String loginPassword) {
+    public final boolean changeLoginPassword(String loginPassword) {
         if(!isAuthenticated()) {
             return false;
         }
