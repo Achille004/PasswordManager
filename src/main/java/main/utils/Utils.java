@@ -33,6 +33,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.SortedList;
+import javafx.scene.Node;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -98,6 +99,13 @@ public class Utils {
     public static <T extends TextField> void clearTextFields(@NotNull T... fields) {
         for (T field : fields) {
             field.clear();
+        }
+    }
+
+    @SafeVarargs
+    public static <T extends Node> void clearStlye(T... nodes) {
+        for (T node : nodes) {
+            node.setStyle("");
         }
     }
 

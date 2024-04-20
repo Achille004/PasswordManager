@@ -18,16 +18,7 @@
 
 package main;
 
-import static main.utils.Utils.bindPasswordFields;
-import static main.utils.Utils.bindValueComparator;
-import static main.utils.Utils.bindValueConverter;
-import static main.utils.Utils.capitalizeWord;
-import static main.utils.Utils.checkTextFields;
-import static main.utils.Utils.clearTextFields;
-import static main.utils.Utils.getFXSortedList;
-import static main.utils.Utils.selectedChoiceBoxIndex;
-import static main.utils.Utils.selectedChoiceBoxItem;
-import static main.utils.Utils.toStringConverter;
+import static main.utils.Utils.*;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -150,10 +141,7 @@ public class Controller implements Initializable {
     }
 
     private void encryptResetStyle() {
-        encryptSoftware.setStyle("");
-        encryptUsername.setStyle("");
-        encryptPasswordVisible.setStyle("");
-        encryptPasswordHidden.setStyle("");
+        clearStlye(encryptSoftware, encryptUsername, encryptPasswordVisible, encryptPasswordHidden);
     }
 
     @FXML
@@ -263,13 +251,7 @@ public class Controller implements Initializable {
     }
 
     private void decryptResetStyle() {
-        // TODO clear styles
-
-        decryptSoftware.setStyle("");
-        decryptUsername.setStyle("");
-        decryptPasswordVisible.setStyle("");
-        decryptPasswordHidden.setStyle("");
-        decryptDelete.setStyle("");
+        clearStlye(decryptSoftware, decryptUsername, decryptPasswordVisible, decryptPasswordHidden, decryptDelete);
     }
 
     @FXML
@@ -299,7 +281,7 @@ public class Controller implements Initializable {
         // when the deleteCounter is true it means that the user has confirmed the
         // elimination
         if (decryptDeleteCounter) {
-            decryptDelete.setStyle("");
+            clearStlye(decryptDelete);
 
             // removes the selected account from the list
             ioManager.deleteAccount(index);
@@ -341,7 +323,7 @@ public class Controller implements Initializable {
         langResources.bindTextProperty(settingsLoginPaswordDesc, "login_pas.desc");
         langResources.bindTextProperty(settingsDriveConnLbl, "drive_con");
         langResources.bindTextProperty(wip, "wip");
-        
+
         SortedList<Locale> langs = getFXSortedList(SUPPORTED_LOCALES);
         settingsLangCB.setItems(langs);
         settingsLangCB.getSelectionModel().select(ioManager.getLoginAccount().getLocale());
@@ -351,8 +333,6 @@ public class Controller implements Initializable {
             Locale locale = selectedChoiceBoxItem(settingsLangCB);
             langResources.setResources(ResourceBundle.getBundle("/bundles/Lang", locale));
             ioManager.getLoginAccount().setLocale(locale);
-
-            // settingsSidebarButton(null);
             setMainTitle(langResources.getValue("settings"));
         });
 
@@ -367,7 +347,6 @@ public class Controller implements Initializable {
             ioManager.sortAccountList();
         });
 
-        // TODO utils method
         bindPasswordFields(settingsLoginPasswordHidden, settingsLoginPasswordVisible);
         settingsLoginPasswordVisible.setOnAction(event -> {
             ioManager.changeLoginPassword(settingsLoginPasswordVisible.getText());
@@ -380,8 +359,6 @@ public class Controller implements Initializable {
     @FXML
     public void settingsSidebarButton(ActionEvent event) {
         ioManager.displayLoginPassword(settingsLoginPasswordVisible, settingsLoginPasswordHidden);
-
-        // settingsOrderCB.getItems().sort(Comparator.comparing(ORDER_CONVERTER::toString));
 
         settingsPane.toFront();
         setMainTitle(langResources.getValue("settings"));
@@ -432,7 +409,7 @@ public class Controller implements Initializable {
     }
 
     private StringConverter<Locale> languageStringConverter(Locale locale) {
-        return toStringConverter(item -> capitalizeWord(item.getDisplayLanguage(locale)));
+        return toStringConverter(item -> capitalizeWord(item.getDisplayLanguage(item)));
     }
 
     private StringConverter<SavingOrder> savingOrderStringConverter(Locale locale) {
