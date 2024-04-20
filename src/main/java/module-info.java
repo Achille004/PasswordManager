@@ -17,10 +17,12 @@
  */
 
 module PasswordManager.main {
+    requires java.base;
+
     requires org.jetbrains.annotations;
 
     requires javafx.base;
-    requires javafx.controls;
+    requires transitive javafx.controls;
     requires javafx.fxml;
     requires transitive javafx.graphics;
     requires javafx.web;

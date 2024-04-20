@@ -18,21 +18,35 @@
 
 package main.utils;
 
+import java.text.Collator;
 import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
+import java.util.Comparator;
+import java.util.Locale;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import org.jetbrains.annotations.NotNull;
 
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.transformation.SortedList;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.util.Callback;
+import javafx.util.StringConverter;
 
 public class Utils {
     public static final Encoder BASE64ENC = Base64.getEncoder();
     public static final Decoder BASE64DEC = Base64.getDecoder();
+
+    @SafeVarargs
+    public static <T> SortedList<T> getFXSortedList(T... items) {
+        return FXCollections.observableArrayList(items).sorted(null);
+    }
 
     /**
      * Returns the selected index in a Combo Box with a first blank option. If
@@ -41,14 +55,27 @@ public class Utils {
      * @param comboBox The combo box to extract the index from.
      * @return The index of the current selected item.
      */
-    public static <T> int selectedItemInChoiceBox(@NotNull ChoiceBox<T> comboBox) {
+    public static <T> int selectedChoiceBoxIndex(@NotNull ChoiceBox<T> comboBox) {
         return comboBox.getSelectionModel().getSelectedIndex();
     }
 
-    @SafeVarargs
-    public static <T> void setChoiceBoxItems(@NotNull ChoiceBox<T> comboBox, @NotNull T... items) {
-        comboBox.getSelectionModel().clearSelection();
-        comboBox.setItems(FXCollections.observableArrayList(items));
+    /**
+     * Returns the selected item in a Combo Box.
+     *
+     * @param comboBox The combo box to extract the index from.
+     * @return The index of the current selected item.
+     */
+    public static <T> T selectedChoiceBoxItem(@NotNull ChoiceBox<T> comboBox) {
+        return comboBox.getSelectionModel().getSelectedItem();
+    }
+
+    public static void bindPasswordFields(PasswordField hidden, TextField visible) {
+        hidden.textProperty().addListener((options, oldValue, newValue) -> {
+            visible.setText(newValue);
+        });
+        visible.textProperty().addListener((options, oldValue, newValue) -> {
+            hidden.setText(newValue);
+        });
     }
 
     @SafeVarargs
@@ -74,16 +101,6 @@ public class Utils {
         }
     }
 
-    public static <T extends Enum<T>> String[] getEnumStringValues(Class<T> enumClass) {
-        return getEnumStringValuesWithStringExtractor(enumClass, Enum::name);
-    }
-
-    public static <T extends Enum<T>> String[] getEnumStringValuesWithStringExtractor(
-            Class<T> enumClass,
-            Function<? super T, String> extractor) {
-        return Stream.of(enumClass.getEnumConstants()).map(extractor).toArray(String[]::new);
-    }
-
     /**
      * Returns a string containing the index, preceded by zero to match up the same
      * number of digits of the size of the list.
@@ -105,5 +122,46 @@ public class Utils {
     public static byte[] base64ToByte(String src) {
         // Base64-encode the encrypted password for a readable representation
         return BASE64DEC.decode(src);
+    }
+
+    public static String capitalizeWord(String str) {
+        return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
+    }
+
+    public static <T> StringConverter<T> toStringConverter(Callback<? super T, String> converter) {
+        return new StringConverter<>() {
+
+            @Override
+            public T fromString(String string) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public String toString(T object) {
+                return converter.call(object);
+            }
+        };
+    }
+
+    public static <T> ObservableValue<Comparator<T>> comparatorBinding(ObjectProperty<Locale> locale,
+            ObjectProperty<? extends StringConverter<T>> converter) {
+        return Bindings.createObjectBinding(
+                () -> {
+                    return Comparator.comparing(
+                            converter.getValue()::toString,
+                            Collator.getInstance(locale.getValue()));
+                },
+                locale,
+                converter);
+    }
+
+    public static <T> void bindValueConverter(ChoiceBox<T> choiceBox, ObjectProperty<Locale> locale,
+            Function<Locale, StringConverter<T>> mapper) {
+        choiceBox.converterProperty().bind(locale.map(mapper));
+    }
+
+    public static <T> void bindValueComparator(SortedList<T> sortedList, ObjectProperty<Locale> locale,
+            ChoiceBox<T> choiceBox) {
+        sortedList.comparatorProperty().bind(comparatorBinding(locale, choiceBox.converterProperty()));
     }
 }

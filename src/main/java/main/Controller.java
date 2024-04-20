@@ -18,10 +18,16 @@
 
 package main;
 
+import static main.utils.Utils.bindPasswordFields;
+import static main.utils.Utils.bindValueComparator;
+import static main.utils.Utils.bindValueConverter;
+import static main.utils.Utils.capitalizeWord;
 import static main.utils.Utils.checkTextFields;
 import static main.utils.Utils.clearTextFields;
-import static main.utils.Utils.selectedItemInChoiceBox;
-import static main.utils.Utils.setChoiceBoxItems;
+import static main.utils.Utils.getFXSortedList;
+import static main.utils.Utils.selectedChoiceBoxIndex;
+import static main.utils.Utils.selectedChoiceBoxItem;
+import static main.utils.Utils.toStringConverter;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -29,6 +35,8 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+import javafx.collections.FXCollections;
+import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -49,7 +57,7 @@ import main.utils.ObservableResourceFactory;
 
 public class Controller implements Initializable {
 
-    public static final Locale[] supportedLocales = { Locale.ENGLISH, Locale.ITALIAN };
+    public static final Locale[] SUPPORTED_LOCALES = { Locale.ENGLISH, Locale.ITALIAN };
 
     private final IOManager ioManager;
     private final ObservableResourceFactory langResources;
@@ -82,14 +90,15 @@ public class Controller implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         ioManager.loadDataFile();
 
-        // If account
+        // If account exixsts, its Locale will be used, else it will use either default
+        // Locale or English
         Locale locale = ioManager.getLoginAccount() != null ? ioManager.getLoginAccount().getLocale()
-                : Arrays.stream(supportedLocales).anyMatch(Locale.getDefault()::equals) ? Locale.getDefault()
+                : Arrays.stream(SUPPORTED_LOCALES).anyMatch(Locale.getDefault()::equals) ? Locale.getDefault()
                         : Locale.ENGLISH;
         langResources.setResources(ResourceBundle.getBundle("/bundles/Lang", locale));
 
-        homeDescTop.textProperty().bind(langResources.getStringBinding("home_desc.top"));
-        homeDescBtm.textProperty().bind(langResources.getStringBinding("home_desc.btm"));
+        langResources.bindTextProperty(homeDescTop, "home_desc.top");
+        langResources.bindTextProperty(homeDescBtm, "home_desc.btm");
 
         initializeEncrypt();
         initializeDecrypt();
@@ -117,18 +126,12 @@ public class Controller implements Initializable {
     private Label encryptSoftwareLbl, encryptUsernameLbl, encryptPasswordLbl;
 
     private void initializeEncrypt() {
-        encryptSubmitBtn.textProperty().bind(langResources.getStringBinding("submit"));
-        encryptSoftwareLbl.textProperty().bind(langResources.getStringBinding("software"));
-        encryptUsernameLbl.textProperty().bind(langResources.getStringBinding("username"));
-        encryptPasswordLbl.textProperty().bind(langResources.getStringBinding("password"));
+        langResources.bindTextProperty(encryptSubmitBtn, "submit");
+        langResources.bindTextProperty(encryptSoftwareLbl, "software");
+        langResources.bindTextProperty(encryptUsernameLbl, "username");
+        langResources.bindTextProperty(encryptPasswordLbl, "password");
 
-        encryptPasswordVisible.textProperty().addListener((options, oldValue, newValue) -> {
-            encryptPasswordHidden.setText(newValue);
-        });
-
-        encryptPasswordHidden.textProperty().addListener((options, oldValue, newValue) -> {
-            encryptPasswordVisible.setText(newValue);
-        });
+        bindPasswordFields(encryptPasswordHidden, encryptPasswordVisible);
     }
 
     @FXML
@@ -188,18 +191,12 @@ public class Controller implements Initializable {
     private Label decryptAccSelLbl, decryptSoftwareLbl, decryptUsernameLbl, decryptPasswordLbl;
 
     private void initializeDecrypt() {
-        decryptAccSelLbl.textProperty().bind(langResources.getStringBinding("select_acc"));
-        decryptSoftwareLbl.textProperty().bind(langResources.getStringBinding("software"));
-        decryptUsernameLbl.textProperty().bind(langResources.getStringBinding("username"));
-        decryptPasswordLbl.textProperty().bind(langResources.getStringBinding("password"));
+        langResources.bindTextProperty(decryptAccSelLbl, "select_acc");
+        langResources.bindTextProperty(decryptSoftwareLbl, "software");
+        langResources.bindTextProperty(decryptUsernameLbl, "username");
+        langResources.bindTextProperty(decryptPasswordLbl, "password");
 
-        decryptPasswordVisible.textProperty().addListener((options, oldValue, newValue) -> {
-            decryptPasswordHidden.setText(newValue);
-        });
-
-        decryptPasswordHidden.textProperty().addListener((options, oldValue, newValue) -> {
-            decryptPasswordVisible.setText(newValue);
-        });
+        bindPasswordFields(decryptPasswordHidden, decryptPasswordVisible);
 
         decryptCB.getSelectionModel().selectedIndexProperty().addListener(
                 (options, oldIndex, newIndex) -> {
@@ -256,7 +253,8 @@ public class Controller implements Initializable {
             items[i] = strb.toString();
         }
 
-        setChoiceBoxItems(decryptCB, items);
+        // TODO convert to SortedList
+        decryptCB.setItems(FXCollections.observableArrayList(items));
         decryptClear();
     }
 
@@ -265,6 +263,8 @@ public class Controller implements Initializable {
     }
 
     private void decryptResetStyle() {
+        // TODO clear styles
+
         decryptSoftware.setStyle("");
         decryptUsername.setStyle("");
         decryptPasswordVisible.setStyle("");
@@ -274,7 +274,7 @@ public class Controller implements Initializable {
 
     @FXML
     public void decryptSave(ActionEvent event) {
-        int index = selectedItemInChoiceBox(decryptCB);
+        int index = selectedChoiceBoxIndex(decryptCB);
         if (index >= 0) {
             if (checkTextFields(decryptSoftware, decryptUsername, decryptPasswordVisible, decryptPasswordHidden)) {
                 // get the new software, username and password
@@ -291,7 +291,7 @@ public class Controller implements Initializable {
 
     @FXML
     public void decryptDelete(ActionEvent event) {
-        int index = selectedItemInChoiceBox(decryptCB);
+        int index = selectedChoiceBoxIndex(decryptCB);
         if (index < 0) {
             return;
         }
@@ -335,62 +335,42 @@ public class Controller implements Initializable {
             settingsDriveConnLbl, wip;
 
     public void initializeSettings() {
-        settingsLangLbl.textProperty().bind(langResources.getStringBinding("language"));
-        settingsSavingOrderLbl.textProperty().bind(langResources.getStringBinding("saving_ord"));
-        settingsLoginPaswordLbl.textProperty().bind(langResources.getStringBinding("login_pas"));
-        settingsLoginPaswordDesc.textProperty().bind(langResources.getStringBinding("login_pas.desc"));
-        settingsDriveConnLbl.textProperty().bind(langResources.getStringBinding("drive_con"));
-        wip.textProperty().bind(langResources.getStringBinding("wip"));
-
-        setChoiceBoxItems(settingsLangCB, supportedLocales);
-        settingsLangCB.setConverter(new StringConverter<Locale>() {
-            @Override
-            public String toString(Locale locale) {
-                String str = locale.getDisplayLanguage();
-                return str.substring(0, 1).toUpperCase() + str.substring(1);
-            }
-
-            @Override
-            public Locale fromString(String string) {
-                return null;
-            }
-        });
+        langResources.bindTextProperty(settingsLangLbl, "language");
+        langResources.bindTextProperty(settingsSavingOrderLbl, "saving_ord");
+        langResources.bindTextProperty(settingsLoginPaswordLbl, "login_pas");
+        langResources.bindTextProperty(settingsLoginPaswordDesc, "login_pas.desc");
+        langResources.bindTextProperty(settingsDriveConnLbl, "drive_con");
+        langResources.bindTextProperty(wip, "wip");
+        
+        SortedList<Locale> langs = getFXSortedList(SUPPORTED_LOCALES);
+        settingsLangCB.setItems(langs);
         settingsLangCB.getSelectionModel().select(ioManager.getLoginAccount().getLocale());
+        bindValueConverter(settingsLangCB, settingsLangCB.valueProperty(), this::languageStringConverter);
+        bindValueComparator(langs, settingsLangCB.valueProperty(), settingsLangCB);
         settingsLangCB.setOnAction(event -> {
-            Locale locale = settingsLangCB.getSelectionModel().getSelectedItem();
+            Locale locale = selectedChoiceBoxItem(settingsLangCB);
             langResources.setResources(ResourceBundle.getBundle("/bundles/Lang", locale));
             ioManager.getLoginAccount().setLocale(locale);
+
+            // settingsSidebarButton(null);
             setMainTitle(langResources.getValue("settings"));
         });
 
-        setChoiceBoxItems(settingsOrderCB, SavingOrder.class.getEnumConstants());
-        settingsOrderCB.setConverter(new StringConverter<SavingOrder>() {
-            @Override
-            public String toString(SavingOrder savingOrder) {
-                return savingOrder.name();
-            }
-
-            @Override
-            public SavingOrder fromString(String string) {
-                return null;
-            }
-        });
+        SortedList<SavingOrder> savingOrders = getFXSortedList(SavingOrder.class.getEnumConstants());
+        settingsOrderCB.setItems(savingOrders);
         settingsOrderCB.getSelectionModel().select(ioManager.getLoginAccount().getSavingOrder());
+        bindValueConverter(settingsOrderCB, settingsLangCB.valueProperty(), this::savingOrderStringConverter);
+        bindValueComparator(savingOrders, settingsLangCB.valueProperty(), settingsOrderCB);
         settingsOrderCB.setOnAction(event -> {
             SavingOrder savingOrder = settingsOrderCB.getSelectionModel().getSelectedItem();
             ioManager.getLoginAccount().setSavingOrder(savingOrder);
             ioManager.sortAccountList();
         });
 
-        settingsLoginPasswordVisible.textProperty().addListener((options, oldValue, newValue) -> {
-            settingsLoginPasswordHidden.setText(newValue);
-        });
+        // TODO utils method
+        bindPasswordFields(settingsLoginPasswordHidden, settingsLoginPasswordVisible);
         settingsLoginPasswordVisible.setOnAction(event -> {
             ioManager.changeLoginPassword(settingsLoginPasswordVisible.getText());
-        });
-
-        settingsLoginPasswordHidden.textProperty().addListener((options, oldValue, newValue) -> {
-            settingsLoginPasswordVisible.setText(newValue);
         });
         settingsLoginPasswordHidden.setOnAction(event -> {
             ioManager.changeLoginPassword(settingsLoginPasswordHidden.getText());
@@ -400,6 +380,8 @@ public class Controller implements Initializable {
     @FXML
     public void settingsSidebarButton(ActionEvent event) {
         ioManager.displayLoginPassword(settingsLoginPasswordVisible, settingsLoginPasswordHidden);
+
+        // settingsOrderCB.getItems().sort(Comparator.comparing(ORDER_CONVERTER::toString));
 
         settingsPane.toFront();
         setMainTitle(langResources.getValue("settings"));
@@ -447,5 +429,13 @@ public class Controller implements Initializable {
 
         homeButton.setVisible(homeButtonVisibility);
         mainTitle.setText("Password Manager" + title);
+    }
+
+    private StringConverter<Locale> languageStringConverter(Locale locale) {
+        return toStringConverter(item -> capitalizeWord(item.getDisplayLanguage(locale)));
+    }
+
+    private StringConverter<SavingOrder> savingOrderStringConverter(Locale locale) {
+        return toStringConverter(item -> langResources.getValue(item.i18nKey()));
     }
 }

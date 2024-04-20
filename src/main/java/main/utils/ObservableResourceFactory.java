@@ -5,6 +5,7 @@ import java.util.ResourceBundle;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.scene.control.Labeled;
 
 public class ObservableResourceFactory {
 
@@ -37,5 +38,9 @@ public class ObservableResourceFactory {
 
     public String getValue(String key) {
         return getResources().getString(key);
+    }
+
+    public <T extends Labeled> void bindTextProperty(T field, String key) {
+        field.textProperty().bind(getStringBinding(key));
     }
 }
