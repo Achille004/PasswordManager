@@ -81,6 +81,8 @@ public class Logger {
 
     public boolean save() {
         try (FileWriter w = new FileWriter(logFile)) {
+            addInfo("Log file saved");
+
             w.write(logHistory.toString());
             w.close();
 

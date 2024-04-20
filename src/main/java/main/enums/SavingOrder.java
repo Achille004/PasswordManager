@@ -19,6 +19,16 @@
 package main.enums;
 
 public enum SavingOrder {
-    Software,
-    Username;
+    Software("software"),
+    Username("username");
+
+    private final String i18nKey;
+
+    private SavingOrder(String i18nKey) {
+        this.i18nKey = i18nKey;
+    }
+
+    public String i18nKey() {
+        return i18nKey;
+    }
 }

@@ -193,7 +193,7 @@ public class IOManager {
 
         this.loginAccount = LoginAccount.of(savingOrder, locale, loginPassword);
         this.loginPassword = loginPassword;
-        logger.addInfo("Login account created.");
+        logger.addInfo("Login account created");
 
         return true;
     }
@@ -215,7 +215,7 @@ public class IOManager {
         }
         
         this.loginPassword = loginPassword;
-        logger.addInfo("Login password changed.");
+        logger.addInfo("Login password changed");
 
         return true;
     }
@@ -266,25 +266,28 @@ public class IOManager {
     }
     // #endregion
 
-    private void saveAccountFile() {
+    private boolean saveAccountFile() {
         try (ObjectOutputStream fOUT = new ObjectOutputStream(
                 new FileOutputStream(filePath.resolve(DATA_FILE).toFile()))) {
             fOUT.writeObject(this.loginAccount);
             fOUT.writeObject(this.accountList);
             fOUT.close();
 
-            logger.addInfo("Files saved");
+            logger.addInfo("Data file saved");
+
+            return true;
         } catch (IOException e) {
             logger.addError(e);
+            return false;
         }
     }
 
     public void saveAll() {
         // when the user shuts down the program on the first run, it won't save
         if (loginAccount != null) {
-            saveAccountFile();
+            logger.addInfo("Shutting down");
 
-            logger.addInfo("Program shut down");
+            saveAccountFile();
             logger.save();
         }
     }

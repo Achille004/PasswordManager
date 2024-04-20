@@ -54,14 +54,12 @@ public class App extends Application {
         } catch (NullPointerException e) {
             controller.getFileManager().getLogger().addError(e);
         } finally {
-            stop();
+            controller.getFileManager().saveAll();
         }
     }
 
-    @Override
-    public void stop() {
-        controller.getFileManager().saveAll();
-    }
+    // @Override
+    // public void stop() {}
 
     public static void main(String[] args) {
         launch(args);
