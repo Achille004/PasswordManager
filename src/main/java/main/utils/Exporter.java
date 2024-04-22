@@ -20,11 +20,11 @@ package main.utils;
 
 import static main.utils.Utils.addZerosToIndex;
 
-import java.util.ArrayList;
 import java.util.Locale;
 
 import org.jetbrains.annotations.NotNull;
 
+import javafx.collections.ObservableList;
 import main.security.Account;
 
 public class Exporter {
@@ -36,7 +36,7 @@ public class Exporter {
      * @param loginPassword The password used to decrypt.
      * @return The whole HTML text.
      */
-    public static @NotNull String exportHtml(ArrayList<Account>  accountList, Locale language, String loginPassword) {
+    public static @NotNull String exportHtml(@NotNull ObservableList<Account>  accountList, Locale language, String loginPassword) {
         StringBuilder stb = new StringBuilder();
 
         stb.append("<!DOCTYPE html>\n<html>\n<style>\n");
@@ -92,7 +92,7 @@ public class Exporter {
      * @param loginPassword The password used to decrypt.
      * @return The whole CSV text.
      */
-    public static @NotNull String exportCsv(@NotNull ArrayList<Account> accountList, String loginPassword) {
+    public static @NotNull String exportCsv(@NotNull ObservableList<Account> accountList, String loginPassword) {
         StringBuilder stb = new StringBuilder();
 
         final int listSize = accountList.size();

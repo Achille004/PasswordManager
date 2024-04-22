@@ -31,6 +31,7 @@ module PasswordManager.main {
     
     exports main;
     exports main.enums;
+    exports main.extraClasses;
     exports main.security;
     exports main.utils;
     
