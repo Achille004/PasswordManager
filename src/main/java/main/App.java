@@ -53,13 +53,15 @@ public class App extends Application {
             primaryStage.show();
         } catch (NullPointerException e) {
             controller.getFileManager().getLogger().addError(e);
-        } finally {
-            controller.getFileManager().saveAll();
+            stop();
+            System.exit(1);
         }
     }
 
-    // @Override
-    // public void stop() {}
+    @Override
+    public void stop() {
+        controller.getFileManager().saveAll();
+    }
 
     public static void main(String[] args) {
         launch(args);

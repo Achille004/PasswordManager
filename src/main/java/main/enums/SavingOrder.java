@@ -18,17 +18,48 @@
 
 package main.enums;
 
+import java.util.Comparator;
+import java.util.function.BiFunction;
+
+import main.security.Account;
+
 public enum SavingOrder {
-    Software("software"),
-    Username("username");
+    Software("software", (software, username) -> software + " / " + username, (acc1, acc2) -> {
+        int software = acc1.getSoftware().compareTo(acc2.getSoftware());
+        return (software == 0) ? acc1.getUsername().compareTo(acc2.getUsername()) : software;
+    }),
+    Username("username", (software, username) -> username + " / " + software, (acc1, acc2) -> {
+        int username = acc1.getUsername().compareTo(acc2.getUsername());
+        return (username == 0) ? acc1.getSoftware().compareTo(acc2.getSoftware()) : username;
+    });
 
     private final String i18nKey;
+    private final BiFunction<String, String, String> converter;
+    private final Comparator<Account> comparator;
 
-    private SavingOrder(String i18nKey) {
+    private SavingOrder(String i18nKey, BiFunction<String, String, String> converter, Comparator<Account> comparator) {
         this.i18nKey = i18nKey;
+        this.converter = converter;
+        this.comparator = comparator;
     }
 
     public String i18nKey() {
         return i18nKey;
+    }
+
+    public BiFunction<String, String, String> getConverter() {
+        return converter;
+    }
+
+    public String convert(String software, String username) {
+        return converter.apply(software, username);
+    }
+
+    public String convert(Account account) {
+        return this.convert(account.getSoftware(), account.getUsername());
+    }
+
+    public Comparator<Account> getComparator() {
+        return comparator;
     }
 }

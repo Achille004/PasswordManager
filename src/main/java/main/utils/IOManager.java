@@ -32,6 +32,9 @@ import java.util.Locale;
 
 import org.jetbrains.annotations.NotNull;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.scene.control.TextInputControl;
 import main.enums.SavingOrder;
 import main.security.Account;
@@ -50,14 +53,14 @@ public class IOManager {
     private final Logger logger;
 
     private LoginAccount loginAccount;
-    private ArrayList<Account> accountList;
+    private final ObservableList<Account> accountList;
     private final Path filePath, desktopPath;
 
     private String loginPassword;
 
     public IOManager() {
         // initialize objects
-        accountList = new ArrayList<>();
+        accountList = FXCollections.observableArrayList(new Account[0]);
         loginAccount = null;
         loginPassword = null;
 
@@ -72,7 +75,6 @@ public class IOManager {
         logger = new Logger(filePath.resolve(LOG_FILE).toFile());
     }
 
-    @SuppressWarnings({ "unchecked" })
     public void loadDataFile() {
         boolean firstRun = true;
         if (!filePath.toFile().mkdirs()) {
@@ -98,8 +100,8 @@ public class IOManager {
                     }
 
                     obj = fIN.readObject();
-                    if (obj instanceof ArrayList<?>) {
-                        accountList = (ArrayList<Account>) obj;
+                    if (obj instanceof Account[]) {
+                        accountList.addAll((Account[]) obj);
                     } else {
                         throw new InvalidClassException(
                                 "Unexpected object class. Expecting: " + ArrayList.class.toString());
@@ -110,9 +112,11 @@ public class IOManager {
                     // All the data was loaded successfully, so user can now login
                     firstRun = false;
                 } catch (IOException | ClassNotFoundException e) {
-                    // TODO invalid file version: ask to overwrite (exit application in case of denial)
+                    // TODO invalid file version: ask to overwrite (exit application in case of
+                    // denial)
                     // "There was a problem loading your passwords: ..."
-                    // if (e.getCause() instanceof InvalidClassException) -> probably is a different file version
+                    // if (e.getCause() instanceof InvalidClassException) -> probably is a different
+                    // file version
 
                     logger.addError(e);
                 }
@@ -130,25 +134,16 @@ public class IOManager {
     }
 
     // #region AccountList methods
-    public ArrayList<Account> getAccountList() {
+    public ObservableList<Account> getAccountList() {
         return this.accountList;
     }
 
+    public SortedList<Account> getSortedAccountList() {
+        return this.accountList.sorted(null);
+    }
+
     public void sortAccountList() {
-        switch (loginAccount.getSavingOrder()) {
-            case Software -> this.accountList.sort((acc1, acc2) -> {
-                int software = acc1.getSoftware().compareTo(acc2.getSoftware());
-                return (software == 0) ? acc1.getUsername().compareTo(acc2.getUsername()) : software;
-            });
-
-            case Username -> this.accountList.sort((acc1, acc2) -> {
-                int username = acc1.getUsername().compareTo(acc2.getUsername());
-                return (username == 0) ? acc1.getSoftware().compareTo(acc2.getSoftware()) : username;
-            });
-
-            default ->
-                throw new IllegalArgumentException("Invalid saving order: " + loginAccount.getSavingOrder().name());
-        }
+        this.accountList.sort(loginAccount.getSavingOrder().getComparator());
     }
     // #endregion
 
@@ -203,7 +198,7 @@ public class IOManager {
     }
 
     public final boolean changeLoginPassword(String loginPassword) {
-        if(!isAuthenticated()) {
+        if (!isAuthenticated()) {
             return false;
         }
 
@@ -213,7 +208,7 @@ public class IOManager {
             accountList.forEach(account -> account.changeLoginPassword(this.loginPassword, loginPassword));
             sortAccountList();
         }
-        
+
         this.loginPassword = loginPassword;
         logger.addInfo("Login password changed");
 
@@ -222,7 +217,7 @@ public class IOManager {
 
     @SafeVarargs
     public final <T extends TextInputControl> void displayLoginPassword(T... elements) {
-        for(T element : elements) {
+        for (T element : elements) {
             element.setText(loginPassword);
         }
     }
@@ -270,7 +265,7 @@ public class IOManager {
         try (ObjectOutputStream fOUT = new ObjectOutputStream(
                 new FileOutputStream(filePath.resolve(DATA_FILE).toFile()))) {
             fOUT.writeObject(this.loginAccount);
-            fOUT.writeObject(this.accountList);
+            fOUT.writeObject(this.accountList.toArray(new Account[0]));
             fOUT.close();
 
             logger.addInfo("Data file saved");

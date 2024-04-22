@@ -27,36 +27,46 @@ import java.util.Locale;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import javafx.beans.property.ObjectProperty;
 import main.enums.SavingOrder;
+import main.extraClasses.SerializableSimpleObjectProperty;
 
 public class LoginAccount implements Serializable {
-    private SavingOrder savingOrder;
-    private Locale locale;
+    private final ObjectProperty<SavingOrder> savingOrder;
+    private final ObjectProperty<Locale> locale;
     private byte[] hashedPassword;
     private final byte[] salt;
 
     public LoginAccount(SavingOrder savingOrder, Locale locale, String password) {
-        this.savingOrder = savingOrder;
-        this.locale = locale;
+        this.savingOrder = new SerializableSimpleObjectProperty<>(savingOrder);
+        this.locale = new SerializableSimpleObjectProperty<>(locale);
 
         this.salt = new byte[16];
         setPassword(password);
     }
 
-    public SavingOrder getSavingOrder() {
+    public ObjectProperty<SavingOrder> getSavingOrderProperty() {
         return this.savingOrder;
     }
 
-    public void setSavingOrder(SavingOrder savingOrder) {
-        this.savingOrder = savingOrder;
+    public SavingOrder getSavingOrder() {
+        return this.savingOrder.getValue();
     }
 
-    public Locale getLocale() {
+    public void setSavingOrder(SavingOrder savingOrder) {
+        this.savingOrder.setValue(savingOrder);
+    }
+
+    public ObjectProperty<Locale> getLocaleProperty() {
         return this.locale;
     }
 
+    public Locale getLocale() {
+        return this.locale.getValue();
+    }
+
     public void setLocale(Locale locale) {
-        this.locale = locale;
+        this.locale.setValue(locale);
     }
 
     public boolean verifyPassword(String passwordToVerify) {

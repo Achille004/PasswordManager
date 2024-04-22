@@ -1,4 +1,4 @@
-package main.utils;
+package main.extraClasses;
 
 import java.util.ResourceBundle;
 
@@ -8,7 +8,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.control.Labeled;
 
 public class ObservableResourceFactory {
-
     private ObjectProperty<ResourceBundle> resources = new SimpleObjectProperty<>();
 
     public ObjectProperty<ResourceBundle> resourcesProperty() {

@@ -18,15 +18,23 @@
 
 package main;
 
-import static main.utils.Utils.*;
+import static main.utils.Utils.bindPasswordFields;
+import static main.utils.Utils.bindValueComparator;
+import static main.utils.Utils.bindValueConverter;
+import static main.utils.Utils.capitalizeWord;
+import static main.utils.Utils.checkTextFields;
+import static main.utils.Utils.clearStlye;
+import static main.utils.Utils.clearTextFields;
+import static main.utils.Utils.getFXSortedList;
+import static main.utils.Utils.selectedChoiceBoxIndex;
+import static main.utils.Utils.selectedChoiceBoxItem;
+import static main.utils.Utils.toStringConverter;
 
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import javafx.collections.FXCollections;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -42,9 +50,9 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
 import main.enums.SavingOrder;
+import main.extraClasses.ObservableResourceFactory;
 import main.security.Account;
 import main.utils.IOManager;
-import main.utils.ObservableResourceFactory;
 
 public class Controller implements Initializable {
 
@@ -164,7 +172,7 @@ public class Controller implements Initializable {
     private GridPane decryptPane;
 
     @FXML
-    private ChoiceBox<String> decryptCB;
+    private ChoiceBox<Account> decryptCB;
 
     @FXML
     private TextField decryptSoftware, decryptUsername, decryptPasswordVisible;
@@ -220,29 +228,13 @@ public class Controller implements Initializable {
     }
 
     private void decryptChoiceBoxLoad() {
-        ArrayList<Account> accountList = ioManager.getAccountList();
-
-        String[] items = new String[accountList.size()];
-        StringBuilder strb;
-
-        for (int i = 0; i < items.length; i++) {
-            strb = new StringBuilder();
-
-            strb.append(i + 1).append(") ");
-
-            Account account = accountList.get(i);
-            switch (ioManager.getLoginAccount().getSavingOrder()) {
-                case Software -> strb.append(account.getSoftware()).append(" / ").append(account.getUsername());
-                case Username -> strb.append(account.getUsername()).append(" / ").append(account.getSoftware());
-                default -> throw new IllegalArgumentException(
-                        "Invalid saving order: " + ioManager.getLoginAccount().getSavingOrder().name());
-            }
-
-            items[i] = strb.toString();
-        }
-
         // TODO convert to SortedList
-        decryptCB.setItems(FXCollections.observableArrayList(items));
+        SortedList<Account> accountList = ioManager.getSortedAccountList();
+
+        decryptCB.setItems(accountList);
+        bindValueConverter(decryptCB, settingsLangCB.valueProperty(), this::accountStringConverter);
+        bindValueComparator(accountList, settingsLangCB.valueProperty(), decryptCB);
+
         decryptClear();
     }
 
@@ -323,6 +315,8 @@ public class Controller implements Initializable {
         langResources.bindTextProperty(settingsLoginPaswordDesc, "login_pas.desc");
         langResources.bindTextProperty(settingsDriveConnLbl, "drive_con");
         langResources.bindTextProperty(wip, "wip");
+
+        // TODO convert SavingOrder and Language to valueProperty
 
         SortedList<Locale> langs = getFXSortedList(SUPPORTED_LOCALES);
         settingsLangCB.setItems(langs);
@@ -406,6 +400,10 @@ public class Controller implements Initializable {
 
         homeButton.setVisible(homeButtonVisibility);
         mainTitle.setText("Password Manager" + title);
+    }
+
+    private StringConverter<Account> accountStringConverter(Locale locale) {
+        return toStringConverter(item -> item != null ? ioManager.getLoginAccount().getSavingOrder().convert(item) : null);
     }
 
     private StringConverter<Locale> languageStringConverter(Locale locale) {
