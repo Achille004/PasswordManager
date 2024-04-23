@@ -20,8 +20,6 @@ package main.utils;
 
 import static main.utils.Utils.addZerosToIndex;
 
-import java.util.Locale;
-
 import org.jetbrains.annotations.NotNull;
 
 import javafx.collections.ObservableList;
@@ -36,7 +34,8 @@ public class Exporter {
      * @param loginPassword The password used to decrypt.
      * @return The whole HTML text.
      */
-    public static @NotNull String exportHtml(@NotNull ObservableList<Account>  accountList, Locale language, String loginPassword) {
+    public static @NotNull String exportHtml(@NotNull ObservableList<Account> accountList,
+            ObservableResourceFactory langResources, String loginPassword) {
         StringBuilder stb = new StringBuilder();
 
         stb.append("<!DOCTYPE html>\n<html>\n<style>\n");
@@ -60,13 +59,10 @@ public class Exporter {
                 """);
 
         stb.append("\n</style>\n\n<body>\n<table style=\"width:100%\">");
-
-        // TODO fix
-        // stb.append(switch (locale) {
-        //     case English -> "<tr>\n<th>Account</th>\n<th>Software</th>\n<th>Username</th>\n<th>Password</th>\n</tr>";
-        //     case Italian -> "<tr>\n<th>Account</th>\n<th>Software</th>\n<th>Nome Utente</th>\n<th>Password</th>\n</tr>";
-        //     default -> throw new IllegalArgumentException("Invalid language: " + language.name());
-        // });
+        stb.append("<tr>\n<th>" + langResources.getValue("account") + "</th>\n<th>"
+                + langResources.getValue("software") + "</th>\n<th>"
+                + langResources.getValue("username") + "</th>\n<th>"
+                + langResources.getValue("password") + "</th>\n</tr>");
 
         final int listSize = accountList.size();
         int counter = 0;

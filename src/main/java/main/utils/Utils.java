@@ -103,7 +103,7 @@ public class Utils {
     }
 
     @SafeVarargs
-    public static <T extends Node> void clearStlye(T... nodes) {
+    public static <T extends Node> void clearStyle(T... nodes) {
         for (T node : nodes) {
             node.setStyle("");
         }

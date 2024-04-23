@@ -64,7 +64,7 @@ public class IOManager {
         loginAccount = null;
         loginPassword = null;
 
-        // gets system preoperties
+        // gets system properties
         OS = System.getProperty("os.name");
         USER_HOME = System.getProperty("user.home");
 
@@ -236,16 +236,16 @@ public class IOManager {
     }
 
     // #region Exporters
-    public void exportHtml() {
+    public void exportHtml(ObservableResourceFactory langResources) {
         try (FileWriter file = new FileWriter(desktopPath.resolve("Passwords.html").toFile())) {
-            file.write(Exporter.exportHtml(accountList, loginAccount.getLocale(), loginPassword));
+            file.write(Exporter.exportHtml(accountList, langResources, loginPassword));
             file.flush();
         } catch (IOException e) {
             logger.addError(e);
         }
     }
 
-    public void csvMenuItemActionPerformed() {
+    public void exportCsv() {
         try (FileWriter file = new FileWriter(desktopPath.resolve("Passwords.csv").toFile())) {
             file.write(Exporter.exportCsv(accountList, loginPassword));
             file.flush();
