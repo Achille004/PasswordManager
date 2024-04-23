@@ -1,4 +1,4 @@
-package main.extraClasses;
+package main.utils;
 
 import java.util.ResourceBundle;
 

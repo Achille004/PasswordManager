@@ -31,10 +31,11 @@ import static main.utils.Utils.selectedChoiceBoxItem;
 import static main.utils.Utils.toStringConverter;
 
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.ObjectProperty;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -49,10 +50,10 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
-import main.enums.SavingOrder;
-import main.extraClasses.ObservableResourceFactory;
+import main.enums.SortingOrder;
 import main.security.Account;
 import main.utils.IOManager;
+import main.utils.ObservableResourceFactory;
 
 public class Controller implements Initializable {
 
@@ -89,12 +90,14 @@ public class Controller implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         ioManager.loadDataFile();
 
-        // If account exixsts, its Locale will be used, else it will use either default
-        // Locale or English
-        Locale locale = ioManager.getLoginAccount() != null ? ioManager.getLoginAccount().getLocale()
-                : Arrays.stream(SUPPORTED_LOCALES).anyMatch(Locale.getDefault()::equals) ? Locale.getDefault()
-                        : Locale.ENGLISH;
-        langResources.setResources(ResourceBundle.getBundle("/bundles/Lang", locale));
+        ObjectProperty<Locale> locale = settingsLangCB.valueProperty();
+        langResources.resourcesProperty().bind(Bindings.createObjectBinding(
+                () -> {
+                    Locale localeValue = locale.getValue();
+                    return ResourceBundle.getBundle("/bundles/Lang",
+                            localeValue != null ? localeValue : Locale.getDefault());
+                },
+                locale));
 
         langResources.bindTextProperty(homeDescTop, "home_desc.top");
         langResources.bindTextProperty(homeDescBtm, "home_desc.btm");
@@ -194,6 +197,19 @@ public class Controller implements Initializable {
 
         bindPasswordFields(decryptPasswordHidden, decryptPasswordVisible);
 
+        SortedList<Account> accountList = ioManager.getSortedAccountList();
+        decryptCB.setItems(accountList);
+        bindValueConverter(decryptCB, settingsLangCB.valueProperty(), this::accountStringConverter);
+
+        ObjectProperty<SortingOrder> sortingOrder = settingsOrderCB.valueProperty();
+        accountList.comparatorProperty().bind(Bindings.createObjectBinding(
+                () -> {
+                    SortingOrder sortingOrderValue = sortingOrder.getValue();
+                    return sortingOrderValue != null ? sortingOrderValue.getComparator()
+                            : SortingOrder.Software.getComparator();
+                },
+                sortingOrder));
+
         decryptCB.getSelectionModel().selectedIndexProperty().addListener(
                 (options, oldIndex, newIndex) -> {
                     decryptDeleteCounter = false;
@@ -219,23 +235,12 @@ public class Controller implements Initializable {
     @FXML
     public void decryptSidebarButton(ActionEvent event) {
         decryptResetStyle();
-        decryptChoiceBoxLoad();
+        decryptClear();
 
         decryptPane.toFront();
         setMainTitle(langResources.getValue("decryption"));
 
         highlightSidebarButton(event);
-    }
-
-    private void decryptChoiceBoxLoad() {
-        // TODO convert to SortedList
-        SortedList<Account> accountList = ioManager.getSortedAccountList();
-
-        decryptCB.setItems(accountList);
-        bindValueConverter(decryptCB, settingsLangCB.valueProperty(), this::accountStringConverter);
-        bindValueComparator(accountList, settingsLangCB.valueProperty(), decryptCB);
-
-        decryptClear();
     }
 
     private void decryptClear() {
@@ -257,8 +262,6 @@ public class Controller implements Initializable {
                 String password = decryptPasswordVisible.getText();
                 // save the new attributes of the account
                 ioManager.replaceAccount(index, software, username, password);
-
-                decryptChoiceBoxLoad();
             }
         }
     }
@@ -277,8 +280,6 @@ public class Controller implements Initializable {
 
             // removes the selected account from the list
             ioManager.deleteAccount(index);
-
-            decryptChoiceBoxLoad();
         } else {
             decryptDelete.setStyle("-fx-background-color: #ff5f5f;");
         }
@@ -294,7 +295,7 @@ public class Controller implements Initializable {
     @FXML
     private ChoiceBox<Locale> settingsLangCB;
     @FXML
-    private ChoiceBox<SavingOrder> settingsOrderCB;
+    private ChoiceBox<SortingOrder> settingsOrderCB;
 
     @FXML
     private TextField settingsLoginPasswordVisible;
@@ -305,18 +306,16 @@ public class Controller implements Initializable {
     private Button settingsChangePassButton;
 
     @FXML
-    private Label settingsLangLbl, settingsSavingOrderLbl, settingsLoginPaswordLbl, settingsLoginPaswordDesc,
+    private Label settingsLangLbl, settingsSortingOrderLbl, settingsLoginPaswordLbl, settingsLoginPaswordDesc,
             settingsDriveConnLbl, wip;
 
     public void initializeSettings() {
         langResources.bindTextProperty(settingsLangLbl, "language");
-        langResources.bindTextProperty(settingsSavingOrderLbl, "saving_ord");
+        langResources.bindTextProperty(settingsSortingOrderLbl, "sorting_ord");
         langResources.bindTextProperty(settingsLoginPaswordLbl, "login_pas");
         langResources.bindTextProperty(settingsLoginPaswordDesc, "login_pas.desc");
         langResources.bindTextProperty(settingsDriveConnLbl, "drive_con");
         langResources.bindTextProperty(wip, "wip");
-
-        // TODO convert SavingOrder and Language to valueProperty
 
         SortedList<Locale> langs = getFXSortedList(SUPPORTED_LOCALES);
         settingsLangCB.setItems(langs);
@@ -325,20 +324,18 @@ public class Controller implements Initializable {
         bindValueComparator(langs, settingsLangCB.valueProperty(), settingsLangCB);
         settingsLangCB.setOnAction(event -> {
             Locale locale = selectedChoiceBoxItem(settingsLangCB);
-            langResources.setResources(ResourceBundle.getBundle("/bundles/Lang", locale));
             ioManager.getLoginAccount().setLocale(locale);
             setMainTitle(langResources.getValue("settings"));
         });
 
-        SortedList<SavingOrder> savingOrders = getFXSortedList(SavingOrder.class.getEnumConstants());
-        settingsOrderCB.setItems(savingOrders);
-        settingsOrderCB.getSelectionModel().select(ioManager.getLoginAccount().getSavingOrder());
-        bindValueConverter(settingsOrderCB, settingsLangCB.valueProperty(), this::savingOrderStringConverter);
-        bindValueComparator(savingOrders, settingsLangCB.valueProperty(), settingsOrderCB);
+        SortedList<SortingOrder> sortingOrders = getFXSortedList(SortingOrder.class.getEnumConstants());
+        settingsOrderCB.setItems(sortingOrders);
+        settingsOrderCB.getSelectionModel().select(ioManager.getLoginAccount().getSortingOrder());
+        bindValueConverter(settingsOrderCB, settingsLangCB.valueProperty(), this::sortingOrderStringConverter);
+        bindValueComparator(sortingOrders, settingsLangCB.valueProperty(), settingsOrderCB);
         settingsOrderCB.setOnAction(event -> {
-            SavingOrder savingOrder = settingsOrderCB.getSelectionModel().getSelectedItem();
-            ioManager.getLoginAccount().setSavingOrder(savingOrder);
-            ioManager.sortAccountList();
+            SortingOrder sortingOrder = settingsOrderCB.getSelectionModel().getSelectedItem();
+            ioManager.getLoginAccount().setSortingOrder(sortingOrder);
         });
 
         bindPasswordFields(settingsLoginPasswordHidden, settingsLoginPasswordVisible);
@@ -403,14 +400,15 @@ public class Controller implements Initializable {
     }
 
     private StringConverter<Account> accountStringConverter(Locale locale) {
-        return toStringConverter(item -> item != null ? ioManager.getLoginAccount().getSavingOrder().convert(item) : null);
+        return toStringConverter(
+                item -> item != null ? ioManager.getLoginAccount().getSortingOrder().convert(item) : null);
     }
 
     private StringConverter<Locale> languageStringConverter(Locale locale) {
         return toStringConverter(item -> capitalizeWord(item.getDisplayLanguage(item)));
     }
 
-    private StringConverter<SavingOrder> savingOrderStringConverter(Locale locale) {
+    private StringConverter<SortingOrder> sortingOrderStringConverter(Locale locale) {
         return toStringConverter(item -> langResources.getValue(item.i18nKey()));
     }
 }

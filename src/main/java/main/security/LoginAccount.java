@@ -27,46 +27,36 @@ import java.util.Locale;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import javafx.beans.property.ObjectProperty;
-import main.enums.SavingOrder;
-import main.extraClasses.SerializableSimpleObjectProperty;
+import main.enums.SortingOrder;
 
 public class LoginAccount implements Serializable {
-    private final ObjectProperty<SavingOrder> savingOrder;
-    private final ObjectProperty<Locale> locale;
+    private SortingOrder sortingOrder;
+    private Locale locale;
     private byte[] hashedPassword;
     private final byte[] salt;
 
-    public LoginAccount(SavingOrder savingOrder, Locale locale, String password) {
-        this.savingOrder = new SerializableSimpleObjectProperty<>(savingOrder);
-        this.locale = new SerializableSimpleObjectProperty<>(locale);
+    public LoginAccount(SortingOrder sortingOrder, Locale locale, String password) {
+        this.sortingOrder = sortingOrder;
+        this.locale = locale;
 
         this.salt = new byte[16];
         setPassword(password);
     }
 
-    public ObjectProperty<SavingOrder> getSavingOrderProperty() {
-        return this.savingOrder;
+    public SortingOrder getSortingOrder() {
+        return this.sortingOrder;
     }
 
-    public SavingOrder getSavingOrder() {
-        return this.savingOrder.getValue();
+    public void setSortingOrder(SortingOrder sortingOrder) {
+        this.sortingOrder = sortingOrder;
     }
-
-    public void setSavingOrder(SavingOrder savingOrder) {
-        this.savingOrder.setValue(savingOrder);
-    }
-
-    public ObjectProperty<Locale> getLocaleProperty() {
+    
+    public Locale getLocale() {
         return this.locale;
     }
 
-    public Locale getLocale() {
-        return this.locale.getValue();
-    }
-
     public void setLocale(Locale locale) {
-        this.locale.setValue(locale);
+        this.locale = locale;
     }
 
     public boolean verifyPassword(String passwordToVerify) {
@@ -104,8 +94,8 @@ public class LoginAccount implements Serializable {
     }
 
     @Contract("_, _, _ -> new")
-    public static @NotNull LoginAccount of(SavingOrder savingOrder, Locale locale, String password) {
+    public static @NotNull LoginAccount of(SortingOrder sortingOrder, Locale locale, String password) {
         // creates the account, adding its attributes by constructor
-        return new LoginAccount(savingOrder, locale, password);
+        return new LoginAccount(sortingOrder, locale, password);
     }
 }
