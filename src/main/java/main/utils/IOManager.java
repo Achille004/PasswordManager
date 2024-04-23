@@ -36,7 +36,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.TextInputControl;
-import main.enums.SavingOrder;
+import main.enums.SortingOrder;
 import main.security.Account;
 import main.security.LoginAccount;
 
@@ -129,7 +129,7 @@ public class IOManager {
 
         // TODO login and first run (remove everything following this comment)
         if (firstRun) {
-            setLoginAccount(SavingOrder.Software, Locale.ENGLISH, "LoginPassword");
+            setLoginAccount(SortingOrder.Software, Locale.ENGLISH, "LoginPassword");
         }
     }
 
@@ -141,10 +141,6 @@ public class IOManager {
     public SortedList<Account> getSortedAccountList() {
         return this.accountList.sorted(null);
     }
-
-    public void sortAccountList() {
-        this.accountList.sort(loginAccount.getSavingOrder().getComparator());
-    }
     // #endregion
 
     // #region Account methods
@@ -153,7 +149,7 @@ public class IOManager {
      */
     public void addAccount(String software, String username, String password) {
         accountList.add(Account.of(software, username, password, loginPassword));
-        sortAccountList();
+        //sortAccountList();
 
         logger.addInfo("Account added");
     }
@@ -161,7 +157,7 @@ public class IOManager {
     public void replaceAccount(int index, String software, String username, String password) {
         if (index >= 0 && index < accountList.size()) {
             accountList.set(index, Account.of(software, username, password, loginPassword));
-            sortAccountList();
+            //sortAccountList();
 
             logger.addInfo("Account edited");
         }
@@ -170,7 +166,6 @@ public class IOManager {
     public void deleteAccount(int index) {
         if (index >= 0 && index < accountList.size()) {
             accountList.remove(index);
-
             logger.addInfo("Account deleted");
         }
     }
@@ -181,12 +176,12 @@ public class IOManager {
     // #endregion
 
     // #region LoginAccount methods
-    public boolean setLoginAccount(SavingOrder savingOrder, Locale locale, String loginPassword) {
+    public boolean setLoginAccount(SortingOrder sortingOrder, Locale locale, String loginPassword) {
         if (loginAccount != null) {
             return false;
         }
 
-        this.loginAccount = LoginAccount.of(savingOrder, locale, loginPassword);
+        this.loginAccount = LoginAccount.of(sortingOrder, locale, loginPassword);
         this.loginPassword = loginPassword;
         logger.addInfo("Login account created");
 
@@ -206,7 +201,6 @@ public class IOManager {
 
         if (!accountList.isEmpty()) {
             accountList.forEach(account -> account.changeLoginPassword(this.loginPassword, loginPassword));
-            sortAccountList();
         }
 
         this.loginPassword = loginPassword;

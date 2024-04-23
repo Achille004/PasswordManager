@@ -23,7 +23,7 @@ import java.util.function.BiFunction;
 
 import main.security.Account;
 
-public enum SavingOrder {
+public enum SortingOrder {
     Software("software", (software, username) -> software + " / " + username, (acc1, acc2) -> {
         int software = acc1.getSoftware().compareTo(acc2.getSoftware());
         return (software == 0) ? acc1.getUsername().compareTo(acc2.getUsername()) : software;
@@ -37,7 +37,7 @@ public enum SavingOrder {
     private final BiFunction<String, String, String> converter;
     private final Comparator<Account> comparator;
 
-    private SavingOrder(String i18nKey, BiFunction<String, String, String> converter, Comparator<Account> comparator) {
+    private SortingOrder(String i18nKey, BiFunction<String, String, String> converter, Comparator<Account> comparator) {
         this.i18nKey = i18nKey;
         this.converter = converter;
         this.comparator = comparator;

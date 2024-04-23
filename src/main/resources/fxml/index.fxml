@@ -151,7 +151,7 @@
                               <ChoiceBox fx:id="settingsLangCB" layoutY="33.0" prefHeight="27.0" prefWidth="461.0" styleClass="textField" />
                            </children>
                         </AnchorPane>
-                        <Label fx:id="settingsSavingOrderLbl" prefHeight="35.0" prefWidth="263.0" text="Saving Order:" textFill="WHITE" GridPane.rowIndex="1">
+                        <Label fx:id="settingsSortingOrderLbl" prefHeight="35.0" prefWidth="263.0" text="Order by:" textFill="WHITE" GridPane.rowIndex="1">
                            <font>
                               <Font name="System Bold Italic" size="24.0" />
                            </font>

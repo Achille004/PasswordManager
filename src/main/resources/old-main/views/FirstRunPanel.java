@@ -12,7 +12,7 @@ public class FirstRunPanel extends JPanel {
     private JCheckBox AcceptEulaCheckBox;
     private JComboBox<String> LanguageSelector;
     private JTextField LoginPasswordTextField;
-    private JComboBox<String> SavingOrderSelector;
+    private JComboBox<String> SortingOrderSelector;
 
     private final Main appInstance;
 
@@ -27,12 +27,12 @@ public class FirstRunPanel extends JPanel {
         LanguageSelector.addItem("English");
         LanguageSelector.addItem("Italian");
 
-        SavingOrderSelector.removeAllItems();
-        SavingOrderSelector.addItem("");
-        SavingOrderSelector.addItem("Software");
-        SavingOrderSelector.addItem("Username");
+        SortingOrderSelector.removeAllItems();
+        SortingOrderSelector.addItem("");
+        SortingOrderSelector.addItem("Software");
+        SortingOrderSelector.addItem("Username");
 
-        repaintAll(LanguageSelector, SavingOrderSelector);
+        repaintAll(LanguageSelector, SortingOrderSelector);
     }
 
     private void ConfirmButtonActionPerformed(ActionEvent evt) {
@@ -41,10 +41,10 @@ public class FirstRunPanel extends JPanel {
 
         if (!loginPassword.isBlank()) {
             int languageSelectorIndex = selectedItemInComboBox(LanguageSelector);
-            int savingOrderSelectorIndex= selectedItemInComboBox(SavingOrderSelector);
+            int sortingOrderSelectorIndex= selectedItemInComboBox(SortingOrderSelector);
 
             // checks if all is inserted and EULA is accepted
-            if (languageSelectorIndex == -1 || savingOrderSelectorIndex == -1
+            if (languageSelectorIndex == -1 || sortingOrderSelectorIndex == -1
                 || loginPassword.isBlank() || !AcceptEulaCheckBox.isSelected()) {
                 return;
             }
@@ -56,15 +56,15 @@ public class FirstRunPanel extends JPanel {
                 default -> throw new IllegalArgumentException("Invalid language.");
             };
 
-            // translates the index into the actual saving order
-            String savingOrder = switch (savingOrderSelectorIndex) {
+            // translates the index into the actual sorting order
+            String sortingOrder = switch (sortingOrderSelectorIndex) {
                 case 0 -> "s";
                 case 1 -> "u";
-                default -> throw new IllegalArgumentException("Invalid saving order.");
+                default -> throw new IllegalArgumentException("Invalid sorting order.");
             };
 
             // saves all in the new login account
-            appInstance.setLoginAccount(savingOrder, language, loginPassword);
+            appInstance.setLoginAccount(sortingOrder, language, loginPassword);
             appInstance.getLogger().addInfo("First Run successful, accepted EULA)");
 
             appInstance.switchToProgramPanel(loginPassword);
@@ -73,12 +73,12 @@ public class FirstRunPanel extends JPanel {
 
     private void initComponents() {
         JButton ConfirmButton;
-        JLabel Header1, Header2, LanguageLabel, LoginPassowrdLabel, SavingorderLabel;
+        JLabel Header1, Header2, LanguageLabel, LoginPassowrdLabel, SortingOrderLabel;
         JSeparator Separator1, Separator2;
         JTextArea EulaTextArea;
 
         LanguageLabel = new JLabel();
-        SavingorderLabel = new JLabel();
+        SortingOrderLabel = new JLabel();
         LoginPassowrdLabel = new JLabel();
         Separator1 = new JSeparator();
         ConfirmButton = new JButton();
@@ -88,7 +88,7 @@ public class FirstRunPanel extends JPanel {
         EulaTextArea = new JTextArea();
         LanguageSelector = new JComboBox<>();
         LoginPasswordTextField = new JTextField();
-        SavingOrderSelector = new JComboBox<>();
+        SortingOrderSelector = new JComboBox<>();
         AcceptEulaCheckBox = new JCheckBox();
 
         setBackground(new Color(38, 38, 38));
@@ -107,11 +107,11 @@ public class FirstRunPanel extends JPanel {
         LanguageLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         LanguageLabel.setText("Language:");
 
-        SavingorderLabel.setBackground(new Color(38, 38, 38));
-        SavingorderLabel.setFont(new Font("Dialog", Font.PLAIN, 18)); // NOI18N
-        SavingorderLabel.setForeground(new Color(242, 242, 242));
-        SavingorderLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-        SavingorderLabel.setText("Saving order:");
+        SortingOrderLabel.setBackground(new Color(38, 38, 38));
+        SortingOrderLabel.setFont(new Font("Dialog", Font.PLAIN, 18)); // NOI18N
+        SortingOrderLabel.setForeground(new Color(242, 242, 242));
+        SortingOrderLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        SortingOrderLabel.setText("Sorting order:");
 
         LoginPassowrdLabel.setBackground(new Color(38, 38, 38));
         LoginPassowrdLabel.setFont(new Font("Dialog", Font.PLAIN, 18)); // NOI18N
@@ -148,11 +148,11 @@ public class FirstRunPanel extends JPanel {
         Header2.setText(
                 "It's the developer here, before using this program i need you to insert some personalization informations and a password to protect your accounts.");
 
-        SavingOrderSelector.setBackground(new Color(38, 38, 38));
-        SavingOrderSelector.setForeground(new Color(242, 242, 242));
-        SavingOrderSelector.setModel(
+        SortingOrderSelector.setBackground(new Color(38, 38, 38));
+        SortingOrderSelector.setForeground(new Color(242, 242, 242));
+        SortingOrderSelector.setModel(
                 new DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        SavingOrderSelector.setBorder(null);
+        SortingOrderSelector.setBorder(null);
 
         Separator2.setBackground(new Color(38, 38, 38));
         Separator2.setForeground(new Color(242, 242, 242));
@@ -195,7 +195,7 @@ public class FirstRunPanel extends JPanel {
                                                 .addGroup(FirstRunPanelLayout
                                                         .createParallelGroup(GroupLayout.Alignment.TRAILING,
                                                                 false)
-                                                        .addComponent(SavingorderLabel,
+                                                        .addComponent(SortingOrderLabel,
                                                                 GroupLayout.DEFAULT_SIZE,
                                                                 GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                                         .addComponent(LoginPassowrdLabel,
@@ -211,7 +211,7 @@ public class FirstRunPanel extends JPanel {
                                                         .addComponent(LoginPasswordTextField)
                                                         .addComponent(LanguageSelector, 0,
                                                                 GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                                        .addComponent(SavingOrderSelector, 0,
+                                                        .addComponent(SortingOrderSelector, 0,
                                                                 GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                                         .addComponent(Header1, GroupLayout.DEFAULT_SIZE,
                                                 GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -241,9 +241,9 @@ public class FirstRunPanel extends JPanel {
                                 .addGap(17, 17, 17)
                                 .addGroup(FirstRunPanelLayout
                                         .createParallelGroup(GroupLayout.Alignment.BASELINE)
-                                        .addComponent(SavingorderLabel, GroupLayout.PREFERRED_SIZE,
+                                        .addComponent(SortingOrderLabel, GroupLayout.PREFERRED_SIZE,
                                                 33, GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(SavingOrderSelector,
+                                        .addComponent(SortingOrderSelector,
                                                 GroupLayout.PREFERRED_SIZE, 32,
                                                 GroupLayout.PREFERRED_SIZE))
                                 .addGap(18, 18, 18)
