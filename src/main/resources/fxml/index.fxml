@@ -170,7 +170,7 @@
                               <Font name="System Bold Italic" size="24.0" />
                            </font>
                         </Label>
-                        <Label fx:id="settingsLoginPaswordLbl" prefHeight="35.0" prefWidth="264.0" text="Login Password:" textFill="WHITE" GridPane.rowIndex="2">
+                        <Label fx:id="settingsLoginPasswordLbl" prefHeight="35.0" prefWidth="264.0" text="Login Password:" textFill="WHITE" GridPane.rowIndex="2">
                            <font>
                               <Font name="System Bold Italic" size="24.0" />
                            </font>
@@ -185,7 +185,7 @@
                                           <Image url="@../images/icons/closed-eye.png" />
                                        </image>
                                     </ImageView>
-                                    <Label fx:id="settingsLoginPaswordDesc" alignment="CENTER_RIGHT" layoutX="128.0" layoutY="60.0" prefHeight="20.0" prefWidth="330.0" text="Press ENTER to confirm." textFill="WHITE">
+                                    <Label fx:id="settingsLoginPasswordDesc" alignment="CENTER_RIGHT" layoutX="128.0" layoutY="60.0" prefHeight="20.0" prefWidth="330.0" text="Press ENTER to confirm." textFill="WHITE">
                                        <font>
                                           <Font name="System Italic" size="14.0" />
                                        </font>

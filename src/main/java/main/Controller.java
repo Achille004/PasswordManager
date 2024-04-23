@@ -23,7 +23,7 @@ import static main.utils.Utils.bindValueComparator;
 import static main.utils.Utils.bindValueConverter;
 import static main.utils.Utils.capitalizeWord;
 import static main.utils.Utils.checkTextFields;
-import static main.utils.Utils.clearStlye;
+import static main.utils.Utils.clearStyle;
 import static main.utils.Utils.clearTextFields;
 import static main.utils.Utils.getFXSortedList;
 import static main.utils.Utils.selectedChoiceBoxIndex;
@@ -90,6 +90,7 @@ public class Controller implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         ioManager.loadDataFile();
 
+        // If account exists, its Locale will be used, else it will use the default Locale
         ObjectProperty<Locale> locale = settingsLangCB.valueProperty();
         langResources.resourcesProperty().bind(Bindings.createObjectBinding(
                 () -> {
@@ -152,7 +153,7 @@ public class Controller implements Initializable {
     }
 
     private void encryptResetStyle() {
-        clearStlye(encryptSoftware, encryptUsername, encryptPasswordVisible, encryptPasswordHidden);
+        clearStyle(encryptSoftware, encryptUsername, encryptPasswordVisible, encryptPasswordHidden);
     }
 
     @FXML
@@ -248,7 +249,7 @@ public class Controller implements Initializable {
     }
 
     private void decryptResetStyle() {
-        clearStlye(decryptSoftware, decryptUsername, decryptPasswordVisible, decryptPasswordHidden, decryptDelete);
+        clearStyle(decryptSoftware, decryptUsername, decryptPasswordVisible, decryptPasswordHidden, decryptDelete);
     }
 
     @FXML
@@ -276,7 +277,7 @@ public class Controller implements Initializable {
         // when the deleteCounter is true it means that the user has confirmed the
         // elimination
         if (decryptDeleteCounter) {
-            clearStlye(decryptDelete);
+            clearStyle(decryptDelete);
 
             // removes the selected account from the list
             ioManager.deleteAccount(index);
@@ -306,14 +307,14 @@ public class Controller implements Initializable {
     private Button settingsChangePassButton;
 
     @FXML
-    private Label settingsLangLbl, settingsSortingOrderLbl, settingsLoginPaswordLbl, settingsLoginPaswordDesc,
+    private Label settingsLangLbl, settingsSortingOrderLbl, settingsLoginPasswordLbl, settingsLoginPasswordDesc,
             settingsDriveConnLbl, wip;
 
     public void initializeSettings() {
         langResources.bindTextProperty(settingsLangLbl, "language");
         langResources.bindTextProperty(settingsSortingOrderLbl, "sorting_ord");
-        langResources.bindTextProperty(settingsLoginPaswordLbl, "login_pas");
-        langResources.bindTextProperty(settingsLoginPaswordDesc, "login_pas.desc");
+        langResources.bindTextProperty(settingsLoginPasswordLbl, "login_pas");
+        langResources.bindTextProperty(settingsLoginPasswordDesc, "login_pas.desc");
         langResources.bindTextProperty(settingsDriveConnLbl, "drive_con");
         langResources.bindTextProperty(wip, "wip");
 
