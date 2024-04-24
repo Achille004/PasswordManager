@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.cert.CertPath;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -31,7 +30,6 @@ import java.util.stream.Collectors;
 import dev.sigstore.KeylessSignature;
 import dev.sigstore.KeylessSigner;
 import dev.sigstore.bundle.BundleFactory;
-import dev.sigstore.encryption.certificates.Certificates;
 
 public class Sign {
 
