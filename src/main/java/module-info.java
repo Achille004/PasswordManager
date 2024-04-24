@@ -26,8 +26,11 @@ module PasswordManager.main {
     requires javafx.fxml;
     requires transitive javafx.graphics;
     requires javafx.web;
+
+    // TODO switch to sign/sigstore plugin
+    requires sigstore.java;
     
-    requires jdk.jsobject;
+    // requires jdk.jsobject;
     
     exports main;
     exports main.enums;

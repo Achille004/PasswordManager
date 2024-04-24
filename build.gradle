@@ -6,6 +6,9 @@ plugins {
     id 'org.beryx.jlink' version '3.0.1'
 
     id 'org.javamodularity.moduleplugin' version '1.8.13'
+
+    // id 'signing'
+    // id 'dev.sigstore.sign' version '0.7.0'
 }
 
 project.version = '3.0.0'
@@ -16,22 +19,23 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.jetbrains:annotations:20.1.0'
+    implementation 'org.jetbrains:annotations:24.1.0'
 
     // Use JUnit Jupiter for testing.
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     // This dependency is used by the application.
-    implementation 'com.google.guava:guava:31.0.1-jre'
+    implementation 'com.google.guava:guava:33.1.0-jre'
 
     // https://mvnrepository.com/artifact/org.openjfx/javafx-web
-    implementation 'org.openjfx:javafx-web:21.0.1'
+    implementation 'org.openjfx:javafx-web:22.0.1'
 
     // https://mvnrepository.com/artifact/dev.sigstore/sigstore-java
     implementation 'dev.sigstore:sigstore-java:0.7.0'
     
-    implementation 'javax.xml.bind:jaxb-api:2.3.1'
+    // https://mvnrepository.com/artifact/jakarta.xml.bind/jakarta.xml.bind-api
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.2'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -53,7 +57,7 @@ tasks.named('test') {
 }
 
 javafx {
-    version = "21.0.1"
+    version = "22.0.1"
     modules = [ 'javafx.base', 'javafx.controls', 'javafx.fxml', 'javafx.graphics', 'javafx.web' ]
 }
 
@@ -65,6 +69,7 @@ jar {
 }
 
 jlink {
+    // jarExclude("netty", "**/license/")
     mergedModule {
         requires 'java.naming'
         requires 'java.xml'
