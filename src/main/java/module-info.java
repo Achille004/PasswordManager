@@ -17,14 +17,14 @@
  */
 
 module PasswordManager.main {
+    requires jdk.compiler;
+    // requires jdk.jsobject;
     requires java.base;
     requires static lombok;
 
     requires org.jetbrains.annotations;
 
-    // requires org.bouncycastle.util;
-
-    requires jdk.compiler;
+    requires org.bouncycastle.provider;
 
     requires javafx.base;
     requires transitive javafx.controls;
@@ -34,8 +34,6 @@ module PasswordManager.main {
 
     // TODO switch to sign/sigstore plugin
     requires sigstore.java;
-    
-    // requires jdk.jsobject;
     
     exports main;
     exports main.enums;

@@ -40,6 +40,7 @@ public class Encrypter {
     private static final int AES_KEY_LENGTH = 256;
 
     static {
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
         Security.setProperty("crypto.policy", "unlimited");
 
         try {
@@ -89,7 +90,7 @@ public class Encrypter {
      */
     public static byte[] encryptAES(@NotNull String password, byte[] key, byte[] iv) throws Exception {
         // Create Cipher object to encrypt
-        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
         cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(128, iv));
 
         // Encrypt the password
@@ -107,7 +108,7 @@ public class Encrypter {
      */
     public static @NotNull String decryptAES(byte[] encryptedPassword, byte[] key, byte[] iv) throws Exception {
         // Create Cipher object to decrypt
-        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
         cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(128, iv));
 
         // Decrypt the password
