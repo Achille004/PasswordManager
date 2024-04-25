@@ -18,9 +18,8 @@
 
 package main.security;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.security.NoSuchAlgorithmException;
+import java.security.Security;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 
@@ -31,6 +30,8 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.jetbrains.annotations.NotNull;
+
 public class Encrypter {
     private static SecretKeyFactory keyFactory;
 
@@ -39,6 +40,8 @@ public class Encrypter {
     private static final int AES_KEY_LENGTH = 256;
 
     static {
+        Security.setProperty("crypto.policy", "unlimited");
+
         try {
             keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
         } catch (NoSuchAlgorithmException e) {

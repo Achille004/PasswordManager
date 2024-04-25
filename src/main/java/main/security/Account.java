@@ -18,15 +18,18 @@
 
 package main.security;
 
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-
 import java.io.Serializable;
 import java.security.SecureRandom;
 
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+
+import lombok.Getter;
+
 public class Account implements Serializable {
-    private String software;
-    private String username;
+    
+    @Getter
+    private String software, username;
     private byte[] encryptedPassword;
     private final byte[] iv;
 
@@ -38,20 +41,12 @@ public class Account implements Serializable {
         setPassword(password, loginPassword);
     }
 
-    public String getSoftware() {
-        return software;
-    }
-
     public void setSoftware(String software, String loginPassword) {
         String password = getPassword(loginPassword);
         this.software = software;
         setPassword(password, loginPassword);
     }
-
-    public String getUsername() {
-        return this.username;
-    }
-
+    
     public void setUsername(String username, String loginPassword) {
         String password = getPassword(loginPassword);
         this.username = username;

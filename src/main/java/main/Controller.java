@@ -410,6 +410,6 @@ public class Controller implements Initializable {
     }
 
     private StringConverter<SortingOrder> sortingOrderStringConverter(Locale locale) {
-        return toStringConverter(item -> langResources.getValue(item.i18nKey()));
+        return toStringConverter(item -> langResources.getValue(item.getI18nKey()));
     }
 }

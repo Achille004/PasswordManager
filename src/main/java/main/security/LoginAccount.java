@@ -28,8 +28,12 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import main.enums.SortingOrder;
+import lombok.Getter;
+import lombok.Setter;
 
 public class LoginAccount implements Serializable {
+    @Getter
+    @Setter
     private SortingOrder sortingOrder;
     private Locale locale;
     private byte[] hashedPassword;
@@ -41,14 +45,6 @@ public class LoginAccount implements Serializable {
 
         this.salt = new byte[16];
         setPassword(password);
-    }
-
-    public SortingOrder getSortingOrder() {
-        return this.sortingOrder;
-    }
-
-    public void setSortingOrder(SortingOrder sortingOrder) {
-        this.sortingOrder = sortingOrder;
     }
     
     public Locale getLocale() {

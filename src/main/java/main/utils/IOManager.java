@@ -36,6 +36,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.TextInputControl;
+import lombok.Getter;
 import main.enums.SortingOrder;
 import main.security.Account;
 import main.security.LoginAccount;
@@ -53,7 +54,7 @@ public class IOManager {
     private final Logger logger;
 
     private LoginAccount loginAccount;
-    private final ObservableList<Account> accountList;
+    private final @Getter ObservableList<Account> accountList;
     private final Path filePath, desktopPath;
 
     private String loginPassword;
@@ -134,10 +135,6 @@ public class IOManager {
     }
 
     // #region AccountList methods
-    public ObservableList<Account> getAccountList() {
-        return this.accountList;
-    }
-
     public SortedList<Account> getSortedAccountList() {
         return this.accountList.sorted(null);
     }
