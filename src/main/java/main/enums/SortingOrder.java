@@ -22,6 +22,7 @@ import java.util.Comparator;
 import java.util.function.BiFunction;
 
 import main.security.Account;
+import lombok.Getter;
 
 public enum SortingOrder {
     Software("software", (software, username) -> software + " / " + username, (acc1, acc2) -> {
@@ -33,22 +34,14 @@ public enum SortingOrder {
         return (username == 0) ? acc1.getSoftware().compareTo(acc2.getSoftware()) : username;
     });
 
-    private final String i18nKey;
-    private final BiFunction<String, String, String> converter;
-    private final Comparator<Account> comparator;
+    private final @Getter String i18nKey;
+    private final @Getter BiFunction<String, String, String> converter;
+    private final @Getter Comparator<Account> comparator;
 
     private SortingOrder(String i18nKey, BiFunction<String, String, String> converter, Comparator<Account> comparator) {
         this.i18nKey = i18nKey;
         this.converter = converter;
         this.comparator = comparator;
-    }
-
-    public String i18nKey() {
-        return i18nKey;
-    }
-
-    public BiFunction<String, String, String> getConverter() {
-        return converter;
     }
 
     public String convert(String software, String username) {
@@ -57,9 +50,5 @@ public enum SortingOrder {
 
     public String convert(Account account) {
         return this.convert(account.getSoftware(), account.getUsername());
-    }
-
-    public Comparator<Account> getComparator() {
-        return comparator;
     }
 }

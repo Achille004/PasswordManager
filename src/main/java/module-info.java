@@ -21,6 +21,11 @@ module PasswordManager.main {
 
     requires org.jetbrains.annotations;
 
+    // requires org.bouncycastle.util;
+
+    requires jdk.compiler;
+    requires static lombok;
+
     requires javafx.base;
     requires transitive javafx.controls;
     requires javafx.fxml;
