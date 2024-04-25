@@ -40,7 +40,7 @@ public class App extends Application {
         try {
             root = loader.load();
         } catch (IOException e) {
-            controller.getFileManager().getLogger().addError(e);
+            controller.getIoManager().getLogger().addError(e);
             e.printStackTrace();
         }
 
@@ -52,7 +52,7 @@ public class App extends Application {
             primaryStage.setScene(scene);
             primaryStage.show();
         } catch (NullPointerException e) {
-            controller.getFileManager().getLogger().addError(e);
+            controller.getIoManager().getLogger().addError(e);
             stop();
             System.exit(1);
         }
@@ -60,7 +60,7 @@ public class App extends Application {
 
     @Override
     public void stop() {
-        controller.getFileManager().saveAll();
+        controller.getIoManager().saveAll();
     }
 
     public static void main(String[] args) {

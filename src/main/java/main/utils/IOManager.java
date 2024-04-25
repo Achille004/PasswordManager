@@ -30,6 +30,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Locale;
 
+import main.enums.Exporter;
 import org.jetbrains.annotations.NotNull;
 
 import javafx.collections.FXCollections;
@@ -51,9 +52,9 @@ public class IOManager {
 
     private final String OS, USER_HOME;
 
-    private final Logger logger;
+    private final @Getter Logger logger;
 
-    private LoginAccount loginAccount;
+    private @Getter LoginAccount loginAccount;
     private final @Getter ObservableList<Account> accountList;
     private final Path filePath, desktopPath;
 
@@ -97,7 +98,7 @@ public class IOManager {
                         loginAccount = (LoginAccount) obj;
                     } else {
                         throw new InvalidClassException(
-                                "Unexpected object class. Expecting: " + LoginAccount.class.toString());
+                                "Unexpected object class. Expecting: " + LoginAccount.class);
                     }
 
                     obj = fIN.readObject();
@@ -105,10 +106,10 @@ public class IOManager {
                         accountList.addAll((Account[]) obj);
                     } else {
                         throw new InvalidClassException(
-                                "Unexpected object class. Expecting: " + ArrayList.class.toString());
+                                "Unexpected object class. Expecting: " + ArrayList.class);
                     }
 
-                    logger.addInfo("File loaded: '" + data_file.toString() + "'");
+                    logger.addInfo("File loaded: '" + data_file + "'");
 
                     // All the data was loaded successfully, so user can now login
                     firstRun = false;
@@ -122,15 +123,15 @@ public class IOManager {
                     logger.addError(e);
                 }
             } else {
-                logger.addInfo("File not found: '" + data_file.toString() + "'");
+                logger.addInfo("File not found: '" + data_file + "'");
             }
         } else {
-            logger.addInfo("Directory '" + filePath.toString() + "' did not exist and was therefore created");
+            logger.addInfo("Directory '" + filePath + "' did not exist and was therefore created");
         }
 
         // TODO login and first run (remove everything following this comment)
         if (firstRun) {
-            setLoginAccount(SortingOrder.Software, Locale.ENGLISH, "LoginPassword");
+            setLoginAccount(SortingOrder.SOFTWARE, Locale.ENGLISH, "LoginPassword");
         }
     }
 
@@ -185,10 +186,6 @@ public class IOManager {
         return true;
     }
 
-    public LoginAccount getLoginAccount() {
-        return this.loginAccount;
-    }
-
     public final boolean changeLoginPassword(String loginPassword) {
         if (!isAuthenticated()) {
             return false;
@@ -228,29 +225,14 @@ public class IOManager {
     }
     // #endregion
 
-    public Logger getLogger() {
-        return logger;
-    }
-
-    // #region Exporters
-    public void exportHtml(ObservableResourceFactory langResources) {
-        try (FileWriter file = new FileWriter(desktopPath.resolve("Passwords.html").toFile())) {
-            file.write(Exporter.exportHtml(accountList, langResources, loginPassword));
+    public void export(Exporter exporter, ObservableResourceFactory langResources) {
+        try (FileWriter file = new FileWriter(desktopPath.resolve("Passwords." + exporter.name().toLowerCase()).toFile())) {
+            file.write(exporter.getExporter().apply(accountList, langResources, loginPassword));
             file.flush();
         } catch (IOException e) {
             logger.addError(e);
         }
     }
-
-    public void exportCsv() {
-        try (FileWriter file = new FileWriter(desktopPath.resolve("Passwords.csv").toFile())) {
-            file.write(Exporter.exportCsv(accountList, loginPassword));
-            file.flush();
-        } catch (IOException e) {
-            logger.addError(e);
-        }
-    }
-    // #endregion
 
     private boolean saveAccountFile() {
         try (ObjectOutputStream fOUT = new ObjectOutputStream(

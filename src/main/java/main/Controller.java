@@ -50,6 +50,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
+import lombok.Getter;
 import main.enums.SortingOrder;
 import main.security.Account;
 import main.utils.IOManager;
@@ -59,20 +60,12 @@ public class Controller implements Initializable {
 
     public static final Locale[] SUPPORTED_LOCALES = { Locale.ENGLISH, Locale.ITALIAN };
 
-    private final IOManager ioManager;
-    private final ObservableResourceFactory langResources;
+    private final @Getter IOManager ioManager;
+    private final @Getter ObservableResourceFactory langResources;
 
     public Controller() {
         this.ioManager = new IOManager();
         this.langResources = new ObservableResourceFactory();
-    }
-
-    public IOManager getFileManager() {
-        return ioManager;
-    }
-
-    public ObservableResourceFactory getLangResources() {
-        return langResources;
     }
 
     private Button lastSidebarButton = null;
@@ -207,7 +200,7 @@ public class Controller implements Initializable {
                 () -> {
                     SortingOrder sortingOrderValue = sortingOrder.getValue();
                     return sortingOrderValue != null ? sortingOrderValue.getComparator()
-                            : SortingOrder.Software.getComparator();
+                            : SortingOrder.SOFTWARE.getComparator();
                 },
                 sortingOrder));
 
@@ -340,12 +333,8 @@ public class Controller implements Initializable {
         });
 
         bindPasswordFields(settingsLoginPasswordHidden, settingsLoginPasswordVisible);
-        settingsLoginPasswordVisible.setOnAction(event -> {
-            ioManager.changeLoginPassword(settingsLoginPasswordVisible.getText());
-        });
-        settingsLoginPasswordHidden.setOnAction(event -> {
-            ioManager.changeLoginPassword(settingsLoginPasswordHidden.getText());
-        });
+        settingsLoginPasswordVisible.setOnAction(event -> ioManager.changeLoginPassword(settingsLoginPasswordVisible.getText()));
+        settingsLoginPasswordHidden.setOnAction(event -> ioManager.changeLoginPassword(settingsLoginPasswordHidden.getText()));
     }
 
     @FXML

@@ -16,26 +16,23 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package main.utils;
+package main.enums;
 
 import static main.utils.Utils.addZerosToIndex;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import main.inerfaces.TriFunction;
+import main.utils.ObservableResourceFactory;
 import org.jetbrains.annotations.NotNull;
 
 import javafx.collections.ObservableList;
 import main.security.Account;
 
-public class Exporter {
-    /**
-     * Exports a list of accounts in HTML.
-     * 
-     * @param accountList   The list of accounts.
-     * @param language      The language of the header.
-     * @param loginPassword The password used to decrypt.
-     * @return The whole HTML text.
-     */
-    public static @NotNull String exportHtml(@NotNull ObservableList<Account> accountList,
-            ObservableResourceFactory langResources, String loginPassword) {
+@RequiredArgsConstructor
+public enum Exporter {
+
+    HTML((accountList, langResources, loginPassword) -> {
         StringBuilder stb = new StringBuilder();
 
         stb.append("<!DOCTYPE html>\n<html>\n<style>\n");
@@ -59,10 +56,11 @@ public class Exporter {
                 """);
 
         stb.append("\n</style>\n\n<body>\n<table style=\"width:100%\">");
-        stb.append("<tr>\n<th>" + langResources.getValue("account") + "</th>\n<th>"
-                + langResources.getValue("software") + "</th>\n<th>"
-                + langResources.getValue("username") + "</th>\n<th>"
-                + langResources.getValue("password") + "</th>\n</tr>");
+        stb.append("<tr>\n<th>").append(langResources.getValue("account"))
+                .append("</th>\n<th>").append(langResources.getValue("software"))
+                .append("</th>\n<th>").append(langResources.getValue("username"))
+                .append("</th>\n<th>").append(langResources.getValue("password"))
+                .append("</th>\n</tr>");
 
         final int listSize = accountList.size();
         int counter = 0;
@@ -79,16 +77,8 @@ public class Exporter {
         stb.append("</table>\n</body>\n</html>");
 
         return stb.toString();
-    }
-
-    /**
-     * Exports a list of accounts in CSV.
-     * 
-     * @param accountList   The list of accounts.
-     * @param loginPassword The password used to decrypt.
-     * @return The whole CSV text.
-     */
-    public static @NotNull String exportCsv(@NotNull ObservableList<Account> accountList, String loginPassword) {
+    }),
+    CSV((accountList, langResources, loginPassword) -> {
         StringBuilder stb = new StringBuilder();
 
         final int listSize = accountList.size();
@@ -103,5 +93,7 @@ public class Exporter {
         }
 
         return stb.toString();
-    }
+    });
+
+    private final @Getter TriFunction<@NotNull ObservableList<Account>, ObservableResourceFactory, String, String> exporter;
 }

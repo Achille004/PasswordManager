@@ -61,21 +61,19 @@ public class Logger {
     }
 
     public boolean readFile() {
-        if (logFile == null || !logFile.exists()) {
+        if (!logFile.exists()) {
             addInfo("File not found: '" + logFile.toString() + "'");
             return false;
         }
 
         try (Scanner scanner = new Scanner(logFile)) {
             logHistory.append(scanner.useDelimiter("\\Z").next()).append("\n\n");
-
-            scanner.close();
         } catch (IOException e) {
             addError(e);
             return false;
         }
 
-        addInfo("File loaded: '" + logFile.toString() + "'");
+        addInfo("File loaded: '" + logFile + "'");
         return true;
     }
 
