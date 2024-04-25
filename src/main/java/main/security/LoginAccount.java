@@ -35,6 +35,8 @@ public class LoginAccount implements Serializable {
     @Getter
     @Setter
     private SortingOrder sortingOrder;
+    @Getter
+    @Setter
     private Locale locale;
     private byte[] hashedPassword;
     private final byte[] salt;
@@ -45,14 +47,6 @@ public class LoginAccount implements Serializable {
 
         this.salt = new byte[16];
         setPassword(password);
-    }
-    
-    public Locale getLocale() {
-        return this.locale;
-    }
-
-    public void setLocale(Locale locale) {
-        this.locale = locale;
     }
 
     public boolean verifyPassword(String passwordToVerify) {

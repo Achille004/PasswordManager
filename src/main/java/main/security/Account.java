@@ -27,9 +27,8 @@ import org.jetbrains.annotations.NotNull;
 import lombok.Getter;
 
 public class Account implements Serializable {
-    
-    @Getter
-    private String software, username;
+
+    private @Getter String software, username;
     private byte[] encryptedPassword;
     private final byte[] iv;
 

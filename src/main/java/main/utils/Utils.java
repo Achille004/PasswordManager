@@ -71,12 +71,8 @@ public class Utils {
     }
 
     public static void bindPasswordFields(PasswordField hidden, TextField visible) {
-        hidden.textProperty().addListener((options, oldValue, newValue) -> {
-            visible.setText(newValue);
-        });
-        visible.textProperty().addListener((options, oldValue, newValue) -> {
-            hidden.setText(newValue);
-        });
+        hidden.textProperty().addListener((options, oldValue, newValue) -> visible.setText(newValue));
+        visible.textProperty().addListener((options, oldValue, newValue) -> hidden.setText(newValue));
     }
 
     @SafeVarargs
@@ -154,11 +150,9 @@ public class Utils {
     public static <T> ObservableValue<Comparator<T>> comparatorBinding(ObjectProperty<Locale> locale,
             ObjectProperty<? extends StringConverter<T>> converter) {
         return Bindings.createObjectBinding(
-                () -> {
-                    return Comparator.comparing(
-                            converter.getValue()::toString,
-                            Collator.getInstance(locale.getValue()));
-                },
+                () -> Comparator.comparing(
+                        converter.getValue()::toString,
+                        Collator.getInstance(locale.getValue())),
                 locale,
                 converter);
     }

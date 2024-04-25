@@ -18,13 +18,13 @@
 
 module PasswordManager.main {
     requires java.base;
+    requires static lombok;
 
     requires org.jetbrains.annotations;
 
     // requires org.bouncycastle.util;
 
     requires jdk.compiler;
-    requires static lombok;
 
     requires javafx.base;
     requires transitive javafx.controls;
@@ -39,6 +39,7 @@ module PasswordManager.main {
     
     exports main;
     exports main.enums;
+    exports main.inerfaces;
     exports main.security;
     exports main.utils;
     
