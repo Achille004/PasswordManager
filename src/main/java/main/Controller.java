@@ -228,6 +228,7 @@ public class Controller implements Initializable {
 
     @FXML
     public void decryptSidebarButton(ActionEvent event) {
+        decryptCB.getSelectionModel().clearSelection();
         decryptResetStyle();
         decryptClear();
 
