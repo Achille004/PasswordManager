@@ -50,13 +50,13 @@ public class IOManager {
         LOG_FILE = "report.log";
     }
 
-    private final String OS, USER_HOME;
+    private final @Getter String OS, USER_HOME;
 
     private final @Getter Logger logger;
 
     private @Getter LoginAccount loginAccount;
     private final @Getter ObservableList<Account> accountList;
-    private final Path filePath, desktopPath;
+    private final @Getter Path filePath, desktopPath;
 
     private String loginPassword;
 

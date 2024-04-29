@@ -30,6 +30,8 @@ import static main.utils.Utils.selectedChoiceBoxIndex;
 import static main.utils.Utils.selectedChoiceBoxItem;
 import static main.utils.Utils.toStringConverter;
 
+import java.awt.Desktop;
+import java.io.IOException;
 import java.net.URL;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -346,6 +348,16 @@ public class Controller implements Initializable {
         setMainTitle(langResources.getValue("settings"));
 
         highlightSidebarButton(event);
+    }
+    // #endregion
+
+    @FXML
+    public void folderSidebarButton(ActionEvent event) {
+        try {
+            Desktop.getDesktop().open(ioManager.getFilePath().toFile());
+        } catch (IOException e) {
+            ioManager.getLogger().addError(e);
+        }
     }
     // #endregion
 

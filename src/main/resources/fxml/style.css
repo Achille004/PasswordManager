@@ -1,3 +1,7 @@
+.body {
+    -fx-background-color: #202428; 
+}
+
 .sidebarButton {
     -fx-background-color: #202428; 
     -fx-background-radius: 10deg;
@@ -13,4 +17,12 @@
     -fx-border-color: #a7acb1;
     -fx-border-radius: 3deg;
     -fx-text-inner-color: white;
+}
+
+.defaultButton {
+    -fx-text-inner-color: white;
+    -fx-background-color: none;
+    -fx-border-color:  #0aba4d;
+    -fx-border-width: 3;
+    -fx-border-radius: 10;
 }
