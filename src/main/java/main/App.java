@@ -33,29 +33,22 @@ public class App extends Application {
     public void start(Stage primaryStage) {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/index.fxml"));
 
-        controller = new Controller();
-        loader.setController(controller);
-
         Parent root = null;
         try {
             root = loader.load();
         } catch (IOException e) {
-            controller.getIoManager().getLogger().addError(e);
             e.printStackTrace();
-        }
-
-        try {
-            Scene scene = new Scene(root, 900, 600);
-
-            primaryStage.setTitle("Password Manager");
-            primaryStage.setResizable(false);
-            primaryStage.setScene(scene);
-            primaryStage.show();
-        } catch (NullPointerException e) {
-            controller.getIoManager().getLogger().addError(e);
-            stop();
             System.exit(1);
         }
+
+        controller = loader.getController();
+
+        Scene scene = new Scene(root, 900, 600);
+        primaryStage.setTitle("Password Manager");
+        primaryStage.setResizable(false);
+        primaryStage.setScene(scene);
+        primaryStage.show();
+
     }
 
     @Override

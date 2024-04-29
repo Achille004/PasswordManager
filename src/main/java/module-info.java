@@ -20,6 +20,7 @@ module PasswordManager.main {
     requires jdk.compiler;
     // requires jdk.jsobject;
     requires java.base;
+    requires java.desktop;
     requires static lombok;
 
     requires org.jetbrains.annotations;
