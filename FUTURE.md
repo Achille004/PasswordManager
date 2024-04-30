@@ -1,7 +1,7 @@
 # UI-Update features:
 ### Add character-checking from fields
 ### Add xml and json export + encrypted export + choose export directory
-### Add open file directory and show EULA
+### Divide index.fxml into separate parts
 
 # Future updates: 
 ### Google drive linking

@@ -18,20 +18,11 @@
 
 package main;
 
-import static main.utils.Utils.bindPasswordFields;
-import static main.utils.Utils.bindValueComparator;
-import static main.utils.Utils.bindValueConverter;
-import static main.utils.Utils.capitalizeWord;
-import static main.utils.Utils.checkTextFields;
-import static main.utils.Utils.clearStyle;
-import static main.utils.Utils.clearTextFields;
-import static main.utils.Utils.getFXSortedList;
-import static main.utils.Utils.selectedChoiceBoxIndex;
-import static main.utils.Utils.selectedChoiceBoxItem;
-import static main.utils.Utils.toStringConverter;
+import static main.utils.Utils.*;
 
 import java.awt.Desktop;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -41,29 +32,34 @@ import javafx.beans.property.ObjectProperty;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import main.enums.SortingOrder;
 import main.security.Account;
 import main.utils.IOManager;
 import main.utils.ObservableResourceFactory;
 
 public class Controller implements Initializable {
-
     public static final Locale[] SUPPORTED_LOCALES = { Locale.ENGLISH, Locale.ITALIAN };
 
     private final @Getter IOManager ioManager;
     private final @Getter ObservableResourceFactory langResources;
+
+    private Stage eulaStage = null;
 
     public Controller() {
         this.ioManager = new IOManager();
@@ -85,7 +81,8 @@ public class Controller implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         ioManager.loadDataFile();
 
-        // If account exists, its Locale will be used, else it will use the default Locale
+        // If account exists, its Locale will be used, else it will use the default
+        // Locale
         ObjectProperty<Locale> locale = settingsLangCB.valueProperty();
         langResources.resourcesProperty().bind(Bindings.createObjectBinding(
                 () -> {
@@ -101,6 +98,19 @@ public class Controller implements Initializable {
         initializeEncrypt();
         initializeDecrypt();
         initializeSettings();
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/eula.fxml"));
+            loader.setController(new EULAController(ioManager));
+
+            Parent root = loader.load();
+            eulaStage = new Stage();
+            eulaStage.setTitle(capitalizeWord(langResources.getValue("terms_credits")));
+            eulaStage.setResizable(false);
+            eulaStage.setScene(new Scene(root, 900, 600));
+        } catch (IOException e) {
+            ioManager.getLogger().addError(e);
+        }
 
         // TODO login and first run (remove everything following this comment)
         ioManager.authenticate("LoginPassword");
@@ -336,8 +346,10 @@ public class Controller implements Initializable {
         });
 
         bindPasswordFields(settingsLoginPasswordHidden, settingsLoginPasswordVisible);
-        settingsLoginPasswordVisible.setOnAction(event -> ioManager.changeLoginPassword(settingsLoginPasswordVisible.getText()));
-        settingsLoginPasswordHidden.setOnAction(event -> ioManager.changeLoginPassword(settingsLoginPasswordHidden.getText()));
+        settingsLoginPasswordVisible
+                .setOnAction(event -> ioManager.changeLoginPassword(settingsLoginPasswordVisible.getText()));
+        settingsLoginPasswordHidden
+                .setOnAction(event -> ioManager.changeLoginPassword(settingsLoginPasswordHidden.getText()));
     }
 
     @FXML
@@ -353,13 +365,23 @@ public class Controller implements Initializable {
 
     @FXML
     public void folderSidebarButton(ActionEvent event) {
-        try {
-            Desktop.getDesktop().open(ioManager.getFilePath().toFile());
-        } catch (IOException e) {
-            ioManager.getLogger().addError(e);
+        if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+            try {
+                Desktop.getDesktop().open(ioManager.getFilePath().toFile());
+            } catch (IOException e) {
+                ioManager.getLogger().addError(e);
+            }
         }
     }
-    // #endregion
+
+    @FXML
+    public void creditsSidebarButton(ActionEvent event) {
+        if (eulaStage == null) {
+            return;
+        }
+
+        eulaStage.show();
+    }
 
     @FXML
     public void homeButton(ActionEvent event) {
@@ -370,7 +392,7 @@ public class Controller implements Initializable {
     }
 
     @FXML
-    public void showPassword(MouseEvent event) {
+    public void showPassword(ActionEvent event) {
         Object obj = event.getSource();
 
         if (obj instanceof Node) {
@@ -413,5 +435,39 @@ public class Controller implements Initializable {
 
     private StringConverter<SortingOrder> sortingOrderStringConverter(Locale locale) {
         return toStringConverter(item -> langResources.getValue(item.getI18nKey()));
+    }
+
+    @RequiredArgsConstructor
+    public class EULAController implements Initializable {
+        public static final URI FM_LINK = URI.create("https://github.com/Achille004"),
+                SS_LINK = URI.create("https://github.com/samustocco");
+
+        private final @Getter IOManager ioManager;
+
+        @Override
+        public void initialize(URL location, ResourceBundle resources) {
+        }
+
+        @FXML
+        public void githubFM(ActionEvent event) {
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                try {
+                    Desktop.getDesktop().browse(FM_LINK);
+                } catch (IOException e) {
+                    ioManager.getLogger().addError(e);
+                }
+            }
+        }
+
+        @FXML
+        public void githubSS(ActionEvent event) {
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                try {
+                    Desktop.getDesktop().browse(SS_LINK);
+                } catch (IOException e) {
+                    ioManager.getLogger().addError(e);
+                }
+            }
+        }
     }
 }
