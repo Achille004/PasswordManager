@@ -160,7 +160,7 @@ public class Controller implements Initializable {
 
     @FXML
     public void doFirstRun() {
-        if (checkTextFields(firstRunPasswordVisible) && firstRunCheckBox.isSelected()) {
+        if (checkTextFields(firstRunPasswordVisible, firstRunPasswordHidden) && firstRunCheckBox.isSelected()) {
             ioManager.setLoginAccount(SortingOrder.SOFTWARE, DEFAULT_LOCALE, firstRunPasswordVisible.getText());
             firstRunPane.toBack();
         }
@@ -426,6 +426,7 @@ public class Controller implements Initializable {
         settingsLangCB.setOnAction(event -> {
             Locale locale = selectedChoiceBoxItem(settingsLangCB);
             ioManager.getLoginAccount().setLocale(locale);
+            // TODO error when changing language, doesnt load properly
             setMainTitle(langResources.getValue("settings"));
         });
 
