@@ -42,6 +42,7 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
@@ -106,6 +107,7 @@ public class Controller implements Initializable {
             Parent root = loader.load();
             eulaStage = new Stage();
             eulaStage.setTitle(capitalizeWord(langResources.getValue("terms_credits")));
+            eulaStage.getIcons().add(new Image(getClass().getResourceAsStream("/locker.ico")));
             eulaStage.setResizable(false);
             eulaStage.setScene(new Scene(root, 900, 600));
         } catch (IOException e) {
