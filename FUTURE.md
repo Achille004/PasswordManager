@@ -1,12 +1,12 @@
 # UI-Update features:
 ### Add character-checking from fields
-### Add xml and json export + encrypted export + choose export directory
-### Divide index.fxml into separate parts
+### Add xml and json export + choose export directory
 
-# Future updates: 
+# Future updates:
+### Better signing
 ### Google drive linking
-### Concurrency
 
 # Ideas:
+### Divide index.fxml into separate parts
 ### Switch from ArrayList to embedded database
 ### Animations (from javafx.animation package)

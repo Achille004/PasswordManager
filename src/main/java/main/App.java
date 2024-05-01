@@ -24,6 +24,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 public class App extends Application {
@@ -31,6 +32,7 @@ public class App extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        System.out.println(getClass().getResource("/locker.ico").toExternalForm());
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/index.fxml"));
 
         Parent root = null;
@@ -43,10 +45,10 @@ public class App extends Application {
 
         controller = loader.getController();
 
-        Scene scene = new Scene(root, 900, 600);
         primaryStage.setTitle("Password Manager");
+        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/locker.ico")));
         primaryStage.setResizable(false);
-        primaryStage.setScene(scene);
+        primaryStage.setScene(new Scene(root, 900, 600));
         primaryStage.show();
 
     }
