@@ -18,12 +18,23 @@
 
 package main;
 
-import static main.utils.Utils.*;
+import static main.utils.Utils.bindPasswordFields;
+import static main.utils.Utils.bindValueComparator;
+import static main.utils.Utils.bindValueConverter;
+import static main.utils.Utils.capitalizeWord;
+import static main.utils.Utils.checkTextFields;
+import static main.utils.Utils.clearStyle;
+import static main.utils.Utils.clearTextFields;
+import static main.utils.Utils.getFXSortedList;
+import static main.utils.Utils.selectedChoiceBoxIndex;
+import static main.utils.Utils.selectedChoiceBoxItem;
+import static main.utils.Utils.toStringConverter;
 
 import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -38,11 +49,13 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
@@ -56,6 +69,10 @@ import main.utils.ObservableResourceFactory;
 
 public class Controller implements Initializable {
     public static final Locale[] SUPPORTED_LOCALES = { Locale.ENGLISH, Locale.ITALIAN };
+    public static final Locale SYSTEM_LANGUAGE = Locale.forLanguageTag(Locale.getDefault().getLanguage());
+    public static final Locale DEFAULT_LOCALE = Arrays.asList(SUPPORTED_LOCALES).contains(SYSTEM_LANGUAGE)
+            ? SYSTEM_LANGUAGE
+            : Locale.ENGLISH;
 
     private final @Getter IOManager ioManager;
     private final @Getter ObservableResourceFactory langResources;
@@ -67,6 +84,114 @@ public class Controller implements Initializable {
         this.langResources = new ObservableResourceFactory();
     }
 
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        boolean firstRun = ioManager.loadDataFile();
+
+        // If account exists, its Locale will be used, else it will fallback to the
+        // default value.
+        ObjectProperty<Locale> locale = settingsLangCB.valueProperty();
+
+        langResources.resourcesProperty().bind(Bindings.createObjectBinding(
+                () -> {
+                    Locale localeValue = locale.getValue();
+                    return ResourceBundle.getBundle("/bundles/Lang",
+                            localeValue != null ? localeValue : DEFAULT_LOCALE);
+                },
+                locale));
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/eula.fxml"));
+            loader.setController(new EULAController(ioManager));
+
+            Parent root = loader.load();
+            eulaStage = new Stage();
+            eulaStage.setTitle(langResources.getValue("terms_credits"));
+            eulaStage.getIcons().add(new Image(getClass().getResourceAsStream("/locker.ico")));
+            eulaStage.setResizable(false);
+            eulaStage.setScene(new Scene(root, 900, 600));
+        } catch (IOException e) {
+            ioManager.getLogger().addError(e);
+        }
+
+        if (firstRun) {
+            initializeFirstRun();
+            ioManager.getLogger().addInfo("First run done");
+        } else {
+            // TODO login
+            initializeLogin();
+            ioManager.getLogger().addInfo("User authenticated");
+        }
+
+        initializeMain();
+    }
+
+    // #region First Run
+    @FXML
+    private AnchorPane firstRunPane;
+
+    @FXML
+    private Label firstRunTitle, firstRunDescTop, firstRunDescBtm, firstRunTermsCred, firstRunDisclaimer;
+
+    @FXML
+    private TextField firstRunPasswordVisible;
+
+    @FXML
+    private PasswordField firstRunPasswordHidden;
+
+    @FXML
+    private CheckBox firstRunCheckBox;
+
+    @FXML
+    private Button firstRunSubmitBtn;
+
+    private void initializeFirstRun() {
+        langResources.bindTextProperty(firstRunTitle, "hi");
+        langResources.bindTextProperty(firstRunDescTop, "first_run.desc.top");
+        langResources.bindTextProperty(firstRunDescBtm, "first_run.desc.btm");
+        langResources.bindTextProperty(firstRunCheckBox, "first_run.check_box");
+        langResources.bindTextProperty(firstRunTermsCred, "terms_credits");
+        langResources.bindTextProperty(firstRunSubmitBtn, "lets_go");
+        langResources.bindTextProperty(firstRunDisclaimer, "first_run.disclaimer");
+
+        bindPasswordFields(firstRunPasswordHidden, firstRunPasswordVisible);
+
+        firstRunPane.toFront();
+    }
+
+    @FXML
+    public void doFirstRun() {
+        if (checkTextFields(firstRunPasswordVisible) && firstRunCheckBox.isSelected()) {
+            ioManager.setLoginAccount(SortingOrder.SOFTWARE, DEFAULT_LOCALE, firstRunPasswordVisible.getText());
+            firstRunPane.toBack();
+        }
+    }
+    // #endregion
+
+    // #region Login
+    private void initializeLogin() {
+        // while (!ioManager.isAuthenticated()) {
+        // ioManager.authenticate("");
+        // }
+    }
+    // #endregion
+
+    // #region Main
+    private void initializeMain() {
+        initializeHome();
+        initializeEncrypt();
+        initializeDecrypt();
+        initializeSettings();
+    }
+
+    @FXML
+    public void homeButton(ActionEvent event) {
+        homePane.toFront();
+        setMainTitle("");
+
+        highlightSidebarButton(null);
+    }
+
+    // #region Home
     private Button lastSidebarButton = null;
 
     @FXML
@@ -78,46 +203,11 @@ public class Controller implements Initializable {
     @FXML
     private Label mainTitle, homeDescTop, homeDescBtm;
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        ioManager.loadDataFile();
-
-        // If account exists, its Locale will be used, else it will use the default
-        // Locale
-        ObjectProperty<Locale> locale = settingsLangCB.valueProperty();
-        langResources.resourcesProperty().bind(Bindings.createObjectBinding(
-                () -> {
-                    Locale localeValue = locale.getValue();
-                    return ResourceBundle.getBundle("/bundles/Lang",
-                            localeValue != null ? localeValue : Locale.getDefault());
-                },
-                locale));
-
+    private void initializeHome() {
         langResources.bindTextProperty(homeDescTop, "home_desc.top");
         langResources.bindTextProperty(homeDescBtm, "home_desc.btm");
-
-        initializeEncrypt();
-        initializeDecrypt();
-        initializeSettings();
-
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/eula.fxml"));
-            loader.setController(new EULAController(ioManager));
-
-            Parent root = loader.load();
-            eulaStage = new Stage();
-            eulaStage.setTitle(capitalizeWord(langResources.getValue("terms_credits")));
-            eulaStage.getIcons().add(new Image(getClass().getResourceAsStream("/locker.ico")));
-            eulaStage.setResizable(false);
-            eulaStage.setScene(new Scene(root, 900, 600));
-        } catch (IOException e) {
-            ioManager.getLogger().addError(e);
-        }
-
-        // TODO login and first run (remove everything following this comment)
-        ioManager.authenticate("LoginPassword");
-        System.out.println("User" + (ioManager.isAuthenticated() ? " " : " not ") + "authenticated");
     }
+    // #endregion
 
     // #region Encrypt
     @FXML
@@ -328,7 +418,9 @@ public class Controller implements Initializable {
 
         SortedList<Locale> langs = getFXSortedList(SUPPORTED_LOCALES);
         settingsLangCB.setItems(langs);
-        settingsLangCB.getSelectionModel().select(ioManager.getLoginAccount().getLocale());
+        settingsLangCB.getSelectionModel().select(ioManager.getLoginAccount() != null
+                ? ioManager.getLoginAccount().getLocale()
+                : DEFAULT_LOCALE);
         bindValueConverter(settingsLangCB, settingsLangCB.valueProperty(), this::languageStringConverter);
         bindValueComparator(langs, settingsLangCB.valueProperty(), settingsLangCB);
         settingsLangCB.setOnAction(event -> {
@@ -339,7 +431,9 @@ public class Controller implements Initializable {
 
         SortedList<SortingOrder> sortingOrders = getFXSortedList(SortingOrder.class.getEnumConstants());
         settingsOrderCB.setItems(sortingOrders);
-        settingsOrderCB.getSelectionModel().select(ioManager.getLoginAccount().getSortingOrder());
+        settingsOrderCB.getSelectionModel().select(ioManager.getLoginAccount() != null
+                ? ioManager.getLoginAccount().getSortingOrder()
+                : SortingOrder.SOFTWARE);
         bindValueConverter(settingsOrderCB, settingsLangCB.valueProperty(), this::sortingOrderStringConverter);
         bindValueComparator(sortingOrders, settingsLangCB.valueProperty(), settingsOrderCB);
         settingsOrderCB.setOnAction(event -> {
@@ -376,43 +470,6 @@ public class Controller implements Initializable {
         }
     }
 
-    @FXML
-    public void creditsSidebarButton(ActionEvent event) {
-        if (eulaStage == null) {
-            return;
-        }
-
-        eulaStage.show();
-    }
-
-    @FXML
-    public void homeButton(ActionEvent event) {
-        homePane.toFront();
-        setMainTitle("");
-
-        highlightSidebarButton(null);
-    }
-
-    @FXML
-    public void showPassword(ActionEvent event) {
-        Object obj = event.getSource();
-
-        if (obj instanceof Node) {
-            ((Node) obj).getParent().toBack();
-        }
-    }
-
-    private void highlightSidebarButton(ActionEvent event) {
-        if (lastSidebarButton != null) {
-            lastSidebarButton.setStyle("-fx-background-color: #202428;");
-        }
-
-        if (event != null) {
-            lastSidebarButton = (Button) event.getSource();
-            lastSidebarButton.setStyle("-fx-background-color: #42464a;");
-        }
-    }
-
     private void setMainTitle(String title) {
         boolean homeButtonVisibility;
         if (title.isBlank()) {
@@ -426,6 +483,17 @@ public class Controller implements Initializable {
         mainTitle.setText("Password Manager" + title);
     }
 
+    private void highlightSidebarButton(ActionEvent event) {
+        if (lastSidebarButton != null) {
+            lastSidebarButton.setStyle("-fx-background-color: #202428;");
+        }
+
+        if (event != null) {
+            lastSidebarButton = (Button) event.getSource();
+            lastSidebarButton.setStyle("-fx-background-color: #42464a;");
+        }
+    }
+
     private StringConverter<Account> accountStringConverter(Locale locale) {
         return toStringConverter(
                 item -> item != null ? ioManager.getLoginAccount().getSortingOrder().convert(item) : null);
@@ -437,6 +505,25 @@ public class Controller implements Initializable {
 
     private StringConverter<SortingOrder> sortingOrderStringConverter(Locale locale) {
         return toStringConverter(item -> langResources.getValue(item.getI18nKey()));
+    }
+    // #endregion
+
+    @FXML
+    public void showPassword(MouseEvent event) {
+        Object obj = event.getSource();
+
+        if (obj instanceof Node) {
+            ((Node) obj).getParent().toBack();
+        }
+    }
+
+    @FXML
+    public void showEula(MouseEvent event) {
+        if (eulaStage == null) {
+            return;
+        }
+
+        eulaStage.show();
     }
 
     @RequiredArgsConstructor

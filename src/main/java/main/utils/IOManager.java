@@ -77,7 +77,7 @@ public class IOManager {
         logger = new Logger(filePath.resolve(LOG_FILE).toFile());
     }
 
-    public void loadDataFile() {
+    public boolean loadDataFile() {
         boolean firstRun = true;
         if (!filePath.toFile().mkdirs()) {
             // gets the log history
@@ -129,10 +129,7 @@ public class IOManager {
             logger.addInfo("Directory '" + filePath + "' did not exist and was therefore created");
         }
 
-        // TODO login and first run (remove everything following this comment)
-        if (firstRun) {
-            setLoginAccount(SortingOrder.SOFTWARE, Locale.ENGLISH, "LoginPassword");
-        }
+        return firstRun;
     }
 
     // #region AccountList methods

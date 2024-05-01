@@ -50,6 +50,7 @@ dependencies {
 
 // Apply a specific Java toolchain to ease working on different environments.
 java {
+    sourceCompatibility = JavaVersion.VERSION_21
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
@@ -96,10 +97,10 @@ jlink {
 
     jpackage {
         installerType = null // exe/msi
-        installerOutputDir = file("$projectDir/compiled")
+        installerOutputDir = layout.projectDirectory.dir("/compiled").asFile
         installerName = 'PasswordManager'
         appVersion = version
-        icon =  file("$projectDir/src/main/resources/locker.ico")
+        icon =  layout.projectDirectory.file("/src/main/resources/locker.ico").asFile
         vendor = 'Francesco Marras'
 
         // '--description "Password Manager is an application able to add, modify and delete locally saved accounts, characterized by a software, a username and an AES-encrypted password."',
@@ -123,12 +124,12 @@ jlink {
     }
 }
 
-task(sign, dependsOn: 'classes', type: JavaExec) {
+tasks.register('sign', JavaExec) {
     mainClass = 'signer.Sign'
     classpath = sourceSets.main.runtimeClasspath
 }
 
-task(verify, dependsOn: 'classes', type: JavaExec) {
+tasks.register('verify', JavaExec) {
     mainClass = 'signer.Verify'
     classpath = sourceSets.main.runtimeClasspath
 }

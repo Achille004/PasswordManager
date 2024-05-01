@@ -32,7 +32,6 @@ public class App extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        System.out.println(getClass().getResource("/locker.ico").toExternalForm());
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/index.fxml"));
 
         Parent root = null;
@@ -50,7 +49,6 @@ public class App extends Application {
         primaryStage.setResizable(false);
         primaryStage.setScene(new Scene(root, 900, 600));
         primaryStage.show();
-
     }
 
     @Override

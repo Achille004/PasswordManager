@@ -26,3 +26,20 @@
     -fx-border-width: 3px;
     -fx-border-radius: 8deg;
 }
+
+.eulaText:hover {
+    -fx-text-fill: #0aba4d;
+    -fx-underline: true;
+}
+
+.check-box > .box {
+    /* background color of unselected checkbox */
+    -fx-background-color: #2e3136;
+    -fx-border-color: #a7acb1;
+    -fx-border-radius: 4deg;
+}
+
+.check-box:selected > .box > .mark {
+    /* modify mark color */
+    -fx-background-color: #a7acb1;
+}
