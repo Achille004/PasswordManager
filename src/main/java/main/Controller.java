@@ -1,6 +1,6 @@
 /*
     Password Manager: Manages accounts given by user with encrypted password.
-    Copyright (C) 2022-2024  Francesco Marras
+    Copyright (C) 2022-2024  Francesco Marras (2004marras@gmail.com)
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -290,7 +290,7 @@ public class Controller implements Initializable {
         encryptClear();
 
         encryptPane.toFront();
-        setMainTitle(langResources.getValue("encryption"));
+        setMainTitle("encryption");
 
         highlightSidebarButton(event);
     }
@@ -387,7 +387,7 @@ public class Controller implements Initializable {
         decryptClear();
 
         decryptPane.toFront();
-        setMainTitle(langResources.getValue("decryption"));
+        setMainTitle("decryption");
 
         highlightSidebarButton(event);
     }
@@ -474,10 +474,7 @@ public class Controller implements Initializable {
         bindValueConverter(settingsLangCB, settingsLangCB.valueProperty(), this::languageStringConverter);
         bindValueComparator(langs, settingsLangCB.valueProperty(), settingsLangCB);
         settingsLangCB.setOnAction(event -> {
-            Locale locale = selectedChoiceBoxItem(settingsLangCB);
-            ioManager.getLoginAccount().setLocale(locale);
-            // TODO error when changing language, doesnt load properly
-            setMainTitle(langResources.getValue("settings"));
+            ioManager.getLoginAccount().setLocale(selectedChoiceBoxItem(settingsLangCB));
         });
 
         SortedList<SortingOrder> sortingOrders = getFXSortedList(SortingOrder.class.getEnumConstants());
@@ -488,8 +485,7 @@ public class Controller implements Initializable {
         bindValueConverter(settingsOrderCB, settingsLangCB.valueProperty(), this::sortingOrderStringConverter);
         bindValueComparator(sortingOrders, settingsLangCB.valueProperty(), settingsOrderCB);
         settingsOrderCB.setOnAction(event -> {
-            SortingOrder sortingOrder = settingsOrderCB.getSelectionModel().getSelectedItem();
-            ioManager.getLoginAccount().setSortingOrder(sortingOrder);
+            ioManager.getLoginAccount().setSortingOrder(selectedChoiceBoxItem(settingsOrderCB));
         });
 
         bindPasswordFields(settingsLoginPasswordHidden, settingsLoginPasswordVisible);
@@ -504,7 +500,7 @@ public class Controller implements Initializable {
         ioManager.displayLoginPassword(settingsLoginPasswordVisible, settingsLoginPasswordHidden);
 
         settingsPane.toFront();
-        setMainTitle(langResources.getValue("settings"));
+        setMainTitle("settings");
 
         highlightSidebarButton(event);
     }
@@ -521,17 +517,12 @@ public class Controller implements Initializable {
         }
     }
 
-    private void setMainTitle(String title) {
-        boolean homeButtonVisibility;
-        if (title.isBlank()) {
-            homeButtonVisibility = false;
-        } else {
-            title = " > " + title;
-            homeButtonVisibility = true;
-        }
+    private void setMainTitle(String key) {
+        boolean isNotHome = !key.isBlank();
 
-        homeButton.setVisible(homeButtonVisibility);
-        mainTitle.setText("Password Manager" + title);
+        homeButton.setVisible(isNotHome);
+        mainTitle.setVisible(isNotHome);
+        langResources.bindTextProperty(mainTitle, key);
     }
 
     private void highlightSidebarButton(ActionEvent event) {
