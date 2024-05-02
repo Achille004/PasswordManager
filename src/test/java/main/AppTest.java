@@ -1,8 +1,9 @@
 package main;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.security.SecureRandom;
 
-import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
 import main.security.Encrypter;
@@ -25,6 +26,6 @@ class AppTest {
 
         byte[] e = Encrypter.encryptAES(p, key, iv);
         String d = Encrypter.decryptAES(e, key, iv);
-        assertEquals(p, d, "Crittografia fallita");
+        assertEquals(p, d, "Decrypted password (" + d + ") doesn't match the original one (" + p + ")");
     }
 }

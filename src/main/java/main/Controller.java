@@ -37,6 +37,8 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
@@ -122,7 +124,6 @@ public class Controller implements Initializable {
             initializeFirstRun();
             ioManager.getLogger().addInfo("First run done");
         } else {
-            // TODO login
             initializeLogin();
             ioManager.getLogger().addInfo("User authenticated");
         }
@@ -173,10 +174,54 @@ public class Controller implements Initializable {
     // #endregion
 
     // #region Login
+    @FXML
+    private AnchorPane loginPane;
+
+    @FXML
+    private Label loginTitle;
+
+    @FXML
+    private TextField loginPasswordVisible;
+
+    @FXML
+    private PasswordField loginPasswordHidden;
+
+    @FXML
+    private Button loginSubmitBtn;
+
+    private Timer wrongPasswordsTimer;
+
     private void initializeLogin() {
-        // while (!ioManager.isAuthenticated()) {
-        // ioManager.authenticate("");
-        // }
+        wrongPasswordsTimer = new Timer();
+
+        langResources.bindTextProperty(loginTitle, "welcome_back");
+        langResources.bindTextProperty(loginSubmitBtn, "lets_go");
+
+        bindPasswordFields(loginPasswordHidden, loginPasswordVisible);
+
+        loginPane.toFront();
+    }
+
+    @FXML
+    public void doLogin() {
+        if (checkTextFields(loginPasswordVisible, loginPasswordHidden)) {
+            wrongPasswordsTimer.cancel();
+            ioManager.authenticate(loginPasswordVisible.getText());
+
+            if (ioManager.isAuthenticated()) {
+                loginPane.toBack();
+            } else {
+                loginSubmitBtn.setStyle("-fx-border-color: #ff5f5f");
+                wrongPasswordsTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        clearStyle(loginSubmitBtn);
+                    }
+                }, 1000);
+            }
+
+            clearTextFields(loginPasswordHidden, loginPasswordVisible);
+        }
     }
     // #endregion
 
