@@ -18,17 +18,7 @@
 
 package main;
 
-import static main.utils.Utils.bindPasswordFields;
-import static main.utils.Utils.bindValueComparator;
-import static main.utils.Utils.bindValueConverter;
-import static main.utils.Utils.capitalizeWord;
-import static main.utils.Utils.checkTextFields;
-import static main.utils.Utils.clearStyle;
-import static main.utils.Utils.clearTextFields;
-import static main.utils.Utils.getFXSortedList;
-import static main.utils.Utils.selectedChoiceBoxIndex;
-import static main.utils.Utils.selectedChoiceBoxItem;
-import static main.utils.Utils.toStringConverter;
+import static main.utils.Utils.*;
 
 import java.awt.Desktop;
 import java.io.IOException;
@@ -36,10 +26,11 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.ResourceBundle;
-import java.util.Timer;
-import java.util.TimerTask;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.collections.transformation.SortedList;
@@ -61,6 +52,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -93,7 +85,7 @@ public class Controller implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
-        // If account exists, its Locale will be used, else it will fallback to the
+        // If account exists, its Locale will be used, else it will fall back to the
         // default value.
         ObjectProperty<Locale> locale = settingsLangCB.valueProperty();
         langResources.resourcesProperty().bind(Bindings.createObjectBinding(
@@ -113,7 +105,7 @@ public class Controller implements Initializable {
             Parent root = loader.load();
             eulaStage = new Stage();
             eulaStage.setTitle(langResources.getValue("terms_credits"));
-            eulaStage.getIcons().add(new Image(getClass().getResourceAsStream("/locker.ico")));
+            eulaStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/locker.ico"))));
             eulaStage.setResizable(false);
             eulaStage.setScene(new Scene(root, 900, 600));
         } catch (IOException e) {
@@ -189,10 +181,12 @@ public class Controller implements Initializable {
     @FXML
     private Button loginSubmitBtn;
 
-    private Timer wrongPasswordsTimer;
+    private Timeline wrongPasswordsTimeline;
 
     private void initializeLogin() {
-        wrongPasswordsTimer = new Timer();
+        wrongPasswordsTimeline = new Timeline(
+                new KeyFrame(Duration.ZERO, evt -> loginSubmitBtn.setStyle("-fx-border-color: #ff5f5f")),
+                new KeyFrame(Duration.seconds(1), evt -> clearStyle(loginSubmitBtn)));
 
         langResources.bindTextProperty(loginTitle, "welcome_back");
         langResources.bindTextProperty(loginSubmitBtn, "lets_go");
@@ -205,19 +199,13 @@ public class Controller implements Initializable {
     @FXML
     public void doLogin() {
         if (checkTextFields(loginPasswordVisible, loginPasswordHidden)) {
-            wrongPasswordsTimer.cancel();
+            wrongPasswordsTimeline.stop();
             ioManager.authenticate(loginPasswordVisible.getText());
 
             if (ioManager.isAuthenticated()) {
                 loginPane.toBack();
             } else {
-                loginSubmitBtn.setStyle("-fx-border-color: #ff5f5f");
-                wrongPasswordsTimer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        clearStyle(loginSubmitBtn);
-                    }
-                }, 1000);
+                wrongPasswordsTimeline.play();
             }
 
             clearTextFields(loginPasswordHidden, loginPasswordVisible);
@@ -452,9 +440,6 @@ public class Controller implements Initializable {
     private PasswordField settingsLoginPasswordHidden;
 
     @FXML
-    private Button settingsChangePassButton;
-
-    @FXML
     private Label settingsLangLbl, settingsSortingOrderLbl, settingsLoginPasswordLbl, settingsLoginPasswordDesc,
             settingsDriveConnLbl, wip;
 
@@ -466,16 +451,14 @@ public class Controller implements Initializable {
         langResources.bindTextProperty(settingsDriveConnLbl, "drive_con");
         langResources.bindTextProperty(wip, "wip");
 
-        SortedList<Locale> langs = getFXSortedList(SUPPORTED_LOCALES);
-        settingsLangCB.setItems(langs);
+        SortedList<Locale> languages = getFXSortedList(SUPPORTED_LOCALES);
+        settingsLangCB.setItems(languages);
         settingsLangCB.getSelectionModel().select(ioManager.getLoginAccount() != null
                 ? ioManager.getLoginAccount().getLocale()
                 : DEFAULT_LOCALE);
         bindValueConverter(settingsLangCB, settingsLangCB.valueProperty(), this::languageStringConverter);
-        bindValueComparator(langs, settingsLangCB.valueProperty(), settingsLangCB);
-        settingsLangCB.setOnAction(event -> {
-            ioManager.getLoginAccount().setLocale(selectedChoiceBoxItem(settingsLangCB));
-        });
+        bindValueComparator(languages, settingsLangCB.valueProperty(), settingsLangCB);
+        settingsLangCB.setOnAction(event -> ioManager.getLoginAccount().setLocale(selectedChoiceBoxItem(settingsLangCB)));
 
         SortedList<SortingOrder> sortingOrders = getFXSortedList(SortingOrder.class.getEnumConstants());
         settingsOrderCB.setItems(sortingOrders);
@@ -484,9 +467,7 @@ public class Controller implements Initializable {
                 : SortingOrder.SOFTWARE);
         bindValueConverter(settingsOrderCB, settingsLangCB.valueProperty(), this::sortingOrderStringConverter);
         bindValueComparator(sortingOrders, settingsLangCB.valueProperty(), settingsOrderCB);
-        settingsOrderCB.setOnAction(event -> {
-            ioManager.getLoginAccount().setSortingOrder(selectedChoiceBoxItem(settingsOrderCB));
-        });
+        settingsOrderCB.setOnAction(event -> ioManager.getLoginAccount().setSortingOrder(selectedChoiceBoxItem(settingsOrderCB)));
 
         bindPasswordFields(settingsLoginPasswordHidden, settingsLoginPasswordVisible);
         settingsLoginPasswordVisible

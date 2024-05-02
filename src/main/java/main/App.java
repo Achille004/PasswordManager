@@ -19,6 +19,7 @@
 package main;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -45,7 +46,7 @@ public class App extends Application {
         controller = loader.getController();
 
         primaryStage.setTitle("Password Manager");
-        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/locker.ico")));
+        primaryStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/locker.ico"))));
         primaryStage.setResizable(false);
         primaryStage.setScene(new Scene(root, 900, 600));
         primaryStage.show();

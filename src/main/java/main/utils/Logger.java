@@ -62,7 +62,7 @@ public class Logger {
 
     public boolean readFile() {
         if (!logFile.exists()) {
-            addInfo("File not found: '" + logFile.toString() + "'");
+            addInfo("File not found: '" + logFile + "'");
             return false;
         }
 

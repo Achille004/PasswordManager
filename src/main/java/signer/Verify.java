@@ -18,19 +18,18 @@
 
 package signer;
 
-import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import dev.sigstore.KeylessSignature;
 import dev.sigstore.KeylessVerificationRequest;
 import dev.sigstore.KeylessVerificationRequest.CertificateIdentity;
 import dev.sigstore.KeylessVerificationRequest.VerificationOptions;
 import dev.sigstore.KeylessVerifier;
 import dev.sigstore.bundle.BundleFactory;
+
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 
 public class Verify {
     static final Path SOURCE_PATH = Path.of("compiled", "verificationBundles");
@@ -48,7 +47,7 @@ public class Verify {
             .build();
 
     public static void main(String... args) throws Exception {
-        List<Path> PATHS_LIST = Files.walk(SOURCE_PATH).filter(Files::isRegularFile).collect(Collectors.toList());
+        List<Path> PATHS_LIST = Files.walk(SOURCE_PATH).filter(Files::isRegularFile).toList();
         PATHS_LIST.forEach(Verify::verifySignature);
     }
 
@@ -66,9 +65,9 @@ public class Verify {
                     .verificationOptions(verificationOptions)
                     .build());
 
-            System.out.println("Passed verification of: " + artifact.toString());
+            System.out.println("Passed verification of: " + artifact);
         } catch (Exception  e) {
-            System.out.println("Failed verification of: " + e.toString());
+            System.out.println("Failed verification of: " + e);
         }
     }
 }

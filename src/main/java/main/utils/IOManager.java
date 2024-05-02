@@ -116,12 +116,12 @@ public class IOManager {
 
                     logger.addInfo("File loaded: '" + data_file + "'");
 
-                    // All the data was loaded successfully, so user can now login
+                    // All the data was loaded successfully, so user can now log in
                     firstRun = false;
                 } catch (IOException | ClassNotFoundException e) {
                     logger.addError(e);
                     Alert alert = new Alert(AlertType.ERROR, langResources.getValue("load_error"), ButtonType.YES, ButtonType.NO);
-                    alert = setDefaultButton(alert, ButtonType.NO);
+                    setDefaultButton(alert, ButtonType.NO);
                     alert.showAndWait();
 
                     if (alert.getResult() != ButtonType.YES) {
