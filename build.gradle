@@ -79,7 +79,7 @@ jar {
 }
 
 jlink {
-    // jarExclude("netty", "**/license/")
+    jarExclude("netty", "**/license/")
     mergedModule {
         requires 'java.naming'
         requires 'java.xml'
@@ -90,8 +90,8 @@ jlink {
     }
     tasks.jlink.doLast {
         copy {
-            from("$projectDir/src/main/resources")
-            into("$buildDir/image/bin")
+            from(layout.projectDirectory.dir("/src/main/resources").asFile)
+            into(layout.buildDirectory.dir("/image/bin").asFile)
         }
     }
 

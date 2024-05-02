@@ -1,5 +1,5 @@
 # UI-Update features:
-### Better code comments and documentation + copyright
+### Better code comments and documentation
 ### Add character-checking from fields
 ### Add xml and json export + choose export directory
 

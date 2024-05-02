@@ -25,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import dev.sigstore.KeylessSignature;
@@ -37,9 +38,9 @@ public class Sign {
     static final Path SAVE_PATH = Path.of(SOURCE_PATH.toString(), "verificationBundles");
 
     public static void main(String... args) throws Exception {
-        for(File file: SAVE_PATH.toFile().listFiles()) {
+        for(File file: Objects.requireNonNull(SAVE_PATH.toFile().listFiles())) {
             file.delete();
-            System.out.println("Deleted: " + file.toString());
+            System.out.println("Deleted: " + file);
         }
         System.out.println();
 
@@ -57,7 +58,7 @@ public class Sign {
             String bundle = BundleFactory.createBundle(keylessSignature);
 
             Path savePath = Path.of(SAVE_PATH.toString(), path.getFileName().toString() + ".json");
-            System.out.println("Signed: " + savePath.toString());
+            System.out.println("Signed: " + savePath);
 
             PrintWriter pw = new PrintWriter(savePath.toFile());
             pw.write(bundle);
