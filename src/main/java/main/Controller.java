@@ -69,10 +69,14 @@ import main.utils.ObservableResourceFactory;
 
 public class Controller implements Initializable {
     public static final Locale[] SUPPORTED_LOCALES = { Locale.ENGLISH, Locale.ITALIAN };
-    public static final Locale SYSTEM_LANGUAGE = Locale.forLanguageTag(Locale.getDefault().getLanguage());
-    public static final Locale DEFAULT_LOCALE = Arrays.asList(SUPPORTED_LOCALES).contains(SYSTEM_LANGUAGE)
-            ? SYSTEM_LANGUAGE
-            : Locale.ENGLISH;
+    public static final Locale DEFAULT_LOCALE;
+
+    static {
+        Locale systemLang = Locale.forLanguageTag(Locale.getDefault().getLanguage());
+        DEFAULT_LOCALE = Arrays.asList(SUPPORTED_LOCALES).contains(systemLang)
+                ? systemLang
+                : Locale.ENGLISH;
+    }
 
     private final @Getter IOManager ioManager;
     private final @Getter ObservableResourceFactory langResources;
@@ -86,12 +90,10 @@ public class Controller implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        boolean firstRun = ioManager.loadDataFile();
 
         // If account exists, its Locale will be used, else it will fallback to the
         // default value.
         ObjectProperty<Locale> locale = settingsLangCB.valueProperty();
-
         langResources.resourcesProperty().bind(Bindings.createObjectBinding(
                 () -> {
                     Locale localeValue = locale.getValue();
@@ -99,6 +101,9 @@ public class Controller implements Initializable {
                             localeValue != null ? localeValue : DEFAULT_LOCALE);
                 },
                 locale));
+
+        boolean firstRun = ioManager.loadDataFile(langResources);
+
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/eula.fxml"));
             loader.setController(new EULAController(ioManager));
