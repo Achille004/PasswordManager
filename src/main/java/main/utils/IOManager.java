@@ -18,6 +18,8 @@
 
 package main.utils;
 
+import static main.utils.Utils.setDefaultButton;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -30,14 +32,17 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Locale;
 
-import main.enums.Exporter;
 import org.jetbrains.annotations.NotNull;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.TextInputControl;
 import lombok.Getter;
+import main.enums.Exporter;
 import main.enums.SortingOrder;
 import main.security.Account;
 import main.security.LoginAccount;
@@ -77,7 +82,7 @@ public class IOManager {
         logger = new Logger(filePath.resolve(LOG_FILE).toFile());
     }
 
-    public boolean loadDataFile() {
+    public boolean loadDataFile(final ObservableResourceFactory langResources) {
         boolean firstRun = true;
         if (!filePath.toFile().mkdirs()) {
             // gets the log history
@@ -114,13 +119,18 @@ public class IOManager {
                     // All the data was loaded successfully, so user can now login
                     firstRun = false;
                 } catch (IOException | ClassNotFoundException e) {
-                    // TODO invalid file version: ask to overwrite (exit application in case of
-                    // denial)
-                    // "There was a problem loading your passwords: ..."
-                    // if (e.getCause() instanceof InvalidClassException) -> probably is a different
-                    // file version
-
                     logger.addError(e);
+                    Alert alert = new Alert(AlertType.ERROR, langResources.getValue("load_error"), ButtonType.YES, ButtonType.NO);
+                    alert = setDefaultButton(alert, ButtonType.NO);
+                    alert.showAndWait();
+
+                    if (alert.getResult() != ButtonType.YES) {
+                        logger.addInfo("Data overwriting denied");
+                        logger.save();
+                        System.exit(0);
+                    } else {
+                        logger.addInfo("Data overwriting accepted");
+                    }
                 }
             } else {
                 logger.addInfo("File not found: '" + data_file + "'");
@@ -144,7 +154,7 @@ public class IOManager {
      */
     public void addAccount(String software, String username, String password) {
         accountList.add(Account.of(software, username, password, loginPassword));
-        //sortAccountList();
+        // sortAccountList();
 
         logger.addInfo("Account added");
     }
@@ -152,7 +162,7 @@ public class IOManager {
     public void replaceAccount(int index, String software, String username, String password) {
         if (index >= 0 && index < accountList.size()) {
             accountList.set(index, Account.of(software, username, password, loginPassword));
-            //sortAccountList();
+            // sortAccountList();
 
             logger.addInfo("Account edited");
         }
@@ -223,7 +233,8 @@ public class IOManager {
     // #endregion
 
     public void export(Exporter exporter, ObservableResourceFactory langResources) {
-        try (FileWriter file = new FileWriter(desktopPath.resolve("Passwords." + exporter.name().toLowerCase()).toFile())) {
+        try (FileWriter file = new FileWriter(
+                desktopPath.resolve("Passwords." + exporter.name().toLowerCase()).toFile())) {
             file.write(exporter.getExporter().apply(accountList, langResources, loginPassword));
             file.flush();
         } catch (IOException e) {

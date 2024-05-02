@@ -34,7 +34,11 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.util.Callback;
@@ -165,5 +169,12 @@ public class Utils {
     public static <T> void bindValueComparator(SortedList<T> sortedList, ObjectProperty<Locale> locale,
             ChoiceBox<T> choiceBox) {
         sortedList.comparatorProperty().bind(comparatorBinding(locale, choiceBox.converterProperty()));
+    }
+
+    public static Alert setDefaultButton(Alert alert, ButtonType defBtn) {
+        DialogPane pane = alert.getDialogPane();
+        for (ButtonType t : alert.getButtonTypes())
+            ((Button) pane.lookupButton(t)).setDefaultButton(t == defBtn);
+        return alert;
     }
 }
