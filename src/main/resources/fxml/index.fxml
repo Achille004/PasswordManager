@@ -53,6 +53,44 @@
 
 <StackPane prefHeight="600.0" prefWidth="900.0" styleClass="body" stylesheets="@style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.Controller">
    <children>
+      <AnchorPane fx:id="loginPane" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: #202428;">
+         <children>
+            <Label fx:id="loginTitle" layoutX="172.0" layoutY="253.0" prefHeight="58.0" prefWidth="400.0" text="Welcome back!" textFill="#0aba4d">
+               <font>
+                  <Font name="Script MT Bold" size="48.0" />
+               </font>
+            </Label>
+            <StackPane layoutX="171.0" layoutY="320.0" prefHeight="27.0" prefWidth="545.0">
+               <children>
+                  <AnchorPane prefHeight="200.0" prefWidth="200.0">
+                     <children>
+                        <TextField fx:id="loginPasswordVisible" prefHeight="27.0" prefWidth="560.0" styleClass="textField" />
+                        <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="527.0" layoutY="2.0" onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/icons/closed-eye.png" />
+                           </image>
+                        </ImageView>
+                     </children>
+                  </AnchorPane>
+                  <AnchorPane prefHeight="27.0" prefWidth="551.0">
+                     <children>
+                        <PasswordField fx:id="loginPasswordHidden" prefHeight="27.0" prefWidth="560.0" styleClass="textField" />
+                        <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="527.0" layoutY="2.0" onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/icons/open-eye.png" />
+                           </image>
+                        </ImageView>
+                     </children>
+                  </AnchorPane>
+               </children>
+            </StackPane>
+            <Button fx:id="loginSubmitBtn" alignment="CENTER" contentDisplay="CENTER" layoutX="627.0" layoutY="260.0" mnemonicParsing="false" nodeOrientation="LEFT_TO_RIGHT" onAction="#doLogin" styleClass="greenButton" text="Let's go!" textAlignment="CENTER" textFill="WHITE" AnchorPane.rightAnchor="171.39999999999998">
+               <font>
+                  <Font name="System Bold" size="18.0" />
+               </font>
+            </Button>
+         </children>
+      </AnchorPane>
       <AnchorPane fx:id="firstRunPane" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: #202428;">
          <children>
             <Label fx:id="firstRunTitle" alignment="CENTER" layoutX="170.0" layoutY="145.0" prefHeight="58.0" prefWidth="560.0" text="Hi!" textFill="#0aba4d">
