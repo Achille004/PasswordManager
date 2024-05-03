@@ -16,31 +16,33 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-module PasswordManager.main {
-    requires jdk.compiler;
-    // requires jdk.jsobject;
+module password.manager {
     requires java.base;
     requires java.desktop;
-    requires static lombok;
-
-    requires org.jetbrains.annotations;
-
-    requires org.bouncycastle.provider;
-
+    
     requires javafx.base;
     requires transitive javafx.controls;
     requires javafx.fxml;
     requires transitive javafx.graphics;
     requires javafx.web;
+    
+    // requires jdk.compiler;
+    // requires jdk.jsobject;
+    
+    requires static lombok;
+    
+    requires org.bouncycastle.provider;
+    
+    requires org.jetbrains.annotations;
 
     // TODO switch to sign/sigstore plugin
-    requires sigstore.java;
+    // requires sigstore.java;
     
-    exports main;
-    exports main.enums;
-    exports main.inerfaces;
-    exports main.security;
-    exports main.utils;
+    exports password.manager;
+    exports password.manager.enums;
+    exports password.manager.inerfaces;
+    exports password.manager.security;
+    exports password.manager.utils;
     
-    opens main to javafx.fxml;
+    opens password.manager to javafx.fxml;
 }

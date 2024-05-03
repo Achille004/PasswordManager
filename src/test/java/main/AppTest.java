@@ -24,7 +24,7 @@ import java.security.SecureRandom;
 
 import org.junit.jupiter.api.Test;
 
-import main.security.Encrypter;
+import password.manager.security.Encrypter;
 
 class AppTest {
     @Test

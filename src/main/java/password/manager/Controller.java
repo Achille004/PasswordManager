@@ -16,9 +16,9 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package main;
+package password.manager;
 
-import static main.utils.Utils.*;
+import static password.manager.utils.Utils.*;
 
 import java.awt.Desktop;
 import java.io.IOException;
@@ -56,10 +56,10 @@ import javafx.util.Duration;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import main.enums.SortingOrder;
-import main.security.Account;
-import main.utils.IOManager;
-import main.utils.ObservableResourceFactory;
+import password.manager.enums.SortingOrder;
+import password.manager.security.Account;
+import password.manager.utils.IOManager;
+import password.manager.utils.ObservableResourceFactory;
 
 public class Controller implements Initializable {
     public static final Locale[] SUPPORTED_LOCALES = { Locale.ENGLISH, Locale.ITALIAN };

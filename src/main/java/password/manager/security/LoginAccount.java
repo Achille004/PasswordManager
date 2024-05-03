@@ -16,7 +16,7 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package main.security;
+package password.manager.security;
 
 import java.io.Serializable;
 import java.security.SecureRandom;
@@ -27,9 +27,9 @@ import java.util.Locale;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import main.enums.SortingOrder;
 import lombok.Getter;
 import lombok.Setter;
+import password.manager.enums.SortingOrder;
 
 public class LoginAccount implements Serializable {
     @Getter
