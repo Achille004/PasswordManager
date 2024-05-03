@@ -7,6 +7,9 @@ plugins {
     id 'io.franzbecker.gradle-lombok' version '5.0.0'
     id 'org.javamodularity.moduleplugin' version '1.8.13'
 
+    // https://github.com/gradlex-org/java-module-dependencies?tab=readme-ov-file
+    id 'org.gradlex.java-module-dependencies' version '1.6.4'
+
     // id 'signing'
     // id 'dev.sigstore.sign' version '0.7.0'
 }
@@ -18,34 +21,18 @@ repositories {
     mavenCentral()
 }
 
-// TODO https://github.com/gradlex-org/java-module-packaging?tab=readme-ov-file#java-modules-with-gradle
+testModuleInfo {
+    requires("org.junit.jupiter.api")
+    requires('jdk.compiler')
+    annotationProcessor('lombok')
+}
+
 dependencies {
-    implementation 'org.jetbrains:annotations:24.1.0'
-
-    // Use JUnit Jupiter for testing.
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-    // This dependency is used by the application.
-    implementation 'com.google.guava:guava:33.1.0-jre'
-
     // https://mvnrepository.com/artifact/org.projectlombok/lombok
     annotationProcessor 'org.projectlombok:lombok:1.18.32'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.32'
-    compileOnly 'org.projectlombok:lombok'
-    testCompileOnly 'org.projectlombok:lombok'
-
-    // https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on
-    implementation 'org.bouncycastle:bcprov-jdk18on:1.78.1'
-
-    // https://mvnrepository.com/artifact/org.openjfx/javafx-web
-    implementation 'org.openjfx:javafx-web:22.0.1'
 
     // https://mvnrepository.com/artifact/dev.sigstore/sigstore-java
-    implementation 'dev.sigstore:sigstore-java:0.7.0'
-    
-    // https://mvnrepository.com/artifact/jakarta.xml.bind/jakarta.xml.bind-api
-    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.2'
+    // implementation 'dev.sigstore:sigstore-java:0.7.0'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -57,8 +44,8 @@ java {
 }
 application {
     // Define the main class for the application.
-    mainModule = 'PasswordManager.main'
-    mainClass = 'main.App'
+    mainModule = 'password.manager'
+    mainClass = 'password.manager.App'
 }
 
 tasks.named('test') {
@@ -73,12 +60,13 @@ javafx {
 
 jar {
     manifest {
-        attributes 'Implementation-Title': "Password Manager", 'Main-Class': 'main.App'
+        attributes 'Implementation-Title': "Password Manager", 'Main-Class': 'password.manager.App'
     }
     archiveBaseName.set(rootProject.name)
 }
 
 jlink {
+    // options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
     jarExclude("netty", "**/license/")
     mergedModule {
         requires 'java.naming'

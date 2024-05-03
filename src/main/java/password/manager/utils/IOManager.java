@@ -16,9 +16,9 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package main.utils;
+package password.manager.utils;
 
-import static main.utils.Utils.setDefaultButton;
+import static password.manager.utils.Utils.setDefaultButton;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,10 +42,10 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.TextInputControl;
 import lombok.Getter;
-import main.enums.Exporter;
-import main.enums.SortingOrder;
-import main.security.Account;
-import main.security.LoginAccount;
+import password.manager.enums.Exporter;
+import password.manager.enums.SortingOrder;
+import password.manager.security.Account;
+import password.manager.security.LoginAccount;
 
 public class IOManager {
     static final String WINDOWS_PATH, DATA_FILE, LOG_FILE;

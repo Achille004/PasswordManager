@@ -16,18 +16,19 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package main.enums;
-
-import static main.utils.Utils.addZerosToIndex;
+package password.manager.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import main.inerfaces.TriFunction;
-import main.utils.ObservableResourceFactory;
+import password.manager.inerfaces.TriFunction;
+import password.manager.security.Account;
+import password.manager.utils.ObservableResourceFactory;
+
+import static password.manager.utils.Utils.addZerosToIndex;
+
 import org.jetbrains.annotations.NotNull;
 
 import javafx.collections.ObservableList;
-import main.security.Account;
 
 @RequiredArgsConstructor
 public enum Exporter {
