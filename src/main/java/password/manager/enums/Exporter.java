@@ -42,6 +42,7 @@ public enum Exporter {
         stb.append("""
                 body {
                     background-color: rgb(51,51,51);
+                    font-family: sans-serif;
                     color: rgb(204,204,204);
                     margin: 1em;
                 }

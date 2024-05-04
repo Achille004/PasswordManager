@@ -1,7 +1,6 @@
-# UI-Update features:
+# Next:
 ### Better code comments and documentation
-### Add character-checking from fields
-### Add xml and json export + choose export directory
+### Add export (add xml and json) + choose export directory + character-checking from fields
 
 # Future updates:
 ### Better signing

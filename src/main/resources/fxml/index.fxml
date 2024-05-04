@@ -138,7 +138,7 @@
                   <Font name="System Bold" size="18.0" />
                </font>
             </Button>
-            <Label fx:id="firstRunTermsCred" layoutX="170.0" layoutY="364.0" onMouseClicked="#showEula" text="Terms and Credits" textFill="#0aba4d" underline="true">
+            <Label fx:id="firstRunTermsCred" layoutX="170.0" layoutY="364.0" onMouseClicked="#showEula" styleClass="eulaText" text="Terms and Credits" textFill="#0aba4d">
                <font>
                   <Font size="18.0" />
                </font>

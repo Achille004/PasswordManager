@@ -28,7 +28,6 @@
 }
 
 .eulaText:hover {
-    -fx-text-fill: #0aba4d;
     -fx-underline: true;
 }
 

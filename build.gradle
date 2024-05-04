@@ -2,16 +2,15 @@ plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     id 'java'
     id 'application'
+    id 'signing'
+
     id 'org.openjfx.javafxplugin' version '0.1.0'
-    id 'org.beryx.jlink' version '3.0.1'
     id 'io.franzbecker.gradle-lombok' version '5.0.0'
     id 'org.javamodularity.moduleplugin' version '1.8.13'
+    id 'org.panteleyev.jpackageplugin' version '1.6.0'
 
-    // https://github.com/gradlex-org/java-module-dependencies?tab=readme-ov-file
+    // https://github.com/gradlex-org/java-module-dependencies
     id 'org.gradlex.java-module-dependencies' version '1.6.4'
-
-    // id 'signing'
-    // id 'dev.sigstore.sign' version '0.7.0'
 }
 
 project.version = '3.0.0'
@@ -22,22 +21,20 @@ repositories {
 }
 
 testModuleInfo {
-    requires("org.junit.jupiter.api")
-    requires('jdk.compiler')
+    requires('org.junit.jupiter.api')
     annotationProcessor('lombok')
 }
 
 dependencies {
     // https://mvnrepository.com/artifact/org.projectlombok/lombok
     annotationProcessor 'org.projectlombok:lombok:1.18.32'
-
-    // https://mvnrepository.com/artifact/dev.sigstore/sigstore-java
-    // implementation 'dev.sigstore:sigstore-java:0.7.0'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
 java {
     sourceCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_21
+
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
@@ -54,70 +51,86 @@ tasks.named('test') {
 }
 
 javafx {
-    version = "22.0.1"
+    version = '22.0.1'
     modules = [ 'javafx.base', 'javafx.controls', 'javafx.fxml', 'javafx.graphics', 'javafx.web' ]
 }
 
 jar {
     manifest {
-        attributes 'Implementation-Title': "Password Manager", 'Main-Class': 'password.manager.App'
+        attributes 'Implementation-Title': 'Password Manager', 'Main-Class': 'password.manager.App'
     }
     archiveBaseName.set(rootProject.name)
 }
 
-jlink {
-    // options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
-    jarExclude("netty", "**/license/")
-    mergedModule {
-        requires 'java.naming'
-        requires 'java.xml'
-    }
-    launcher{
-        name = 'PasswordManager-' + project.version
-        jvmArgs = ['-Dlog4j.configurationFile=./log4j2.xml']
-    }
-    tasks.jlink.doLast {
+assembleDist {
+    doLast {
         copy {
-            from(layout.projectDirectory.dir("/src/main/resources").asFile)
-            into(layout.buildDirectory.dir("/image/bin").asFile)
-        }
-    }
-
-    jpackage {
-        installerType = null // exe/msi
-        installerOutputDir = layout.projectDirectory.dir("/compiled").asFile
-        installerName = 'PasswordManager'
-        appVersion = version
-        icon =  layout.projectDirectory.file("/src/main/resources/locker.ico").asFile
-        vendor = 'Francesco Marras'
-
-        // '--description "Password Manager is an application able to add, modify and delete locally saved accounts, characterized by a software, a username and an AES-encrypted password."',
-        // '--copyright "Copyright (C) 2022-2024  Francesco Marras  GNU GPLv3"',
-        // '--license-file ./src/main/resources/license.txt',
-        // '--about-url "https://github.com/Achille004/PasswordManager"'
-
-        if (org.gradle.internal.os.OperatingSystem.current().windows) {
-            installerOptions += [
-                '--win-dir-chooser',
-                '--win-menu',
-                '--win-shortcut'
-            ]
-        }
-    }
-    tasks.jpackage.doLast {
-        copy {
-            from("$buildDir/libs")
-            into("$rootDir/compiled")
+            from(layout.buildDirectory.dir('/distributions'))
+            into(layout.projectDirectory.dir('/compiled/portable'))
         }
     }
 }
 
-tasks.register('sign', JavaExec) {
-    mainClass = 'signer.Sign'
-    classpath = sourceSets.main.runtimeClasspath
+tasks.register('copyJars', Copy) {
+    dependsOn('compileJava', 'jar')
+    copy {
+        from(configurations.runtimeClasspath, tasks.jar)
+        into(layout.buildDirectory.dir('/jars'))
+    }
 }
 
-tasks.register('verify', JavaExec) {
-    mainClass = 'signer.Verify'
-    classpath = sourceSets.main.runtimeClasspath
+jpackage {
+    dependsOn('copyJars')
+
+    // type = 'dmg'
+    // type = 'pkg'
+	// type = 'exe'
+	// type = 'msi'
+	// type = 'rpm'
+	// type = 'deb'
+
+    aboutUrl = 'https://github.com/Achille004/PasswordManager'
+    appDescription = 'Password Manager is an application able to add, modify and delete locally saved accounts, characterized by a software, a username and an AES-encrypted password.'
+    appName = 'Password Manager'
+    appVersion = project.version
+    copyright = 'Copyright (c) 2022-2024 Francesco Marras'
+    destination = layout.projectDirectory.dir('/compiled/installer')
+    icon =  layout.projectDirectory.file('/src/main/resources/locker.ico')
+    javaOptions = ['-Dfile.encoding=UTF-8']
+    licenseFile	= layout.projectDirectory.dir('/src/main/resources/license.txt')
+    module = 'password.manager/password.manager.App'
+    modulePaths = Arrays.asList('/build/jars')
+    resourceDir = layout.projectDirectory.dir('/src/main/resources')
+    runtimeImage = System.getProperty('java.home')
+    vendor = 'Francesco Marras'
+    
+    windows {
+        winConsole = false
+        winDirChooser = true
+        winHelpUrl = 'https://github.com/Achille004/PasswordManager'
+        winMenu = true
+        winMenuGroup = 'Francesco Marras'
+        winShortcut = true
+        winShortcutPrompt = true
+    }
+
+    mac {
+        macAppCategory  = 'security'
+        macAppStore = false
+        macPackageIdentifier = 'PasswordManager-3.0.0'
+        macPackageName = 'PasswordManager'
+        macSigningKeyUserName = 'Francesco Marras'
+    }
+
+    linux {
+        linuxAppCategory = 'security'
+        linuxDebMaintainer = '2004marras@gmail.com'
+        linuxMenuGroup = 'Francesco Marras'
+        linuxRpmLicenseType = 'GPLv3'
+        linuxShortcut = true
+    }
+}
+
+tasks.register('assembleAll') {
+    dependsOn('assembleDist', 'jpackage')
 }
