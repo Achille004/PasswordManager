@@ -62,7 +62,15 @@ jar {
     archiveBaseName.set(rootProject.name)
 }
 
-assembleDist {
+signing {
+    sign jar
+    sign distZip
+    sign distTar
+}
+
+tasks.register('assemblePortables') {
+    dependsOn('signDistZip', 'signDistTar')
+
     doLast {
         copy {
             from(layout.buildDirectory.dir('/distributions'))
@@ -72,7 +80,8 @@ assembleDist {
 }
 
 tasks.register('copyJars', Copy) {
-    dependsOn('compileJava', 'jar')
+    dependsOn('compileJava', 'signJar')
+
     copy {
         from(configurations.runtimeClasspath, tasks.jar)
         into(layout.buildDirectory.dir('/jars'))
@@ -129,8 +138,4 @@ jpackage {
         linuxRpmLicenseType = 'GPLv3'
         linuxShortcut = true
     }
-}
-
-tasks.register('assembleAll') {
-    dependsOn('assembleDist', 'jpackage')
 }
