@@ -62,10 +62,12 @@ import password.manager.utils.IOManager;
 import password.manager.utils.ObservableResourceFactory;
 
 public class Controller implements Initializable {
-    public static final Locale[] SUPPORTED_LOCALES = { Locale.ENGLISH, Locale.ITALIAN };
+    public static final Locale[] SUPPORTED_LOCALES;
     public static final Locale DEFAULT_LOCALE;
 
     static {
+        SUPPORTED_LOCALES = new Locale[] { Locale.ENGLISH, Locale.ITALIAN };
+
         Locale systemLang = Locale.forLanguageTag(Locale.getDefault().getLanguage());
         DEFAULT_LOCALE = Arrays.asList(SUPPORTED_LOCALES).contains(systemLang)
                 ? systemLang
@@ -105,7 +107,8 @@ public class Controller implements Initializable {
             Parent root = loader.load();
             eulaStage = new Stage();
             eulaStage.setTitle(langResources.getValue("terms_credits"));
-            eulaStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/locker.ico"))));
+            eulaStage.getIcons()
+                    .add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/locker.png"))));
             eulaStage.setResizable(false);
             eulaStage.setScene(new Scene(root, 900, 600));
         } catch (IOException e) {
@@ -458,7 +461,8 @@ public class Controller implements Initializable {
                 : DEFAULT_LOCALE);
         bindValueConverter(settingsLangCB, settingsLangCB.valueProperty(), this::languageStringConverter);
         bindValueComparator(languages, settingsLangCB.valueProperty(), settingsLangCB);
-        settingsLangCB.setOnAction(event -> ioManager.getLoginAccount().setLocale(selectedChoiceBoxItem(settingsLangCB)));
+        settingsLangCB
+                .setOnAction(event -> ioManager.getLoginAccount().setLocale(selectedChoiceBoxItem(settingsLangCB)));
 
         SortedList<SortingOrder> sortingOrders = getFXSortedList(SortingOrder.class.getEnumConstants());
         settingsOrderCB.setItems(sortingOrders);
@@ -467,7 +471,8 @@ public class Controller implements Initializable {
                 : SortingOrder.SOFTWARE);
         bindValueConverter(settingsOrderCB, settingsLangCB.valueProperty(), this::sortingOrderStringConverter);
         bindValueComparator(sortingOrders, settingsLangCB.valueProperty(), settingsOrderCB);
-        settingsOrderCB.setOnAction(event -> ioManager.getLoginAccount().setSortingOrder(selectedChoiceBoxItem(settingsOrderCB)));
+        settingsOrderCB.setOnAction(
+                event -> ioManager.getLoginAccount().setSortingOrder(selectedChoiceBoxItem(settingsOrderCB)));
 
         bindPasswordFields(settingsLoginPasswordHidden, settingsLoginPasswordVisible);
         settingsLoginPasswordVisible

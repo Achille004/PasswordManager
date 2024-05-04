@@ -26,7 +26,6 @@ module password.manager {
     requires transitive javafx.graphics;
     requires javafx.web;
     
-    // requires jdk.compiler;
     // requires jdk.jsobject;
     
     requires static lombok;
@@ -34,9 +33,6 @@ module password.manager {
     requires org.bouncycastle.provider;
     
     requires org.jetbrains.annotations;
-
-    // TODO switch to sign/sigstore plugin
-    // requires sigstore.java;
     
     exports password.manager;
     exports password.manager.enums;
