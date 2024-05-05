@@ -1,6 +1,6 @@
 /*
     Password Manager: Manages accounts given by user with encrypted password.
-    Copyright (C) 2022-2024  Francesco Marras
+    Copyright (C) 2022-2024  Francesco Marras (2004marras@gmail.com)
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,29 +16,17 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-module password.manager {
-    requires java.base;
-    requires java.desktop;
-    
-    requires javafx.base;
-    requires transitive javafx.controls;
-    requires javafx.fxml;
-    requires transitive javafx.graphics;
-    requires javafx.web;
-    
-    // requires jdk.jsobject;
-    
-    requires static lombok;
-    
-    requires org.bouncycastle.provider;
-    
-    requires org.jetbrains.annotations;
-    
-    exports password.manager;
-    exports password.manager.enums;
-    exports password.manager.inerfaces;
-    exports password.manager.security;
-    exports password.manager.utils;
-    
-    opens password.manager to javafx.fxml;
+package password.manager.inerfaces;
+
+import java.util.Objects;
+import java.util.function.Function;
+
+@FunctionalInterface
+public interface TriFunction<T, U, V, R> {
+    R apply(T t, U u, V v);
+
+    default <S> TriFunction<T, U, V, S> andThen(Function<? super R, ? extends S> after) {
+        Objects.requireNonNull(after);
+        return (T t, U u, V v) -> after.apply(apply(t, u, v));
+    }
 }

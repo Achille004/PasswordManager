@@ -1,7 +1,13 @@
-# Future updates: 
-### Add Linux support
-### Add show password in login
-### Change lanuage system
-### Add xml and json export
+# Next up:
+- Embed fonts (as they only work on Windows) + msix packaging
+- Better code comments and documentation
+- Add export (add xml and json) + choose export directory + character-checking from fields
+- Better readme
 
-### ?? Encryption method: Photo ??
+# Future:
+- Google drive linking
+
+# Ideas:
+- Divide `index.fxml` into separate parts
+- Switch from `ArrayList` to embedded database
+- Animations (from `javafx.animation package`)
