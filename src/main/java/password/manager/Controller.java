@@ -35,6 +35,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -349,20 +350,16 @@ public class Controller implements Initializable {
                 },
                 sortingOrder));
 
-        decryptCB.getSelectionModel().selectedIndexProperty().addListener(
-                (options, oldIndex, newIndex) -> {
+        decryptCB.getSelectionModel().selectedItemProperty().addListener(
+                (options, oldItem, newItem) -> {
                     decryptDeleteCounter = false;
                     decryptResetStyle();
 
-                    int index = newIndex.intValue();
-                    if (index >= 0) {
-                        // gets the selected account
-                        Account selectedAcc = ioManager.getAccountList().get(index);
-                        String password = ioManager.getAccountPassword(selectedAcc);
-
+                    if (newItem != null) {
                         // shows the software, username and account of the selected account
-                        decryptSoftware.setText(selectedAcc.getSoftware());
-                        decryptUsername.setText(selectedAcc.getUsername());
+                        decryptSoftware.setText(newItem.getSoftware());
+                        decryptUsername.setText(newItem.getUsername());
+                        String password = ioManager.getAccountPassword(newItem);
                         decryptPasswordVisible.setText(password);
                         decryptPasswordHidden.setText(password);
                     } else {
@@ -393,35 +390,42 @@ public class Controller implements Initializable {
 
     @FXML
     public void decryptSave(ActionEvent event) {
-        int index = selectedChoiceBoxIndex(decryptCB);
-        if (index >= 0) {
-            if (checkTextFields(decryptSoftware, decryptUsername, decryptPasswordVisible, decryptPasswordHidden)) {
-                // get the new software, username and password
-                String software = decryptSoftware.getText();
-                String username = decryptUsername.getText();
-                String password = decryptPasswordVisible.getText();
-                // save the new attributes of the account
-                ioManager.replaceAccount(index, software, username, password);
-            }
+        Account account = selectedChoiceBoxItem(decryptCB);
+        if (account == null) {
+            return;
+        }
+
+        if (checkTextFields(decryptSoftware, decryptUsername, decryptPasswordVisible, decryptPasswordHidden)) {
+            // get the new software, username and password
+            String software = decryptSoftware.getText();
+            String username = decryptUsername.getText();
+            String password = decryptPasswordVisible.getText();
+
+            clearStyle(decryptDelete);
+            decryptClear();
+
+            // save the new attributes of the account
+            ioManager.editAccount(account, software, username, password);
         }
     }
 
     @FXML
     public void decryptDelete(ActionEvent event) {
-        int index = selectedChoiceBoxIndex(decryptCB);
-        if (index < 0) {
+        Account account = selectedChoiceBoxItem(decryptCB);
+        if (account == null) {
             return;
         }
 
         // when the deleteCounter is true it means that the user has confirmed the
         // elimination
         if (decryptDeleteCounter) {
-            clearStyle(decryptDelete);
+            decryptResetStyle();
+            decryptClear();
 
             // removes the selected account from the list
-            ioManager.deleteAccount(index);
+            ioManager.removeAccount(account);
         } else {
-            decryptDelete.setStyle("-fx-background-color: #ff5f5f;");
+            decryptDelete.setStyle("-fx-background-color: #ff5f5f");
         }
 
         decryptDeleteCounter = !decryptDeleteCounter;
@@ -474,11 +478,14 @@ public class Controller implements Initializable {
         settingsOrderCB.setOnAction(
                 event -> ioManager.getLoginAccount().setSortingOrder(selectedChoiceBoxItem(settingsOrderCB)));
 
+        EventHandler<ActionEvent> changeLoginPasswordEvent = event -> {
+            if (checkTextFields(settingsLoginPasswordVisible, settingsLoginPasswordHidden)) {
+                ioManager.changeLoginPassword(settingsLoginPasswordVisible.getText());
+            }
+        };
+        settingsLoginPasswordVisible.setOnAction(changeLoginPasswordEvent);
+        settingsLoginPasswordHidden.setOnAction(changeLoginPasswordEvent);
         bindPasswordFields(settingsLoginPasswordHidden, settingsLoginPasswordVisible);
-        settingsLoginPasswordVisible
-                .setOnAction(event -> ioManager.changeLoginPassword(settingsLoginPasswordVisible.getText()));
-        settingsLoginPasswordHidden
-                .setOnAction(event -> ioManager.changeLoginPassword(settingsLoginPasswordHidden.getText()));
     }
 
     @FXML
@@ -513,12 +520,12 @@ public class Controller implements Initializable {
 
     private void highlightSidebarButton(ActionEvent event) {
         if (lastSidebarButton != null) {
-            lastSidebarButton.setStyle("-fx-background-color: #202428;");
+            lastSidebarButton.setStyle("-fx-background-color: #202428");
         }
 
         if (event != null) {
             lastSidebarButton = (Button) event.getSource();
-            lastSidebarButton.setStyle("-fx-background-color: #42464a;");
+            lastSidebarButton.setStyle("-fx-background-color: #42464a");
         }
     }
 
