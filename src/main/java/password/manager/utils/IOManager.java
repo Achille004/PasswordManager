@@ -142,37 +142,26 @@ public class IOManager {
         return firstRun;
     }
 
-    // #region AccountList methods
     public SortedList<Account> getSortedAccountList() {
         return this.accountList.sorted(null);
     }
-    // #endregion
 
     // #region Account methods
-    /**
-     * Sorts the account list.
-     */
     public void addAccount(String software, String username, String password) {
         accountList.add(Account.of(software, username, password, loginPassword));
-        // sortAccountList();
-
         logger.addInfo("Account added");
     }
 
-    public void replaceAccount(int index, String software, String username, String password) {
-        if (index >= 0 && index < accountList.size()) {
-            accountList.set(index, Account.of(software, username, password, loginPassword));
-            // sortAccountList();
+    public void editAccount(@NotNull Account account, String software, String username, String password) {
+        accountList.remove(account);
+        accountList.add(Account.of(software, username, password, loginPassword));
 
-            logger.addInfo("Account edited");
-        }
+        logger.addInfo("Account edited");
     }
 
-    public void deleteAccount(int index) {
-        if (index >= 0 && index < accountList.size()) {
-            accountList.remove(index);
-            logger.addInfo("Account deleted");
-        }
+    public void removeAccount(@NotNull Account account) {
+        accountList.remove(account);
+        logger.addInfo("Account deleted");
     }
 
     public String getAccountPassword(@NotNull Account account) {
@@ -181,11 +170,7 @@ public class IOManager {
     // #endregion
 
     // #region LoginAccount methods
-    public boolean setLoginAccount(SortingOrder sortingOrder, Locale locale, String loginPassword) {
-        if (loginAccount != null) {
-            return false;
-        }
-
+    public boolean setLoginAccount(SortingOrder sortingOrder, Locale locale, @NotNull String loginPassword) {
         this.loginAccount = LoginAccount.of(sortingOrder, locale, loginPassword);
         this.loginPassword = loginPassword;
         logger.addInfo("Login account created");
@@ -224,6 +209,7 @@ public class IOManager {
 
         logger.addInfo("Successful login");
         this.loginPassword = loginPassword;
+        
         return true;
     }
 
