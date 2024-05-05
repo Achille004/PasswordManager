@@ -1,14 +1,15 @@
+# Ignore Gradle project-specific cache directory
 .gradle
-build/
+
+# Ignore Gradle build output directory
+build
+
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 
 ### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
+.idea/
 *.iws
 *.iml
 *.ipr
