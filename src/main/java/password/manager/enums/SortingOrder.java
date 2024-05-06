@@ -21,6 +21,8 @@ package password.manager.enums;
 import java.util.Comparator;
 import java.util.function.BiFunction;
 
+import org.jetbrains.annotations.NotNull;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import password.manager.security.Account;
@@ -44,7 +46,7 @@ public enum SortingOrder {
         return converter.apply(software, username);
     }
 
-    public String convert(Account account) {
+    public String convert(@NotNull Account account) {
         return this.convert(account.getSoftware(), account.getUsername());
     }
 }

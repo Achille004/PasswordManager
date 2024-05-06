@@ -29,6 +29,8 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.ResourceBundle;
 
+import org.jetbrains.annotations.NotNull;
+
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.binding.Bindings;
@@ -339,9 +341,9 @@ public class Controller implements Initializable {
 
         SortedList<Account> accountList = ioManager.getSortedAccountList();
         decryptCB.setItems(accountList);
-        bindValueConverter(decryptCB, settingsLangCB.valueProperty(), this::accountStringConverter);
 
         ObjectProperty<SortingOrder> sortingOrder = settingsOrderCB.valueProperty();
+        decryptCB.converterProperty().bind(sortingOrder.map(this::accountStringConverter));
         accountList.comparatorProperty().bind(Bindings.createObjectBinding(
                 () -> {
                     SortingOrder sortingOrderValue = sortingOrder.getValue();
@@ -465,8 +467,8 @@ public class Controller implements Initializable {
                 : DEFAULT_LOCALE);
         bindValueConverter(settingsLangCB, settingsLangCB.valueProperty(), this::languageStringConverter);
         bindValueComparator(languages, settingsLangCB.valueProperty(), settingsLangCB);
-        settingsLangCB
-                .setOnAction(event -> ioManager.getLoginAccount().setLocale(selectedComboBoxItem(settingsLangCB)));
+        settingsLangCB.getSelectionModel().selectedItemProperty().addListener(
+                (options, oldItem, newItem) -> ioManager.getLoginAccount().setLocale(newItem));
 
         SortedList<SortingOrder> sortingOrders = getFXSortedList(SortingOrder.class.getEnumConstants());
         settingsOrderCB.setItems(sortingOrders);
@@ -475,8 +477,8 @@ public class Controller implements Initializable {
                 : SortingOrder.SOFTWARE);
         bindValueConverter(settingsOrderCB, settingsLangCB.valueProperty(), this::sortingOrderStringConverter);
         bindValueComparator(sortingOrders, settingsLangCB.valueProperty(), settingsOrderCB);
-        settingsOrderCB.setOnAction(
-                event -> ioManager.getLoginAccount().setSortingOrder(selectedComboBoxItem(settingsOrderCB)));
+        settingsOrderCB.getSelectionModel().selectedItemProperty().addListener(
+                (options, oldItem, newItem) -> ioManager.getLoginAccount().setSortingOrder(newItem));
 
         EventHandler<ActionEvent> changeLoginPasswordEvent = event -> {
             if (checkTextFields(settingsLoginPasswordVisible, settingsLoginPasswordHidden)) {
@@ -529,17 +531,26 @@ public class Controller implements Initializable {
         }
     }
 
-    private StringConverter<Account> accountStringConverter(Locale locale) {
-        return toStringConverter(
-                item -> item != null ? ioManager.getLoginAccount().getSortingOrder().convert(item) : null);
+    private StringConverter<Account> accountStringConverter(SortingOrder order) {
+        return new StringConverter<Account>() {
+            @Override
+            public Account fromString(String string) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public String toString(@NotNull Account account) {
+                return account != null ? order.convert(account) : null;
+            }
+        };
     }
 
     private StringConverter<Locale> languageStringConverter(Locale locale) {
-        return toStringConverter(item -> capitalizeWord(item.getDisplayLanguage(item)));
+        return toStringConverter(item -> item != null ? capitalizeWord(item.getDisplayLanguage(item)) : null);
     }
 
     private StringConverter<SortingOrder> sortingOrderStringConverter(Locale locale) {
-        return toStringConverter(item -> langResources.getValue(item.getI18nKey()));
+        return toStringConverter(item -> item != null ? langResources.getValue(item.getI18nKey()) : null);
     }
     // #endregion
 

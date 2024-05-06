@@ -138,14 +138,13 @@ public class Utils {
 
     public static <T> StringConverter<T> toStringConverter(Callback<? super T, String> converter) {
         return new StringConverter<>() {
-
             @Override
             public T fromString(String string) {
                 throw new UnsupportedOperationException();
             }
 
             @Override
-            public String toString(T object) {
+            public String toString(@NotNull T object) {
                 return converter.call(object);
             }
         };
