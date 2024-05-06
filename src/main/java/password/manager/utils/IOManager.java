@@ -244,13 +244,15 @@ public class IOManager {
         }
     }
 
-    public void saveAll() {
+    public boolean saveAll() {
+        boolean result = true;
+
         // when the user shuts down the program on the first run, it won't save
         if (loginAccount != null) {
             logger.addInfo("Shutting down");
-
-            saveAccountFile();
-            logger.save();
+            result = saveAccountFile() && logger.save();
         }
+
+        return result;
     }
 }
