@@ -44,7 +44,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -315,7 +315,7 @@ public class Controller implements Initializable {
     private GridPane decryptPane;
 
     @FXML
-    private ChoiceBox<Account> decryptCB;
+    private ComboBox<Account> decryptCB;
 
     @FXML
     private TextField decryptSoftware, decryptUsername, decryptPasswordVisible;
@@ -390,7 +390,7 @@ public class Controller implements Initializable {
 
     @FXML
     public void decryptSave(ActionEvent event) {
-        Account account = selectedChoiceBoxItem(decryptCB);
+        Account account = selectedComboBoxItem(decryptCB);
         if (account == null) {
             return;
         }
@@ -411,7 +411,7 @@ public class Controller implements Initializable {
 
     @FXML
     public void decryptDelete(ActionEvent event) {
-        Account account = selectedChoiceBoxItem(decryptCB);
+        Account account = selectedComboBoxItem(decryptCB);
         if (account == null) {
             return;
         }
@@ -437,9 +437,9 @@ public class Controller implements Initializable {
     private GridPane settingsPane;
 
     @FXML
-    private ChoiceBox<Locale> settingsLangCB;
+    private ComboBox<Locale> settingsLangCB;
     @FXML
-    private ChoiceBox<SortingOrder> settingsOrderCB;
+    private ComboBox<SortingOrder> settingsOrderCB;
 
     @FXML
     private TextField settingsLoginPasswordVisible;
@@ -466,7 +466,7 @@ public class Controller implements Initializable {
         bindValueConverter(settingsLangCB, settingsLangCB.valueProperty(), this::languageStringConverter);
         bindValueComparator(languages, settingsLangCB.valueProperty(), settingsLangCB);
         settingsLangCB
-                .setOnAction(event -> ioManager.getLoginAccount().setLocale(selectedChoiceBoxItem(settingsLangCB)));
+                .setOnAction(event -> ioManager.getLoginAccount().setLocale(selectedComboBoxItem(settingsLangCB)));
 
         SortedList<SortingOrder> sortingOrders = getFXSortedList(SortingOrder.class.getEnumConstants());
         settingsOrderCB.setItems(sortingOrders);
@@ -476,7 +476,7 @@ public class Controller implements Initializable {
         bindValueConverter(settingsOrderCB, settingsLangCB.valueProperty(), this::sortingOrderStringConverter);
         bindValueComparator(sortingOrders, settingsLangCB.valueProperty(), settingsOrderCB);
         settingsOrderCB.setOnAction(
-                event -> ioManager.getLoginAccount().setSortingOrder(selectedChoiceBoxItem(settingsOrderCB)));
+                event -> ioManager.getLoginAccount().setSortingOrder(selectedComboBoxItem(settingsOrderCB)));
 
         EventHandler<ActionEvent> changeLoginPasswordEvent = event -> {
             if (checkTextFields(settingsLoginPasswordVisible, settingsLoginPasswordHidden)) {
