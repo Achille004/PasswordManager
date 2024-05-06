@@ -37,7 +37,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -60,7 +60,7 @@ public class Utils {
      * @param comboBox The combo box to extract the index from.
      * @return The index of the current selected item.
      */
-    public static <T> int selectedChoiceBoxIndex(@NotNull ChoiceBox<T> comboBox) {
+    public static <T> int selectedComboBoxIndex(@NotNull ComboBox<T> comboBox) {
         return comboBox.getSelectionModel().getSelectedIndex();
     }
 
@@ -70,7 +70,7 @@ public class Utils {
      * @param comboBox The combo box to extract the index from.
      * @return The index of the current selected item.
      */
-    public static <T> T selectedChoiceBoxItem(@NotNull ChoiceBox<T> comboBox) {
+    public static <T> T selectedComboBoxItem(@NotNull ComboBox<T> comboBox) {
         return comboBox.getSelectionModel().getSelectedItem();
     }
 
@@ -161,14 +161,14 @@ public class Utils {
                 converter);
     }
 
-    public static <T> void bindValueConverter(ChoiceBox<T> choiceBox, ObjectProperty<Locale> locale,
+    public static <T> void bindValueConverter(ComboBox<T> comboBox, ObjectProperty<Locale> locale,
             Function<Locale, StringConverter<T>> mapper) {
-        choiceBox.converterProperty().bind(locale.map(mapper));
+        comboBox.converterProperty().bind(locale.map(mapper));
     }
 
     public static <T> void bindValueComparator(SortedList<T> sortedList, ObjectProperty<Locale> locale,
-            ChoiceBox<T> choiceBox) {
-        sortedList.comparatorProperty().bind(comparatorBinding(locale, choiceBox.converterProperty()));
+            ComboBox<T> comboBox) {
+        sortedList.comparatorProperty().bind(comparatorBinding(locale, comboBox.converterProperty()));
     }
 
     public static Alert setDefaultButton(Alert alert, ButtonType defBtn) {

@@ -1,4 +1,5 @@
 # Next up:
+- Add language flags to its selector
 - Embed fonts (as they only work on Windows) + msix packaging
 - Better code comments and documentation
 - Add export (add xml and json) + choose export directory + character-checking from fields
