@@ -66,12 +66,17 @@ public class Logger {
             return false;
         }
 
+        String prevContent = logHistory.toString();
+        logHistory.setLength(0);
+
         try (Scanner scanner = new Scanner(logFile)) {
             logHistory.append(scanner.useDelimiter("\\Z").next()).append("\n\n");
         } catch (IOException e) {
             addError(e);
             return false;
         }
+
+        logHistory.append(prevContent);
 
         addInfo("File loaded: '" + logFile + "'");
         return true;
