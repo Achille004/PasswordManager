@@ -23,11 +23,11 @@ import java.security.SecureRandom;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import lombok.Getter;
 
 public class Account implements Serializable {
-
     private @Getter String software, username;
     private byte[] encryptedPassword;
     private final byte[] iv;
@@ -40,16 +40,19 @@ public class Account implements Serializable {
         setPassword(password, loginPassword);
     }
 
-    public void setSoftware(String software, String loginPassword) {
-        String password = getPassword(loginPassword);
-        this.software = software;
-        setPassword(password, loginPassword);
-    }
-    
-    public void setUsername(String username, String loginPassword) {
-        String password = getPassword(loginPassword);
-        this.username = username;
-        setPassword(password, loginPassword);
+    private boolean setPassword(String password, String loginPassword) {
+        // Generate IV
+        SecureRandom random = new SecureRandom();
+        random.nextBytes(iv);
+
+        try {
+            byte[] key = Encrypter.getKey(loginPassword, getSalt());
+            this.encryptedPassword = Encrypter.encryptAES(password, key, iv);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public String getPassword(String loginPassword) {
@@ -58,22 +61,35 @@ public class Account implements Serializable {
             return Encrypter.decryptAES(encryptedPassword, key, iv);
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
-
-        return "";
     }
 
-    public void setPassword(String password, String loginPassword) {
-        // Generate IV
-        SecureRandom random = new SecureRandom();
-        random.nextBytes(iv);
+    public boolean setData(@Nullable String software, @Nullable String username, @Nullable String password,
+            String loginPassword) {
+        if (password == null) {
+            String oldPassword = getPassword(loginPassword);
 
-        try {
-            byte[] key = Encrypter.getKey(loginPassword, getSalt());
-            this.encryptedPassword = Encrypter.encryptAES(password, key, iv);
-        } catch (Exception e) {
-            e.printStackTrace();
+            if (oldPassword == null) {
+                return false;
+            }
+
+            password = oldPassword;
         }
+
+        if (software == null) {
+            this.software = software;
+        }
+
+        if (username == null) {
+            this.username = username;
+        }
+
+        if (!setPassword(password, loginPassword)) {
+            return false;
+        }
+
+        return true;
     }
 
     public void changeLoginPassword(String oldLoginPassword, String newLoginPassword) {

@@ -32,12 +32,8 @@ import lombok.Setter;
 import password.manager.enums.SortingOrder;
 
 public class LoginAccount implements Serializable {
-    @Getter
-    @Setter
-    private SortingOrder sortingOrder;
-    @Getter
-    @Setter
-    private Locale locale;
+    private @Getter @Setter SortingOrder sortingOrder;
+    private @Getter @Setter Locale locale;
     private byte[] hashedPassword;
     private final byte[] salt;
 

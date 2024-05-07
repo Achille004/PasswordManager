@@ -120,10 +120,8 @@ public class Controller implements Initializable {
 
         if (firstRun) {
             initializeFirstRun();
-            ioManager.getLogger().addInfo("First run done");
         } else {
             initializeLogin();
-            ioManager.getLogger().addInfo("User authenticated");
         }
 
         initializeMain();

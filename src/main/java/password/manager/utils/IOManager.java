@@ -60,7 +60,7 @@ public class IOManager {
     private final @Getter Logger logger;
 
     private @Getter LoginAccount loginAccount;
-    private final @Getter ObservableList<Account> accountList;
+    private final ObservableList<Account> accountList;
     private final @Getter Path filePath, desktopPath;
 
     private String loginPassword;
@@ -83,63 +83,68 @@ public class IOManager {
     }
 
     public boolean loadDataFile(final ObservableResourceFactory langResources) {
-        boolean firstRun = true;
-        if (!filePath.toFile().mkdirs()) {
-            // gets the log history
-            logger.readFile();
+        logger.addInfo("os.name: '" + OS + "'");
+        logger.addInfo("user.home: '" + USER_HOME + "'");
 
-            logger.addInfo("os.name: '" + OS + "'");
-            logger.addInfo("user.home: '" + USER_HOME + "'");
-
-            File data_file = filePath.resolve(DATA_FILE).toFile();
-            // if the data file exists, it will try to read its contents
-            if (data_file.exists()) {
-                try (FileInputStream f = new FileInputStream(data_file)) {
-                    ObjectInputStream fIN = new ObjectInputStream(f);
-                    Object obj;
-
-                    obj = fIN.readObject();
-                    if (obj instanceof LoginAccount) {
-                        loginAccount = (LoginAccount) obj;
-                    } else {
-                        throw new InvalidClassException(
-                                "Unexpected object class. Expecting: " + LoginAccount.class);
-                    }
-
-                    obj = fIN.readObject();
-                    if (obj instanceof Account[]) {
-                        accountList.addAll((Account[]) obj);
-                    } else {
-                        throw new InvalidClassException(
-                                "Unexpected object class. Expecting: " + ArrayList.class);
-                    }
-
-                    logger.addInfo("File loaded: '" + data_file + "'");
-
-                    // All the data was loaded successfully, so user can now log in
-                    firstRun = false;
-                } catch (IOException | ClassNotFoundException e) {
-                    logger.addError(e);
-                    Alert alert = new Alert(AlertType.ERROR, langResources.getValue("load_error"), ButtonType.YES, ButtonType.NO);
-                    setDefaultButton(alert, ButtonType.NO);
-                    alert.showAndWait();
-
-                    if (alert.getResult() != ButtonType.YES) {
-                        logger.addInfo("Data overwriting denied");
-                        logger.save();
-                        System.exit(0);
-                    } else {
-                        logger.addInfo("Data overwriting accepted");
-                    }
-                }
-            } else {
-                logger.addInfo("File not found: '" + data_file + "'");
-            }
-        } else {
+        if (filePath.toFile().mkdirs()) {
             logger.addInfo("Directory '" + filePath + "' did not exist and was therefore created");
+
+            return true;
         }
 
-        return firstRun;
+        // gets the log history
+        logger.readFile();
+
+        File data_file = filePath.resolve(DATA_FILE).toFile();
+
+        // if the data file exists, it will try to read its contents
+        if (!data_file.exists()) {
+            logger.addInfo("File not found: '" + data_file + "'");
+
+            return true;
+        }
+
+        try (FileInputStream f = new FileInputStream(data_file)) {
+            ObjectInputStream fIN = new ObjectInputStream(f);
+            Object obj;
+
+            obj = fIN.readObject();
+            if (obj instanceof LoginAccount) {
+                loginAccount = (LoginAccount) obj;
+            } else {
+                throw new InvalidClassException(
+                        "Unexpected object class. Expecting: " + LoginAccount.class);
+            }
+
+            obj = fIN.readObject();
+            if (obj instanceof Account[]) {
+                accountList.addAll((Account[]) obj);
+            } else {
+                throw new InvalidClassException(
+                        "Unexpected object class. Expecting: " + ArrayList.class);
+            }
+
+            logger.addInfo("File loaded: '" + data_file + "'");
+
+            // All the data was loaded successfully, so user can now log in
+            return false;
+        } catch (IOException | ClassNotFoundException e) {
+            logger.addError(e);
+
+            Alert alert = new Alert(AlertType.ERROR, langResources.getValue("load_error"), ButtonType.YES, ButtonType.NO);
+            setDefaultButton(alert, ButtonType.NO);
+            alert.showAndWait();
+
+            if (alert.getResult() != ButtonType.YES) {
+                logger.addInfo("Data overwriting denied");
+                logger.save();
+                System.exit(0);
+            } else {
+                logger.addInfo("Data overwriting accepted");
+            }
+        }
+
+        return true;
     }
 
     public SortedList<Account> getSortedAccountList() {
@@ -147,25 +152,35 @@ public class IOManager {
     }
 
     // #region Account methods
-    public void addAccount(String software, String username, String password) {
-        accountList.add(Account.of(software, username, password, loginPassword));
-        logger.addInfo("Account added");
+    public boolean addAccount(String software, String username, String password) {
+        if (isAuthenticated() && accountList.add(Account.of(software, username, password, loginPassword))) {
+            logger.addInfo("Account added");
+            return true;
+        }
+
+        return false;
     }
 
-    public void editAccount(@NotNull Account account, String software, String username, String password) {
-        accountList.remove(account);
-        accountList.add(Account.of(software, username, password, loginPassword));
+    public boolean editAccount(@NotNull Account account, String software, String username, String password) {
+        if (isAuthenticated() && account.setData(software, username, password, loginPassword)) {
+            logger.addInfo("Account edited");
+            return true;
+        }
 
-        logger.addInfo("Account edited");
+        return false;
     }
 
-    public void removeAccount(@NotNull Account account) {
-        accountList.remove(account);
-        logger.addInfo("Account deleted");
+    public boolean removeAccount(@NotNull Account account) {
+        if (isAuthenticated() && accountList.remove(account)) {
+            logger.addInfo("Account deleted");
+            return true;
+        }
+
+        return false;
     }
 
     public String getAccountPassword(@NotNull Account account) {
-        return account.getPassword(loginPassword);
+        return isAuthenticated() ? account.getPassword(loginPassword) : null;
     }
     // #endregion
 
@@ -178,18 +193,23 @@ public class IOManager {
         return true;
     }
 
-    public final boolean changeLoginPassword(String loginPassword) {
+    public final boolean changeLoginPassword(String newLoginPassword) {
         if (!isAuthenticated()) {
             return false;
         }
+        String oldLoginPassword = this.loginPassword;
 
-        loginAccount.setPasswordVerified(this.loginPassword, loginPassword);
+        loginAccount.setPasswordVerified(oldLoginPassword, newLoginPassword);
 
         if (!accountList.isEmpty()) {
-            accountList.forEach(account -> account.changeLoginPassword(this.loginPassword, loginPassword));
+            accountList.forEach(account -> {
+                new Thread(() -> {
+                    account.changeLoginPassword(oldLoginPassword, newLoginPassword);
+                }).start();
+            });
         }
 
-        this.loginPassword = loginPassword;
+        this.loginPassword = newLoginPassword;
         logger.addInfo("Login password changed");
 
         return true;
@@ -207,9 +227,9 @@ public class IOManager {
             return false;
         }
 
-        logger.addInfo("Successful login");
         this.loginPassword = loginPassword;
-        
+        logger.addInfo("User authenticated");
+
         return true;
     }
 
