@@ -176,11 +176,21 @@
                         <AnchorPane prefHeight="123.0" prefWidth="738.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                            <children>
                               <ComboBox fx:id="settingsOrderCB" layoutY="33.0" prefHeight="27.0" prefWidth="461.0" styleClass="textField" />
+                              <Label fx:id="selectedOrderLbl" focusTraversable="false" layoutX="5.0" layoutY="33.0" pickOnBounds="false" prefHeight="27.0" prefWidth="430.0" text="Selected Order" textFill="WHITE">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Label>
                            </children>
                         </AnchorPane>
                         <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1">
                            <children>
                               <ComboBox fx:id="settingsLangCB" layoutY="33.0" prefHeight="27.0" prefWidth="461.0" styleClass="textField" />
+                              <Label fx:id="selectedLangLbl" focusTraversable="false" layoutX="5.0" layoutY="33.0" pickOnBounds="false" prefHeight="27.0" prefWidth="430.0" text="Selected Lang" textFill="WHITE">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Label>
                            </children>
                         </AnchorPane>
                         <Label fx:id="settingsSortingOrderLbl" prefHeight="35.0" prefWidth="263.0" text="Order by:" textFill="WHITE" GridPane.rowIndex="1">
@@ -357,6 +367,11 @@
                               <Label fx:id="decryptAccSelLbl" layoutX="1.0" layoutY="28.0" prefHeight="35.0" prefWidth="222.0" text="Select Account:" textFill="WHITE">
                                  <font>
                                     <Font name="System Bold Italic" size="24.0" />
+                                 </font>
+                              </Label>
+                              <Label fx:id="decryptSelectedAccLbl" focusTraversable="false" layoutX="229.0" layoutY="32.0" pickOnBounds="false" prefHeight="27.0" prefWidth="469.0" text="Selected Account" textFill="WHITE">
+                                 <font>
+                                    <Font size="18.0" />
                                  </font>
                               </Label>
                            </children>

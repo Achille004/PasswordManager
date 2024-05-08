@@ -89,7 +89,6 @@ public class Controller implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-
         // If account exists, its Locale will be used, else it will fall back to the
         // default value.
         ObjectProperty<Locale> locale = settingsLangCB.valueProperty();
@@ -327,7 +326,7 @@ public class Controller implements Initializable {
     private boolean decryptDeleteCounter = false;
 
     @FXML
-    private Label decryptAccSelLbl, decryptSoftwareLbl, decryptUsernameLbl, decryptPasswordLbl;
+    private Label decryptAccSelLbl, decryptSelectedAccLbl, decryptSoftwareLbl, decryptUsernameLbl, decryptPasswordLbl;
 
     private void initializeDecrypt() {
         langResources.bindTextProperty(decryptAccSelLbl, "select_acc");
@@ -345,7 +344,8 @@ public class Controller implements Initializable {
         accountList.comparatorProperty().bind(Bindings.createObjectBinding(
                 () -> {
                     SortingOrder sortingOrderValue = sortingOrder.getValue();
-                    return sortingOrderValue != null ? sortingOrderValue.getComparator()
+                    return sortingOrderValue != null
+                            ? sortingOrderValue.getComparator()
                             : SortingOrder.SOFTWARE.getComparator();
                 },
                 sortingOrder));
@@ -366,6 +366,16 @@ public class Controller implements Initializable {
                         decryptClear();
                     }
                 });
+
+        ObjectProperty<Account> selectedAccount = decryptCB.valueProperty();
+        decryptSelectedAccLbl.textProperty().bind(Bindings.createStringBinding(
+                () -> {
+                    SortingOrder sortingOrderValue = sortingOrder.getValue();
+                    return sortingOrderValue != null
+                            ? accountStringConverter(sortingOrderValue).toString(selectedAccount.getValue())
+                            : null;
+                },
+                selectedAccount));
     }
 
     @FXML
@@ -430,6 +440,20 @@ public class Controller implements Initializable {
 
         decryptDeleteCounter = !decryptDeleteCounter;
     }
+
+    private StringConverter<Account> accountStringConverter(SortingOrder order) {
+        return new StringConverter<Account>() {
+            @Override
+            public Account fromString(String string) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public String toString(@NotNull Account account) {
+                return account != null ? order.convert(account) : null;
+            }
+        };
+    }
     // #endregion
 
     // #region Settings
@@ -447,8 +471,8 @@ public class Controller implements Initializable {
     private PasswordField settingsLoginPasswordHidden;
 
     @FXML
-    private Label settingsLangLbl, settingsSortingOrderLbl, settingsLoginPasswordLbl, settingsLoginPasswordDesc,
-            settingsDriveConnLbl, wip;
+    private Label settingsLangLbl, selectedLangLbl, settingsSortingOrderLbl, selectedOrderLbl,
+            settingsLoginPasswordLbl, settingsLoginPasswordDesc, settingsDriveConnLbl, wip;
 
     public void initializeSettings() {
         langResources.bindTextProperty(settingsLangLbl, "language");
@@ -468,6 +492,14 @@ public class Controller implements Initializable {
         settingsLangCB.getSelectionModel().selectedItemProperty().addListener(
                 (options, oldItem, newItem) -> ioManager.getLoginAccount().setLocale(newItem));
 
+        ObjectProperty<Locale> language = settingsLangCB.valueProperty();
+        selectedLangLbl.textProperty().bind(Bindings.createStringBinding(
+                () -> {
+                    Locale languageValue = language.getValue();
+                    return languageStringConverter(languageValue).toString(languageValue);
+                },
+                language));
+
         SortedList<SortingOrder> sortingOrders = getFXSortedList(SortingOrder.class.getEnumConstants());
         settingsOrderCB.setItems(sortingOrders);
         settingsOrderCB.getSelectionModel().select(ioManager.getLoginAccount() != null
@@ -477,6 +509,14 @@ public class Controller implements Initializable {
         bindValueComparator(sortingOrders, settingsLangCB.valueProperty(), settingsOrderCB);
         settingsOrderCB.getSelectionModel().selectedItemProperty().addListener(
                 (options, oldItem, newItem) -> ioManager.getLoginAccount().setSortingOrder(newItem));
+
+        ObjectProperty<SortingOrder> sortingOrder = settingsOrderCB.valueProperty();
+        selectedOrderLbl.textProperty().bind(Bindings.createStringBinding(
+                () -> {
+                    SortingOrder sortingOrderValue = sortingOrder.getValue();
+                    return sortingOrderStringConverter(language.getValue()).toString(sortingOrderValue);
+                },
+                sortingOrder, language));
 
         EventHandler<ActionEvent> changeLoginPasswordEvent = event -> {
             if (checkTextFields(settingsLoginPasswordVisible, settingsLoginPasswordHidden)) {
@@ -496,6 +536,14 @@ public class Controller implements Initializable {
         setMainTitle("settings");
 
         highlightSidebarButton(event);
+    }
+
+    private StringConverter<Locale> languageStringConverter(Locale locale) {
+        return toStringConverter(item -> item != null ? capitalizeWord(item.getDisplayLanguage(item)) : null);
+    }
+
+    private StringConverter<SortingOrder> sortingOrderStringConverter(Locale locale) {
+        return toStringConverter(item -> item != null ? langResources.getValue(item.getI18nKey()) : null);
     }
     // #endregion
 
@@ -527,28 +575,6 @@ public class Controller implements Initializable {
             lastSidebarButton = (Button) event.getSource();
             lastSidebarButton.setStyle("-fx-background-color: #42464a");
         }
-    }
-
-    private StringConverter<Account> accountStringConverter(SortingOrder order) {
-        return new StringConverter<Account>() {
-            @Override
-            public Account fromString(String string) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public String toString(@NotNull Account account) {
-                return account != null ? order.convert(account) : null;
-            }
-        };
-    }
-
-    private StringConverter<Locale> languageStringConverter(Locale locale) {
-        return toStringConverter(item -> item != null ? capitalizeWord(item.getDisplayLanguage(item)) : null);
-    }
-
-    private StringConverter<SortingOrder> sortingOrderStringConverter(Locale locale) {
-        return toStringConverter(item -> item != null ? langResources.getValue(item.getI18nKey()) : null);
     }
     // #endregion
 
