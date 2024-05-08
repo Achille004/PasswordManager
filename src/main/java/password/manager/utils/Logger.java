@@ -51,9 +51,15 @@ public class Logger {
     public void addError(@NotNull Exception e) {
         logHistory
                 .append(dtf.format(LocalDateTime.now()))
-                .append(" !!! ")
+                .append(" !!! An exception has been thrown, stack trace:\n")
+                .append(e.getClass().getName())
+                .append(": ")
                 .append(e.getMessage())
                 .append("\n");
+
+        for (StackTraceElement element : e.getStackTrace()) {
+            logHistory.append("        ").append(element).append('\n');
+        }
     }
 
     public String getLogHistory() {
