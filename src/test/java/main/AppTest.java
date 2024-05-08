@@ -20,6 +20,7 @@ package main;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 
 import org.junit.jupiter.api.Test;
@@ -28,7 +29,7 @@ import password.manager.security.Encrypter;
 
 class AppTest {
     @Test
-    void testAES() throws Exception {
+    void testAES() throws GeneralSecurityException {
         String loginPassword = "logPass";
         String s = "soft", u = "user", p = "pass";
 

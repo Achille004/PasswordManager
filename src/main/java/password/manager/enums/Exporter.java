@@ -26,13 +26,14 @@ import password.manager.utils.ObservableResourceFactory;
 
 import static password.manager.utils.Utils.addZerosToIndex;
 
+import java.security.GeneralSecurityException;
+
 import org.jetbrains.annotations.NotNull;
 
 import javafx.collections.ObservableList;
 
 @RequiredArgsConstructor
 public enum Exporter {
-
     HTML((accountList, langResources, loginPassword) -> {
         StringBuilder stb = new StringBuilder();
 
@@ -68,12 +69,16 @@ public enum Exporter {
         int counter = 0;
         for (Account currentAccount : accountList) {
             counter++;
-            stb
-                    .append("<tr>\n<td>")
-                    .append(addZerosToIndex(listSize, counter)).append("</td>\n<td>")
-                    .append(currentAccount.getSoftware()).append("</td>\n<td>")
-                    .append(currentAccount.getUsername()).append("</td>\n<td>")
-                    .append(currentAccount.getPassword(loginPassword)).append("</td>\n</tr>");
+
+            try {
+                stb.append("<tr>\n<td>")
+                        .append(addZerosToIndex(listSize, counter)).append("</td>\n<td>")
+                        .append(currentAccount.getSoftware()).append("</td>\n<td>")
+                        .append(currentAccount.getUsername()).append("</td>\n<td>")
+                        .append(currentAccount.getPassword(loginPassword)).append("</td>\n</tr>");
+            } catch (GeneralSecurityException e) {
+                e.printStackTrace();
+            }
         }
 
         stb.append("</table>\n</body>\n</html>");
@@ -87,11 +92,15 @@ public enum Exporter {
         int counter = 0;
         for (Account currentAccount : accountList) {
             counter++;
-            stb
-                    .append(addZerosToIndex(listSize, counter)).append(",")
-                    .append(currentAccount.getSoftware()).append(",")
-                    .append(currentAccount.getUsername()).append(",")
-                    .append(currentAccount.getPassword(loginPassword)).append("\n");
+
+            try {
+                stb.append(addZerosToIndex(listSize, counter)).append(",")
+                        .append(currentAccount.getSoftware()).append(",")
+                        .append(currentAccount.getUsername()).append(",")
+                        .append(currentAccount.getPassword(loginPassword)).append("\n");
+            } catch (GeneralSecurityException e) {
+                e.printStackTrace();
+            }
         }
 
         return stb.toString();

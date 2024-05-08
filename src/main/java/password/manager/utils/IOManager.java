@@ -29,6 +29,8 @@ import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.file.Path;
+import java.security.GeneralSecurityException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -131,7 +133,8 @@ public class IOManager {
         } catch (IOException | ClassNotFoundException e) {
             logger.addError(e);
 
-            Alert alert = new Alert(AlertType.ERROR, langResources.getValue("load_error"), ButtonType.YES, ButtonType.NO);
+            Alert alert = new Alert(AlertType.ERROR, langResources.getValue("load_error"), ButtonType.YES,
+                    ButtonType.NO);
             setDefaultButton(alert, ButtonType.NO);
             alert.showAndWait();
 
@@ -153,18 +156,26 @@ public class IOManager {
 
     // #region Account methods
     public boolean addAccount(String software, String username, String password) {
-        if (isAuthenticated() && accountList.add(Account.of(software, username, password, loginPassword))) {
-            logger.addInfo("Account added");
-            return true;
+        try {
+            if (isAuthenticated() && accountList.add(Account.of(software, username, password, loginPassword))) {
+                logger.addInfo("Account added");
+                return true;
+            }
+        } catch (GeneralSecurityException e) {
+            logger.addError(e);
         }
 
         return false;
     }
 
     public boolean editAccount(@NotNull Account account, String software, String username, String password) {
-        if (isAuthenticated() && account.setData(software, username, password, loginPassword)) {
-            logger.addInfo("Account edited");
-            return true;
+        try {
+            if (isAuthenticated() && account.setData(software, username, password, loginPassword)) {
+                logger.addInfo("Account edited");
+                return true;
+            }
+        } catch (GeneralSecurityException e) {
+            logger.addError(e);
         }
 
         return false;
@@ -180,17 +191,31 @@ public class IOManager {
     }
 
     public String getAccountPassword(@NotNull Account account) {
-        return isAuthenticated() ? account.getPassword(loginPassword) : null;
+        try {
+            if (isAuthenticated()) {
+                return account.getPassword(loginPassword);
+            }
+        } catch (GeneralSecurityException e) {
+            logger.addError(e);
+        }
+
+        return null;
     }
     // #endregion
 
     // #region LoginAccount methods
     public boolean setLoginAccount(SortingOrder sortingOrder, Locale locale, @NotNull String loginPassword) {
-        this.loginAccount = LoginAccount.of(sortingOrder, locale, loginPassword);
-        this.loginPassword = loginPassword;
-        logger.addInfo("Login account created");
+        try {
+            this.loginAccount = LoginAccount.of(sortingOrder, locale, loginPassword);
+            this.loginPassword = loginPassword;
 
-        return true;
+            logger.addInfo("Login account created");
+            return true;
+        } catch (InvalidKeySpecException e) {
+            logger.addError(e);
+        }
+
+        return false;
     }
 
     public final boolean changeLoginPassword(String newLoginPassword) {
@@ -199,12 +224,21 @@ public class IOManager {
         }
         String oldLoginPassword = this.loginPassword;
 
-        loginAccount.setPasswordVerified(oldLoginPassword, newLoginPassword);
+        try {
+            loginAccount.setPasswordVerified(oldLoginPassword, newLoginPassword);
+        } catch (InvalidKeySpecException e) {
+            logger.addError(e);
+            return false;
+        }
 
         if (!accountList.isEmpty()) {
             accountList.forEach(account -> {
                 new Thread(() -> {
-                    account.changeLoginPassword(oldLoginPassword, newLoginPassword);
+                    try {
+                        account.changeLoginPassword(oldLoginPassword, newLoginPassword);
+                    } catch (GeneralSecurityException e) {
+                        e.printStackTrace();
+                    }
                 }).start();
             });
         }
@@ -223,7 +257,12 @@ public class IOManager {
     }
 
     public boolean authenticate(String loginPassword) {
-        if (isAuthenticated() || !loginAccount.verifyPassword(loginPassword)) {
+        try {
+            if (isAuthenticated() || !loginAccount.verifyPassword(loginPassword)) {
+                return false;
+            }
+        } catch (InvalidKeySpecException e) {
+            logger.addError(e);
             return false;
         }
 
