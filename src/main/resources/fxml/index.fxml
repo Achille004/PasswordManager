@@ -39,6 +39,7 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.Image?>
@@ -93,17 +94,17 @@
       </AnchorPane>
       <AnchorPane fx:id="firstRunPane" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: #202428;">
          <children>
-            <Label fx:id="firstRunTitle" alignment="CENTER" layoutX="170.0" layoutY="145.0" prefHeight="58.0" prefWidth="560.0" text="Hi!" textFill="#0aba4d">
+            <Label fx:id="firstRunTitle" alignment="CENTER" layoutX="170.0" layoutY="165.0" prefHeight="58.0" prefWidth="560.0" text="Hi!" textFill="#0aba4d">
                <font>
                   <Font name="Script MT Bold" size="48.0" />
                </font>
             </Label>
-            <Label fx:id="firstRunDescBtm" alignment="CENTER" layoutX="170.0" layoutY="269.0" prefHeight="27.0" prefWidth="560.0" text="PasswordManager will NEVER collect your data *" textAlignment="CENTER" textFill="#a7acb1" wrapText="true">
+            <Label fx:id="firstRunDescBtm" alignment="CENTER" layoutX="170.0" layoutY="289.0" prefHeight="27.0" prefWidth="560.0" text="PasswordManager will NEVER collect your data *" textAlignment="CENTER" textFill="#a7acb1" wrapText="true">
                <font>
                   <Font name="Comic Sans MS Italic" size="18.0" />
                </font>
             </Label>
-            <StackPane layoutX="170.0" layoutY="322.0" prefHeight="27.0" prefWidth="545.0">
+            <StackPane layoutX="170.0" layoutY="337.0" prefHeight="27.0" prefWidth="545.0">
                <children>
                   <AnchorPane prefHeight="200.0" prefWidth="200.0">
                      <children>
@@ -127,18 +128,18 @@
                   </AnchorPane>
                </children>
             </StackPane>
-            <Label fx:id="firstRunDescTop" alignment="CENTER" layoutX="170.0" layoutY="210.0" prefHeight="58.0" prefWidth="560.0" text="Before getting started with PasswordManager, I need you to insert a password in order to protect your accounts&#10;" textAlignment="CENTER" textFill="#a7acb1" wrapText="true">
+            <Label fx:id="firstRunDescTop" alignment="CENTER" layoutX="170.0" layoutY="230.0" prefHeight="58.0" prefWidth="560.0" text="Before getting started with PasswordManager, I need you to insert a strong password in order to protect your accounts&#10;" textAlignment="CENTER" textFill="#a7acb1" wrapText="true">
                <font>
                   <Font name="Comic Sans MS Italic" size="18.0" />
                </font>
             </Label>
             <Label fx:id="firstRunDisclaimer" alignment="CENTER" layoutY="559.0" prefHeight="27.0" prefWidth="901.0" text="* If you intend to link Google Drive to your data, make sure you read their privacy policy" textAlignment="CENTER" textFill="#a7acb1" wrapText="true" />
-            <Button fx:id="firstRunSubmitBtn" alignment="CENTER" contentDisplay="CENTER" layoutX="627.0" layoutY="364.0" mnemonicParsing="false" nodeOrientation="LEFT_TO_RIGHT" onAction="#doFirstRun" styleClass="greenButton" text="Let's go!" textAlignment="CENTER" textFill="WHITE" AnchorPane.rightAnchor="170.0">
+            <Button fx:id="firstRunSubmitBtn" alignment="CENTER" contentDisplay="CENTER" layoutX="628.0" layoutY="390.0" mnemonicParsing="false" nodeOrientation="LEFT_TO_RIGHT" onAction="#doFirstRun" styleClass="greenButton" text="Let's go!" textAlignment="CENTER" textFill="WHITE" AnchorPane.rightAnchor="170.39999999999998">
                <font>
                   <Font name="System Bold" size="18.0" />
                </font>
             </Button>
-            <Label fx:id="firstRunTermsCred" layoutX="170.0" layoutY="364.0" onMouseClicked="#showEula" styleClass="eulaText" text="Terms and Credits" textFill="#0aba4d">
+            <Label fx:id="firstRunTermsCred" layoutX="170.0" layoutY="390.0" onMouseClicked="#showEula" styleClass="eulaText" text="Terms and Credits" textFill="#0aba4d">
                <font>
                   <Font size="18.0" />
                </font>
@@ -153,6 +154,7 @@
                   </CheckBox>
                </graphic>
             </Label>
+            <ProgressBar fx:id="firstRunPassStr" layoutX="170.0" layoutY="365.0" prefHeight="10.0" prefWidth="560.0" progress="1.0" />
          </children>
       </AnchorPane>
         <BorderPane fx:id="mainPane" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #202428;">

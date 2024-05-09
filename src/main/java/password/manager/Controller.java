@@ -35,6 +35,8 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.StringProperty;
+import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -49,6 +51,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
@@ -145,6 +148,9 @@ public class Controller implements Initializable {
     @FXML
     private Button firstRunSubmitBtn;
 
+    @FXML
+    private ProgressBar firstRunPassStr;
+
     private void initializeFirstRun() {
         langResources.bindTextProperty(firstRunTitle, "hi");
         langResources.bindTextProperty(firstRunDescTop, "first_run.desc.top");
@@ -155,6 +161,27 @@ public class Controller implements Initializable {
         langResources.bindTextProperty(firstRunDisclaimer, "first_run.disclaimer");
 
         bindPasswordFields(firstRunPasswordHidden, firstRunPasswordVisible);
+
+        StringProperty password = firstRunPasswordVisible.textProperty();
+        ObservableList<Node> firstRunPassStrChildren = firstRunPassStr.getChildrenUnmodifiable();
+        firstRunPassStr.progressProperty().bind(Bindings.createObjectBinding(
+                () -> {
+
+                    String passwordValue = password.getValue();
+
+                    double passwordStrength = passwordStrength(passwordValue);
+                    passwordStrength = Math.max(20d, passwordStrength);
+                    passwordStrength = Math.min(50d, passwordStrength);
+
+                    double progress = (passwordStrength - 20) / 30;
+                    if (firstRunPassStrChildren.size() != 0) {
+                        firstRunPassStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst()
+                                .setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
+                    }
+
+                    return progress;
+                },
+                password));
 
         firstRunPane.toFront();
     }
