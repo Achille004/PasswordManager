@@ -19,6 +19,7 @@
 package main;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static password.manager.utils.Utils.passwordStrength;
 
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
@@ -46,5 +47,14 @@ class AppTest {
         byte[] e = Encrypter.encryptAES(p, key, iv);
         String d = Encrypter.decryptAES(e, key, iv);
         assertEquals(p, d, "Decrypted password (" + d + ") doesn't match the original one (" + p + ")");
+    }
+
+    @Test
+    void calcPassStr() {
+        String[] passwords = {"C", "E$", "}18", "0s(C", "oA633=", "mZ/66am5", "F1/nro1u4Y", "5£@>4}7>$Hv7", "2rq8KU*5E!)'*bal"};
+        for(String password : passwords) {
+            double passStr = passwordStrength(password);
+            System.out.println("Strength of '" +password + "': " + passStr);
+        }
     }
 }

@@ -44,9 +44,12 @@ import javafx.scene.control.TextField;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
+import me.gosimple.nbvcxz.Nbvcxz;
+
 public class Utils {
     public static final Encoder BASE64ENC = Base64.getEncoder();
     public static final Decoder BASE64DEC = Base64.getDecoder();
+    public static final Nbvcxz NBVCXZ = new Nbvcxz();
 
     @SafeVarargs
     public static <T> SortedList<T> getFXSortedList(T... items) {
@@ -175,5 +178,10 @@ public class Utils {
         for (ButtonType t : alert.getButtonTypes())
             ((Button) pane.lookupButton(t)).setDefaultButton(t == defBtn);
         return alert;
+    }
+
+    // Ideal gap is from 20 to 50, represented with linear progress bar with gaps of 1
+    public static double passwordStrength(String password) {
+        return NBVCXZ.estimate(password).getEntropy();
     }
 }
