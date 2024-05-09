@@ -11,4 +11,4 @@
 # Ideas:
 - Divide `index.fxml` into separate parts
 - Switch from `ArrayList` to embedded database
-- Animations (from `javafx.animation package`)
+- More animations

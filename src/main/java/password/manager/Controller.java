@@ -32,10 +32,10 @@ import java.util.ResourceBundle;
 import org.jetbrains.annotations.NotNull;
 
 import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
@@ -162,26 +162,26 @@ public class Controller implements Initializable {
 
         bindPasswordFields(firstRunPasswordHidden, firstRunPasswordVisible);
 
-        StringProperty password = firstRunPasswordVisible.textProperty();
         ObservableList<Node> passStrChildren = firstRunPassStr.getChildrenUnmodifiable();
-        firstRunPassStr.progressProperty().bind(Bindings.createObjectBinding(
-                () -> {
+        firstRunPasswordVisible.textProperty().addListener((observable, oldValue, newValue) -> {
+            double passwordStrength = passwordStrength(newValue);
+            passwordStrength = Math.max(20d, passwordStrength);
+            passwordStrength = Math.min(50d, passwordStrength);
 
-                    String passwordValue = password.getValue();
+            double progress = (passwordStrength - 20) / 30;
+            if (passStrChildren.size() != 0) {
+                Node bar = passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst();
+                bar.setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
 
-                    double passwordStrength = passwordStrength(passwordValue);
-                    passwordStrength = Math.max(20d, passwordStrength);
-                    passwordStrength = Math.min(50d, passwordStrength);
+                Timeline timeline = new Timeline(
+                        new KeyFrame(Duration.ZERO,
+                                new KeyValue(firstRunPassStr.progressProperty(), firstRunPassStr.getProgress())),
+                        new KeyFrame(new Duration(200),
+                                new KeyValue(firstRunPassStr.progressProperty(), progress)));
 
-                    double progress = (passwordStrength - 20) / 30;
-                    if (passStrChildren.size() != 0) {
-                        passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst()
-                                .setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
-                    }
-
-                    return progress;
-                },
-                password));
+                timeline.play();
+            }
+        });
 
         firstRunPane.toFront();
     }
@@ -304,26 +304,26 @@ public class Controller implements Initializable {
 
         bindPasswordFields(encryptPasswordHidden, encryptPasswordVisible);
 
-        StringProperty password = encryptPasswordVisible.textProperty();
         ObservableList<Node> passStrChildren = encryptPassStr.getChildrenUnmodifiable();
-        encryptPassStr.progressProperty().bind(Bindings.createObjectBinding(
-                () -> {
+        encryptPasswordVisible.textProperty().addListener((observable, oldValue, newValue) -> {
+            double passwordStrength = passwordStrength(newValue);
+            passwordStrength = Math.max(20d, passwordStrength);
+            passwordStrength = Math.min(50d, passwordStrength);
 
-                    String passwordValue = password.getValue();
+            double progress = (passwordStrength - 20) / 30;
+            if (passStrChildren.size() != 0) {
+                Node bar = passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst();
+                bar.setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
 
-                    double passwordStrength = passwordStrength(passwordValue);
-                    passwordStrength = Math.max(20d, passwordStrength);
-                    passwordStrength = Math.min(50d, passwordStrength);
+                Timeline timeline = new Timeline(
+                        new KeyFrame(Duration.ZERO,
+                                new KeyValue(encryptPassStr.progressProperty(), encryptPassStr.getProgress())),
+                        new KeyFrame(new Duration(200),
+                                new KeyValue(encryptPassStr.progressProperty(), progress)));
 
-                    double progress = (passwordStrength - 20) / 30;
-                    if (passStrChildren.size() != 0) {
-                        passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst()
-                                .setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
-                    }
-
-                    return progress;
-                },
-                password));
+                timeline.play();
+            }
+        });
     }
 
     @FXML
@@ -390,29 +390,26 @@ public class Controller implements Initializable {
 
         bindPasswordFields(decryptPasswordHidden, decryptPasswordVisible);
 
-        StringProperty password = decryptPasswordVisible.textProperty();
         ObservableList<Node> passStrChildren = decryptPassStr.getChildrenUnmodifiable();
-        decryptPassStr.progressProperty().bind(Bindings.createObjectBinding(
-                () -> {
-                    if (decryptCB.getSelectionModel().isEmpty()) {
-                        return 0;
-                    }
+        decryptPasswordVisible.textProperty().addListener((observable, oldValue, newValue) -> {
+            double passwordStrength = passwordStrength(newValue);
+            passwordStrength = Math.max(20d, passwordStrength);
+            passwordStrength = Math.min(50d, passwordStrength);
 
-                    String passwordValue = password.getValue();
+            double progress = (passwordStrength - 20) / 30;
+            if (passStrChildren.size() != 0) {
+                Node bar = passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst();
+                bar.setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
 
-                    double passwordStrength = passwordStrength(passwordValue);
-                    passwordStrength = Math.max(20d, passwordStrength);
-                    passwordStrength = Math.min(50d, passwordStrength);
+                Timeline timeline = new Timeline(
+                        new KeyFrame(Duration.ZERO,
+                                new KeyValue(decryptPassStr.progressProperty(), decryptPassStr.getProgress())),
+                        new KeyFrame(new Duration(200),
+                                new KeyValue(decryptPassStr.progressProperty(), progress)));
 
-                    double progress = (passwordStrength - 20) / 30;
-                    if (passStrChildren.size() != 0) {
-                        passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst()
-                                .setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
-                    }
-
-                    return progress;
-                },
-                password));
+                timeline.play();
+            }
+        });
 
         SortedList<Account> accountList = ioManager.getSortedAccountList();
         decryptCB.setItems(accountList);
@@ -608,25 +605,26 @@ public class Controller implements Initializable {
         settingsLoginPasswordHidden.setOnAction(changeLoginPasswordEvent);
         bindPasswordFields(settingsLoginPasswordHidden, settingsLoginPasswordVisible);
 
-        StringProperty password = settingsLoginPasswordVisible.textProperty();
         ObservableList<Node> passStrChildren = settingsLoginPassStr.getChildrenUnmodifiable();
-        settingsLoginPassStr.progressProperty().bind(Bindings.createObjectBinding(
-                () -> {
-                    String passwordValue = password.getValue();
+        settingsLoginPasswordVisible.textProperty().addListener((observable, oldValue, newValue) -> {
+            double passwordStrength = passwordStrength(newValue);
+            passwordStrength = Math.max(20d, passwordStrength);
+            passwordStrength = Math.min(50d, passwordStrength);
 
-                    double passwordStrength = passwordStrength(passwordValue);
-                    passwordStrength = Math.max(20d, passwordStrength);
-                    passwordStrength = Math.min(50d, passwordStrength);
+            double progress = (passwordStrength - 20) / 30;
+            if (passStrChildren.size() != 0) {
+                Node bar = passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst();
+                bar.setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
 
-                    double progress = (passwordStrength - 20) / 30;
-                    if (passStrChildren.size() != 0) {
-                        passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst()
-                                .setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
-                    }
+                Timeline timeline = new Timeline(
+                        new KeyFrame(Duration.ZERO,
+                                new KeyValue(settingsLoginPassStr.progressProperty(), settingsLoginPassStr.getProgress())),
+                        new KeyFrame(new Duration(200),
+                                new KeyValue(settingsLoginPassStr.progressProperty(), progress)));
 
-                    return progress;
-                },
-                password));
+                timeline.play();
+            }
+        });
     }
 
     @FXML

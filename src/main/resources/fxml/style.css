@@ -61,6 +61,9 @@
     -fx-border-radius: 4deg;
 }
 
+.progress-bar>.bar {  
+    -fx-background-color: linear-gradient(to right, #F00, #FF0, #0F0);
+}
 .progress-bar>.track {  
     -fx-background-color: transparent;
 }
