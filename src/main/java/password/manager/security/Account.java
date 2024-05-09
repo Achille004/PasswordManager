@@ -19,20 +19,21 @@
 package password.manager.security;
 
 import java.io.Serializable;
+import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import lombok.Getter;
 
 public class Account implements Serializable {
-
     private @Getter String software, username;
     private byte[] encryptedPassword;
     private final byte[] iv;
 
-    public Account(String software, String username, String password, String loginPassword) {
+    public Account(String software, String username, String password, String loginPassword) throws GeneralSecurityException {
         this.software = software;
         this.username = username;
 
@@ -40,48 +41,51 @@ public class Account implements Serializable {
         setPassword(password, loginPassword);
     }
 
-    public void setSoftware(String software, String loginPassword) {
-        String password = getPassword(loginPassword);
-        this.software = software;
-        setPassword(password, loginPassword);
-    }
-    
-    public void setUsername(String username, String loginPassword) {
-        String password = getPassword(loginPassword);
-        this.username = username;
-        setPassword(password, loginPassword);
-    }
-
-    public String getPassword(String loginPassword) {
-        try {
-            byte[] key = Encrypter.getKey(loginPassword, getSalt());
-            return Encrypter.decryptAES(encryptedPassword, key, iv);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return "";
-    }
-
-    public void setPassword(String password, String loginPassword) {
+    private void setPassword(String password, String loginPassword) throws GeneralSecurityException {
         // Generate IV
         SecureRandom random = new SecureRandom();
         random.nextBytes(iv);
 
-        try {
-            byte[] key = Encrypter.getKey(loginPassword, getSalt());
-            this.encryptedPassword = Encrypter.encryptAES(password, key, iv);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        byte[] key = Encrypter.getKey(loginPassword, getSalt());
+        this.encryptedPassword = Encrypter.encryptAES(password, key, iv);
     }
 
-    public void changeLoginPassword(String oldLoginPassword, String newLoginPassword) {
+    public String getPassword(String loginPassword) throws GeneralSecurityException {
+        byte[] key = Encrypter.getKey(loginPassword, getSalt());
+        return Encrypter.decryptAES(encryptedPassword, key, iv);
+    }
+
+    public boolean setData(@Nullable String software, @Nullable String username, @Nullable String password,
+            String loginPassword) throws GeneralSecurityException {
+        if (password == null) {
+            String oldPassword = getPassword(loginPassword);
+
+            if (oldPassword == null) {
+                return false;
+            }
+
+            password = oldPassword;
+        }
+
+        if (software == null) {
+            this.software = software;
+        }
+
+        if (username == null) {
+            this.username = username;
+        }
+
+        setPassword(password, loginPassword);
+
+        return true;
+    }
+
+    public void changeLoginPassword(String oldLoginPassword, String newLoginPassword) throws GeneralSecurityException {
         setPassword(getPassword(oldLoginPassword), newLoginPassword);
     }
 
     @Contract("_, _, _, _ -> new")
-    public static @NotNull Account of(String software, String username, String password, String loginPassword) {
+    public static @NotNull Account of(String software, String username, String password, String loginPassword) throws GeneralSecurityException {
         // creates the account, adding its attributes by constructor
         return new Account(software, username, password, loginPassword);
     }

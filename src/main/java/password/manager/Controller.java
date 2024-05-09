@@ -29,12 +29,17 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.ResourceBundle;
 
+import org.jetbrains.annotations.NotNull;
+
 import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
+import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -43,9 +48,10 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
@@ -86,7 +92,6 @@ public class Controller implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-
         // If account exists, its Locale will be used, else it will fall back to the
         // default value.
         ObjectProperty<Locale> locale = settingsLangCB.valueProperty();
@@ -117,10 +122,8 @@ public class Controller implements Initializable {
 
         if (firstRun) {
             initializeFirstRun();
-            ioManager.getLogger().addInfo("First run done");
         } else {
             initializeLogin();
-            ioManager.getLogger().addInfo("User authenticated");
         }
 
         initializeMain();
@@ -145,6 +148,9 @@ public class Controller implements Initializable {
     @FXML
     private Button firstRunSubmitBtn;
 
+    @FXML
+    private ProgressBar firstRunPassStr;
+
     private void initializeFirstRun() {
         langResources.bindTextProperty(firstRunTitle, "hi");
         langResources.bindTextProperty(firstRunDescTop, "first_run.desc.top");
@@ -155,6 +161,27 @@ public class Controller implements Initializable {
         langResources.bindTextProperty(firstRunDisclaimer, "first_run.disclaimer");
 
         bindPasswordFields(firstRunPasswordHidden, firstRunPasswordVisible);
+
+        ObservableList<Node> passStrChildren = firstRunPassStr.getChildrenUnmodifiable();
+        firstRunPasswordVisible.textProperty().addListener((observable, oldValue, newValue) -> {
+            double passwordStrength = passwordStrength(newValue);
+            passwordStrength = Math.max(20d, passwordStrength);
+            passwordStrength = Math.min(50d, passwordStrength);
+
+            double progress = (passwordStrength - 20) / 30;
+            if (passStrChildren.size() != 0) {
+                Node bar = passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst();
+                bar.setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
+
+                Timeline timeline = new Timeline(
+                        new KeyFrame(Duration.ZERO,
+                                new KeyValue(firstRunPassStr.progressProperty(), firstRunPassStr.getProgress())),
+                        new KeyFrame(new Duration(200),
+                                new KeyValue(firstRunPassStr.progressProperty(), progress)));
+
+                timeline.play();
+            }
+        });
 
         firstRunPane.toFront();
     }
@@ -266,6 +293,9 @@ public class Controller implements Initializable {
     @FXML
     private Label encryptSoftwareLbl, encryptUsernameLbl, encryptPasswordLbl;
 
+    @FXML
+    private ProgressBar encryptPassStr;
+
     private void initializeEncrypt() {
         langResources.bindTextProperty(encryptSubmitBtn, "submit");
         langResources.bindTextProperty(encryptSoftwareLbl, "software");
@@ -273,6 +303,27 @@ public class Controller implements Initializable {
         langResources.bindTextProperty(encryptPasswordLbl, "password");
 
         bindPasswordFields(encryptPasswordHidden, encryptPasswordVisible);
+
+        ObservableList<Node> passStrChildren = encryptPassStr.getChildrenUnmodifiable();
+        encryptPasswordVisible.textProperty().addListener((observable, oldValue, newValue) -> {
+            double passwordStrength = passwordStrength(newValue);
+            passwordStrength = Math.max(20d, passwordStrength);
+            passwordStrength = Math.min(50d, passwordStrength);
+
+            double progress = (passwordStrength - 20) / 30;
+            if (passStrChildren.size() != 0) {
+                Node bar = passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst();
+                bar.setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
+
+                Timeline timeline = new Timeline(
+                        new KeyFrame(Duration.ZERO,
+                                new KeyValue(encryptPassStr.progressProperty(), encryptPassStr.getProgress())),
+                        new KeyFrame(new Duration(200),
+                                new KeyValue(encryptPassStr.progressProperty(), progress)));
+
+                timeline.play();
+            }
+        });
     }
 
     @FXML
@@ -314,7 +365,7 @@ public class Controller implements Initializable {
     private GridPane decryptPane;
 
     @FXML
-    private ChoiceBox<Account> decryptCB;
+    private ComboBox<Account> decryptCB;
 
     @FXML
     private TextField decryptSoftware, decryptUsername, decryptPasswordVisible;
@@ -326,7 +377,10 @@ public class Controller implements Initializable {
     private boolean decryptDeleteCounter = false;
 
     @FXML
-    private Label decryptAccSelLbl, decryptSoftwareLbl, decryptUsernameLbl, decryptPasswordLbl;
+    private Label decryptAccSelLbl, decryptSelectedAccLbl, decryptSoftwareLbl, decryptUsernameLbl, decryptPasswordLbl;
+
+    @FXML
+    private ProgressBar decryptPassStr;
 
     private void initializeDecrypt() {
         langResources.bindTextProperty(decryptAccSelLbl, "select_acc");
@@ -336,39 +390,67 @@ public class Controller implements Initializable {
 
         bindPasswordFields(decryptPasswordHidden, decryptPasswordVisible);
 
+        ObservableList<Node> passStrChildren = decryptPassStr.getChildrenUnmodifiable();
+        decryptPasswordVisible.textProperty().addListener((observable, oldValue, newValue) -> {
+            double passwordStrength = passwordStrength(newValue);
+            passwordStrength = Math.max(20d, passwordStrength);
+            passwordStrength = Math.min(50d, passwordStrength);
+
+            double progress = (passwordStrength - 20) / 30;
+            if (passStrChildren.size() != 0) {
+                Node bar = passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst();
+                bar.setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
+
+                Timeline timeline = new Timeline(
+                        new KeyFrame(Duration.ZERO,
+                                new KeyValue(decryptPassStr.progressProperty(), decryptPassStr.getProgress())),
+                        new KeyFrame(new Duration(200),
+                                new KeyValue(decryptPassStr.progressProperty(), progress)));
+
+                timeline.play();
+            }
+        });
+
         SortedList<Account> accountList = ioManager.getSortedAccountList();
         decryptCB.setItems(accountList);
-        bindValueConverter(decryptCB, settingsLangCB.valueProperty(), this::accountStringConverter);
 
         ObjectProperty<SortingOrder> sortingOrder = settingsOrderCB.valueProperty();
+        decryptCB.converterProperty().bind(sortingOrder.map(this::accountStringConverter));
         accountList.comparatorProperty().bind(Bindings.createObjectBinding(
                 () -> {
                     SortingOrder sortingOrderValue = sortingOrder.getValue();
-                    return sortingOrderValue != null ? sortingOrderValue.getComparator()
+                    return sortingOrderValue != null
+                            ? sortingOrderValue.getComparator()
                             : SortingOrder.SOFTWARE.getComparator();
                 },
                 sortingOrder));
 
-        decryptCB.getSelectionModel().selectedIndexProperty().addListener(
-                (options, oldIndex, newIndex) -> {
+        decryptCB.getSelectionModel().selectedItemProperty().addListener(
+                (options, oldItem, newItem) -> {
                     decryptDeleteCounter = false;
                     decryptResetStyle();
 
-                    int index = newIndex.intValue();
-                    if (index >= 0) {
-                        // gets the selected account
-                        Account selectedAcc = ioManager.getAccountList().get(index);
-                        String password = ioManager.getAccountPassword(selectedAcc);
-
+                    if (newItem != null) {
                         // shows the software, username and account of the selected account
-                        decryptSoftware.setText(selectedAcc.getSoftware());
-                        decryptUsername.setText(selectedAcc.getUsername());
-                        decryptPasswordVisible.setText(password);
-                        decryptPasswordHidden.setText(password);
+                        decryptSoftware.setText(newItem.getSoftware());
+                        decryptUsername.setText(newItem.getUsername());
+                        String accPassword = ioManager.getAccountPassword(newItem);
+                        decryptPasswordVisible.setText(accPassword);
+                        decryptPasswordHidden.setText(accPassword);
                     } else {
                         decryptClear();
                     }
                 });
+
+        ObjectProperty<Account> selectedAccount = decryptCB.valueProperty();
+        decryptSelectedAccLbl.textProperty().bind(Bindings.createStringBinding(
+                () -> {
+                    SortingOrder sortingOrderValue = sortingOrder.getValue();
+                    return sortingOrderValue != null
+                            ? accountStringConverter(sortingOrderValue).toString(selectedAccount.getValue())
+                            : null;
+                },
+                selectedAccount));
     }
 
     @FXML
@@ -393,38 +475,59 @@ public class Controller implements Initializable {
 
     @FXML
     public void decryptSave(ActionEvent event) {
-        int index = selectedChoiceBoxIndex(decryptCB);
-        if (index >= 0) {
-            if (checkTextFields(decryptSoftware, decryptUsername, decryptPasswordVisible, decryptPasswordHidden)) {
-                // get the new software, username and password
-                String software = decryptSoftware.getText();
-                String username = decryptUsername.getText();
-                String password = decryptPasswordVisible.getText();
-                // save the new attributes of the account
-                ioManager.replaceAccount(index, software, username, password);
-            }
+        Account account = selectedComboBoxItem(decryptCB);
+        if (account == null) {
+            return;
+        }
+
+        if (checkTextFields(decryptSoftware, decryptUsername, decryptPasswordVisible, decryptPasswordHidden)) {
+            // get the new software, username and password
+            String software = decryptSoftware.getText();
+            String username = decryptUsername.getText();
+            String password = decryptPasswordVisible.getText();
+
+            clearStyle(decryptDelete);
+            decryptClear();
+
+            // save the new attributes of the account
+            ioManager.editAccount(account, software, username, password);
         }
     }
 
     @FXML
     public void decryptDelete(ActionEvent event) {
-        int index = selectedChoiceBoxIndex(decryptCB);
-        if (index < 0) {
+        Account account = selectedComboBoxItem(decryptCB);
+        if (account == null) {
             return;
         }
 
         // when the deleteCounter is true it means that the user has confirmed the
         // elimination
         if (decryptDeleteCounter) {
-            clearStyle(decryptDelete);
+            decryptResetStyle();
+            decryptClear();
 
             // removes the selected account from the list
-            ioManager.deleteAccount(index);
+            ioManager.removeAccount(account);
         } else {
-            decryptDelete.setStyle("-fx-background-color: #ff5f5f;");
+            decryptDelete.setStyle("-fx-background-color: #ff5f5f");
         }
 
         decryptDeleteCounter = !decryptDeleteCounter;
+    }
+
+    private StringConverter<Account> accountStringConverter(SortingOrder order) {
+        return new StringConverter<Account>() {
+            @Override
+            public Account fromString(String string) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public String toString(@NotNull Account account) {
+                return account != null ? order.convert(account) : null;
+            }
+        };
     }
     // #endregion
 
@@ -433,9 +536,9 @@ public class Controller implements Initializable {
     private GridPane settingsPane;
 
     @FXML
-    private ChoiceBox<Locale> settingsLangCB;
+    private ComboBox<Locale> settingsLangCB;
     @FXML
-    private ChoiceBox<SortingOrder> settingsOrderCB;
+    private ComboBox<SortingOrder> settingsOrderCB;
 
     @FXML
     private TextField settingsLoginPasswordVisible;
@@ -443,8 +546,11 @@ public class Controller implements Initializable {
     private PasswordField settingsLoginPasswordHidden;
 
     @FXML
-    private Label settingsLangLbl, settingsSortingOrderLbl, settingsLoginPasswordLbl, settingsLoginPasswordDesc,
-            settingsDriveConnLbl, wip;
+    private Label settingsLangLbl, selectedLangLbl, settingsSortingOrderLbl, selectedOrderLbl,
+            settingsLoginPasswordLbl, settingsLoginPasswordDesc, settingsDriveConnLbl, wip;
+
+    @FXML
+    private ProgressBar settingsLoginPassStr;
 
     public void initializeSettings() {
         langResources.bindTextProperty(settingsLangLbl, "language");
@@ -461,8 +567,16 @@ public class Controller implements Initializable {
                 : DEFAULT_LOCALE);
         bindValueConverter(settingsLangCB, settingsLangCB.valueProperty(), this::languageStringConverter);
         bindValueComparator(languages, settingsLangCB.valueProperty(), settingsLangCB);
-        settingsLangCB
-                .setOnAction(event -> ioManager.getLoginAccount().setLocale(selectedChoiceBoxItem(settingsLangCB)));
+        settingsLangCB.getSelectionModel().selectedItemProperty().addListener(
+                (options, oldItem, newItem) -> ioManager.getLoginAccount().setLocale(newItem));
+
+        ObjectProperty<Locale> language = settingsLangCB.valueProperty();
+        selectedLangLbl.textProperty().bind(Bindings.createStringBinding(
+                () -> {
+                    Locale languageValue = language.getValue();
+                    return languageStringConverter(languageValue).toString(languageValue);
+                },
+                language));
 
         SortedList<SortingOrder> sortingOrders = getFXSortedList(SortingOrder.class.getEnumConstants());
         settingsOrderCB.setItems(sortingOrders);
@@ -471,14 +585,46 @@ public class Controller implements Initializable {
                 : SortingOrder.SOFTWARE);
         bindValueConverter(settingsOrderCB, settingsLangCB.valueProperty(), this::sortingOrderStringConverter);
         bindValueComparator(sortingOrders, settingsLangCB.valueProperty(), settingsOrderCB);
-        settingsOrderCB.setOnAction(
-                event -> ioManager.getLoginAccount().setSortingOrder(selectedChoiceBoxItem(settingsOrderCB)));
+        settingsOrderCB.getSelectionModel().selectedItemProperty().addListener(
+                (options, oldItem, newItem) -> ioManager.getLoginAccount().setSortingOrder(newItem));
 
+        ObjectProperty<SortingOrder> sortingOrder = settingsOrderCB.valueProperty();
+        selectedOrderLbl.textProperty().bind(Bindings.createStringBinding(
+                () -> {
+                    SortingOrder sortingOrderValue = sortingOrder.getValue();
+                    return sortingOrderStringConverter(language.getValue()).toString(sortingOrderValue);
+                },
+                sortingOrder, language));
+
+        EventHandler<ActionEvent> changeLoginPasswordEvent = event -> {
+            if (checkTextFields(settingsLoginPasswordVisible, settingsLoginPasswordHidden)) {
+                ioManager.changeLoginPassword(settingsLoginPasswordVisible.getText());
+            }
+        };
+        settingsLoginPasswordVisible.setOnAction(changeLoginPasswordEvent);
+        settingsLoginPasswordHidden.setOnAction(changeLoginPasswordEvent);
         bindPasswordFields(settingsLoginPasswordHidden, settingsLoginPasswordVisible);
-        settingsLoginPasswordVisible
-                .setOnAction(event -> ioManager.changeLoginPassword(settingsLoginPasswordVisible.getText()));
-        settingsLoginPasswordHidden
-                .setOnAction(event -> ioManager.changeLoginPassword(settingsLoginPasswordHidden.getText()));
+
+        ObservableList<Node> passStrChildren = settingsLoginPassStr.getChildrenUnmodifiable();
+        settingsLoginPasswordVisible.textProperty().addListener((observable, oldValue, newValue) -> {
+            double passwordStrength = passwordStrength(newValue);
+            passwordStrength = Math.max(20d, passwordStrength);
+            passwordStrength = Math.min(50d, passwordStrength);
+
+            double progress = (passwordStrength - 20) / 30;
+            if (passStrChildren.size() != 0) {
+                Node bar = passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst();
+                bar.setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
+
+                Timeline timeline = new Timeline(
+                        new KeyFrame(Duration.ZERO,
+                                new KeyValue(settingsLoginPassStr.progressProperty(), settingsLoginPassStr.getProgress())),
+                        new KeyFrame(new Duration(200),
+                                new KeyValue(settingsLoginPassStr.progressProperty(), progress)));
+
+                timeline.play();
+            }
+        });
     }
 
     @FXML
@@ -489,6 +635,14 @@ public class Controller implements Initializable {
         setMainTitle("settings");
 
         highlightSidebarButton(event);
+    }
+
+    private StringConverter<Locale> languageStringConverter(Locale locale) {
+        return toStringConverter(item -> item != null ? capitalizeWord(item.getDisplayLanguage(item)) : null);
+    }
+
+    private StringConverter<SortingOrder> sortingOrderStringConverter(Locale locale) {
+        return toStringConverter(item -> item != null ? langResources.getValue(item.getI18nKey()) : null);
     }
     // #endregion
 
@@ -513,26 +667,13 @@ public class Controller implements Initializable {
 
     private void highlightSidebarButton(ActionEvent event) {
         if (lastSidebarButton != null) {
-            lastSidebarButton.setStyle("-fx-background-color: #202428;");
+            lastSidebarButton.setStyle("-fx-background-color: #202428");
         }
 
         if (event != null) {
             lastSidebarButton = (Button) event.getSource();
-            lastSidebarButton.setStyle("-fx-background-color: #42464a;");
+            lastSidebarButton.setStyle("-fx-background-color: #42464a");
         }
-    }
-
-    private StringConverter<Account> accountStringConverter(Locale locale) {
-        return toStringConverter(
-                item -> item != null ? ioManager.getLoginAccount().getSortingOrder().convert(item) : null);
-    }
-
-    private StringConverter<Locale> languageStringConverter(Locale locale) {
-        return toStringConverter(item -> capitalizeWord(item.getDisplayLanguage(item)));
-    }
-
-    private StringConverter<SortingOrder> sortingOrderStringConverter(Locale locale) {
-        return toStringConverter(item -> langResources.getValue(item.getI18nKey()));
     }
     // #endregion
 

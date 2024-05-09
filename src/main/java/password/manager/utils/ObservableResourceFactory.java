@@ -20,6 +20,8 @@ package password.manager.utils;
 
 import java.util.ResourceBundle;
 
+import org.jetbrains.annotations.NotNull;
+
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -53,7 +55,7 @@ public class ObservableResourceFactory {
         };
     }
 
-    public String getValue(String key) {
+    public String getValue(@NotNull String key) {
         return getResources().getString(key);
     }
 
