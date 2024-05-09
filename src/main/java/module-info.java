@@ -25,10 +25,12 @@ module password.manager {
     requires javafx.fxml;
     requires transitive javafx.graphics;
     requires javafx.web;
-    
+
     // requires jdk.jsobject;
     
     requires static lombok;
+
+    requires me.gosimple.nbvcxz;
     
     requires org.bouncycastle.provider;
     
