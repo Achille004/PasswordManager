@@ -154,7 +154,7 @@
                   </CheckBox>
                </graphic>
             </Label>
-            <ProgressBar fx:id="firstRunPassStr" layoutX="170.0" layoutY="365.0" prefHeight="10.0" prefWidth="560.0" progress="1.0" />
+            <ProgressBar fx:id="firstRunPassStr" layoutX="170.0" layoutY="365.0" prefHeight="10.0" prefWidth="560.0" progress="0.0" />
          </children>
       </AnchorPane>
         <BorderPane fx:id="mainPane" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #202428;">
@@ -244,7 +244,7 @@
                                           <Image url="@../images/icons/open-eye.png" />
                                        </image>
                                     </ImageView>
-                                    <ProgressBar fx:id="settingsLoginPassStr" layoutY="60.0" prefHeight="10.0" prefWidth="460.0" progress="1.0" />
+                                    <ProgressBar fx:id="settingsLoginPassStr" layoutY="60.0" prefHeight="10.0" prefWidth="460.0" progress="0.0" />
                                  </children>
                               </AnchorPane>
                            </children>
@@ -359,7 +359,7 @@
                                           <Image url="@../images/icons/open-eye.png" />
                                        </image>
                                     </ImageView>
-                                    <ProgressBar fx:id="decryptPassStr" layoutX="3.0" layoutY="86.0" prefHeight="10.0" prefWidth="720.0" progress="1.0" />
+                                    <ProgressBar fx:id="decryptPassStr" layoutX="3.0" layoutY="86.0" prefHeight="10.0" prefWidth="720.0" progress="0.0" />
                                  </children>
                               </AnchorPane>
                            </children>
@@ -455,7 +455,7 @@
                                                         <Image url="@../images/icons/open-eye.png" />
                                                     </image>
                                                 </ImageView>
-                                    <ProgressBar fx:id="encryptPassStr" layoutY="72.0" prefHeight="10.0" prefWidth="734.0" progress="1.0" />
+                                    <ProgressBar fx:id="encryptPassStr" layoutY="72.0" prefHeight="10.0" prefWidth="734.0" progress="0.0" />
                                             </children>
                                         </AnchorPane>
                                     </children>
