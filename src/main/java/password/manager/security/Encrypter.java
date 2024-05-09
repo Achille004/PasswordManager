@@ -18,6 +18,7 @@
 
 package password.manager.security;
 
+import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 import java.security.spec.InvalidKeySpecException;
@@ -86,9 +87,9 @@ public class Encrypter {
      * @param key      The AES key.
      * @param iv       The initialization vector.
      * @return The encrypted password.
-     * @throws Exception
+     * @throws GeneralSecurityException
      */
-    public static byte[] encryptAES(@NotNull String password, byte[] key, byte[] iv) throws Exception {
+    public static byte[] encryptAES(@NotNull String password, byte[] key, byte[] iv) throws GeneralSecurityException {
         // Create Cipher object to encrypt
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
         cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(128, iv));
@@ -104,9 +105,9 @@ public class Encrypter {
      * @param key               The AES key.
      * @param iv                The initialization vector.
      * @return The decrypted password.
-     * @throws Exception
+     * @throws GeneralSecurityException
      */
-    public static @NotNull String decryptAES(byte[] encryptedPassword, byte[] key, byte[] iv) throws Exception {
+    public static @NotNull String decryptAES(byte[] encryptedPassword, byte[] key, byte[] iv) throws GeneralSecurityException {
         // Create Cipher object to decrypt
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
         cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(128, iv));

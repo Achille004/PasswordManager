@@ -37,16 +37,19 @@ import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.paint.Color;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import me.gosimple.nbvcxz.Nbvcxz;
 
 public class Utils {
     public static final Encoder BASE64ENC = Base64.getEncoder();
     public static final Decoder BASE64DEC = Base64.getDecoder();
+    public static final Nbvcxz NBVCXZ = new Nbvcxz();
 
     @SafeVarargs
     public static <T> SortedList<T> getFXSortedList(T... items) {
@@ -60,7 +63,7 @@ public class Utils {
      * @param comboBox The combo box to extract the index from.
      * @return The index of the current selected item.
      */
-    public static <T> int selectedChoiceBoxIndex(@NotNull ChoiceBox<T> comboBox) {
+    public static <T> int selectedComboBoxIndex(@NotNull ComboBox<T> comboBox) {
         return comboBox.getSelectionModel().getSelectedIndex();
     }
 
@@ -70,7 +73,7 @@ public class Utils {
      * @param comboBox The combo box to extract the index from.
      * @return The index of the current selected item.
      */
-    public static <T> T selectedChoiceBoxItem(@NotNull ChoiceBox<T> comboBox) {
+    public static <T> T selectedComboBoxItem(@NotNull ComboBox<T> comboBox) {
         return comboBox.getSelectionModel().getSelectedItem();
     }
 
@@ -86,9 +89,9 @@ public class Utils {
         for (T field : fields) {
             if (field.getText().isBlank()) {
                 nonEmpty = false;
-                field.setStyle("-fx-border-color: #ff5f5f;");
+                field.setStyle("-fx-border-color: #ff5f5f");
             } else {
-                field.setStyle("-fx-border-color: #a7acb1;");
+                field.setStyle("-fx-border-color: #a7acb1");
             }
         }
 
@@ -138,14 +141,13 @@ public class Utils {
 
     public static <T> StringConverter<T> toStringConverter(Callback<? super T, String> converter) {
         return new StringConverter<>() {
-
             @Override
             public T fromString(String string) {
                 throw new UnsupportedOperationException();
             }
 
             @Override
-            public String toString(T object) {
+            public String toString(@NotNull T object) {
                 return converter.call(object);
             }
         };
@@ -161,14 +163,14 @@ public class Utils {
                 converter);
     }
 
-    public static <T> void bindValueConverter(ChoiceBox<T> choiceBox, ObjectProperty<Locale> locale,
+    public static <T> void bindValueConverter(ComboBox<T> comboBox, ObjectProperty<Locale> locale,
             Function<Locale, StringConverter<T>> mapper) {
-        choiceBox.converterProperty().bind(locale.map(mapper));
+        comboBox.converterProperty().bind(locale.map(mapper));
     }
 
     public static <T> void bindValueComparator(SortedList<T> sortedList, ObjectProperty<Locale> locale,
-            ChoiceBox<T> choiceBox) {
-        sortedList.comparatorProperty().bind(comparatorBinding(locale, choiceBox.converterProperty()));
+            ComboBox<T> comboBox) {
+        sortedList.comparatorProperty().bind(comparatorBinding(locale, comboBox.converterProperty()));
     }
 
     public static Alert setDefaultButton(Alert alert, ButtonType defBtn) {
@@ -176,5 +178,36 @@ public class Utils {
         for (ButtonType t : alert.getButtonTypes())
             ((Button) pane.lookupButton(t)).setDefaultButton(t == defBtn);
         return alert;
+    }
+
+    // Ideal gap is from 20 to 50, represented with linear progress bar with gaps of 1
+    public static double passwordStrength(String password) {
+        return NBVCXZ.estimate(password).getEntropy();
+    }
+
+    public static String passwordStrengthGradient(double progress) throws IllegalArgumentException {
+        if (progress < 0 || progress > 1) {
+            throw new IllegalArgumentException("Progress must be between 0 and 1");
+        }
+        String gradientStr = "linear-gradient(to right, #f00 0%";
+        boolean isHalfProgress = progress >= 0.5;
+
+        if (isHalfProgress) {
+            double halfProgress = progress - 0.5;
+
+            gradientStr += ", #ff0 " + (1 - halfProgress) * 100 + "%";
+            gradientStr += ", " +
+                    (Color.YELLOW.interpolate(Color.GREEN, halfProgress * 2).toString() + "x")
+                            .replace("0x", "#").replace("ffx", "")
+                    + " 100%";
+        } else {
+            gradientStr += ", " +
+                    (Color.RED.interpolate(Color.YELLOW, progress * 2).toString() + "x")
+                            .replace("0x", "#").replace("ffx", "")
+                    + " 100%";
+        }
+        gradientStr += ")";
+
+        return gradientStr;
     }
 }

@@ -51,9 +51,15 @@ public class Logger {
     public void addError(@NotNull Exception e) {
         logHistory
                 .append(dtf.format(LocalDateTime.now()))
-                .append(" !!! ")
+                .append(" !!! An exception has been thrown, stack trace:\n")
+                .append(e.getClass().getName())
+                .append(": ")
                 .append(e.getMessage())
                 .append("\n");
+
+        for (StackTraceElement element : e.getStackTrace()) {
+            logHistory.append("        ").append(element).append('\n');
+        }
     }
 
     public String getLogHistory() {
@@ -66,12 +72,17 @@ public class Logger {
             return false;
         }
 
+        String prevContent = logHistory.toString();
+        logHistory.setLength(0);
+
         try (Scanner scanner = new Scanner(logFile)) {
             logHistory.append(scanner.useDelimiter("\\Z").next()).append("\n\n");
         } catch (IOException e) {
             addError(e);
             return false;
         }
+
+        logHistory.append(prevContent);
 
         addInfo("File loaded: '" + logFile + "'");
         return true;

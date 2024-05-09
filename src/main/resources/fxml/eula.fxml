@@ -10,7 +10,6 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" styleClass="body" stylesheets="@style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <Label layoutX="120.0" layoutY="80.0" text="Password Manager " textFill="#0aba4d">
@@ -79,7 +78,7 @@
             <Cursor fx:constant="HAND" />
          </cursor>
       </Button>
-      <TextArea editable="false" layoutX="120.0" layoutY="260.0" prefHeight="250.0" prefWidth="660.0" style="-fx-control-inner-background: #303434; -fx-text-fill: white; -fx-border-color: #a7acb1;" text="Password Manager: Manages accounts given by user with encrypted password.&#10;Copyright (C) 2022-2024  Francesco Marras (2004marras@gmail.com)&#10;&#10;This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.&#10;&#10;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.&#10;&#10;You should have received a copy of the GNU General Public License along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html." wrapText="true">
+      <TextArea editable="false" layoutX="120.0" layoutY="260.0" prefHeight="250.0" prefWidth="660.0" style="-fx-control-inner-background: #303434; -fx-text-fill: white; -fx-border-color: #a7acb1; -fx-border-radius: 4deg;" text="Password Manager: Manages accounts given by user with encrypted password.&#10;Copyright (C) 2022-2024  Francesco Marras (2004marras@gmail.com)&#10;&#10;This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.&#10;&#10;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.&#10;&#10;You should have received a copy of the GNU General Public License along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html." wrapText="true">
          <font>
             <Font size="18.0" />
          </font>
