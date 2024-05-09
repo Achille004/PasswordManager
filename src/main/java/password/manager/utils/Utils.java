@@ -19,6 +19,7 @@
 package password.manager.utils;
 
 import java.text.Collator;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
@@ -41,9 +42,11 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.LinearGradient;
+import javafx.scene.paint.Stop;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
-
 import me.gosimple.nbvcxz.Nbvcxz;
 
 public class Utils {
@@ -183,5 +186,31 @@ public class Utils {
     // Ideal gap is from 20 to 50, represented with linear progress bar with gaps of 1
     public static double passwordStrength(String password) {
         return NBVCXZ.estimate(password).getEntropy();
+    }
+
+    public static String passwordStrengthGradient(double progress) throws IllegalArgumentException {
+        if (progress < 0 || progress > 1) {
+            throw new IllegalArgumentException("Progress must be between 0 and 1");
+        }
+        String gradientStr = "linear-gradient(to right, #f00 0%";
+        boolean isHalfProgress = progress >= 0.5;
+
+        if (isHalfProgress) {
+            double halfProgress = progress - 0.5;
+
+            gradientStr += ", #ff0 " + (1 - halfProgress) * 100 + "%";
+            gradientStr += ", " +
+                    (Color.YELLOW.interpolate(Color.GREEN, halfProgress * 2).toString() + "x")
+                            .replace("0x", "#").replace("ffx", "")
+                    + " 100%";
+        } else {
+            gradientStr += ", " +
+                    (Color.RED.interpolate(Color.YELLOW, progress * 2).toString() + "x")
+                            .replace("0x", "#").replace("ffx", "")
+                    + " 100%";
+        }
+        gradientStr += ")";
+
+        return gradientStr;
     }
 }
