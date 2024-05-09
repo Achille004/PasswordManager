@@ -19,7 +19,6 @@
 package password.manager.utils;
 
 import java.text.Collator;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
@@ -43,8 +42,6 @@ import javafx.scene.control.DialogPane;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.LinearGradient;
-import javafx.scene.paint.Stop;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import me.gosimple.nbvcxz.Nbvcxz;
