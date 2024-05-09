@@ -163,7 +163,7 @@ public class Controller implements Initializable {
         bindPasswordFields(firstRunPasswordHidden, firstRunPasswordVisible);
 
         StringProperty password = firstRunPasswordVisible.textProperty();
-        ObservableList<Node> firstRunPassStrChildren = firstRunPassStr.getChildrenUnmodifiable();
+        ObservableList<Node> passStrChildren = firstRunPassStr.getChildrenUnmodifiable();
         firstRunPassStr.progressProperty().bind(Bindings.createObjectBinding(
                 () -> {
 
@@ -174,8 +174,8 @@ public class Controller implements Initializable {
                     passwordStrength = Math.min(50d, passwordStrength);
 
                     double progress = (passwordStrength - 20) / 30;
-                    if (firstRunPassStrChildren.size() != 0) {
-                        firstRunPassStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst()
+                    if (passStrChildren.size() != 0) {
+                        passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst()
                                 .setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
                     }
 
@@ -293,6 +293,9 @@ public class Controller implements Initializable {
     @FXML
     private Label encryptSoftwareLbl, encryptUsernameLbl, encryptPasswordLbl;
 
+    @FXML
+    private ProgressBar encryptPassStr;
+
     private void initializeEncrypt() {
         langResources.bindTextProperty(encryptSubmitBtn, "submit");
         langResources.bindTextProperty(encryptSoftwareLbl, "software");
@@ -300,6 +303,27 @@ public class Controller implements Initializable {
         langResources.bindTextProperty(encryptPasswordLbl, "password");
 
         bindPasswordFields(encryptPasswordHidden, encryptPasswordVisible);
+
+        StringProperty password = encryptPasswordVisible.textProperty();
+        ObservableList<Node> passStrChildren = encryptPassStr.getChildrenUnmodifiable();
+        encryptPassStr.progressProperty().bind(Bindings.createObjectBinding(
+                () -> {
+
+                    String passwordValue = password.getValue();
+
+                    double passwordStrength = passwordStrength(passwordValue);
+                    passwordStrength = Math.max(20d, passwordStrength);
+                    passwordStrength = Math.min(50d, passwordStrength);
+
+                    double progress = (passwordStrength - 20) / 30;
+                    if (passStrChildren.size() != 0) {
+                        passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst()
+                                .setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
+                    }
+
+                    return progress;
+                },
+                password));
     }
 
     @FXML
@@ -355,6 +379,9 @@ public class Controller implements Initializable {
     @FXML
     private Label decryptAccSelLbl, decryptSelectedAccLbl, decryptSoftwareLbl, decryptUsernameLbl, decryptPasswordLbl;
 
+    @FXML
+    private ProgressBar decryptPassStr;
+
     private void initializeDecrypt() {
         langResources.bindTextProperty(decryptAccSelLbl, "select_acc");
         langResources.bindTextProperty(decryptSoftwareLbl, "software");
@@ -362,6 +389,30 @@ public class Controller implements Initializable {
         langResources.bindTextProperty(decryptPasswordLbl, "password");
 
         bindPasswordFields(decryptPasswordHidden, decryptPasswordVisible);
+
+        StringProperty password = decryptPasswordVisible.textProperty();
+        ObservableList<Node> passStrChildren = decryptPassStr.getChildrenUnmodifiable();
+        decryptPassStr.progressProperty().bind(Bindings.createObjectBinding(
+                () -> {
+                    if (decryptCB.getSelectionModel().isEmpty()) {
+                        return 0;
+                    }
+
+                    String passwordValue = password.getValue();
+
+                    double passwordStrength = passwordStrength(passwordValue);
+                    passwordStrength = Math.max(20d, passwordStrength);
+                    passwordStrength = Math.min(50d, passwordStrength);
+
+                    double progress = (passwordStrength - 20) / 30;
+                    if (passStrChildren.size() != 0) {
+                        passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst()
+                                .setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
+                    }
+
+                    return progress;
+                },
+                password));
 
         SortedList<Account> accountList = ioManager.getSortedAccountList();
         decryptCB.setItems(accountList);
@@ -386,9 +437,9 @@ public class Controller implements Initializable {
                         // shows the software, username and account of the selected account
                         decryptSoftware.setText(newItem.getSoftware());
                         decryptUsername.setText(newItem.getUsername());
-                        String password = ioManager.getAccountPassword(newItem);
-                        decryptPasswordVisible.setText(password);
-                        decryptPasswordHidden.setText(password);
+                        String accPassword = ioManager.getAccountPassword(newItem);
+                        decryptPasswordVisible.setText(accPassword);
+                        decryptPasswordHidden.setText(accPassword);
                     } else {
                         decryptClear();
                     }
@@ -501,6 +552,9 @@ public class Controller implements Initializable {
     private Label settingsLangLbl, selectedLangLbl, settingsSortingOrderLbl, selectedOrderLbl,
             settingsLoginPasswordLbl, settingsLoginPasswordDesc, settingsDriveConnLbl, wip;
 
+    @FXML
+    private ProgressBar settingsLoginPassStr;
+
     public void initializeSettings() {
         langResources.bindTextProperty(settingsLangLbl, "language");
         langResources.bindTextProperty(settingsSortingOrderLbl, "sorting_ord");
@@ -553,6 +607,26 @@ public class Controller implements Initializable {
         settingsLoginPasswordVisible.setOnAction(changeLoginPasswordEvent);
         settingsLoginPasswordHidden.setOnAction(changeLoginPasswordEvent);
         bindPasswordFields(settingsLoginPasswordHidden, settingsLoginPasswordVisible);
+
+        StringProperty password = settingsLoginPasswordVisible.textProperty();
+        ObservableList<Node> passStrChildren = settingsLoginPassStr.getChildrenUnmodifiable();
+        settingsLoginPassStr.progressProperty().bind(Bindings.createObjectBinding(
+                () -> {
+                    String passwordValue = password.getValue();
+
+                    double passwordStrength = passwordStrength(passwordValue);
+                    passwordStrength = Math.max(20d, passwordStrength);
+                    passwordStrength = Math.min(50d, passwordStrength);
+
+                    double progress = (passwordStrength - 20) / 30;
+                    if (passStrChildren.size() != 0) {
+                        passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst()
+                                .setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
+                    }
+
+                    return progress;
+                },
+                password));
     }
 
     @FXML
