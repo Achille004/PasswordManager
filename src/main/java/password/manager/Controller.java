@@ -328,8 +328,7 @@ public class Controller implements Initializable {
 
     @FXML
     public void encryptSidebarButton(ActionEvent event) {
-        encryptResetStyle();
-        encryptClear();
+        encryptReset();
 
         encryptPane.toFront();
         setMainTitle("encryption");
@@ -337,12 +336,9 @@ public class Controller implements Initializable {
         highlightSidebarButton(event);
     }
 
-    private void encryptClear() {
-        clearTextFields(encryptSoftware, encryptUsername, encryptPasswordVisible, encryptPasswordHidden);
-    }
-
-    private void encryptResetStyle() {
+    private void encryptReset() {
         clearStyle(encryptSoftware, encryptUsername, encryptPasswordVisible, encryptPasswordHidden);
+        clearTextFields(encryptSoftware, encryptUsername, encryptPasswordVisible, encryptPasswordHidden);
     }
 
     @FXML
@@ -355,7 +351,7 @@ public class Controller implements Initializable {
             // save the new account
             ioManager.addAccount(software, username, password);
 
-            encryptClear();
+            encryptReset();
         }
     }
     // #endregion
@@ -392,12 +388,13 @@ public class Controller implements Initializable {
 
         ObservableList<Node> passStrChildren = decryptPassStr.getChildrenUnmodifiable();
         decryptPasswordVisible.textProperty().addListener((observable, oldValue, newValue) -> {
-            double passwordStrength = passwordStrength(newValue);
-            passwordStrength = Math.max(20d, passwordStrength);
-            passwordStrength = Math.min(50d, passwordStrength);
+            if (passStrChildren.size() != 0 && !decryptCB.getSelectionModel().isEmpty()) {
+                double passwordStrength = passwordStrength(newValue);
+                passwordStrength = Math.max(20d, passwordStrength);
+                passwordStrength = Math.min(50d, passwordStrength);
 
-            double progress = (passwordStrength - 20) / 30;
-            if (passStrChildren.size() != 0) {
+                double progress = (passwordStrength - 20) / 30;
+
                 Node bar = passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst();
                 bar.setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
 
@@ -427,9 +424,7 @@ public class Controller implements Initializable {
 
         decryptCB.getSelectionModel().selectedItemProperty().addListener(
                 (options, oldItem, newItem) -> {
-                    decryptDeleteCounter = false;
-                    decryptResetStyle();
-
+                    decryptReset();
                     if (newItem != null) {
                         // shows the software, username and account of the selected account
                         decryptSoftware.setText(newItem.getSoftware());
@@ -437,8 +432,6 @@ public class Controller implements Initializable {
                         String accPassword = ioManager.getAccountPassword(newItem);
                         decryptPasswordVisible.setText(accPassword);
                         decryptPasswordHidden.setText(accPassword);
-                    } else {
-                        decryptClear();
                     }
                 });
 
@@ -455,9 +448,8 @@ public class Controller implements Initializable {
 
     @FXML
     public void decryptSidebarButton(ActionEvent event) {
+        decryptReset();
         decryptCB.getSelectionModel().clearSelection();
-        decryptResetStyle();
-        decryptClear();
 
         decryptPane.toFront();
         setMainTitle("decryption");
@@ -465,12 +457,10 @@ public class Controller implements Initializable {
         highlightSidebarButton(event);
     }
 
-    private void decryptClear() {
-        clearTextFields(decryptSoftware, decryptUsername, decryptPasswordVisible, decryptPasswordHidden);
-    }
-
-    private void decryptResetStyle() {
+    private void decryptReset() {
+        decryptDeleteCounter = false;
         clearStyle(decryptSoftware, decryptUsername, decryptPasswordVisible, decryptPasswordHidden, decryptDelete);
+        clearTextFields(decryptSoftware, decryptUsername, decryptPasswordVisible, decryptPasswordHidden);
     }
 
     @FXML
@@ -486,8 +476,8 @@ public class Controller implements Initializable {
             String username = decryptUsername.getText();
             String password = decryptPasswordVisible.getText();
 
-            clearStyle(decryptDelete);
-            decryptClear();
+            decryptReset();
+            decryptCB.getSelectionModel().clearSelection();
 
             // save the new attributes of the account
             ioManager.editAccount(account, software, username, password);
@@ -504,16 +494,15 @@ public class Controller implements Initializable {
         // when the deleteCounter is true it means that the user has confirmed the
         // elimination
         if (decryptDeleteCounter) {
-            decryptResetStyle();
-            decryptClear();
+            decryptReset();
+            decryptCB.getSelectionModel().clearSelection();
 
             // removes the selected account from the list
             ioManager.removeAccount(account);
         } else {
             decryptDelete.setStyle("-fx-background-color: #ff5f5f");
+            decryptDeleteCounter = true;
         }
-
-        decryptDeleteCounter = !decryptDeleteCounter;
     }
 
     private StringConverter<Account> accountStringConverter(SortingOrder order) {
@@ -629,6 +618,7 @@ public class Controller implements Initializable {
 
     @FXML
     public void settingsSidebarButton(ActionEvent event) {
+        clearStyle(settingsLoginPasswordHidden, settingsLoginPasswordVisible);
         ioManager.displayLoginPassword(settingsLoginPasswordVisible, settingsLoginPasswordHidden);
 
         settingsPane.toFront();

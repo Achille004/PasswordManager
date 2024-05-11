@@ -170,7 +170,10 @@ public class IOManager {
 
     public boolean editAccount(@NotNull Account account, String software, String username, String password) {
         try {
-            if (isAuthenticated() && account.setData(software, username, password, loginPassword)) {
+            int index = accountList.indexOf(account);
+            if (isAuthenticated() && index >= 0 && account.setData(software, username, password, loginPassword)) {
+                // Substitute the account with itself to trigger the SortedList wrapper
+                accountList.set(index, account);
                 logger.addInfo("Account edited");
                 return true;
             }

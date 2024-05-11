@@ -67,11 +67,11 @@ public class Account implements Serializable {
             password = oldPassword;
         }
 
-        if (software == null) {
+        if (software != null) {
             this.software = software;
         }
 
-        if (username == null) {
+        if (username != null) {
             this.username = username;
         }
 
