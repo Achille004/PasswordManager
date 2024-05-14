@@ -1,4 +1,6 @@
-# Password Manager
+# Password Manager <img src="https://wakatime.com/badge/github/Achille004/PasswordManager.svg?style=flat" alt="wakatime"> <img src="https://img.shields.io/badge/version-3.0.1-green" alt="version"> <img alt="license" src="https://img.shields.io/github/license/Achille004/PasswordManager">
+
+
 Password Manager is an application able to add, modify and delete locally saved accounts, characterized by a software, a username and an [AES](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard "AES explanation.") ([GCM](https://en.wikipedia.org/wiki/Galois/Counter_Mode "GCM explanation.") mode) encrypted password.  
 The program will be protected with a password that the user must remember.  
 Two languages are available: English and Italian. If you want to help translating, contact me at my email (2004marras@gmail.com).
