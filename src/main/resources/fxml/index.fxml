@@ -157,7 +157,7 @@
             <ProgressBar fx:id="firstRunPassStr" layoutX="170.0" layoutY="365.0" prefHeight="10.0" prefWidth="560.0" progress="0.0" />
          </children>
       </AnchorPane>
-        <BorderPane fx:id="mainPane" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #202428;">
+        <BorderPane prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #202428;">
             <center>
                 <StackPane prefHeight="565.0" prefWidth="751.0" BorderPane.alignment="CENTER">
                     <children>
@@ -490,7 +490,7 @@
             <top>
                 <AnchorPane minHeight="-Infinity" prefHeight="43.0" prefWidth="900.0" BorderPane.alignment="CENTER">
                     <children>
-                        <Label layoutX="14.0" minWidth="60.0" prefHeight="46.0" prefWidth="222.0" style="&#10;" text="Password Manager" textFill="#0aba4d">
+                        <Label fx:id="psmgTitle" layoutX="14.0" minWidth="60.0" prefHeight="46.0" prefWidth="222.0" style="&#10;" text="Password Manager" textFill="#0aba4d">
                             <font>
                                 <Font name="System Bold Italic" size="24.0" fx:id="x1" />
                             </font>
