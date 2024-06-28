@@ -268,12 +268,6 @@ public class Controller implements Initializable {
 
         for (char c : title.toCharArray()) {
             for (int i = 0; i < 26; i++) {
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
                 if (Character.isLowerCase(c)) {
                     stages.add(currString + lower[i]);
                     if (lower[i] == c) {
@@ -302,13 +296,12 @@ public class Controller implements Initializable {
         initializeSettings();
 
         titleAnimation = new Timeline();
-        final int[] i = {0};
-        System.out.println(titleStages.length);
-        for (String str : titleStages) {
-            titleAnimation.getKeyFrames().add(new KeyFrame(Duration.millis(10 * i[0]), event -> {
+        
+        for (int i = 0; i < titleStages.length; i++) {
+            final String str = titleStages[i];
+            titleAnimation.getKeyFrames().add(new KeyFrame(Duration.millis(8 * i), event -> {
                 psmgTitle.setText(str);
             }));
-            i[0]++;
         }
     }
 
