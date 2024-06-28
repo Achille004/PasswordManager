@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.ResourceBundle;
@@ -191,6 +192,7 @@ public class Controller implements Initializable {
         if (checkTextFields(firstRunPasswordVisible, firstRunPasswordHidden) && firstRunCheckBox.isSelected()) {
             ioManager.setLoginAccount(SortingOrder.SOFTWARE, DEFAULT_LOCALE, firstRunPasswordVisible.getText());
             firstRunPane.toBack();
+            mainTitleAnimation();
         }
     }
     // #endregion
@@ -234,6 +236,7 @@ public class Controller implements Initializable {
 
             if (ioManager.isAuthenticated()) {
                 loginPane.toBack();
+                mainTitleAnimation();
             } else {
                 wrongPasswordsTimeline.play();
             }
@@ -242,13 +245,88 @@ public class Controller implements Initializable {
         }
     }
     // #endregion
-
+    
     // #region Main
+    private Button lastSidebarButton = null;
+
+    @FXML
+    private Label psmgTitle, mainTitle;
+
+    @FXML
+    private Button homeButton;
+
+    private static String[] titleStages;
+    private Timeline titleAnimation;
+
+    static {
+        final String title = "Password Manager";
+        final char[] lower = "abcdefghijklmnopqrstuvwxyz".toCharArray();
+        final char[] upper = "ABCDEFGHIJKLMNOPQRTSUVWXYZ".toCharArray();
+
+        final LinkedList<String> stages = new LinkedList<String>();
+        String currString = "";
+
+        for (char c : title.toCharArray()) {
+            for (int i = 0; i < 26; i++) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                if (Character.isLowerCase(c)) {
+                    stages.add(currString + lower[i]);
+                    if (lower[i] == c) {
+                        break;
+                    }
+                } else if (Character.isUpperCase(c)) {
+                    stages.add(currString + upper[i]);
+                    if (upper[i] == c) {
+                        break;
+                    }
+                } else {
+                    stages.add(currString + c);
+                    break;
+                }
+            }
+            currString += c;
+        }
+
+        titleStages = stages.toArray(new String[0]);
+    }
+
     private void initializeMain() {
         initializeHome();
         initializeEncrypt();
         initializeDecrypt();
         initializeSettings();
+
+        titleAnimation = new Timeline();
+        final int[] i = {0};
+        System.out.println(titleStages.length);
+        for (String str : titleStages) {
+            titleAnimation.getKeyFrames().add(new KeyFrame(Duration.millis(10 * i[0]), event -> {
+                psmgTitle.setText(str);
+            }));
+            i[0]++;
+        }
+    }
+
+    private void mainTitleAnimation() {
+        psmgTitle.setText("");
+        titleAnimation.play();
+    }
+
+    // #region Home
+    @FXML
+    private AnchorPane homePane;
+
+    @FXML
+    private Label homeDescTop, homeDescBtm;    
+
+    private void initializeHome() {
+        langResources.bindTextProperty(homeDescTop, "home_desc.top");
+        langResources.bindTextProperty(homeDescBtm, "home_desc.btm");        
     }
 
     @FXML
@@ -257,23 +335,6 @@ public class Controller implements Initializable {
         setMainTitle("");
 
         highlightSidebarButton(null);
-    }
-
-    // #region Home
-    private Button lastSidebarButton = null;
-
-    @FXML
-    private AnchorPane homePane;
-
-    @FXML
-    private Button homeButton;
-
-    @FXML
-    private Label mainTitle, homeDescTop, homeDescBtm;
-
-    private void initializeHome() {
-        langResources.bindTextProperty(homeDescTop, "home_desc.top");
-        langResources.bindTextProperty(homeDescBtm, "home_desc.btm");
     }
     // #endregion
 
