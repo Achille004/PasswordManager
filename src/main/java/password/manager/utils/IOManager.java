@@ -233,13 +233,14 @@ public class IOManager {
 
         if (!accountList.isEmpty()) {
             accountList.forEach(account -> {
-                new Thread(() -> {
+                Thread.startVirtualThread(() -> {
                     try {
                         account.changeLoginPassword(oldLoginPassword, newLoginPassword);
                     } catch (GeneralSecurityException e) {
-                        e.printStackTrace();
+                        logger.addError(e);
                     }
-                }).start();
+                });
+                // to wait until threads are finished, use threadInstance.join()
             });
         }
 
