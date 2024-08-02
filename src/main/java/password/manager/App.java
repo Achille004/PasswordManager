@@ -18,37 +18,26 @@
 
 package password.manager;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
 public class App extends Application {
-    private Controller controller;
+    private AppManager controller;
 
     @Override
     public void start(Stage primaryStage) {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/index.fxml"));
-
-        Parent root = null;
-        try {
-            root = loader.load();
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        controller = loader.getController();
+        AnchorPane scenePane = new AnchorPane();
+        controller = new AppManager(scenePane);
 
         primaryStage.setTitle("Password Manager");
         primaryStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/locker.png"))));
         primaryStage.setResizable(false);
-        primaryStage.setScene(new Scene(root, 900, 600));
+        primaryStage.setScene(new Scene(scenePane, 900, 600));
         primaryStage.show();
     }
 

@@ -37,6 +37,7 @@ module password.manager {
     requires org.jetbrains.annotations;
     
     exports password.manager;
+    exports password.manager.controllers;
     exports password.manager.enums;
     exports password.manager.inerfaces;
     exports password.manager.security;

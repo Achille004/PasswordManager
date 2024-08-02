@@ -1,33 +1,12 @@
-/*
-    Password Manager: Manages accounts given by user with encrypted password.
-    Copyright (C) 2022-2024  Francesco Marras (2004marras@gmail.com)
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
- */
-
-package password.manager;
+package password.manager.controllers;
 
 import static password.manager.utils.Utils.*;
 
 import java.awt.Desktop;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.ResourceBundle;
 
 import org.jetbrains.annotations.NotNull;
@@ -42,218 +21,35 @@ import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
 import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import password.manager.AppManager;
 import password.manager.enums.SortingOrder;
 import password.manager.security.Account;
 import password.manager.utils.IOManager;
 import password.manager.utils.ObservableResourceFactory;
 
-public class Controller implements Initializable {
-    public static final Locale[] SUPPORTED_LOCALES;
-    public static final Locale DEFAULT_LOCALE;
-
-    static {
-        SUPPORTED_LOCALES = new Locale[] { Locale.ENGLISH, Locale.ITALIAN };
-
-        Locale systemLang = Locale.forLanguageTag(Locale.getDefault().getLanguage());
-        DEFAULT_LOCALE = Arrays.asList(SUPPORTED_LOCALES).contains(systemLang)
-                ? systemLang
-                : Locale.ENGLISH;
+public class MainController extends AbstractController {
+    public MainController(IOManager ioManager, ObservableResourceFactory langResources) {
+        super(ioManager, langResources);
     }
 
-    private final @Getter IOManager ioManager;
-    private final @Getter ObservableResourceFactory langResources;
-
-    private Stage eulaStage = null;
-
-    public Controller() {
-        this.ioManager = new IOManager();
-        this.langResources = new ObservableResourceFactory();
-    }
-
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        // If account exists, its Locale will be used, else it will fall back to the
-        // default value.
-        ObjectProperty<Locale> locale = settingsLangCB.valueProperty();
-        langResources.resourcesProperty().bind(Bindings.createObjectBinding(
-                () -> {
-                    Locale localeValue = locale.getValue();
-                    return ResourceBundle.getBundle("/bundles/Lang",
-                            localeValue != null ? localeValue : DEFAULT_LOCALE);
-                },
-                locale));
-
-        boolean firstRun = ioManager.loadDataFile(langResources);
-
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/eula.fxml"));
-            loader.setController(new EULAController(ioManager));
-
-            Parent root = loader.load();
-            eulaStage = new Stage();
-            eulaStage.setTitle(langResources.getValue("terms_credits"));
-            eulaStage.getIcons()
-                    .add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/locker.png"))));
-            eulaStage.setResizable(false);
-            eulaStage.setScene(new Scene(root, 900, 600));
-        } catch (IOException e) {
-            ioManager.getLogger().addError(e);
-        }
-
-        if (firstRun) {
-            initializeFirstRun();
-        } else {
-            initializeLogin();
-        }
-
-        initializeMain();
-    }
-
-    // #region First Run
-    @FXML
-    private AnchorPane firstRunPane;
-
-    @FXML
-    private Label firstRunTitle, firstRunDescTop, firstRunDescBtm, firstRunTermsCred, firstRunDisclaimer;
-
-    @FXML
-    private TextField firstRunPasswordVisible;
-
-    @FXML
-    private PasswordField firstRunPasswordHidden;
-
-    @FXML
-    private CheckBox firstRunCheckBox;
-
-    @FXML
-    private Button firstRunSubmitBtn;
-
-    @FXML
-    private ProgressBar firstRunPassStr;
-
-    private void initializeFirstRun() {
-        langResources.bindTextProperty(firstRunTitle, "hi");
-        langResources.bindTextProperty(firstRunDescTop, "first_run.desc.top");
-        langResources.bindTextProperty(firstRunDescBtm, "first_run.desc.btm");
-        langResources.bindTextProperty(firstRunCheckBox, "first_run.check_box");
-        langResources.bindTextProperty(firstRunTermsCred, "terms_credits");
-        langResources.bindTextProperty(firstRunSubmitBtn, "lets_go");
-        langResources.bindTextProperty(firstRunDisclaimer, "first_run.disclaimer");
-
-        bindPasswordFields(firstRunPasswordHidden, firstRunPasswordVisible);
-
-        ObservableList<Node> passStrChildren = firstRunPassStr.getChildrenUnmodifiable();
-        firstRunPasswordVisible.textProperty().addListener((observable, oldValue, newValue) -> {
-            double passwordStrength = passwordStrength(newValue);
-            passwordStrength = Math.max(20d, passwordStrength);
-            passwordStrength = Math.min(50d, passwordStrength);
-
-            double progress = (passwordStrength - 20) / 30;
-            if (passStrChildren.size() != 0) {
-                Node bar = passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst();
-                bar.setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
-
-                Timeline timeline = new Timeline(
-                        new KeyFrame(Duration.ZERO,
-                                new KeyValue(firstRunPassStr.progressProperty(), firstRunPassStr.getProgress())),
-                        new KeyFrame(new Duration(200),
-                                new KeyValue(firstRunPassStr.progressProperty(), progress)));
-
-                timeline.play();
-            }
-        });
-
-        firstRunPane.toFront();
-    }
-
-    @FXML
-    public void doFirstRun() {
-        if (checkTextFields(firstRunPasswordVisible, firstRunPasswordHidden) && firstRunCheckBox.isSelected()) {
-            ioManager.setLoginAccount(SortingOrder.SOFTWARE, DEFAULT_LOCALE, firstRunPasswordVisible.getText());
-            firstRunPane.toBack();
-            mainTitleAnimation();
-        }
-    }
-    // #endregion
-
-    // #region Login
-    @FXML
-    private AnchorPane loginPane;
-
-    @FXML
-    private Label loginTitle;
-
-    @FXML
-    private TextField loginPasswordVisible;
-
-    @FXML
-    private PasswordField loginPasswordHidden;
-
-    @FXML
-    private Button loginSubmitBtn;
-
-    private Timeline wrongPasswordsTimeline;
-
-    private void initializeLogin() {
-        wrongPasswordsTimeline = new Timeline(
-                new KeyFrame(Duration.ZERO, evt -> loginSubmitBtn.setStyle("-fx-border-color: #ff5f5f")),
-                new KeyFrame(Duration.seconds(1), evt -> clearStyle(loginSubmitBtn)));
-
-        langResources.bindTextProperty(loginTitle, "welcome_back");
-        langResources.bindTextProperty(loginSubmitBtn, "lets_go");
-
-        bindPasswordFields(loginPasswordHidden, loginPasswordVisible);
-
-        loginPane.toFront();
-    }
-
-    @FXML
-    public void doLogin() {
-        if (checkTextFields(loginPasswordVisible, loginPasswordHidden)) {
-            wrongPasswordsTimeline.stop();
-            ioManager.authenticate(loginPasswordVisible.getText());
-
-            if (ioManager.isAuthenticated()) {
-                loginPane.toBack();
-                mainTitleAnimation();
-            } else {
-                wrongPasswordsTimeline.play();
-            }
-
-            clearTextFields(loginPasswordHidden, loginPasswordVisible);
-        }
-    }
-    // #endregion
-    
-    // #region Main
     private Button lastSidebarButton = null;
 
     @FXML
-    private Label psmgTitle, mainTitle;
+    public Label psmgTitle, mainTitle;
 
     @FXML
-    private Button homeButton;
+    public Button homeButton;
 
     private static String[] titleStages;
     private Timeline titleAnimation;
@@ -289,14 +85,14 @@ public class Controller implements Initializable {
         titleStages = stages.toArray(new String[0]);
     }
 
-    private void initializeMain() {
+    public void initialize(URL location, ResourceBundle resources) {
         initializeHome();
         initializeEncrypt();
         initializeDecrypt();
         initializeSettings();
 
         titleAnimation = new Timeline();
-        
+
         for (int i = 0; i < titleStages.length; i++) {
             final String str = titleStages[i];
             titleAnimation.getKeyFrames().add(new KeyFrame(Duration.millis(8 * i), event -> {
@@ -305,21 +101,21 @@ public class Controller implements Initializable {
         }
     }
 
-    private void mainTitleAnimation() {
+    public void mainTitleAnimation() {
         psmgTitle.setText("");
         titleAnimation.play();
     }
 
     // #region Home
     @FXML
-    private AnchorPane homePane;
+    public AnchorPane homePane;
 
     @FXML
-    private Label homeDescTop, homeDescBtm;    
+    public Label homeDescTop, homeDescBtm;
 
     private void initializeHome() {
         langResources.bindTextProperty(homeDescTop, "home_desc.top");
-        langResources.bindTextProperty(homeDescBtm, "home_desc.btm");        
+        langResources.bindTextProperty(homeDescBtm, "home_desc.btm");
     }
 
     @FXML
@@ -333,22 +129,22 @@ public class Controller implements Initializable {
 
     // #region Encrypt
     @FXML
-    private GridPane encryptPane;
+    public GridPane encryptPane;
 
     @FXML
-    private TextField encryptSoftware, encryptUsername, encryptPasswordVisible;
+    public TextField encryptSoftware, encryptUsername, encryptPasswordVisible;
 
     @FXML
-    private PasswordField encryptPasswordHidden;
+    public PasswordField encryptPasswordHidden;
 
     @FXML
-    private Button encryptSubmitBtn;
+    public Button encryptSubmitBtn;
 
     @FXML
-    private Label encryptSoftwareLbl, encryptUsernameLbl, encryptPasswordLbl;
+    public Label encryptSoftwareLbl, encryptUsernameLbl, encryptPasswordLbl;
 
     @FXML
-    private ProgressBar encryptPassStr;
+    public ProgressBar encryptPassStr;
 
     private void initializeEncrypt() {
         langResources.bindTextProperty(encryptSubmitBtn, "submit");
@@ -416,25 +212,25 @@ public class Controller implements Initializable {
 
     // #region Decrypt
     @FXML
-    private GridPane decryptPane;
+    public GridPane decryptPane;
 
     @FXML
-    private ComboBox<Account> decryptCB;
+    public ComboBox<Account> decryptCB;
 
     @FXML
-    private TextField decryptSoftware, decryptUsername, decryptPasswordVisible;
+    public TextField decryptSoftware, decryptUsername, decryptPasswordVisible;
     @FXML
-    private PasswordField decryptPasswordHidden;
+    public PasswordField decryptPasswordHidden;
 
     @FXML
-    private Button decryptDelete;
+    public Button decryptDelete;
     private boolean decryptDeleteCounter = false;
 
     @FXML
-    private Label decryptAccSelLbl, decryptSelectedAccLbl, decryptSoftwareLbl, decryptUsernameLbl, decryptPasswordLbl;
+    public Label decryptAccSelLbl, decryptSelectedAccLbl, decryptSoftwareLbl, decryptUsernameLbl, decryptPasswordLbl;
 
     @FXML
-    private ProgressBar decryptPassStr;
+    public ProgressBar decryptPassStr;
 
     private void initializeDecrypt() {
         langResources.bindTextProperty(decryptAccSelLbl, "select_acc");
@@ -587,26 +383,37 @@ public class Controller implements Initializable {
 
     // #region Settings
     @FXML
-    private GridPane settingsPane;
+    public GridPane settingsPane;
 
     @FXML
-    private ComboBox<Locale> settingsLangCB;
+    public ComboBox<Locale> settingsLangCB;
     @FXML
-    private ComboBox<SortingOrder> settingsOrderCB;
+    public ComboBox<SortingOrder> settingsOrderCB;
 
     @FXML
-    private TextField settingsLoginPasswordVisible;
+    public TextField settingsLoginPasswordVisible;
     @FXML
-    private PasswordField settingsLoginPasswordHidden;
+    public PasswordField settingsLoginPasswordHidden;
 
     @FXML
-    private Label settingsLangLbl, selectedLangLbl, settingsSortingOrderLbl, selectedOrderLbl,
+    public Label settingsLangLbl, selectedLangLbl, settingsSortingOrderLbl, selectedOrderLbl,
             settingsLoginPasswordLbl, settingsLoginPasswordDesc, settingsDriveConnLbl, wip;
 
     @FXML
-    private ProgressBar settingsLoginPassStr;
+    public ProgressBar settingsLoginPassStr;
 
     public void initializeSettings() {
+        // If account exists, its Locale will be used, else it will fall back to the
+        // default value.
+        ObjectProperty<Locale> locale = settingsLangCB.valueProperty();
+        langResources.resourcesProperty().bind(Bindings.createObjectBinding(
+                () -> {
+                    Locale localeValue = locale.getValue();
+                    return ResourceBundle.getBundle("/bundles/Lang",
+                            localeValue != null ? localeValue : AppManager.DEFAULT_LOCALE);
+                },
+                locale));
+
         langResources.bindTextProperty(settingsLangLbl, "language");
         langResources.bindTextProperty(settingsSortingOrderLbl, "sorting_ord");
         langResources.bindTextProperty(settingsLoginPasswordLbl, "login_pas");
@@ -614,11 +421,13 @@ public class Controller implements Initializable {
         langResources.bindTextProperty(settingsDriveConnLbl, "drive_con");
         langResources.bindTextProperty(wip, "wip");
 
-        SortedList<Locale> languages = getFXSortedList(SUPPORTED_LOCALES);
+        // Language box
+
+        SortedList<Locale> languages = getFXSortedList(AppManager.SUPPORTED_LOCALES);
         settingsLangCB.setItems(languages);
         settingsLangCB.getSelectionModel().select(ioManager.getLoginAccount() != null
                 ? ioManager.getLoginAccount().getLocale()
-                : DEFAULT_LOCALE);
+                : AppManager.DEFAULT_LOCALE);
         bindValueConverter(settingsLangCB, settingsLangCB.valueProperty(), this::languageStringConverter);
         bindValueComparator(languages, settingsLangCB.valueProperty(), settingsLangCB);
         settingsLangCB.getSelectionModel().selectedItemProperty().addListener(
@@ -631,6 +440,8 @@ public class Controller implements Initializable {
                     return languageStringConverter(languageValue).toString(languageValue);
                 },
                 language));
+
+        // Sorting order box
 
         SortedList<SortingOrder> sortingOrders = getFXSortedList(SortingOrder.class.getEnumConstants());
         settingsOrderCB.setItems(sortingOrders);
@@ -649,6 +460,8 @@ public class Controller implements Initializable {
                     return sortingOrderStringConverter(language.getValue()).toString(sortingOrderValue);
                 },
                 sortingOrder, language));
+
+        // Login password
 
         EventHandler<ActionEvent> changeLoginPasswordEvent = event -> {
             if (checkTextFields(settingsLoginPasswordVisible, settingsLoginPasswordHidden)) {
@@ -672,7 +485,8 @@ public class Controller implements Initializable {
 
                 Timeline timeline = new Timeline(
                         new KeyFrame(Duration.ZERO,
-                                new KeyValue(settingsLoginPassStr.progressProperty(), settingsLoginPassStr.getProgress())),
+                                new KeyValue(settingsLoginPassStr.progressProperty(),
+                                        settingsLoginPassStr.getProgress())),
                         new KeyFrame(new Duration(200),
                                 new KeyValue(settingsLoginPassStr.progressProperty(), progress)));
 
@@ -727,59 +541,6 @@ public class Controller implements Initializable {
         if (event != null) {
             lastSidebarButton = (Button) event.getSource();
             lastSidebarButton.setStyle("-fx-background-color: #42464a");
-        }
-    }
-    // #endregion
-
-    @FXML
-    public void showPassword(MouseEvent event) {
-        Object obj = event.getSource();
-
-        if (obj instanceof Node) {
-            ((Node) obj).getParent().toBack();
-        }
-    }
-
-    @FXML
-    public void showEula(MouseEvent event) {
-        if (eulaStage == null) {
-            return;
-        }
-
-        eulaStage.show();
-    }
-
-    @RequiredArgsConstructor
-    public class EULAController implements Initializable {
-        public static final URI FM_LINK = URI.create("https://github.com/Achille004"),
-                SS_LINK = URI.create("https://github.com/samustocco");
-
-        private final @Getter IOManager ioManager;
-
-        @Override
-        public void initialize(URL location, ResourceBundle resources) {
-        }
-
-        @FXML
-        public void githubFM(ActionEvent event) {
-            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-                try {
-                    Desktop.getDesktop().browse(FM_LINK);
-                } catch (IOException e) {
-                    ioManager.getLogger().addError(e);
-                }
-            }
-        }
-
-        @FXML
-        public void githubSS(ActionEvent event) {
-            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-                try {
-                    Desktop.getDesktop().browse(SS_LINK);
-                } catch (IOException e) {
-                    ioManager.getLogger().addError(e);
-                }
-            }
         }
     }
 }

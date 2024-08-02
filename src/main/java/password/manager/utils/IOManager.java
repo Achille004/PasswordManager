@@ -18,7 +18,7 @@
 
 package password.manager.utils;
 
-import static password.manager.utils.Utils.setDefaultButton;
+import static password.manager.utils.Utils.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -279,8 +279,7 @@ public class IOManager {
     // #endregion
 
     public void export(Exporter exporter, ObservableResourceFactory langResources) {
-        try (FileWriter file = new FileWriter(
-                desktopPath.resolve("Passwords." + exporter.name().toLowerCase()).toFile())) {
+        try (FileWriter file = new FileWriter(desktopPath.resolve("Passwords." + exporter.name().toLowerCase()).toFile())) {
             file.write(exporter.getExporter().apply(accountList, langResources, loginPassword));
             file.flush();
         } catch (IOException e) {
