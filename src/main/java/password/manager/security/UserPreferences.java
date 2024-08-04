@@ -18,6 +18,7 @@
 
 package password.manager.security;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
@@ -27,22 +28,40 @@ import java.util.Locale;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
-import lombok.Setter;
 import password.manager.enums.SortingOrder;
+import password.manager.utils.Utils;
 
-public class LoginAccount implements Serializable {
-    private @Getter @Setter SortingOrder sortingOrder;
-    private @Getter @Setter Locale locale;
+public class UserPreferences implements Serializable {
+    private transient @Getter ObjectProperty<Locale> localeProperty;
+    private transient @Getter ObjectProperty<SortingOrder> sortingOrderProperty;
     private byte[] hashedPassword;
     private final byte[] salt;
 
-    public LoginAccount(SortingOrder sortingOrder, Locale locale, String password) throws InvalidKeySpecException {
-        this.sortingOrder = sortingOrder;
-        this.locale = locale;
+    public UserPreferences(SortingOrder sortingOrder, Locale locale, String password) throws InvalidKeySpecException {
+        this.localeProperty = new SimpleObjectProperty<>(Utils.DEFAULT_LOCALE);
+        this.sortingOrderProperty = new SimpleObjectProperty<>(SortingOrder.SOFTWARE);
 
         this.salt = new byte[16];
         setPassword(password);
+    }
+
+    public Locale getLocale() {
+        return localeProperty.get();
+    }
+
+    public void setLocale(Locale locale) {
+        localeProperty.set(locale);
+    }
+
+    public SortingOrder getSortingOrder() {
+        return sortingOrderProperty.get();
+    }
+
+    public void setSortingOrder(SortingOrder sortingOrder) {
+        sortingOrderProperty.set(sortingOrder);
     }
 
     public boolean verifyPassword(String passwordToVerify) throws InvalidKeySpecException {
@@ -72,8 +91,23 @@ public class LoginAccount implements Serializable {
     }
 
     @Contract("_, _, _ -> new")
-    public static @NotNull LoginAccount of(SortingOrder sortingOrder, Locale locale, String password) throws InvalidKeySpecException {
-        // creates the account, adding its attributes by constructor
-        return new LoginAccount(sortingOrder, locale, password);
+    public static @NotNull UserPreferences of(Locale locale, SortingOrder sortingOrder, String password) throws InvalidKeySpecException {
+        return new UserPreferences(sortingOrder, locale, password);
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+        out.writeObject(getLocale());
+        out.writeObject(getSortingOrder());
+        out.defaultWriteObject();
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+        Locale localeValue = (Locale) in.readObject();
+        this.localeProperty = new SimpleObjectProperty<>(localeValue);
+
+        SortingOrder sortingOrderValue = (SortingOrder) in.readObject();
+        this.sortingOrderProperty = new SimpleObjectProperty<>(sortingOrderValue);
+
+        in.defaultReadObject();
     }
 }

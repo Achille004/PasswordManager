@@ -11,6 +11,5 @@
 - Google drive linking
 
 # Ideas:
-- Divide `index.fxml` into separate parts
 - Switch from `ArrayList` to embedded database
 - More animations

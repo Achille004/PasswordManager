@@ -19,13 +19,14 @@
 package password.manager;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.ResourceBundle;
 
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -41,20 +42,9 @@ import password.manager.controllers.LoginController;
 import password.manager.controllers.MainController;
 import password.manager.utils.IOManager;
 import password.manager.utils.ObservableResourceFactory;
+import password.manager.utils.Utils;
 
 public class AppManager {
-    public static final Locale[] SUPPORTED_LOCALES;
-    public static final Locale DEFAULT_LOCALE;
-
-    static {
-        SUPPORTED_LOCALES = new Locale[] { Locale.ENGLISH, Locale.ITALIAN };
-
-        Locale systemLang = Locale.forLanguageTag(Locale.getDefault().getLanguage());
-        DEFAULT_LOCALE = Arrays.asList(SUPPORTED_LOCALES).contains(systemLang)
-                ? systemLang
-                : Locale.ENGLISH;
-    }
-
     private final @Getter IOManager ioManager;
     private final @Getter ObservableResourceFactory langResources;
 
@@ -69,20 +59,26 @@ public class AppManager {
     }
 
     private void initialize() {
-        langResources.resourcesProperty().set(ResourceBundle.getBundle("/bundles/Lang", ioManager.getLoginAccount() != null
-                        ? ioManager.getLoginAccount().getLocale()
-                        : AppManager.DEFAULT_LOCALE));
+        langResources.setResources(ResourceBundle.getBundle("/bundles/Lang", Utils.DEFAULT_LOCALE));
+        ioManager.loadDataFile(langResources);
+
+        ObjectProperty<Locale> locale = ioManager.getUserPreferences().getLocaleProperty();
+        langResources.resourcesProperty().bind(Bindings.createObjectBinding(
+                () -> {
+                    Locale localeValue = locale.getValue();
+                    return ResourceBundle.getBundle("/bundles/Lang", localeValue);
+                },
+                locale));
+
         Alert alert = new Alert(AlertType.ERROR, langResources.getValue("ui_error"), ButtonType.OK);
 
         AnchorPane pane;
-        boolean firstRun = ioManager.loadDataFile(langResources);
         final BooleanProperty switchToMain = new SimpleBooleanProperty(false);
-        if (firstRun) {
+        if (ioManager.isFirstRun()) {
             pane = (AnchorPane) loadFxml("/fxml/first_run.fxml",
                     new FirstRunController(ioManager, langResources, switchToMain));
         } else {
-            pane = (AnchorPane) loadFxml("/fxml/login.fxml",
-                    new LoginController(ioManager, langResources, switchToMain));
+            pane = (AnchorPane) loadFxml("/fxml/login.fxml", new LoginController(ioManager, langResources, switchToMain));
         }
         if (pane == null) {
             alert.showAndWait();
@@ -90,7 +86,7 @@ public class AppManager {
             return;
         }
         scenePane.getChildren().add(pane);
-        
+
         final MainController mainController = new MainController(ioManager, langResources);
         final BorderPane mainPane = (BorderPane) loadFxml("/fxml/main.fxml", mainController);
         if (mainPane == null) {

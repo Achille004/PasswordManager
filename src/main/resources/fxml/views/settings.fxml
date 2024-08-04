@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Copyright (c) 2015, 2019, Gluon and/or its affiliates.
+  All rights reserved. Use is subject to license terms.
+
+  This file is available and licensed under the following license:
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions
+  are met:
+
+  - Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+  - Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in
+    the documentation and/or other materials provided with the distribution.
+  - Neither the name of Oracle Corporation nor the names of its
+    contributors may be used to endorse or promote products derived
+    from this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.text.Font?>
+
+<GridPane fx:id="settingsPane" prefHeight="557.0" prefWidth="835.0" style="-fx-background-color: #202428;" stylesheets="@../style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+   <columnConstraints>
+      <ColumnConstraints hgrow="SOMETIMES" maxWidth="748.0" minWidth="10.0" prefWidth="266.40001220703124" />
+      <ColumnConstraints hgrow="SOMETIMES" maxWidth="748.0" minWidth="10.0" prefWidth="462.39998779296883" />
+      <ColumnConstraints hgrow="SOMETIMES" maxWidth="184.0" minWidth="0.0" prefWidth="0.0" />
+   </columnConstraints>
+   <rowConstraints>
+      <RowConstraints maxHeight="146.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="121.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="121.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="142.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="142.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
+   </rowConstraints>
+   <children>
+      <AnchorPane prefHeight="123.0" prefWidth="738.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+         <children>
+            <ComboBox fx:id="settingsOrderCB" layoutY="33.0" prefHeight="27.0" prefWidth="461.0" styleClass="textField" />
+            <Label fx:id="selectedOrderLbl" focusTraversable="false" layoutX="5.0" layoutY="33.0" pickOnBounds="false" prefHeight="27.0" prefWidth="430.0" text="Selected Order" textFill="WHITE">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+         </children>
+      </AnchorPane>
+      <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1">
+         <children>
+            <ComboBox fx:id="settingsLangCB" layoutY="33.0" prefHeight="27.0" prefWidth="461.0" styleClass="textField" />
+            <Label fx:id="selectedLangLbl" focusTraversable="false" layoutX="5.0" layoutY="33.0" pickOnBounds="false" prefHeight="27.0" prefWidth="430.0" text="Selected Language" textFill="WHITE">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+         </children>
+      </AnchorPane>
+      <Label fx:id="settingsSortingOrderLbl" prefHeight="35.0" prefWidth="263.0" text="Order by:" textFill="WHITE" GridPane.rowIndex="1">
+         <font>
+            <Font name="System Bold Italic" size="24.0" />
+         </font>
+      </Label>
+      <AnchorPane prefHeight="0.0" prefWidth="730.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
+         <children>
+            <Label fx:id="wip" layoutY="28.0" prefHeight="35.0" prefWidth="506.0" text="Work in progress..." textFill="WHITE">
+               <font>
+                  <Font name="System Italic" size="24.0" />
+               </font>
+            </Label>
+         </children>
+      </AnchorPane>
+      <Label fx:id="settingsLangLbl" prefHeight="35.0" prefWidth="264.0" text="Language:" textFill="WHITE">
+         <font>
+            <Font name="System Bold Italic" size="24.0" />
+         </font>
+      </Label>
+      <Label fx:id="settingsLoginPasswordLbl" prefHeight="35.0" prefWidth="264.0" text="Login Password:" textFill="WHITE" GridPane.rowIndex="2">
+         <font>
+            <Font name="System Bold Italic" size="24.0" />
+         </font>
+      </Label>
+      <StackPane prefHeight="91.0" prefWidth="628.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+         <children>
+            <AnchorPane prefHeight="91.0" prefWidth="256.0">
+               <children>
+                  <TextField fx:id="settingsLoginPasswordVisible" layoutY="32.0" prefHeight="27.0" prefWidth="460.0" styleClass="textField" />
+                  <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="428.0" layoutY="34.0" onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../../images/icons/closed-eye.png" />
+                     </image>
+                  </ImageView>
+               </children>
+            </AnchorPane>
+            <AnchorPane prefHeight="0.0" prefWidth="502.0">
+               <children>
+                  <Label fx:id="settingsLoginPasswordDesc" alignment="CENTER_RIGHT" layoutX="2.0" layoutY="12.0" prefHeight="20.0" prefWidth="459.0" text="Press ENTER to confirm." textFill="WHITE">
+                     <font>
+                        <Font name="System Italic" size="14.0" />
+                     </font>
+                  </Label>
+                  <PasswordField fx:id="settingsLoginPasswordHidden" layoutY="32.0" prefHeight="27.0" prefWidth="460.0" styleClass="textField" />
+                  <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="428.0" layoutY="34.0" onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../../images/icons/open-eye.png" />
+                     </image>
+                  </ImageView>
+                  <ProgressBar fx:id="settingsLoginPassStr" layoutY="60.0" prefHeight="10.0" prefWidth="460.0" progress="0.0" />
+               </children>
+            </AnchorPane>
+         </children>
+      </StackPane>
+      <Label fx:id="settingsDriveConnLbl" prefHeight="35.0" prefWidth="269.0" text="Drive Connection:" textFill="WHITE" GridPane.rowIndex="3">
+         <font>
+            <Font name="System Bold Italic" size="24.0" />
+         </font>
+      </Label>
+      <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="4" />
+      <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+   </children>
+   <padding>
+      <Insets bottom="80.0" left="50.0" right="50.0" top="20.0" />
+   </padding>
+</GridPane>

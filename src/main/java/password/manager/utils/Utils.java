@@ -19,6 +19,7 @@
 package password.manager.utils;
 
 import java.text.Collator;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
@@ -47,9 +48,21 @@ import javafx.util.StringConverter;
 import me.gosimple.nbvcxz.Nbvcxz;
 
 public class Utils {
-    public static final Encoder BASE64ENC = Base64.getEncoder();
-    public static final Decoder BASE64DEC = Base64.getDecoder();
-    public static final Nbvcxz NBVCXZ = new Nbvcxz();
+    public static final Locale[] SUPPORTED_LOCALE;
+    public static final Locale DEFAULT_LOCALE;
+
+    static {
+        SUPPORTED_LOCALE = new Locale[] { Locale.ENGLISH, Locale.ITALIAN };
+
+        Locale systemLang = Locale.forLanguageTag(Locale.getDefault().getLanguage());
+        DEFAULT_LOCALE = Arrays.asList(SUPPORTED_LOCALE).contains(systemLang)
+                ? systemLang
+                : Locale.ENGLISH;
+    }
+
+    private static final Encoder BASE64ENC = Base64.getEncoder();
+    private static final Decoder BASE64DEC = Base64.getDecoder();
+    private static final Nbvcxz NBVCXZ = new Nbvcxz();
 
     @SafeVarargs
     public static <T> SortedList<T> getFXSortedList(T... items) {

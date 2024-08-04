@@ -51,480 +51,153 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #202428;" stylesheets="@style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
-   <center>
-      <StackPane prefHeight="565.0" prefWidth="751.0" BorderPane.alignment="CENTER">
-         <children>
-            <GridPane fx:id="settingsPane" prefHeight="423.0" prefWidth="838.0" style="-fx-background-color: #202428;">
-               <columnConstraints>
-                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="748.0" minWidth="10.0" prefWidth="266.40001220703124" />
-                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="748.0" minWidth="10.0" prefWidth="462.39998779296883" />
-                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="184.0" minWidth="0.0" prefWidth="0.0" />
-               </columnConstraints>
-               <rowConstraints>
-                  <RowConstraints maxHeight="146.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-                  <RowConstraints maxHeight="121.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-                  <RowConstraints maxHeight="121.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-                  <RowConstraints maxHeight="142.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-                  <RowConstraints maxHeight="142.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-               </rowConstraints>
-               <children>
-                  <AnchorPane prefHeight="123.0" prefWidth="738.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                     <children>
-                        <ComboBox fx:id="settingsOrderCB" layoutY="33.0" prefHeight="27.0" prefWidth="461.0" styleClass="textField" />
-                        <Label fx:id="selectedOrderLbl" focusTraversable="false" layoutX="5.0" layoutY="33.0" pickOnBounds="false" prefHeight="27.0" prefWidth="430.0" text="Selected Order" textFill="WHITE">
-                           <font>
-                              <Font size="18.0" />
-                           </font>
+<BorderPane fx:id="mainPane" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #202428;" stylesheets="@style.css"
+    xmlns="http://javafx.com/javafx/21"
+    xmlns:fx="http://javafx.com/fxml/1">
+    <top>
+        <AnchorPane minHeight="-Infinity" prefHeight="43.0" prefWidth="900.0" BorderPane.alignment="CENTER">
+            <children>
+                <Label fx:id="psmgTitle" layoutX="14.0" minWidth="60.0" prefHeight="46.0" prefWidth="222.0" style="&#10;" text="Password Manager" textFill="#0aba4d">
+                    <font>
+                        <Font name="System Bold Italic" size="24.0" fx:id="x1" />
+                    </font>
+                </Label>
+                <Button fx:id="homeButton" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="857.0" mnemonicParsing="false" onAction="#homeButton" prefHeight="43.0" prefWidth="43.0" style="-fx-background-color: #202428;" text="H" textFill="WHITE" visible="false">
+                    <font>
+                        <Font size="1.0" />
+                    </font>
+                    <graphic>
+                        <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
+                            <image>
+                                <Image url="@../images/icons/home.png" />
+                            </image>
+                        </ImageView>
+                    </graphic>
+                    <padding>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                    </padding>
+                    <cursor>
+                        <Cursor fx:constant="HAND" />
+                    </cursor>
+                </Button>
+                <Label fx:id="mainTitle" layoutX="236.0" layoutY="1.0" minWidth="60.0" prefHeight="43.0" prefWidth="560.0" style="&#10;" text="Section" textFill="#0aba4d" visible="false">
+                    <font>
+                        <Font name="System Bold Italic" size="24.0" fx:id="x11" />
+                    </font>
+                    <graphic>
+                        <Label minWidth="17.0" prefHeight="43.0" prefWidth="17.0" style="&#10;" text="&gt;" textFill="#0aba4d">
+                            <font>
+                                <Font name="System Bold Italic" size="24.0" fx:id="x111" />
+                            </font>
                         </Label>
-                     </children>
-                  </AnchorPane>
-                  <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1">
-                     <children>
-                        <ComboBox fx:id="settingsLangCB" layoutY="33.0" prefHeight="27.0" prefWidth="461.0" styleClass="textField" />
-                        <Label fx:id="selectedLangLbl" focusTraversable="false" layoutX="5.0" layoutY="33.0" pickOnBounds="false" prefHeight="27.0" prefWidth="430.0" text="Selected Lang" textFill="WHITE">
-                           <font>
-                              <Font size="18.0" />
-                           </font>
-                        </Label>
-                     </children>
-                  </AnchorPane>
-                  <Label fx:id="settingsSortingOrderLbl" prefHeight="35.0" prefWidth="263.0" text="Order by:" textFill="WHITE" GridPane.rowIndex="1">
-                     <font>
-                        <Font name="System Bold Italic" size="24.0" />
-                     </font>
-                  </Label>
-                  <AnchorPane prefHeight="0.0" prefWidth="730.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
-                     <children>
-                        <Label fx:id="wip" layoutY="28.0" prefHeight="35.0" prefWidth="506.0" text="Work in progress..." textFill="WHITE">
-                           <font>
-                              <Font name="System Italic" size="24.0" />
-                           </font>
-                        </Label>
-                     </children>
-                  </AnchorPane>
-                  <Label fx:id="settingsLangLbl" prefHeight="35.0" prefWidth="264.0" text="Language:" textFill="WHITE">
-                     <font>
-                        <Font name="System Bold Italic" size="24.0" />
-                     </font>
-                  </Label>
-                  <Label fx:id="settingsLoginPasswordLbl" prefHeight="35.0" prefWidth="264.0" text="Login Password:" textFill="WHITE" GridPane.rowIndex="2">
-                     <font>
-                        <Font name="System Bold Italic" size="24.0" />
-                     </font>
-                  </Label>
-                  <StackPane prefHeight="91.0" prefWidth="628.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
-                     <children>
-                        <AnchorPane prefHeight="91.0" prefWidth="256.0">
-                           <children>
-                              <TextField fx:id="settingsLoginPasswordVisible" layoutY="32.0" prefHeight="27.0" prefWidth="460.0" styleClass="textField" />
-                              <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="428.0" layoutY="34.0" onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
-                                 <image>
-                                    <Image url="@../images/icons/closed-eye.png" />
-                                 </image>
-                              </ImageView>
-                           </children>
-                        </AnchorPane>
-                        <AnchorPane prefHeight="0.0" prefWidth="502.0">
-                           <children>
-                              <Label fx:id="settingsLoginPasswordDesc" alignment="CENTER_RIGHT" layoutX="2.0" layoutY="12.0" prefHeight="20.0" prefWidth="459.0" text="Press ENTER to confirm." textFill="WHITE">
-                                 <font>
-                                    <Font name="System Italic" size="14.0" />
-                                 </font>
-                              </Label>
-                              <PasswordField fx:id="settingsLoginPasswordHidden" layoutY="32.0" prefHeight="27.0" prefWidth="460.0" styleClass="textField" />
-                              <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="428.0" layoutY="34.0" onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
-                                 <image>
-                                    <Image url="@../images/icons/open-eye.png" />
-                                 </image>
-                              </ImageView>
-                              <ProgressBar fx:id="settingsLoginPassStr" layoutY="60.0" prefHeight="10.0" prefWidth="460.0" progress="0.0" />
-                           </children>
-                        </AnchorPane>
-                     </children>
-                  </StackPane>
-                  <Label fx:id="settingsDriveConnLbl" prefHeight="35.0" prefWidth="269.0" text="Drive Connection:" textFill="WHITE" GridPane.rowIndex="3">
-                     <font>
-                        <Font name="System Bold Italic" size="24.0" />
-                     </font>
-                  </Label>
-                  <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="4" />
-                  <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-               </children>
-               <padding>
-                  <Insets bottom="80.0" left="50.0" right="50.0" top="20.0" />
-               </padding>
-            </GridPane>
-            <GridPane fx:id="decryptPane" prefHeight="423.0" prefWidth="838.0" style="-fx-background-color: #202428;">
-               <columnConstraints>
-                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="748.0" minWidth="10.0" prefWidth="748.0" />
-                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="184.0" minWidth="0.0" prefWidth="0.0" />
-               </columnConstraints>
-               <rowConstraints>
-                  <RowConstraints maxHeight="146.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-                  <RowConstraints maxHeight="121.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-                  <RowConstraints maxHeight="121.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-                  <RowConstraints maxHeight="142.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-                  <RowConstraints maxHeight="142.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-               </rowConstraints>
-               <children>
-                  <AnchorPane prefHeight="123.0" prefWidth="738.0" GridPane.rowIndex="1">
-                     <children>
-                        <TextField fx:id="decryptSoftware" layoutX="5.0" layoutY="58.0" prefHeight="25.0" prefWidth="720.0" styleClass="textField" />
-                        <Label fx:id="decryptSoftwareLbl" layoutX="5.0" layoutY="31.0" prefHeight="27.0" prefWidth="405.0" text="Software" textFill="WHITE">
-                           <font>
-                              <Font size="18.0" />
-                           </font>
-                        </Label>
-                     </children>
-                  </AnchorPane>
-                  <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="2">
-                     <children>
-                        <TextField fx:id="decryptUsername" layoutX="4.0" layoutY="58.0" prefHeight="25.0" prefWidth="720.0" styleClass="textField" />
-                        <Label fx:id="decryptUsernameLbl" layoutX="4.0" layoutY="30.0" prefHeight="27.0" prefWidth="375.0" text="Username" textFill="WHITE">
-                           <font>
-                              <Font size="18.0" />
-                           </font>
-                        </Label>
-                     </children>
-                  </AnchorPane>
-                  <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="4">
-                     <children>
-                        <Button fx:id="decryptDelete" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="624.0" layoutY="21.0" mnemonicParsing="false" onAction="#decryptDelete" prefHeight="50.0" prefWidth="50.0" styleClass="decryptButton" text="D" textFill="WHITE">
-                           <font>
-                              <Font size="1.0" />
-                           </font>
-                           <graphic>
-                              <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
-                                 <image>
-                                    <Image url="@../images/icons/delete.png" />
-                                 </image>
-                              </ImageView>
-                           </graphic>
-                           <padding>
-                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                           </padding>
-                           <cursor>
-                              <Cursor fx:constant="HAND" />
-                           </cursor>
-                        </Button>
-                        <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="681.0" layoutY="21.0" mnemonicParsing="false" onAction="#decryptSave" prefHeight="50.0" prefWidth="50.0" styleClass="decryptButton" text="S" textFill="WHITE">
-                           <font>
-                              <Font size="1.0" />
-                           </font>
-                           <padding>
-                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                           </padding>
-                           <cursor>
-                              <Cursor fx:constant="HAND" />
-                           </cursor>
-                           <graphic>
-                              <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
-                                 <image>
-                                    <Image url="@../images/icons/save.png" />
-                                 </image>
-                              </ImageView>
-                           </graphic>
-                        </Button>
-                     </children>
-                  </AnchorPane>
-                  <StackPane prefHeight="150.0" prefWidth="200.0" GridPane.rowIndex="3">
-                     <children>
-                        <AnchorPane prefHeight="200.0" prefWidth="200.0">
-                           <children>
-                              <TextField fx:id="decryptPasswordVisible" layoutX="3.0" layoutY="58.0" prefHeight="25.0" prefWidth="720.0" styleClass="textField" />
-                              <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="690.0" layoutY="60.0" onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
-                                 <image>
-                                    <Image url="@../images/icons/closed-eye.png" />
-                                 </image>
-                              </ImageView>
-                           </children>
-                        </AnchorPane>
-                        <AnchorPane prefHeight="0.0" prefWidth="730.0">
-                           <children>
-                              <Label fx:id="decryptPasswordLbl" layoutX="4.0" layoutY="30.0" prefHeight="27.0" prefWidth="364.0" text="Password" textFill="WHITE">
-                                 <font>
-                                    <Font size="18.0" />
-                                 </font>
-                              </Label>
-                              <PasswordField fx:id="decryptPasswordHidden" layoutX="3.0" layoutY="58.0" prefHeight="25.0" prefWidth="720.0" styleClass="textField" />
-                              <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="690.0" layoutY="60.0" onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
-                                 <image>
-                                    <Image url="@../images/icons/open-eye.png" />
-                                 </image>
-                              </ImageView>
-                              <ProgressBar fx:id="decryptPassStr" layoutX="3.0" layoutY="86.0" prefHeight="10.0" prefWidth="720.0" progress="0.0" />
-                           </children>
-                        </AnchorPane>
-                     </children>
-                  </StackPane>
-                  <AnchorPane prefHeight="200.0" prefWidth="200.0">
-                     <children>
-                        <ComboBox fx:id="decryptCB" layoutX="224.0" layoutY="32.0" prefHeight="27.0" prefWidth="500.0" styleClass="textField" />
-                        <Separator layoutX="2.0" layoutY="91.0" prefHeight="3.0" prefWidth="722.0" />
-                        <Label fx:id="decryptAccSelLbl" layoutX="1.0" layoutY="28.0" prefHeight="35.0" prefWidth="222.0" text="Select Account:" textFill="WHITE">
-                           <font>
-                              <Font name="System Bold Italic" size="24.0" />
-                           </font>
-                        </Label>
-                        <Label fx:id="decryptSelectedAccLbl" focusTraversable="false" layoutX="229.0" layoutY="32.0" pickOnBounds="false" prefHeight="27.0" prefWidth="469.0" text="Selected Account" textFill="WHITE">
-                           <font>
-                              <Font size="18.0" />
-                           </font>
-                        </Label>
-                     </children>
-                  </AnchorPane>
-               </children>
-               <padding>
-                  <Insets bottom="80.0" left="50.0" right="50.0" top="20.0" />
-               </padding>
-            </GridPane>
-            <GridPane fx:id="encryptPane" prefHeight="557.0" prefWidth="835.0" style="-fx-background-color: #202428;">
-               <columnConstraints>
-                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="748.0" minWidth="10.0" prefWidth="748.0" />
-                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="184.0" minWidth="0.0" prefWidth="0.0" />
-               </columnConstraints>
-               <rowConstraints>
-                  <RowConstraints maxHeight="146.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-                  <RowConstraints maxHeight="121.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-                  <RowConstraints maxHeight="121.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-                  <RowConstraints maxHeight="142.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-                  <RowConstraints maxHeight="142.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-               </rowConstraints>
-               <children>
-                  <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="3">
-                     <children>
-                        <Button fx:id="encryptSubmitBtn" alignment="CENTER" contentDisplay="CENTER" layoutX="637.0" layoutY="24.0" mnemonicParsing="false" nodeOrientation="LEFT_TO_RIGHT" onAction="#encryptSave" styleClass="greenButton" text="Submit" textAlignment="CENTER" textFill="WHITE" AnchorPane.rightAnchor="0.0">
-                           <font>
-                              <Font name="System Bold" size="18.0" />
-                           </font>
-                        </Button>
-                     </children>
-                     <GridPane.margin>
-                        <Insets />
-                     </GridPane.margin>
-                  </AnchorPane>
-                  <AnchorPane prefHeight="123.0" prefWidth="738.0">
-                     <children>
-                        <TextField fx:id="encryptSoftware" layoutY="45.0" prefHeight="27.0" prefWidth="735.0" styleClass="textField" />
-                        <Label fx:id="encryptSoftwareLbl" layoutX="-1.0" layoutY="18.0" prefHeight="27.0" prefWidth="273.0" text="Software" textFill="WHITE">
-                           <font>
-                              <Font size="18.0" />
-                           </font>
-                        </Label>
-                     </children>
-                  </AnchorPane>
-                  <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="1">
-                     <children>
-                        <TextField fx:id="encryptUsername" layoutY="45.0" prefHeight="27.0" prefWidth="735.0" styleClass="textField" />
-                        <Label fx:id="encryptUsernameLbl" layoutY="18.0" prefHeight="27.0" prefWidth="250.0" text="Username" textFill="WHITE">
-                           <font>
-                              <Font size="18.0" />
-                           </font>
-                        </Label>
-                     </children>
-                  </AnchorPane>
-                  <StackPane prefHeight="150.0" prefWidth="200.0" GridPane.rowIndex="2">
-                     <children>
-                        <AnchorPane prefHeight="200.0" prefWidth="200.0">
-                           <children>
-                              <TextField fx:id="encryptPasswordVisible" layoutY="45.0" prefHeight="27.0" prefWidth="734.0" styleClass="textField" />
-                              <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="701.0" layoutY="47.0" onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
-                                 <image>
-                                    <Image url="@../images/icons/closed-eye.png" />
-                                 </image>
-                              </ImageView>
-                           </children>
-                        </AnchorPane>
-                        <AnchorPane prefHeight="0.0" prefWidth="730.0">
-                           <children>
-                              <Label fx:id="encryptPasswordLbl" layoutY="19.0" prefHeight="27.0" prefWidth="257.0" text="Password" textFill="WHITE">
-                                 <font>
-                                    <Font size="18.0" />
-                                 </font>
-                              </Label>
-                              <PasswordField fx:id="encryptPasswordHidden" layoutY="45.0" prefHeight="27.0" prefWidth="734.0" styleClass="textField" />
-                              <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="701.0" layoutY="47.0" onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
-                                 <image>
-                                    <Image url="@../images/icons/open-eye.png" />
-                                 </image>
-                              </ImageView>
-                              <ProgressBar fx:id="encryptPassStr" layoutY="72.0" prefHeight="10.0" prefWidth="734.0" progress="0.0" />
-                           </children>
-                        </AnchorPane>
-                     </children>
-                  </StackPane>
-               </children>
-               <padding>
-                  <Insets bottom="80.0" left="50.0" right="50.0" top="20.0" />
-               </padding>
-            </GridPane>
-            <AnchorPane fx:id="homePane" prefHeight="445.0" prefWidth="89.0" style="-fx-background-color: #202428;" StackPane.alignment="CENTER">
-               <children>
-                  <ImageView fitHeight="457.0" fitWidth="457.0" layoutX="186.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/sfondo.png" />
-                     </image>
-                  </ImageView>
-                  <Label fx:id="homeDescTop" alignment="CENTER" layoutX="207.0" layoutY="457.0" prefHeight="53.0" prefWidth="414.0" text="Your Accounts." textFill="#0aba4d" AnchorPane.bottomAnchor="46.19999999999999" AnchorPane.leftAnchor="207.0" AnchorPane.rightAnchor="208.20000000000005" AnchorPane.topAnchor="457.0">
-                     <font>
-                        <Font name="System Bold Italic" size="24.0" />
-                     </font>
-                  </Label>
-                  <Label fx:id="homeDescBtm" alignment="CENTER" contentDisplay="CENTER" layoutX="205.0" layoutY="483.0" prefHeight="53.0" prefWidth="418.0" text="In a Safe Place." textAlignment="CENTER" textFill="#0aba4d" AnchorPane.bottomAnchor="20.200000000000045" AnchorPane.leftAnchor="205.0" AnchorPane.rightAnchor="205.39999999999998" AnchorPane.topAnchor="483.0">
-                     <font>
-                        <Font name="System Bold Italic" size="24.0" />
-                     </font>
-                  </Label>
-               </children>
-            </AnchorPane>
-         </children>
-      </StackPane>
-   </center>
-   <top>
-      <AnchorPane minHeight="-Infinity" prefHeight="43.0" prefWidth="900.0" BorderPane.alignment="CENTER">
-         <children>
-            <Label fx:id="psmgTitle" layoutX="14.0" minWidth="60.0" prefHeight="46.0" prefWidth="222.0" style="&#10;" text="Password Manager" textFill="#0aba4d">
-               <font>
-                  <Font name="System Bold Italic" size="24.0" fx:id="x1" />
-               </font>
-            </Label>
-            <Button fx:id="homeButton" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="857.0" mnemonicParsing="false" onAction="#homeButton" prefHeight="43.0" prefWidth="43.0" style="-fx-background-color: #202428;" text="H" textFill="WHITE" visible="false">
-               <font>
-                  <Font size="1.0" />
-               </font>
-               <graphic>
-                  <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/icons/home.png" />
-                     </image>
-                  </ImageView>
-               </graphic>
-               <padding>
-                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-               </padding>
-               <cursor>
-                  <Cursor fx:constant="HAND" />
-               </cursor>
-            </Button>
-            <Label fx:id="mainTitle" layoutX="236.0" layoutY="1.0" minWidth="60.0" prefHeight="43.0" prefWidth="560.0" style="&#10;" text="Section" textFill="#0aba4d" visible="false">
-               <font>
-                  <Font name="System Bold Italic" size="24.0" fx:id="x11" />
-               </font>
-               <graphic>
-                  <Label minWidth="17.0" prefHeight="43.0" prefWidth="17.0" style="&#10;" text="&gt;" textFill="#0aba4d">
-                     <font>
-                        <Font name="System Bold Italic" size="24.0" fx:id="x111" />
-                     </font>
-                  </Label>
-               </graphic>
-            </Label>
-         </children>
-         <BorderPane.margin>
-            <Insets />
-         </BorderPane.margin>
-      </AnchorPane>
-   </top>
-   <left>
-      <AnchorPane prefHeight="557.0" prefWidth="64.0" style="-fx-border-color: white; -fx-border-width: 0 2px 0 0;" BorderPane.alignment="CENTER">
-         <children>
-            <Button alignment="CENTER" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" mnemonicParsing="false" onAction="#encryptSidebarButton" prefHeight="60.0" prefWidth="60.0" styleClass="sidebarButton" text="E" textFill="WHITE">
-               <font>
-                  <Font size="1.0" />
-               </font>
-               <graphic>
-                  <ImageView fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/icons/sidebar/encrypt.png" />
-                     </image>
-                  </ImageView>
-               </graphic>
-               <padding>
-                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-               </padding>
-               <cursor>
-                  <Cursor fx:constant="HAND" />
-               </cursor>
-            </Button>
-            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutY="60.0" mnemonicParsing="false" onAction="#decryptSidebarButton" prefHeight="60.0" prefWidth="60.0" styleClass="sidebarButton" text="D" textFill="WHITE">
-               <font>
-                  <Font size="1.0" />
-               </font>
-               <graphic>
-                  <ImageView fitHeight="50.0" fitWidth="50.0" onMouseClicked="#decryptSidebarButton" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/icons/sidebar/decrypt.png" />
-                     </image>
-                  </ImageView>
-               </graphic>
-               <padding>
-                  <Insets bottom="5.0" left="3.0" right="7.0" top="5.0" />
-               </padding>
-               <cursor>
-                  <Cursor fx:constant="HAND" />
-               </cursor>
-            </Button>
-            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="2.0" layoutY="464.0" mnemonicParsing="false" onAction="#folderSidebarButton" prefHeight="29.0" prefWidth="29.0" styleClass="sidebarButton" text="F" textFill="WHITE">
-               <font>
-                  <Font size="1.0" />
-               </font>
-               <graphic>
-                  <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/icons/sidebar/folder.png" />
-                     </image>
-                  </ImageView>
-               </graphic>
-               <padding>
-                  <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
-               </padding>
-               <cursor>
-                  <Cursor fx:constant="HAND" />
-               </cursor>
-            </Button>
-            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="30.0" layoutY="464.0" mnemonicParsing="false" onMouseClicked="#showEula" prefHeight="29.0" prefWidth="29.0" styleClass="sidebarButton" text="E" textFill="WHITE">
-               <font>
-                  <Font size="1.0" />
-               </font>
-               <graphic>
-                  <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/icons/sidebar/license.png" />
-                     </image>
-                  </ImageView>
-               </graphic>
-               <padding>
-                  <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
-               </padding>
-               <cursor>
-                  <Cursor fx:constant="HAND" />
-               </cursor>
-            </Button>
-            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutY="494.0" mnemonicParsing="false" onAction="#settingsSidebarButton" prefHeight="60.0" prefWidth="60.0" styleClass="sidebarButton" text="S" textFill="WHITE">
-               <font>
-                  <Font size="1.0" />
-               </font>
-               <graphic>
-                  <ImageView fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/icons/sidebar/settings.png" />
-                     </image>
-                  </ImageView>
-               </graphic>
-               <padding>
-                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-               </padding>
-               <cursor>
-                  <Cursor fx:constant="HAND" />
-               </cursor>
-            </Button>
-         </children>
-         <BorderPane.margin>
-            <Insets left="2.0" />
-         </BorderPane.margin>
-         <padding>
-            <Insets right="2.0" />
-         </padding>
-      </AnchorPane>
-   </left>
+                    </graphic>
+                </Label>
+            </children>
+            <BorderPane.margin>
+                <Insets />
+            </BorderPane.margin>
+        </AnchorPane>
+    </top>
+    <left>
+        <AnchorPane prefHeight="557.0" prefWidth="64.0" style="-fx-border-color: white; -fx-border-width: 0 2px 0 0;" BorderPane.alignment="CENTER">
+            <children>
+                <Button alignment="CENTER" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" mnemonicParsing="false" onAction="#encryptSidebarButton" prefHeight="60.0" prefWidth="60.0" styleClass="sidebarButton" text="E" textFill="WHITE">
+                    <font>
+                        <Font size="1.0" />
+                    </font>
+                    <graphic>
+                        <ImageView fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
+                            <image>
+                                <Image url="@../images/icons/sidebar/encrypt.png" />
+                            </image>
+                        </ImageView>
+                    </graphic>
+                    <padding>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                    </padding>
+                    <cursor>
+                        <Cursor fx:constant="HAND" />
+                    </cursor>
+                </Button>
+                <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutY="60.0" mnemonicParsing="false" onAction="#decryptSidebarButton" prefHeight="60.0" prefWidth="60.0" styleClass="sidebarButton" text="D" textFill="WHITE">
+                    <font>
+                        <Font size="1.0" />
+                    </font>
+                    <graphic>
+                        <ImageView fitHeight="50.0" fitWidth="50.0" onMouseClicked="#decryptSidebarButton" pickOnBounds="true" preserveRatio="true">
+                            <image>
+                                <Image url="@../images/icons/sidebar/decrypt.png" />
+                            </image>
+                        </ImageView>
+                    </graphic>
+                    <padding>
+                        <Insets bottom="5.0" left="3.0" right="7.0" top="5.0" />
+                    </padding>
+                    <cursor>
+                        <Cursor fx:constant="HAND" />
+                    </cursor>
+                </Button>
+                <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="2.0" layoutY="464.0" mnemonicParsing="false" onAction="#folderSidebarButton" prefHeight="29.0" prefWidth="29.0" styleClass="sidebarButton" text="F" textFill="WHITE">
+                    <font>
+                        <Font size="1.0" />
+                    </font>
+                    <graphic>
+                        <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
+                            <image>
+                                <Image url="@../images/icons/sidebar/folder.png" />
+                            </image>
+                        </ImageView>
+                    </graphic>
+                    <padding>
+                        <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+                    </padding>
+                    <cursor>
+                        <Cursor fx:constant="HAND" />
+                    </cursor>
+                </Button>
+                <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="30.0" layoutY="464.0" mnemonicParsing="false" onMouseClicked="#showEula" prefHeight="29.0" prefWidth="29.0" styleClass="sidebarButton" text="E" textFill="WHITE">
+                    <font>
+                        <Font size="1.0" />
+                    </font>
+                    <graphic>
+                        <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
+                            <image>
+                                <Image url="@../images/icons/sidebar/license.png" />
+                            </image>
+                        </ImageView>
+                    </graphic>
+                    <padding>
+                        <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+                    </padding>
+                    <cursor>
+                        <Cursor fx:constant="HAND" />
+                    </cursor>
+                </Button>
+                <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutY="494.0" mnemonicParsing="false" onAction="#settingsSidebarButton" prefHeight="60.0" prefWidth="60.0" styleClass="sidebarButton" text="S" textFill="WHITE">
+                    <font>
+                        <Font size="1.0" />
+                    </font>
+                    <graphic>
+                        <ImageView fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
+                            <image>
+                                <Image url="@../images/icons/sidebar/settings.png" />
+                            </image>
+                        </ImageView>
+                    </graphic>
+                    <padding>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                    </padding>
+                    <cursor>
+                        <Cursor fx:constant="HAND" />
+                    </cursor>
+                </Button>
+            </children>
+            <BorderPane.margin>
+                <Insets left="2.0" />
+            </BorderPane.margin>
+            <padding>
+                <Insets right="2.0" />
+            </padding>
+        </AnchorPane>
+    </left>
 </BorderPane>
