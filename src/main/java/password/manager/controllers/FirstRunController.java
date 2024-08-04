@@ -19,14 +19,12 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.util.Duration;
-import password.manager.AppManager;
-import password.manager.enums.SortingOrder;
 import password.manager.utils.IOManager;
 import password.manager.utils.ObservableResourceFactory;
 
 public class FirstRunController extends AbstractController {
     private final BooleanProperty switchToMain;
-    
+
     public FirstRunController(IOManager ioManager, ObservableResourceFactory langResources, BooleanProperty switchToMain) {
         super(ioManager, langResources);
         this.switchToMain = switchToMain;
@@ -86,7 +84,7 @@ public class FirstRunController extends AbstractController {
     @FXML
     public void doFirstRun() {
         if (checkTextFields(firstRunPasswordVisible, firstRunPasswordHidden) && firstRunCheckBox.isSelected()) {
-            ioManager.setLoginAccount(SortingOrder.SOFTWARE, AppManager.DEFAULT_LOCALE, firstRunPasswordVisible.getText());
+            ioManager.changeLoginPassword(firstRunPasswordVisible.getText());
             switchToMain.set(true);
         }
     }

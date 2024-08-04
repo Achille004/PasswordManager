@@ -30,12 +30,12 @@ import password.manager.security.Account;
 @RequiredArgsConstructor
 public enum SortingOrder {
     SOFTWARE("software", (software, username) -> software + " / " + username, (acc1, acc2) -> {
-        int software = acc1.getSoftware().compareTo(acc2.getSoftware());
-        return (software == 0) ? acc1.getUsername().compareTo(acc2.getUsername()) : software;
+        int software = acc1.getSoftware().compareToIgnoreCase(acc2.getSoftware());
+        return (software == 0) ? acc1.getUsername().compareToIgnoreCase(acc2.getUsername()) : software;
     }),
     USERNAME("username", (software, username) -> username + " / " + software, (acc1, acc2) -> {
-        int username = acc1.getUsername().compareTo(acc2.getUsername());
-        return (username == 0) ? acc1.getSoftware().compareTo(acc2.getSoftware()) : username;
+        int username = acc1.getUsername().compareToIgnoreCase(acc2.getUsername());
+        return (username == 0) ? acc1.getSoftware().compareToIgnoreCase(acc2.getSoftware()) : username;
     });
 
     private final @Getter String i18nKey;
