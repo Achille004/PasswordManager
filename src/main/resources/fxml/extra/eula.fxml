@@ -46,7 +46,7 @@
          <graphic>
             <ImageView fitHeight="31.0" fitWidth="31.0" pickOnBounds="true" preserveRatio="true">
                <image>
-                  <Image url="@../images/icons/GitHub.png" />
+                  <Image url="@../../images/icons/GitHub.png" />
                </image>
                <cursor>
                   <Cursor fx:constant="HAND" />
@@ -64,7 +64,7 @@
          <graphic>
             <ImageView fitHeight="31.0" fitWidth="31.0" pickOnBounds="true" preserveRatio="true">
                <image>
-                  <Image url="@../images/icons/GitHub.png" />
+                  <Image url="@../../images/icons/GitHub.png" />
                </image>
                <cursor>
                   <Cursor fx:constant="HAND" />
