@@ -136,11 +136,12 @@ public class MainController extends AbstractController {
             } catch (IOException e) {
                 ioManager.getLogger().addError(e);
             }
+        } else {
+            ioManager.getLogger().addError(new UnsupportedOperationException("Unsupported action: Desktop.Action.OPEN"));
         }
     }
 
-    private <T extends AbstractViewController, S extends Pane> void sidebarButtonAction(ActionEvent event,
-            T destinationController, S destinationPane, String mainTitleKey) {
+    private <T extends AbstractViewController, S extends Pane> void sidebarButtonAction(ActionEvent event, T destinationController, S destinationPane, String mainTitleKey) {
         // Show selected pane
         destinationController.reset();
         mainPane.centerProperty().set(destinationPane);

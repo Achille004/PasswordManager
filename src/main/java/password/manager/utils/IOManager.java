@@ -20,6 +20,7 @@ package password.manager.utils;
 
 import static password.manager.utils.Utils.*;
 
+import java.awt.Desktop;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -96,6 +97,7 @@ public class IOManager {
     public void loadDataFile(final ObservableResourceFactory langResources) {
         logger.addInfo("os.name: '" + OS + "'");
         logger.addInfo("user.home: '" + USER_HOME + "'");
+        logger.addInfo("java.awt.desktop: " + (Desktop.isDesktopSupported() ? "" : "NOT ") + "supported.");
 
         if (filePath.toFile().mkdirs()) {
             logger.addInfo("Directory '" + filePath + "' did not exist and was therefore created");

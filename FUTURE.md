@@ -1,4 +1,5 @@
 # Next up:
+- Add logging rotation
 - Add language flags to its selector
 - Embed fonts (as they only work on Windows) + msix packaging
 - Better code comments and documentation

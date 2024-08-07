@@ -38,6 +38,7 @@ module password.manager {
     
     exports password.manager;
     exports password.manager.controllers;
+    exports password.manager.controllers.extra;
     exports password.manager.controllers.views;
     exports password.manager.enums;
     exports password.manager.inerfaces;

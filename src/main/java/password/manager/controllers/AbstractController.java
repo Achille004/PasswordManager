@@ -12,6 +12,7 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
+import password.manager.controllers.extra.EulaController;
 import password.manager.utils.IOManager;
 import password.manager.utils.ObservableResourceFactory;
 

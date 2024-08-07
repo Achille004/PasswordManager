@@ -1,4 +1,4 @@
-package password.manager.controllers;
+package password.manager.controllers.extra;
 
 import java.awt.Desktop;
 import java.io.IOException;
@@ -12,8 +12,7 @@ import javafx.fxml.Initializable;
 import password.manager.utils.IOManager;
 
 public class EulaController implements Initializable {
-    public static final URI FM_LINK = URI.create("https://github.com/Achille004"),
-            SS_LINK = URI.create("https://github.com/samustocco");
+    public static final URI FM_LINK = URI.create("https://github.com/Achille004"), SS_LINK = URI.create("https://github.com/samustocco");
 
     private final IOManager ioManager;
 
@@ -27,23 +26,23 @@ public class EulaController implements Initializable {
 
     @FXML
     public void githubFM(ActionEvent event) {
-        if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-            try {
-                Desktop.getDesktop().browse(FM_LINK);
-            } catch (IOException e) {
-                ioManager.getLogger().addError(e);
-            }
-        }
+        browse(FM_LINK);
     }
 
     @FXML
     public void githubSS(ActionEvent event) {
+        browse(SS_LINK);
+    }
+
+    private void browse(URI uri) {
         if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
             try {
-                Desktop.getDesktop().browse(SS_LINK);
+                Desktop.getDesktop().browse(uri);
             } catch (IOException e) {
                 ioManager.getLogger().addError(e);
             }
+        } else {
+            ioManager.getLogger().addError(new UnsupportedOperationException("Unsupported action: Desktop.Action.BROWSE"));
         }
     }
 }
