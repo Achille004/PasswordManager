@@ -137,7 +137,7 @@
                         <Cursor fx:constant="HAND" />
                     </cursor>
                 </Button>
-                <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="2.0" layoutY="464.0" mnemonicParsing="false" onAction="#folderSidebarButton" prefHeight="29.0" prefWidth="29.0" styleClass="sidebarButton" text="F" textFill="WHITE">
+                <Button fx:id="folderButton" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="2.0" layoutY="464.0" mnemonicParsing="false" onAction="#folderSidebarButton" prefHeight="29.0" prefWidth="29.0" styleClass="sidebarButton" text="F" textFill="WHITE">
                     <font>
                         <Font size="1.0" />
                     </font>

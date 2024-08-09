@@ -1,23 +1,23 @@
 package password.manager.controllers.extra;
 
-import java.awt.Desktop;
-import java.io.IOException;
-import java.net.URI;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import javafx.application.HostServices;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import password.manager.utils.IOManager;
 
 public class EulaController implements Initializable {
-    public static final URI FM_LINK = URI.create("https://github.com/Achille004"), SS_LINK = URI.create("https://github.com/samustocco");
+    public static final String FM_LINK = "https://github.com/Achille004", SS_LINK = "https://github.com/samustocco";
 
     private final IOManager ioManager;
+    private final HostServices hostServices;
 
-    public EulaController(IOManager ioManager) {
+    public EulaController(IOManager ioManager, HostServices hostServices) {
         this.ioManager = ioManager;
+        this.hostServices = hostServices;
     }
 
     @Override
@@ -34,15 +34,7 @@ public class EulaController implements Initializable {
         browse(SS_LINK);
     }
 
-    private void browse(URI uri) {
-        if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-            try {
-                Desktop.getDesktop().browse(uri);
-            } catch (IOException e) {
-                ioManager.getLogger().addError(e);
-            }
-        } else {
-            ioManager.getLogger().addError(new UnsupportedOperationException("Unsupported action: Desktop.Action.BROWSE"));
-        }
+    private void browse(String uri) {
+        hostServices.showDocument(uri);
     }
 }

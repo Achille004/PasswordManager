@@ -3,6 +3,7 @@ package password.manager.controllers;
 import java.io.IOException;
 import java.util.Objects;
 
+import javafx.application.HostServices;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -19,18 +20,20 @@ import password.manager.utils.ObservableResourceFactory;
 public abstract class AbstractController implements Initializable {
     protected final IOManager ioManager;
     protected final ObservableResourceFactory langResources;
+    protected final HostServices hostServices;
     protected final Stage eulaStage;
 
-    protected AbstractController(IOManager ioManager, ObservableResourceFactory langResources) {
+    protected AbstractController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices) {
         this.ioManager = ioManager;
         this.langResources = langResources;
+        this.hostServices = hostServices;
 
         eulaStage = new Stage();
         eulaStage.setTitle(langResources.getValue("terms_credits"));
         eulaStage.getIcons()
                 .add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/locker.png"))));
         eulaStage.setResizable(false);
-        eulaStage.setScene(new Scene(loadFxml("/fxml/extra/eula.fxml", new EulaController(ioManager)), 900, 600));
+        eulaStage.setScene(new Scene(loadFxml("/fxml/extra/eula.fxml", new EulaController(ioManager, hostServices)), 900, 600));
     }
 
     @FXML
@@ -52,7 +55,7 @@ public abstract class AbstractController implements Initializable {
         eulaStage.show();
     }
 
-    protected <T, S extends Initializable> Parent loadFxml(String path, S controller) {
+    protected <S extends Initializable> Parent loadFxml(String path, S controller) {
         try {
             FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource(path)));
             loader.setController(controller);

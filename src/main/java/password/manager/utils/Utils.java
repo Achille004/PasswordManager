@@ -210,12 +210,11 @@ public class Utils {
 
             gradientStr += ", #ff0 " + (1 - halfProgress) * 100 + "%";
             gradientStr += ", " +
-                    (Color.YELLOW.interpolate(Color.GREEN, halfProgress * 2).toString() + "x")
+                    (Color.YELLOW.interpolate(Color.GREEN, halfProgress * 2) + "x")
                             .replace("0x", "#").replace("ffx", "")
                     + " 100%";
         } else {
-            gradientStr += ", " +
-                    (Color.RED.interpolate(Color.YELLOW, progress * 2).toString() + "x")
+            gradientStr += ", " + (Color.RED.interpolate(Color.YELLOW, progress * 2) + "x")
                             .replace("0x", "#").replace("ffx", "")
                     + " 100%";
         }

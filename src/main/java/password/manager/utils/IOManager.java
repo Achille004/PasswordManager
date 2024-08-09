@@ -18,24 +18,6 @@
 
 package password.manager.utils;
 
-import static password.manager.utils.Utils.*;
-
-import java.awt.Desktop;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InvalidClassException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.nio.file.Path;
-import java.security.GeneralSecurityException;
-import java.security.spec.InvalidKeySpecException;
-import java.util.ArrayList;
-
-import org.jetbrains.annotations.NotNull;
-
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -44,13 +26,23 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.TextInputControl;
 import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
 import password.manager.enums.Exporter;
 import password.manager.enums.SortingOrder;
 import password.manager.security.Account;
 import password.manager.security.UserPreferences;
 
+import java.io.*;
+import java.nio.file.Path;
+import java.security.GeneralSecurityException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
+
+import static password.manager.utils.Utils.setDefaultButton;
+
 public class IOManager {
     static final String WINDOWS_PATH, DATA_FILE, LOG_FILE;
+
     static {
         WINDOWS_PATH = Path.of("AppData", "Local", "Password Manager").toString();
         DATA_FILE = "passwords.psmg";
@@ -77,7 +69,7 @@ public class IOManager {
         loginPassword = null;
 
         try {
-            userPreferences = UserPreferences.of(Utils.DEFAULT_LOCALE, SortingOrder.SOFTWARE, "");
+            userPreferences = UserPreferences.of("");
             loginPassword = "";
         } catch (InvalidKeySpecException e) {
             e.printStackTrace();
@@ -88,7 +80,7 @@ public class IOManager {
         USER_HOME = System.getProperty("user.home");
 
         // gets the paths
-        filePath = Path.of(USER_HOME, OS.toLowerCase().contains("windows") ? WINDOWS_PATH : ".passwordmanager");
+        filePath = Path.of(USER_HOME, OS.toLowerCase().contains("windows") ? WINDOWS_PATH : ".password-manager");
         desktopPath = Path.of(USER_HOME, "Desktop");
 
         logger = new Logger(filePath.resolve(LOG_FILE).toFile());
@@ -97,7 +89,6 @@ public class IOManager {
     public void loadDataFile(final ObservableResourceFactory langResources) {
         logger.addInfo("os.name: '" + OS + "'");
         logger.addInfo("user.home: '" + USER_HOME + "'");
-        logger.addInfo("java.awt.desktop: " + (Desktop.isDesktopSupported() ? "" : "NOT ") + "supported.");
 
         if (filePath.toFile().mkdirs()) {
             logger.addInfo("Directory '" + filePath + "' did not exist and was therefore created");
@@ -160,13 +151,14 @@ public class IOManager {
 
     // #region Account methods
     public boolean addAccount(String software, String username, String password) {
-        try {
-            if (isAuthenticated() && accountList.add(Account.of(software, username, password, loginPassword))) {
+        if (isAuthenticated()) {
+            try {
+                accountList.add(Account.of(software, username, password, loginPassword));
                 logger.addInfo("Account added");
                 return true;
+            } catch (GeneralSecurityException e) {
+                logger.addError(e);
             }
-        } catch (GeneralSecurityException e) {
-            logger.addError(e);
         }
 
         return false;

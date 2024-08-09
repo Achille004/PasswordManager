@@ -3,7 +3,7 @@
 - Add language flags to its selector
 - Embed fonts (as they only work on Windows) + msix packaging
 - Better code comments and documentation
-- Add export (add xml and json) + choose export directory + character-checking from fields
+- Add export (add xml and json) + choose export directory (FileChooser/DirectoryChooser) + character-checking from fields
 - Better readme
 - Linux support (crashes when opening folder or browser)
 

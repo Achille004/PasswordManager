@@ -21,18 +21,23 @@ package password.manager;
 import java.util.Objects;
 
 import javafx.application.Application;
+import javafx.application.HostServices;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
 public class App extends Application {
-    private AppManager controller;
+    private AppManager appManager;
+    private HostServices hostServices;
 
     @Override
     public void start(Stage primaryStage) {
+        hostServices = getHostServices();
+
+        
         AnchorPane scenePane = new AnchorPane();
-        controller = new AppManager(scenePane);
+        appManager = new AppManager(scenePane, hostServices);
 
         primaryStage.setTitle("Password Manager");
         primaryStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/locker.png"))));
@@ -43,7 +48,7 @@ public class App extends Application {
 
     @Override
     public void stop() {
-        controller.getIoManager().saveAll();
+        appManager.getIoManager().saveAll();
     }
 
     public static void main(String[] args) {

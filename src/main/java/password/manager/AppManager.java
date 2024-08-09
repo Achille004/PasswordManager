@@ -23,6 +23,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.ResourceBundle;
 
+import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
@@ -47,14 +48,16 @@ import password.manager.utils.Utils;
 public class AppManager {
     private final @Getter IOManager ioManager;
     private final @Getter ObservableResourceFactory langResources;
+    private final @Getter HostServices hostServices;
 
     private final AnchorPane scenePane;
 
-    public AppManager(AnchorPane scenePane) {
+    public AppManager(AnchorPane scenePane, HostServices hostServices) {
         this.ioManager = new IOManager();
         this.langResources = new ObservableResourceFactory();
 
         this.scenePane = scenePane;
+        this.hostServices = hostServices;
         initialize();
     }
 
@@ -76,9 +79,9 @@ public class AppManager {
         final BooleanProperty switchToMain = new SimpleBooleanProperty(false);
         if (ioManager.isFirstRun()) {
             pane = (AnchorPane) loadFxml("/fxml/first_run.fxml",
-                    new FirstRunController(ioManager, langResources, switchToMain));
+                    new FirstRunController(ioManager, langResources, hostServices, switchToMain));
         } else {
-            pane = (AnchorPane) loadFxml("/fxml/login.fxml", new LoginController(ioManager, langResources, switchToMain));
+            pane = (AnchorPane) loadFxml("/fxml/login.fxml", new LoginController(ioManager, langResources, hostServices, switchToMain));
         }
         if (pane == null) {
             alert.showAndWait();
@@ -87,7 +90,7 @@ public class AppManager {
         }
         scenePane.getChildren().add(pane);
 
-        final MainController mainController = new MainController(ioManager, langResources);
+        final MainController mainController = new MainController(ioManager, langResources, hostServices);
         final BorderPane mainPane = (BorderPane) loadFxml("/fxml/main.fxml", mainController);
         if (mainPane == null) {
             alert.showAndWait();
@@ -96,13 +99,13 @@ public class AppManager {
         }
 
         switchToMain.addListener(value -> {
-            scenePane.getChildren().remove(0);
+            scenePane.getChildren().removeFirst();
             scenePane.getChildren().add(mainPane);
             mainController.mainTitleAnimation();
         });
     }
 
-    private <T, S extends Initializable> Parent loadFxml(String path, S controller) {
+    private <S extends Initializable> Parent loadFxml(String path, S controller) {
         try {
             FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource(path)));
             loader.setController(controller);

@@ -19,6 +19,7 @@
 package password.manager.security;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
@@ -40,7 +41,7 @@ public class UserPreferences implements Serializable {
     private byte[] hashedPassword;
     private final byte[] salt;
 
-    public UserPreferences(SortingOrder sortingOrder, Locale locale, String password) throws InvalidKeySpecException {
+    public UserPreferences(String password) throws InvalidKeySpecException {
         this.localeProperty = new SimpleObjectProperty<>(Utils.DEFAULT_LOCALE);
         this.sortingOrderProperty = new SimpleObjectProperty<>(SortingOrder.SOFTWARE);
 
@@ -66,12 +67,7 @@ public class UserPreferences implements Serializable {
 
     public boolean verifyPassword(String passwordToVerify) throws InvalidKeySpecException {
         byte[] hashedPasswordToVerify = Encrypter.hash(passwordToVerify, salt);
-
-        if (Arrays.equals(hashedPassword, hashedPasswordToVerify)) {
-            return true;
-        }
-
-        return false;
+        return Arrays.equals(hashedPassword, hashedPasswordToVerify);
     }
 
     public boolean setPasswordVerified(String oldPassword, String newPassword) throws InvalidKeySpecException {
@@ -90,17 +86,19 @@ public class UserPreferences implements Serializable {
         hashedPassword = Encrypter.hash(password, salt);
     }
 
-    @Contract("_, _, _ -> new")
-    public static @NotNull UserPreferences of(Locale locale, SortingOrder sortingOrder, String password) throws InvalidKeySpecException {
-        return new UserPreferences(sortingOrder, locale, password);
+    @Contract("_ -> new")
+    public static @NotNull UserPreferences of(String password) throws InvalidKeySpecException {
+        return new UserPreferences(password);
     }
 
+    @Serial
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
         out.writeObject(getLocale());
         out.writeObject(getSortingOrder());
         out.defaultWriteObject();
     }
 
+    @Serial
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         Locale localeValue = (Locale) in.readObject();
         this.localeProperty = new SimpleObjectProperty<>(localeValue);
