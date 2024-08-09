@@ -5,6 +5,7 @@ import static password.manager.utils.Utils.*;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import javafx.application.HostServices;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -25,8 +26,8 @@ import password.manager.utils.ObservableResourceFactory;
 public class FirstRunController extends AbstractController {
     private final BooleanProperty switchToMain;
 
-    public FirstRunController(IOManager ioManager, ObservableResourceFactory langResources, BooleanProperty switchToMain) {
-        super(ioManager, langResources);
+    public FirstRunController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices, BooleanProperty switchToMain) {
+        super(ioManager, langResources, hostServices);
         this.switchToMain = switchToMain;
     }
 
@@ -66,7 +67,7 @@ public class FirstRunController extends AbstractController {
             passwordStrength = Math.min(50d, passwordStrength);
 
             double progress = (passwordStrength - 20) / 30;
-            if (passStrChildren.size() != 0) {
+            if (!passStrChildren.isEmpty()) {
                 Node bar = passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst();
                 bar.setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
 

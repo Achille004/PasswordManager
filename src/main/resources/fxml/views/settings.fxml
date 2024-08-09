@@ -47,7 +47,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.text.Font?>
 
-<GridPane fx:id="settingsPane" prefHeight="557.0" prefWidth="835.0" style="-fx-background-color: #202428;" stylesheets="@../style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+<GridPane prefHeight="557.0" prefWidth="835.0" style="-fx-background-color: #202428;" stylesheets="@../style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
    <columnConstraints>
       <ColumnConstraints hgrow="SOMETIMES" maxWidth="748.0" minWidth="10.0" prefWidth="266.40001220703124" />
       <ColumnConstraints hgrow="SOMETIMES" maxWidth="748.0" minWidth="10.0" prefWidth="462.39998779296883" />

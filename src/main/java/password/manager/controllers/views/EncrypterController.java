@@ -8,6 +8,7 @@ import java.util.ResourceBundle;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.application.HostServices;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -17,18 +18,14 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
 import javafx.util.Duration;
 import password.manager.utils.IOManager;
 import password.manager.utils.ObservableResourceFactory;
 
 public class EncrypterController extends AbstractViewController {
-    public EncrypterController(IOManager ioManager, ObservableResourceFactory langResources) {
-        super(ioManager, langResources);
+    public EncrypterController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices) {
+        super(ioManager, langResources, hostServices);
     }
-
-    @FXML
-    public GridPane encryptPane;
 
     @FXML
     public TextField encryptSoftware, encryptUsername, encryptPasswordVisible;
@@ -60,7 +57,7 @@ public class EncrypterController extends AbstractViewController {
             passwordStrength = Math.min(50d, passwordStrength);
 
             double progress = (passwordStrength - 20) / 30;
-            if (passStrChildren.size() != 0) {
+            if (!passStrChildren.isEmpty()) {
                 Node bar = passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst();
                 bar.setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
 

@@ -9,6 +9,7 @@ import java.util.ResourceBundle;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.application.HostServices;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.collections.ObservableList;
@@ -22,7 +23,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
 import password.manager.enums.SortingOrder;
@@ -31,12 +31,9 @@ import password.manager.utils.ObservableResourceFactory;
 import password.manager.utils.Utils;
 
 public class SettingsController extends AbstractViewController {
-    public SettingsController(IOManager ioManager, ObservableResourceFactory langResources) {
-        super(ioManager, langResources);
+    public SettingsController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices) {
+        super(ioManager, langResources, hostServices);
     }
-
-    @FXML
-    public GridPane settingsPane;
 
     @FXML
     public ComboBox<Locale> settingsLangCB;
@@ -117,7 +114,7 @@ public class SettingsController extends AbstractViewController {
             passwordStrength = Math.min(50d, passwordStrength);
 
             double progress = (passwordStrength - 20) / 30;
-            if (passStrChildren.size() != 0) {
+            if (!passStrChildren.isEmpty()) {
                 Node bar = passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst();
                 bar.setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
 

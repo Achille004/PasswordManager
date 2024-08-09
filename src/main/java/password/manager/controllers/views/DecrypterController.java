@@ -5,7 +5,7 @@ import static password.manager.utils.Utils.*;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import org.jetbrains.annotations.NotNull;
+import javafx.application.HostServices;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -23,7 +23,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
 import password.manager.enums.SortingOrder;
@@ -32,12 +31,9 @@ import password.manager.utils.IOManager;
 import password.manager.utils.ObservableResourceFactory;
 
 public class DecrypterController extends AbstractViewController {
-    public DecrypterController(IOManager ioManager, ObservableResourceFactory langResources) {
-        super(ioManager, langResources);
+    public DecrypterController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices) {
+        super(ioManager, langResources, hostServices);
     }
-
-    @FXML
-    public GridPane decryptPane;
 
     @FXML
     public ComboBox<Account> decryptCB;
@@ -69,7 +65,7 @@ public class DecrypterController extends AbstractViewController {
 
         ObservableList<Node> passStrChildren = decryptPassStr.getChildrenUnmodifiable();
         decryptPasswordVisible.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (passStrChildren.size() != 0 && !decryptCB.getSelectionModel().isEmpty()) {
+            if (!passStrChildren.isEmpty() && !decryptCB.getSelectionModel().isEmpty()) {
                 double passwordStrength = passwordStrength(newValue);
                 passwordStrength = Math.max(20d, passwordStrength);
                 passwordStrength = Math.min(50d, passwordStrength);
@@ -173,15 +169,15 @@ public class DecrypterController extends AbstractViewController {
     }
 
     private StringConverter<Account> accountStringConverter(SortingOrder order) {
-        return new StringConverter<Account>() {
+        return new StringConverter<>() {
             @Override
             public Account fromString(String string) {
                 throw new UnsupportedOperationException();
             }
 
             @Override
-            public String toString(@NotNull Account account) {
-                return account != null ? order.convert(account) : null;
+            public String toString(Account account) {
+                return account != null ? order.convert(account) : "";
             }
         };
     }

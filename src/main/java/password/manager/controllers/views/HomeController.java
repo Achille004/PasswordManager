@@ -3,19 +3,16 @@ package password.manager.controllers.views;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import javafx.application.HostServices;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
-import javafx.scene.layout.AnchorPane;
 import password.manager.utils.IOManager;
 import password.manager.utils.ObservableResourceFactory;
 
 public class HomeController extends AbstractViewController {
-    public HomeController(IOManager ioManager, ObservableResourceFactory langResources) {
-        super(ioManager, langResources);
+    public HomeController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices) {
+        super(ioManager, langResources, hostServices);
     }
-
-    @FXML
-    public AnchorPane homePane;
 
     @FXML
     public Label homeDescTop, homeDescBtm;

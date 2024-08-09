@@ -7,6 +7,7 @@ import java.util.ResourceBundle;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.HostServices;
 import javafx.beans.property.BooleanProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -20,8 +21,8 @@ import password.manager.utils.ObservableResourceFactory;
 public class LoginController extends AbstractController {
     private final BooleanProperty switchToMain;
 
-    public LoginController(IOManager ioManager, ObservableResourceFactory langResources, BooleanProperty switchToMain) {
-        super(ioManager, langResources);
+    public LoginController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices, BooleanProperty switchToMain) {
+        super(ioManager, langResources, hostServices);
         this.switchToMain = switchToMain;
     }
 

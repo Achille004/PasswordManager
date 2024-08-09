@@ -8,6 +8,7 @@ import java.util.ResourceBundle;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.HostServices;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -26,41 +27,41 @@ import password.manager.utils.IOManager;
 import password.manager.utils.ObservableResourceFactory;
 
 public class MainController extends AbstractController {
-    private static String[] titleStages;
+    private static final String[] titleStages;
 
     static {
         final String title = "Password Manager";
         final char[] lower = "abcdefghijklmnopqrstuvwxyz".toCharArray();
         final char[] upper = "ABCDEFGHIJKLMNOPQRTSUVWXYZ".toCharArray();
 
-        final LinkedList<String> stages = new LinkedList<String>();
-        String currString = "";
+        final LinkedList<String> stages = new LinkedList<>();
+        StringBuilder currString = new StringBuilder();
 
         for (char c : title.toCharArray()) {
             for (int i = 0; i < 26; i++) {
                 if (Character.isLowerCase(c)) {
-                    stages.add(currString + lower[i]);
+                    stages.add(currString.toString() + lower[i]);
                     if (lower[i] == c) {
                         break;
                     }
                 } else if (Character.isUpperCase(c)) {
-                    stages.add(currString + upper[i]);
+                    stages.add(currString.toString() + upper[i]);
                     if (upper[i] == c) {
                         break;
                     }
                 } else {
-                    stages.add(currString + c);
+                    stages.add(currString.toString() + c);
                     break;
                 }
             }
-            currString += c;
+            currString.append(c);
         }
 
         titleStages = stages.toArray(new String[0]);
     }
 
-    public MainController(IOManager ioManager, ObservableResourceFactory langResources) {
-        super(ioManager, langResources);
+    public MainController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices) {
+        super(ioManager, langResources, hostServices);
     }
 
     private Button lastSidebarButton = null;
@@ -73,31 +74,34 @@ public class MainController extends AbstractController {
     public Label psmgTitle, mainTitle;
 
     @FXML
-    public Button homeButton;
+    public Button homeButton, folderButton;
 
     private AnchorPane homePane;
     private GridPane encrypterPane, decrypterPane, settingsPane;
     private AbstractViewController homeController, encrypterController, decrypterController, settingsController;
 
     public void initialize(URL location, ResourceBundle resources) {
-        homeController = new HomeController(ioManager, langResources);
+        homeController = new HomeController(ioManager, langResources, hostServices);
         homePane = (AnchorPane) loadFxml("/fxml/views/home.fxml", homeController);
 
-        encrypterController = new EncrypterController(ioManager, langResources);
+        encrypterController = new EncrypterController(ioManager, langResources, hostServices);
         encrypterPane = (GridPane) loadFxml("/fxml/views/encrypter.fxml", encrypterController);
 
-        decrypterController = new DecrypterController(ioManager, langResources);
+        decrypterController = new DecrypterController(ioManager, langResources, hostServices);
         decrypterPane = (GridPane) loadFxml("/fxml/views/decrypter.fxml", decrypterController);
 
-        settingsController = new SettingsController(ioManager, langResources);
+        settingsController = new SettingsController(ioManager, langResources, hostServices);
         settingsPane = (GridPane) loadFxml("/fxml/views/settings.fxml", settingsController);
 
         titleAnimation = new Timeline();
         for (int i = 0; i < titleStages.length; i++) {
             final String str = titleStages[i];
-            titleAnimation.getKeyFrames().add(new KeyFrame(Duration.millis(8 * i), event -> {
-                psmgTitle.setText(str);
-            }));
+            titleAnimation.getKeyFrames().add(new KeyFrame(Duration.millis(8 * i), event -> psmgTitle.setText(str)));
+        }
+
+        if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+            ioManager.getLogger().addInfo("Unsupported action: Desktop.Action.OPEN");
+            folderButton.setVisible(false);
         }
 
         homeButton(null);
@@ -130,14 +134,10 @@ public class MainController extends AbstractController {
 
     @FXML
     public void folderSidebarButton(ActionEvent event) {
-        if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
-            try {
-                Desktop.getDesktop().open(ioManager.getFilePath().toFile());
-            } catch (IOException e) {
-                ioManager.getLogger().addError(e);
-            }
-        } else {
-            ioManager.getLogger().addError(new UnsupportedOperationException("Unsupported action: Desktop.Action.OPEN"));
+        try {
+            Desktop.getDesktop().open(ioManager.getFilePath().toFile());
+        } catch (IOException e) {
+            ioManager.getLogger().addError(e);
         }
     }
 

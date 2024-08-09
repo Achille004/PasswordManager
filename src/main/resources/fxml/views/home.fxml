@@ -38,7 +38,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="homePane" prefHeight="557.0" prefWidth="835.0" style="-fx-background-color: #202428;" stylesheets="@../style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane prefHeight="557.0" prefWidth="835.0" style="-fx-background-color: #202428;" stylesheets="@../style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <ImageView fitHeight="457.0" fitWidth="457.0" layoutX="186.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true">
          <image>

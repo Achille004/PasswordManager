@@ -27,6 +27,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import password.manager.security.Account;
 
+@Getter
 @RequiredArgsConstructor
 public enum SortingOrder {
     SOFTWARE("software", (software, username) -> software + " / " + username, (acc1, acc2) -> {
@@ -38,9 +39,9 @@ public enum SortingOrder {
         return (username == 0) ? acc1.getSoftware().compareToIgnoreCase(acc2.getSoftware()) : username;
     });
 
-    private final @Getter String i18nKey;
-    private final @Getter BiFunction<String, String, String> converter;
-    private final @Getter Comparator<Account> comparator;
+    private final String i18nKey;
+    private final BiFunction<String, String, String> converter;
+    private final Comparator<Account> comparator;
 
     public String convert(String software, String username) {
         return converter.apply(software, username);

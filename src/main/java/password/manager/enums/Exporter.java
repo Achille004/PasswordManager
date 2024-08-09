@@ -32,6 +32,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javafx.collections.ObservableList;
 
+@Getter
 @RequiredArgsConstructor
 public enum Exporter {
     HTML((accountList, langResources, loginPassword) -> {
@@ -106,5 +107,5 @@ public enum Exporter {
         return stb.toString();
     });
 
-    private final @Getter TriFunction<@NotNull ObservableList<Account>, ObservableResourceFactory, String, String> exporter;
+    private final TriFunction<@NotNull ObservableList<Account>, ObservableResourceFactory, String, String> exporter;
 }
