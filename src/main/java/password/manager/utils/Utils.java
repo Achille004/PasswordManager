@@ -27,6 +27,7 @@ import java.util.Comparator;
 import java.util.Locale;
 import java.util.function.Function;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import javafx.beans.binding.Bindings;
@@ -47,12 +48,12 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 import me.gosimple.nbvcxz.Nbvcxz;
 
-public class Utils {
+public final class Utils {
     public static final Locale[] SUPPORTED_LOCALE;
     public static final Locale DEFAULT_LOCALE;
 
     static {
-        SUPPORTED_LOCALE = new Locale[] { Locale.ENGLISH, Locale.ITALIAN };
+        SUPPORTED_LOCALE = new Locale[]{Locale.ENGLISH, Locale.ITALIAN};
 
         Locale systemLang = Locale.forLanguageTag(Locale.getDefault().getLanguage());
         DEFAULT_LOCALE = Arrays.asList(SUPPORTED_LOCALE).contains(systemLang)
@@ -90,13 +91,13 @@ public class Utils {
         return comboBox.getSelectionModel().getSelectedItem();
     }
 
-    public static void bindPasswordFields(PasswordField hidden, TextField visible) {
+    public static void bindPasswordFields(@NotNull PasswordField hidden, @NotNull TextField visible) {
         hidden.textProperty().addListener((options, oldValue, newValue) -> visible.setText(newValue));
         visible.textProperty().addListener((options, oldValue, newValue) -> hidden.setText(newValue));
     }
 
     @SafeVarargs
-    public static <T extends TextField> boolean checkTextFields(@NotNull T... fields) {
+    public static <T extends TextField> boolean checkTextFields(T @NotNull ... fields) {
         boolean nonEmpty = true;
 
         for (T field : fields) {
@@ -112,14 +113,14 @@ public class Utils {
     }
 
     @SafeVarargs
-    public static <T extends TextField> void clearTextFields(@NotNull T... fields) {
+    public static <T extends TextField> void clearTextFields(T @NotNull ... fields) {
         for (T field : fields) {
             field.clear();
         }
     }
 
     @SafeVarargs
-    public static <T extends Node> void clearStyle(T... nodes) {
+    public static <T extends Node> void clearStyle(T @NotNull ... nodes) {
         for (T node : nodes) {
             node.setStyle("");
         }
@@ -133,7 +134,7 @@ public class Utils {
      * @param index    The index of the element.
      * @return The index.
      */
-    public static String addZerosToIndex(int listSize, int index) {
+    public static @NotNull String addZerosToIndex(int listSize, int index) {
         int listDigits = (int) Math.log10(listSize) + 1;
         return String.format("%0" + listDigits + "d", index);
     }
@@ -148,11 +149,12 @@ public class Utils {
         return BASE64DEC.decode(src);
     }
 
-    public static String capitalizeWord(String str) {
+    public static @NotNull String capitalizeWord(@NotNull String str) {
         return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
     }
 
-    public static <T> StringConverter<T> toStringConverter(Callback<? super T, String> converter) {
+    @Contract(value = "_ -> new", pure = true)
+    public static <T> @NotNull StringConverter<T> toStringConverter(Callback<? super T, String> converter) {
         return new StringConverter<>() {
             @Override
             public T fromString(String string) {
@@ -166,8 +168,8 @@ public class Utils {
         };
     }
 
-    public static <T> ObservableValue<Comparator<T>> comparatorBinding(ObjectProperty<Locale> locale,
-            ObjectProperty<? extends StringConverter<T>> converter) {
+    public static <T> @NotNull ObservableValue<Comparator<T>> comparatorBinding(ObjectProperty<Locale> locale,
+                                                                                ObjectProperty<? extends StringConverter<T>> converter) {
         return Bindings.createObjectBinding(
                 () -> Comparator.comparing(
                         converter.getValue()::toString,
@@ -176,17 +178,18 @@ public class Utils {
                 converter);
     }
 
-    public static <T> void bindValueConverter(ComboBox<T> comboBox, ObjectProperty<Locale> locale,
-            Function<Locale, StringConverter<T>> mapper) {
+    public static <T> void bindValueConverter(@NotNull ComboBox<T> comboBox, @NotNull ObjectProperty<Locale> locale,
+                                              Function<Locale, StringConverter<T>> mapper) {
         comboBox.converterProperty().bind(locale.map(mapper));
     }
 
-    public static <T> void bindValueComparator(SortedList<T> sortedList, ObjectProperty<Locale> locale,
-            ComboBox<T> comboBox) {
+    public static <T> void bindValueComparator(@NotNull SortedList<T> sortedList, ObjectProperty<Locale> locale,
+                                               @NotNull ComboBox<T> comboBox) {
         sortedList.comparatorProperty().bind(comparatorBinding(locale, comboBox.converterProperty()));
     }
 
-    public static Alert setDefaultButton(Alert alert, ButtonType defBtn) {
+    @Contract("_, _ -> param1")
+    public static @NotNull Alert setDefaultButton(@NotNull Alert alert, ButtonType defBtn) {
         DialogPane pane = alert.getDialogPane();
         for (ButtonType t : alert.getButtonTypes())
             ((Button) pane.lookupButton(t)).setDefaultButton(t == defBtn);
@@ -215,7 +218,7 @@ public class Utils {
                     + " 100%";
         } else {
             gradientStr += ", " + (Color.RED.interpolate(Color.YELLOW, progress * 2) + "x")
-                            .replace("0x", "#").replace("ffx", "")
+                    .replace("0x", "#").replace("ffx", "")
                     + " 100%";
         }
         gradientStr += ")";

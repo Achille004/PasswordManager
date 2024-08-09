@@ -24,11 +24,10 @@ import java.security.SecureRandom;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import lombok.Getter;
 
-public class Account implements Serializable {
+public final class Account implements Serializable {
     private @Getter String software, username;
     private byte[] encryptedPassword;
     private final byte[] iv;
@@ -55,29 +54,20 @@ public class Account implements Serializable {
         return Encrypter.decryptAES(encryptedPassword, key, iv);
     }
 
-    public boolean setData(@Nullable String software, @Nullable String username, @Nullable String password,
+    public void setData(@NotNull String software, @NotNull String username, @NotNull String password,
             String loginPassword) throws GeneralSecurityException {
-        if (password == null) {
-            String oldPassword = getPassword(loginPassword);
-
-            if (oldPassword == null) {
-                return false;
-            }
-
-            password = oldPassword;
+        // First the password, so that if any error occurs it exits before software and username get reassigned
+        if (!password.isEmpty()) {
+            setPassword(password, loginPassword);
         }
 
-        if (software != null) {
+        if (!software.isEmpty()) {
             this.software = software;
         }
 
-        if (username != null) {
+        if (!username.isEmpty()) {
             this.username = username;
         }
-
-        setPassword(password, loginPassword);
-
-        return true;
     }
 
     public void changeLoginPassword(String oldLoginPassword, String newLoginPassword) throws GeneralSecurityException {

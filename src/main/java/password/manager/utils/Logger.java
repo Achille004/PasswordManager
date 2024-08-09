@@ -28,7 +28,7 @@ import java.util.Scanner;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Logger {
+public final class Logger {
     private static final DateTimeFormatter dtf = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT,
             FormatStyle.MEDIUM);
 

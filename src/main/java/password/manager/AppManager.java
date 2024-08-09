@@ -38,6 +38,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import lombok.Getter;
+import org.jetbrains.annotations.Nullable;
 import password.manager.controllers.FirstRunController;
 import password.manager.controllers.LoginController;
 import password.manager.controllers.MainController;
@@ -78,8 +79,7 @@ public class AppManager {
         AnchorPane pane;
         final BooleanProperty switchToMain = new SimpleBooleanProperty(false);
         if (ioManager.isFirstRun()) {
-            pane = (AnchorPane) loadFxml("/fxml/first_run.fxml",
-                    new FirstRunController(ioManager, langResources, hostServices, switchToMain));
+            pane = (AnchorPane) loadFxml("/fxml/first_run.fxml", new FirstRunController(ioManager, langResources, hostServices, switchToMain));
         } else {
             pane = (AnchorPane) loadFxml("/fxml/login.fxml", new LoginController(ioManager, langResources, hostServices, switchToMain));
         }
@@ -105,7 +105,7 @@ public class AppManager {
         });
     }
 
-    private <S extends Initializable> Parent loadFxml(String path, S controller) {
+    private <S extends Initializable> @Nullable Parent loadFxml(String path, S controller) {
         try {
             FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource(path)));
             loader.setController(controller);

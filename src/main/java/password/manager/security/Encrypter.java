@@ -33,7 +33,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Encrypter {
+public final class Encrypter {
     private static SecretKeyFactory keyFactory;
 
     private static final int ITERATIONS = 65536;

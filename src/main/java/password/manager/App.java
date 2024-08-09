@@ -35,7 +35,6 @@ public class App extends Application {
     public void start(Stage primaryStage) {
         hostServices = getHostServices();
 
-        
         AnchorPane scenePane = new AnchorPane();
         appManager = new AppManager(scenePane, hostServices);
 

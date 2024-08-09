@@ -17,21 +17,20 @@
  */
 
 module password.manager {
-    requires java.base;
     requires java.desktop;
     
     requires javafx.base;
     requires transitive javafx.controls;
     requires javafx.fxml;
     requires transitive javafx.graphics;
-    requires javafx.web;
+    // requires javafx.web;
 
     // requires jdk.jsobject;
     
     requires static lombok;
 
     requires me.gosimple.nbvcxz;
-    
+
     requires org.bouncycastle.provider;
     
     requires org.jetbrains.annotations;
