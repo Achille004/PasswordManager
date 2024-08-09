@@ -18,19 +18,16 @@
 
 package password.manager.enums;
 
+import static password.manager.utils.Utils.*;
+
+import org.jetbrains.annotations.NotNull;
+
+import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import password.manager.inerfaces.TriFunction;
 import password.manager.security.Account;
 import password.manager.utils.ObservableResourceFactory;
-
-import static password.manager.utils.Utils.addZerosToIndex;
-
-import java.security.GeneralSecurityException;
-
-import org.jetbrains.annotations.NotNull;
-
-import javafx.collections.ObservableList;
 
 @Getter
 @RequiredArgsConstructor
@@ -48,12 +45,12 @@ public enum Exporter {
                     color: rgb(204,204,204);
                     margin: 1em;
                 }
-
+                
                 table, th, td {
                     border: 0.1em solid rgb(204,204,204);
                     border-collapse: collapse;
                 }
-
+                
                 th, td {
                     padding: 1em;
                 }
@@ -71,15 +68,11 @@ public enum Exporter {
         for (Account currentAccount : accountList) {
             counter++;
 
-            try {
-                stb.append("<tr>\n<td>")
-                        .append(addZerosToIndex(listSize, counter)).append("</td>\n<td>")
-                        .append(currentAccount.getSoftware()).append("</td>\n<td>")
-                        .append(currentAccount.getUsername()).append("</td>\n<td>")
-                        .append(currentAccount.getPassword(loginPassword)).append("</td>\n</tr>");
-            } catch (GeneralSecurityException e) {
-                e.printStackTrace();
-            }
+            stb.append("<tr>\n<td>")
+                    .append(addZerosToIndex(listSize, counter)).append("</td>\n<td>")
+                    .append(currentAccount.getSoftware()).append("</td>\n<td>")
+                    .append(currentAccount.getUsername()).append("</td>\n<td>")
+                    .append(currentAccount.getPassword(loginPassword)).append("</td>\n</tr>");
         }
 
         stb.append("</table>\n</body>\n</html>");
@@ -94,14 +87,10 @@ public enum Exporter {
         for (Account currentAccount : accountList) {
             counter++;
 
-            try {
-                stb.append(addZerosToIndex(listSize, counter)).append(",")
-                        .append(currentAccount.getSoftware()).append(",")
-                        .append(currentAccount.getUsername()).append(",")
-                        .append(currentAccount.getPassword(loginPassword)).append("\n");
-            } catch (GeneralSecurityException e) {
-                e.printStackTrace();
-            }
+            stb.append(addZerosToIndex(listSize, counter)).append(",")
+                    .append(currentAccount.getSoftware()).append(",")
+                    .append(currentAccount.getUsername()).append(",")
+                    .append(currentAccount.getPassword(loginPassword)).append("\n");
         }
 
         return stb.toString();

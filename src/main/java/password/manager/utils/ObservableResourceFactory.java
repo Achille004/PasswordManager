@@ -27,18 +27,18 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.control.Labeled;
 
-public class ObservableResourceFactory {
+public final class ObservableResourceFactory {
     private final ObjectProperty<ResourceBundle> resources = new SimpleObjectProperty<>();
 
     public ObjectProperty<ResourceBundle> resourcesProperty() {
         return resources;
     }
 
-    public final ResourceBundle getResources() {
+    public ResourceBundle getResources() {
         return resourcesProperty().get();
     }
 
-    public final void setResources(ResourceBundle resources) {
+    public void setResources(ResourceBundle resources) {
         resourcesProperty().set(resources);
     }
 
@@ -59,7 +59,7 @@ public class ObservableResourceFactory {
         return getResources().getString(key);
     }
 
-    public <T extends Labeled> void bindTextProperty(T field, String key) {
+    public <T extends Labeled> void bindTextProperty(@NotNull T field, @NotNull String key) {
         if (key.isBlank()) {
             field.textProperty().unbind();
         } else {

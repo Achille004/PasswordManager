@@ -19,6 +19,8 @@
 package password.manager.security;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serial;
 import java.io.Serializable;
 import java.security.SecureRandom;
@@ -35,11 +37,19 @@ import lombok.Getter;
 import password.manager.enums.SortingOrder;
 import password.manager.utils.Utils;
 
-public class UserPreferences implements Serializable {
+public final class UserPreferences implements Serializable {
     private transient @Getter ObjectProperty<Locale> localeProperty;
     private transient @Getter ObjectProperty<SortingOrder> sortingOrderProperty;
     private byte[] hashedPassword;
     private final byte[] salt;
+
+    public UserPreferences() {
+        this.localeProperty = new SimpleObjectProperty<>(Utils.DEFAULT_LOCALE);
+        this.sortingOrderProperty = new SimpleObjectProperty<>(SortingOrder.SOFTWARE);
+
+        this.salt = new byte[16];
+        this.hashedPassword = null;
+    }
 
     public UserPreferences(String password) throws InvalidKeySpecException {
         this.localeProperty = new SimpleObjectProperty<>(Utils.DEFAULT_LOCALE);
@@ -65,18 +75,29 @@ public class UserPreferences implements Serializable {
         sortingOrderProperty.set(sortingOrder);
     }
 
-    public boolean verifyPassword(String passwordToVerify) throws InvalidKeySpecException {
+    public @NotNull Boolean isEmpty() {
+        return this.hashedPassword == null;
+    }
+
+    public @NotNull Boolean verifyPassword(String passwordToVerify) throws InvalidKeySpecException {
+        if(hashedPassword == null) {
+            return true;
+        }
+
+        if(passwordToVerify == null) {
+            return false;
+        }
+
         byte[] hashedPasswordToVerify = Encrypter.hash(passwordToVerify, salt);
         return Arrays.equals(hashedPassword, hashedPasswordToVerify);
     }
 
-    public boolean setPasswordVerified(String oldPassword, String newPassword) throws InvalidKeySpecException {
-        if (!verifyPassword(oldPassword)) {
-            return false;
+    public @NotNull Boolean setPasswordVerified(String oldPassword, String newPassword) throws InvalidKeySpecException {
+        boolean res = verifyPassword(oldPassword);
+        if (res) {
+            setPassword(newPassword);
         }
-
-        setPassword(newPassword);
-        return true;
+        return res;
     }
 
     private void setPassword(String password) throws InvalidKeySpecException {
@@ -91,15 +112,20 @@ public class UserPreferences implements Serializable {
         return new UserPreferences(password);
     }
 
+    @Contract("-> new")
+    public static @NotNull UserPreferences empty() {
+        return new UserPreferences();
+    }
+
     @Serial
-    private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+    private void writeObject(@NotNull ObjectOutputStream out) throws IOException {
         out.writeObject(getLocale());
         out.writeObject(getSortingOrder());
         out.defaultWriteObject();
     }
 
     @Serial
-    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+    private void readObject(@NotNull ObjectInputStream in) throws IOException, ClassNotFoundException {
         Locale localeValue = (Locale) in.readObject();
         this.localeProperty = new SimpleObjectProperty<>(localeValue);
 

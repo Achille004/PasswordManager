@@ -23,7 +23,7 @@ import java.util.function.Function;
 
 @FunctionalInterface
 public interface TriFunction<T, U, V, R> {
-    R apply(T t, U u, V v);
+    R apply(T t, U u, V v) throws Exception;
 
     default <S> TriFunction<T, U, V, S> andThen(Function<? super R, ? extends S> after) {
         Objects.requireNonNull(after);

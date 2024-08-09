@@ -19,7 +19,7 @@
 package main;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static password.manager.utils.Utils.passwordStrength;
+import static password.manager.utils.Utils.*;
 
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;

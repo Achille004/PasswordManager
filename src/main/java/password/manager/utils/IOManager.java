@@ -18,6 +18,24 @@
 
 package password.manager.utils;
 
+import static password.manager.utils.Utils.*;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InvalidClassException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.nio.file.Path;
+import java.security.GeneralSecurityException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -26,79 +44,64 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.TextInputControl;
 import lombok.Getter;
-import org.jetbrains.annotations.NotNull;
 import password.manager.enums.Exporter;
-import password.manager.enums.SortingOrder;
 import password.manager.security.Account;
 import password.manager.security.UserPreferences;
 
-import java.io.*;
-import java.nio.file.Path;
-import java.security.GeneralSecurityException;
-import java.security.spec.InvalidKeySpecException;
-import java.util.ArrayList;
-
-import static password.manager.utils.Utils.setDefaultButton;
-
-public class IOManager {
+public final class IOManager {
     static final String WINDOWS_PATH, DATA_FILE, LOG_FILE;
+    static final @Getter String OS, USER_HOME;
+    public static final @Getter Path FILE_PATH, DESKTOP_PATH;
 
     static {
         WINDOWS_PATH = Path.of("AppData", "Local", "Password Manager").toString();
         DATA_FILE = "passwords.psmg";
         LOG_FILE = "report.log";
-    }
-
-    private final @Getter String OS, USER_HOME;
-
-    private final @Getter Logger logger;
-
-    private @Getter UserPreferences userPreferences;
-    private final ObservableList<Account> accountList;
-    private final @Getter Path filePath, desktopPath;
-
-    private @Getter boolean isFirstRun = true;
-
-    private String loginPassword;
-
-    public IOManager() {
-        // initialize objects
-        accountList = FXCollections.observableArrayList(new Account[0]);
-
-        userPreferences = null;
-        loginPassword = null;
-
-        try {
-            userPreferences = UserPreferences.of("");
-            loginPassword = "";
-        } catch (InvalidKeySpecException e) {
-            e.printStackTrace();
-        }
 
         // gets system properties
         OS = System.getProperty("os.name");
         USER_HOME = System.getProperty("user.home");
 
         // gets the paths
-        filePath = Path.of(USER_HOME, OS.toLowerCase().contains("windows") ? WINDOWS_PATH : ".password-manager");
-        desktopPath = Path.of(USER_HOME, "Desktop");
+        FILE_PATH = Path.of(USER_HOME, OS.toLowerCase().contains("windows") ? WINDOWS_PATH : ".password-manager");
+        DESKTOP_PATH = Path.of(USER_HOME, "Desktop");
+    }
 
-        logger = new Logger(filePath.resolve(LOG_FILE).toFile());
+    private final @Getter Logger logger;
+    private final ObservableList<Account> accountList;
+    private @Getter UserPreferences userPreferences;
+
+    private String loginPassword;
+    private @Getter boolean isFirstRun, isAuthenticated;
+
+    public IOManager() {
+        logger = new Logger(FILE_PATH.resolve(LOG_FILE).toFile());
+        accountList = FXCollections.observableArrayList(new Account[0]);
+        userPreferences = UserPreferences.empty();
+
+        loginPassword = null;
+        isFirstRun = true;
+        isAuthenticated = false;
     }
 
     public void loadDataFile(final ObservableResourceFactory langResources) {
+        if (!userPreferences.isEmpty()) {
+            logger.addError(new UnsupportedOperationException("Cannot read data file: it would overwrite non-empty user preferences."));
+            return;
+        }
+
         logger.addInfo("os.name: '" + OS + "'");
         logger.addInfo("user.home: '" + USER_HOME + "'");
 
-        if (filePath.toFile().mkdirs()) {
-            logger.addInfo("Directory '" + filePath + "' did not exist and was therefore created");
+        if (FILE_PATH.toFile().mkdirs()) {
+            logger.addInfo("Directory '" + FILE_PATH + "' did not exist and was therefore created");
             return;
         }
 
         // gets the log history
         logger.readFile();
 
-        File data_file = filePath.resolve(DATA_FILE).toFile();
+        File data_file = FILE_PATH.resolve(DATA_FILE).toFile();
         // if the data file exists, it will try to read its contents
         if (!data_file.exists()) {
             logger.addInfo("File not found: '" + data_file + "'");
@@ -110,15 +113,15 @@ public class IOManager {
             Object obj;
 
             obj = fIN.readObject();
-            if (obj instanceof UserPreferences) {
-                userPreferences = (UserPreferences) obj;
+            if (obj instanceof UserPreferences usrPrfcs) {
+                userPreferences = usrPrfcs;
             } else {
                 throw new InvalidClassException("Unexpected object class. Expecting: " + UserPreferences.class);
             }
 
             obj = fIN.readObject();
-            if (obj instanceof Account[]) {
-                accountList.addAll((Account[]) obj);
+            if (obj instanceof Account[] accounts) {
+                accountList.addAll(accounts);
             } else {
                 throw new InvalidClassException("Unexpected object class. Expecting: " + ArrayList.class);
             }
@@ -150,7 +153,7 @@ public class IOManager {
     }
 
     // #region Account methods
-    public boolean addAccount(String software, String username, String password) {
+    public @NotNull Boolean addAccount(String software, String username, String password) {
         if (isAuthenticated()) {
             try {
                 accountList.add(Account.of(software, username, password, loginPassword));
@@ -164,10 +167,15 @@ public class IOManager {
         return false;
     }
 
-    public boolean editAccount(@NotNull Account account, String software, String username, String password) {
+    public @NotNull Boolean editAccount(@NotNull Account account, @Nullable String software, @Nullable String username, @Nullable String password) {
+        if(software == null || username == null || password == null) {
+            return false;
+        }
+
         try {
             int index = accountList.indexOf(account);
-            if (isAuthenticated() && index >= 0 && account.setData(software, username, password, loginPassword)) {
+            if (isAuthenticated() && index >= 0) {
+                account.setData(software, username, password, loginPassword);
                 // Substitute the account with itself to trigger the SortedList wrapper
                 accountList.set(index, account);
                 logger.addInfo("Account edited");
@@ -180,7 +188,7 @@ public class IOManager {
         return false;
     }
 
-    public boolean removeAccount(@NotNull Account account) {
+    public @NotNull Boolean removeAccount(@NotNull Account account) {
         if (isAuthenticated() && accountList.remove(account)) {
             logger.addInfo("Account deleted");
             return true;
@@ -189,7 +197,7 @@ public class IOManager {
         return false;
     }
 
-    public String getAccountPassword(@NotNull Account account) {
+    public @Nullable String getAccountPassword(@NotNull Account account) {
         try {
             if (isAuthenticated()) {
                 return account.getPassword(loginPassword);
@@ -203,10 +211,9 @@ public class IOManager {
     // #endregion
 
     // #region LoginAccount methods
-    public final boolean changeLoginPassword(String newLoginPassword) {
+    public @NotNull Boolean changeLoginPassword(String newLoginPassword) {
         String oldLoginPassword = this.loginPassword;
-
-        if (!oldLoginPassword.isBlank() && !isAuthenticated()) {
+        if (oldLoginPassword != null && !isAuthenticated()) {
             return false;
         }
 
@@ -217,71 +224,74 @@ public class IOManager {
             return false;
         }
 
+        boolean[] error = new boolean[1];
         accountList.forEach(account -> {
             Thread.startVirtualThread(() -> {
                 try {
                     account.changeLoginPassword(oldLoginPassword, newLoginPassword);
                 } catch (GeneralSecurityException e) {
                     logger.addError(e);
+                    error[0] = true;
                 }
             });
             // to wait until threads are finished, use threadInstance.join()
         });
+        if(error[0]) {
+            return false;
+        }
 
         this.loginPassword = newLoginPassword;
-        if (!oldLoginPassword.isBlank()) {
+        if (oldLoginPassword != null) {
             logger.addInfo("Login password changed");
+        } else {
+            isAuthenticated = true;
         }
 
         return true;
     }
 
     @SafeVarargs
-    public final <T extends TextInputControl> void displayLoginPassword(T... elements) {
+    public final <T extends TextInputControl> void displayLoginPassword(T @NotNull ... elements) {
         for (T element : elements) {
             element.setText(loginPassword);
         }
     }
 
-    public boolean authenticate(String loginPassword) {
-        try {
-            if (isAuthenticated() || !userPreferences.verifyPassword(loginPassword)) {
-                return false;
-            }
-        } catch (InvalidKeySpecException e) {
-            logger.addError(e);
+    public @NotNull Boolean authenticate(String loginPassword) {
+        if (isAuthenticated()) {
             return false;
         }
 
-        this.loginPassword = loginPassword;
-        logger.addInfo("User authenticated");
+        try {
+            isAuthenticated = userPreferences.verifyPassword(loginPassword);
+        } catch (InvalidKeySpecException e) {
+            logger.addError(e);
+        }
 
-        return true;
-    }
+        if (isAuthenticated) {
+            this.loginPassword = loginPassword;
+            logger.addInfo("User authenticated");
+        }
 
-    public boolean isAuthenticated() {
-        return loginPassword != null && !loginPassword.isBlank();
+        return isAuthenticated;
     }
     // #endregion
 
-    public void export(Exporter exporter, ObservableResourceFactory langResources) {
-        try (FileWriter file = new FileWriter(desktopPath.resolve("Passwords." + exporter.name().toLowerCase()).toFile())) {
+    public void export(@NotNull Exporter exporter, ObservableResourceFactory langResources) {
+        try (FileWriter file = new FileWriter(DESKTOP_PATH.resolve("Passwords." + exporter.name().toLowerCase()).toFile())) {
             file.write(exporter.getExporter().apply(accountList, langResources, loginPassword));
             file.flush();
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.addError(e);
         }
     }
 
     private boolean saveAccountFile() {
-        try (ObjectOutputStream fOUT = new ObjectOutputStream(
-                new FileOutputStream(filePath.resolve(DATA_FILE).toFile()))) {
+        try (ObjectOutputStream fOUT = new ObjectOutputStream(new FileOutputStream(FILE_PATH.resolve(DATA_FILE).toFile()))) {
             fOUT.writeObject(this.userPreferences);
             fOUT.writeObject(this.accountList.toArray(new Account[0]));
-            fOUT.close();
 
             logger.addInfo("Data file saved");
-
             return true;
         } catch (IOException e) {
             logger.addError(e);
@@ -289,7 +299,7 @@ public class IOManager {
         }
     }
 
-    public boolean saveAll() {
+    public @NotNull Boolean saveAll() {
         boolean result = false;
 
         // when the user shuts down the program on the first run, it won't save

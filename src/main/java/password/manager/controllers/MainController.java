@@ -1,14 +1,36 @@
+/*
+    Password Manager: Manages accounts given by user with encrypted password.
+    Copyright (C) 2022-2024  Francesco Marras (2004marras@gmail.com)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
+ */
+
 package password.manager.controllers;
 
 import java.awt.Desktop;
+import java.awt.EventQueue;
 import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedList;
 import java.util.ResourceBundle;
 
+import org.jetbrains.annotations.NotNull;
+
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.HostServices;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -18,11 +40,11 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.util.Duration;
+import password.manager.controllers.views.AbstractViewController;
 import password.manager.controllers.views.DecrypterController;
 import password.manager.controllers.views.EncrypterController;
 import password.manager.controllers.views.HomeController;
 import password.manager.controllers.views.SettingsController;
-import password.manager.controllers.views.AbstractViewController;
 import password.manager.utils.IOManager;
 import password.manager.utils.ObservableResourceFactory;
 
@@ -134,14 +156,18 @@ public class MainController extends AbstractController {
 
     @FXML
     public void folderSidebarButton(ActionEvent event) {
-        try {
-            Desktop.getDesktop().open(ioManager.getFilePath().toFile());
-        } catch (IOException e) {
-            ioManager.getLogger().addError(e);
-        }
+        Platform.runLater(() ->
+            EventQueue.invokeLater(() -> {
+                try {
+                    Desktop.getDesktop().open(IOManager.FILE_PATH.toFile());
+                } catch (IOException e) {
+                    ioManager.getLogger().addError(e);
+                }
+            })
+        );
     }
 
-    private <T extends AbstractViewController, S extends Pane> void sidebarButtonAction(ActionEvent event, T destinationController, S destinationPane, String mainTitleKey) {
+    private <T extends AbstractViewController, S extends Pane> void sidebarButtonAction(ActionEvent event, @NotNull T destinationController, S destinationPane, @NotNull String mainTitleKey) {
         // Show selected pane
         destinationController.reset();
         mainPane.centerProperty().set(destinationPane);

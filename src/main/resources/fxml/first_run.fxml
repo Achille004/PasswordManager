@@ -45,68 +45,71 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #202428;" stylesheets="@style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
-   <children>
-      <Label fx:id="firstRunTitle" alignment="CENTER" layoutX="170.0" layoutY="165.0" prefHeight="58.0" prefWidth="560.0" text="Hi!" textFill="#0aba4d">
-         <font>
-            <Font name="Script MT Bold" size="48.0" />
-         </font>
-      </Label>
-      <Label fx:id="firstRunDescBtm" alignment="CENTER" layoutX="170.0" layoutY="289.0" prefHeight="27.0" prefWidth="560.0" text="PasswordManager will NEVER collect your data *" textAlignment="CENTER" textFill="#a7acb1" wrapText="true">
-         <font>
-            <Font name="Comic Sans MS Italic" size="18.0" />
-         </font>
-      </Label>
-      <StackPane layoutX="170.0" layoutY="337.0" prefHeight="27.0" prefWidth="545.0">
-         <children>
-            <AnchorPane prefHeight="200.0" prefWidth="200.0">
-               <children>
-                  <TextField fx:id="firstRunPasswordVisible" prefHeight="27.0" prefWidth="560.0" styleClass="textField" />
-                  <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="527.0" layoutY="2.0" onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/icons/closed-eye.png" />
-                     </image>
-                  </ImageView>
-               </children>
-            </AnchorPane>
-            <AnchorPane prefHeight="27.0" prefWidth="551.0">
-               <children>
-                  <PasswordField fx:id="firstRunPasswordHidden" prefHeight="27.0" prefWidth="560.0" styleClass="textField" />
-                  <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="527.0" layoutY="2.0" onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/icons/open-eye.png" />
-                     </image>
-                  </ImageView>
-               </children>
-            </AnchorPane>
-         </children>
-      </StackPane>
-      <Label fx:id="firstRunDescTop" alignment="CENTER" layoutX="170.0" layoutY="230.0" prefHeight="58.0" prefWidth="560.0" text="Before getting started with PasswordManager, I need you to insert a strong password in order to protect your accounts&#10;" textAlignment="CENTER" textFill="#a7acb1" wrapText="true">
-         <font>
-            <Font name="Comic Sans MS Italic" size="18.0" />
-         </font>
-      </Label>
-      <Label fx:id="firstRunDisclaimer" alignment="CENTER" layoutY="559.0" prefHeight="27.0" prefWidth="901.0" text="* If you intend to link Google Drive to your data, make sure you read their privacy policy" textAlignment="CENTER" textFill="#a7acb1" wrapText="true" />
-      <Button fx:id="firstRunSubmitBtn" alignment="CENTER" contentDisplay="CENTER" layoutX="628.0" layoutY="390.0" mnemonicParsing="false" nodeOrientation="LEFT_TO_RIGHT" onAction="#doFirstRun" styleClass="greenButton" text="Let's go!" textAlignment="CENTER" textFill="WHITE" AnchorPane.rightAnchor="170.39999999999998">
-         <font>
-            <Font name="System Bold" size="18.0" />
-         </font>
-      </Button>
-      <Label fx:id="firstRunTermsCred" layoutX="170.0" layoutY="390.0" onMouseClicked="#showEula" styleClass="eulaText" text="Terms and Credits" textFill="#0aba4d">
-         <font>
-            <Font size="18.0" />
-         </font>
-         <cursor>
-            <Cursor fx:constant="HAND" />
-         </cursor>
-         <graphic>
-            <CheckBox fx:id="firstRunCheckBox" mnemonicParsing="false" text="I've read the" textFill="WHITE">
-               <font>
-                  <Font size="18.0" />
-               </font>
-            </CheckBox>
-         </graphic>
-      </Label>
-      <ProgressBar fx:id="firstRunPassStr" layoutX="170.0" layoutY="365.0" prefHeight="10.0" prefWidth="560.0" progress="0.0" />
-   </children>
+<AnchorPane prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #202428;" stylesheets="@style.css"
+            xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+   <Label fx:id="firstRunTitle" alignment="CENTER" layoutX="170.0" layoutY="165.0" prefHeight="58.0" prefWidth="560.0"
+          text="Hi!" textFill="#0aba4d">
+      <font>
+         <Font name="Script MT Bold" size="48.0"/>
+      </font>
+   </Label>
+   <Label fx:id="firstRunDescBtm" alignment="CENTER" layoutX="170.0" layoutY="289.0" prefHeight="27.0" prefWidth="560.0"
+          text="PasswordManager will NEVER collect your data *" textAlignment="CENTER" textFill="#a7acb1"
+          wrapText="true">
+      <font>
+         <Font name="Comic Sans MS Italic" size="18.0"/>
+      </font>
+   </Label>
+   <StackPane layoutX="170.0" layoutY="337.0" prefHeight="27.0" prefWidth="545.0">
+      <AnchorPane prefHeight="200.0" prefWidth="200.0">
+         <TextField fx:id="firstRunPasswordVisible" prefHeight="27.0" prefWidth="560.0" styleClass="textField"/>
+         <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="527.0" layoutY="2.0"
+                    onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
+            <Image url="@../images/icons/closed-eye.png"/>
+         </ImageView>
+      </AnchorPane>
+      <AnchorPane prefHeight="27.0" prefWidth="551.0">
+         <PasswordField fx:id="firstRunPasswordHidden" prefHeight="27.0" prefWidth="560.0"
+                        styleClass="textField"/>
+         <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="527.0" layoutY="2.0"
+                    onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
+            <Image url="@../images/icons/open-eye.png"/>
+         </ImageView>
+      </AnchorPane>
+   </StackPane>
+   <Label fx:id="firstRunDescTop" alignment="CENTER" layoutX="170.0" layoutY="230.0" prefHeight="58.0" prefWidth="560.0"
+          text="Before getting started with PasswordManager, I need you to insert a strong password in order to protect your accounts&#10;"
+          textAlignment="CENTER" textFill="#a7acb1" wrapText="true">
+      <font>
+         <Font name="Comic Sans MS Italic" size="18.0"/>
+      </font>
+   </Label>
+   <Label fx:id="firstRunDisclaimer" alignment="CENTER" layoutY="559.0" prefHeight="27.0" prefWidth="901.0"
+          text="* If you intend to link Google Drive to your data, make sure you read their privacy policy"
+          textAlignment="CENTER" textFill="#a7acb1" wrapText="true"/>
+   <Button fx:id="firstRunSubmitBtn" alignment="CENTER" contentDisplay="CENTER" layoutX="628.0" layoutY="390.0"
+           mnemonicParsing="false" nodeOrientation="LEFT_TO_RIGHT" onAction="#doFirstRun" styleClass="greenButton"
+           text="Let's go!" textAlignment="CENTER" textFill="WHITE" AnchorPane.rightAnchor="170.39999999999998">
+      <font>
+         <Font name="System Bold" size="18.0"/>
+      </font>
+   </Button>
+   <Label fx:id="firstRunTermsCred" layoutX="170.0" layoutY="390.0" onMouseClicked="#showEula" styleClass="eulaText"
+          text="Terms and Credits" textFill="#0aba4d">
+      <font>
+         <Font size="18.0"/>
+      </font>
+      <cursor>
+         <Cursor fx:constant="HAND"/>
+      </cursor>
+      <graphic>
+         <CheckBox fx:id="firstRunCheckBox" mnemonicParsing="false" text="I've read the" textFill="WHITE">
+            <font>
+               <Font size="18.0"/>
+            </font>
+         </CheckBox>
+      </graphic>
+   </Label>
+   <ProgressBar fx:id="firstRunPassStr" layoutX="170.0" layoutY="365.0" prefHeight="10.0" prefWidth="560.0"
+                progress="0.0"/>
 </AnchorPane>
