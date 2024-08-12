@@ -59,7 +59,7 @@ public final class Encrypter {
      * @return The hashed password.
      * @throws InvalidKeySpecException
      */
-    public static byte[] hash(@NotNull String password, byte[] salt) throws InvalidKeySpecException {
+    public static byte[] hash(String password, @NotNull byte[] salt) throws InvalidKeySpecException {
         KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITERATIONS, HASH_KEY_LENGTH);
         return keyFactory.generateSecret(spec).getEncoded();
     }
@@ -73,7 +73,7 @@ public final class Encrypter {
      * @return The hashed password.
      * @throws InvalidKeySpecException
      */
-    public static byte[] getKey(@NotNull String loginPassword, byte[] salt) throws InvalidKeySpecException {
+    public static byte[] getKey(@NotNull String loginPassword, @NotNull byte[] salt) throws InvalidKeySpecException {
         KeySpec spec = new PBEKeySpec(loginPassword.toCharArray(), salt, ITERATIONS, AES_KEY_LENGTH);
         SecretKey secretKey = keyFactory.generateSecret(spec);
         SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getEncoded(), "AES");
@@ -89,7 +89,7 @@ public final class Encrypter {
      * @return The encrypted password.
      * @throws GeneralSecurityException
      */
-    public static byte[] encryptAES(@NotNull String password, byte[] key, byte[] iv) throws GeneralSecurityException {
+    public static byte[] encryptAES(@NotNull String password, @NotNull byte[] key, @NotNull byte[] iv) throws GeneralSecurityException {
         // Create Cipher object to encrypt
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
         cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(128, iv));
@@ -107,7 +107,7 @@ public final class Encrypter {
      * @return The decrypted password.
      * @throws GeneralSecurityException
      */
-    public static @NotNull String decryptAES(byte[] encryptedPassword, byte[] key, byte[] iv) throws GeneralSecurityException {
+    public static @NotNull String decryptAES(@NotNull byte[] encryptedPassword, @NotNull byte[] key, @NotNull byte[] iv) throws GeneralSecurityException {
         // Create Cipher object to decrypt
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
         cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(128, iv));

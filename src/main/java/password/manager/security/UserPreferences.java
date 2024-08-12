@@ -51,7 +51,7 @@ public final class UserPreferences implements Serializable {
         this.hashedPassword = null;
     }
 
-    public UserPreferences(String password) throws InvalidKeySpecException {
+    public UserPreferences(@NotNull String password) throws InvalidKeySpecException {
         this.localeProperty = new SimpleObjectProperty<>(Utils.DEFAULT_LOCALE);
         this.sortingOrderProperty = new SimpleObjectProperty<>(SortingOrder.SOFTWARE);
 
@@ -63,7 +63,7 @@ public final class UserPreferences implements Serializable {
         return localeProperty.get();
     }
 
-    public void setLocale(Locale locale) {
+    public void setLocale(@NotNull Locale locale) {
         localeProperty.set(locale);
     }
 
@@ -71,7 +71,7 @@ public final class UserPreferences implements Serializable {
         return sortingOrderProperty.get();
     }
 
-    public void setSortingOrder(SortingOrder sortingOrder) {
+    public void setSortingOrder(@NotNull SortingOrder sortingOrder) {
         sortingOrderProperty.set(sortingOrder);
     }
 
@@ -92,7 +92,7 @@ public final class UserPreferences implements Serializable {
         return Arrays.equals(hashedPassword, hashedPasswordToVerify);
     }
 
-    public @NotNull Boolean setPasswordVerified(String oldPassword, String newPassword) throws InvalidKeySpecException {
+    public @NotNull Boolean setPasswordVerified(@NotNull String oldPassword, @NotNull String newPassword) throws InvalidKeySpecException {
         boolean res = verifyPassword(oldPassword);
         if (res) {
             setPassword(newPassword);
@@ -100,7 +100,7 @@ public final class UserPreferences implements Serializable {
         return res;
     }
 
-    private void setPassword(String password) throws InvalidKeySpecException {
+    private void setPassword(@NotNull String password) throws InvalidKeySpecException {
         SecureRandom random = new SecureRandom();
         random.nextBytes(salt);
 
@@ -109,7 +109,7 @@ public final class UserPreferences implements Serializable {
 
     @Contract("_ -> new")
     public static @NotNull UserPreferences of(String password) throws InvalidKeySpecException {
-        return new UserPreferences(password);
+        return password != null ? new UserPreferences(password) : new UserPreferences();
     }
 
     @Contract("-> new")
