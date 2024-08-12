@@ -1,16 +1,17 @@
 # Next up:
-- Add logging rotation
-- Add language flags to its selector
-- Embed fonts (as they only work on Windows) + msix packaging
-- Better code comments and documentation
-- Add export (add xml and json) + choose export directory (FileChooser/DirectoryChooser) + character-checking from fields
+- Change data file from dat to a more portable type
 - Better readme
-- Linux support (crashes when opening folder or browser)
+- Better code comments and documentation + code flow analysis (especially for null values)
+- Embed fonts (as they only work on Windows)
+- Add export (add xml and json) + choose export directory (FileChooser/DirectoryChooser)
+- Add account search
 
 # Future:
-- Resizable window
+- Add language flags to their selector
 - Google drive linking
+- More animations
 
 # Ideas:
+- Resizable window
 - Switch from `ArrayList` to embedded database
-- More animations
+- msix packaging

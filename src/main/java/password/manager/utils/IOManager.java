@@ -49,22 +49,22 @@ import password.manager.security.Account;
 import password.manager.security.UserPreferences;
 
 public final class IOManager {
-    static final String WINDOWS_PATH, DATA_FILE, LOG_FILE;
-    static final @Getter String OS, USER_HOME;
-    public static final @Getter Path FILE_PATH, DESKTOP_PATH;
+    static final String OS, USER_HOME, DATA_FILE;
+    public static final Path FILE_PATH, DESKTOP_PATH;
 
     static {
-        WINDOWS_PATH = Path.of("AppData", "Local", "Password Manager").toString();
-        DATA_FILE = "passwords.psmg";
-        LOG_FILE = "report.log";
-
         // gets system properties
         OS = System.getProperty("os.name");
         USER_HOME = System.getProperty("user.home");
-
+        
         // gets the paths
-        FILE_PATH = Path.of(USER_HOME, OS.toLowerCase().contains("windows") ? WINDOWS_PATH : ".password-manager");
+        String WINDOWS_PATH = Path.of("AppData", "Local", "Password Manager").toString();
+        String OS_FALLBACK_PATH = ".password-manager";
+        FILE_PATH = Path.of(USER_HOME, OS.toLowerCase().contains("windows") ? WINDOWS_PATH : OS_FALLBACK_PATH);
         DESKTOP_PATH = Path.of(USER_HOME, "Desktop");
+
+        // define data file name
+        DATA_FILE = "passwords.psmg";
     }
 
     private final @Getter Logger logger;
@@ -75,7 +75,7 @@ public final class IOManager {
     private @Getter boolean isFirstRun, isAuthenticated;
 
     public IOManager() {
-        logger = new Logger(FILE_PATH.resolve(LOG_FILE).toFile());
+        logger = new Logger(FILE_PATH);
         accountList = FXCollections.observableArrayList(new Account[0]);
         userPreferences = UserPreferences.empty();
 
@@ -84,7 +84,7 @@ public final class IOManager {
         isAuthenticated = false;
     }
 
-    public void loadDataFile(final ObservableResourceFactory langResources) {
+    public void loadData(final ObservableResourceFactory langResources) {
         if (!userPreferences.isEmpty()) {
             logger.addError(new UnsupportedOperationException("Cannot read data file: it would overwrite non-empty user preferences."));
             return;
@@ -97,9 +97,6 @@ public final class IOManager {
             logger.addInfo("Directory '" + FILE_PATH + "' did not exist and was therefore created");
             return;
         }
-
-        // gets the log history
-        logger.readFile();
 
         File data_file = FILE_PATH.resolve(DATA_FILE).toFile();
         // if the data file exists, it will try to read its contents
@@ -140,12 +137,15 @@ public final class IOManager {
 
             if (alert.getResult() != ButtonType.YES) {
                 logger.addInfo("Data overwriting denied");
-                logger.save();
                 System.exit(0);
             } else {
                 logger.addInfo("Data overwriting accepted");
             }
         }
+
+        // TODO Add logging
+        // userPreferences.getLocaleProperty().addListener((observable, oldValue, newValue) -> logger.addInfo("Changed locale to: " + newValue));
+        // userPreferences.getSortingOrderProperty().addListener((observable, oldValue, newValue) -> logger.addInfo("Changed sorting order to: " + newValue));
     }
 
     public SortedList<Account> getSortedAccountList() {
@@ -305,7 +305,7 @@ public final class IOManager {
         // when the user shuts down the program on the first run, it won't save
         if (!isFirstRun() || isAuthenticated()) {
             logger.addInfo("Shutting down");
-            result = saveAccountFile() && logger.save();
+            result = saveAccountFile();
         }
 
         return result;

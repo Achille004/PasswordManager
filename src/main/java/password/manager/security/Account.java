@@ -32,7 +32,7 @@ public final class Account implements Serializable {
     private byte[] encryptedPassword;
     private final byte[] iv;
 
-    public Account(String software, String username, String password, String loginPassword) throws GeneralSecurityException {
+    public Account(@NotNull String software, @NotNull String username, @NotNull String password, @NotNull String loginPassword) throws GeneralSecurityException {
         this.software = software;
         this.username = username;
 
@@ -40,7 +40,7 @@ public final class Account implements Serializable {
         setPassword(password, loginPassword);
     }
 
-    private void setPassword(String password, String loginPassword) throws GeneralSecurityException {
+    private void setPassword(@NotNull String password, @NotNull String loginPassword) throws GeneralSecurityException {
         // Generate IV
         SecureRandom random = new SecureRandom();
         random.nextBytes(iv);
@@ -49,33 +49,30 @@ public final class Account implements Serializable {
         this.encryptedPassword = Encrypter.encryptAES(password, key, iv);
     }
 
-    public String getPassword(String loginPassword) throws GeneralSecurityException {
+    public String getPassword(@NotNull String loginPassword) throws GeneralSecurityException {
         byte[] key = Encrypter.getKey(loginPassword, getSalt());
         return Encrypter.decryptAES(encryptedPassword, key, iv);
     }
 
-    public void setData(@NotNull String software, @NotNull String username, @NotNull String password,
-            String loginPassword) throws GeneralSecurityException {
+    public @NotNull Boolean setData(@NotNull String software, @NotNull String username, @NotNull String password, String loginPassword) throws GeneralSecurityException {
+        if(software.isEmpty() || password.isEmpty() || username.isEmpty()) {
+            return false;
+        }
+
         // First the password, so that if any error occurs it exits before software and username get reassigned
-        if (!password.isEmpty()) {
-            setPassword(password, loginPassword);
-        }
+        setPassword(password, loginPassword);
+        this.software = software;
+        this.username = username;
 
-        if (!software.isEmpty()) {
-            this.software = software;
-        }
-
-        if (!username.isEmpty()) {
-            this.username = username;
-        }
+        return false;
     }
 
-    public void changeLoginPassword(String oldLoginPassword, String newLoginPassword) throws GeneralSecurityException {
+    public void changeLoginPassword(@NotNull String oldLoginPassword, @NotNull String newLoginPassword) throws GeneralSecurityException {
         setPassword(getPassword(oldLoginPassword), newLoginPassword);
     }
 
     @Contract("_, _, _, _ -> new")
-    public static @NotNull Account of(String software, String username, String password, String loginPassword) throws GeneralSecurityException {
+    public static @NotNull Account of(@NotNull String software, @NotNull String username, @NotNull String password, @NotNull String loginPassword) throws GeneralSecurityException {
         // creates the account, adding its attributes by constructor
         return new Account(software, username, password, loginPassword);
     }

@@ -64,7 +64,7 @@ public class AppManager {
 
     private void initialize() {
         langResources.setResources(ResourceBundle.getBundle("/bundles/Lang", Utils.DEFAULT_LOCALE));
-        ioManager.loadDataFile(langResources);
+        ioManager.loadData(langResources);
 
         ObjectProperty<Locale> locale = ioManager.getUserPreferences().getLocaleProperty();
         langResources.resourcesProperty().bind(Bindings.createObjectBinding(
