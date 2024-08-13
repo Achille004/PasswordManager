@@ -1,7 +1,7 @@
 # Next up:
 - Change data file from dat to a more portable type
 - Better readme
-- Better code comments and documentation + code flow analysis (especially for null values)
+- Better code comments and documentation + code flow analysis (especially for null values) + logging
 - Embed fonts (as they only work on Windows)
 - Add export (add xml and json) + choose export directory (FileChooser/DirectoryChooser)
 - Add account search

@@ -56,7 +56,7 @@ public final class IOManager {
         // gets system properties
         OS = System.getProperty("os.name");
         USER_HOME = System.getProperty("user.home");
-        
+
         // gets the paths
         String WINDOWS_PATH = Path.of("AppData", "Local", "Password Manager").toString();
         String OS_FALLBACK_PATH = ".password-manager";
@@ -236,7 +236,7 @@ public final class IOManager {
             });
             // to wait until threads are finished, use threadInstance.join()
         });
-        if(error[0]) {
+        if (error[0]) {
             return false;
         }
 
@@ -251,7 +251,7 @@ public final class IOManager {
     }
 
     @SafeVarargs
-    public final <T extends TextInputControl> void displayLoginPassword(T @NotNull ... elements) {
+    public final <T extends TextInputControl> void displayLoginPassword(T @NotNull... elements) {
         for (T element : elements) {
             element.setText(loginPassword);
         }
@@ -306,6 +306,7 @@ public final class IOManager {
         if (!isFirstRun() || isAuthenticated()) {
             logger.addInfo("Shutting down");
             result = saveAccountFile();
+            logger.closeStream();
         }
 
         return result;
