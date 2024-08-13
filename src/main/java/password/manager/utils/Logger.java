@@ -18,6 +18,8 @@
 
 package password.manager.utils;
 
+import static password.manager.utils.Utils.*;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -43,35 +45,36 @@ public final class Logger {
         FILE_NAME = "report.log";
         MAX_LOG_FILES = 5;
 
-        FILE_DTF = DateTimeFormatter.ofPattern("yyyy.mm.dd_HH.mm.ss");
+        FILE_DTF = DateTimeFormatter.ofPattern("yyyy.MM.dd_HH.mm.ss");
         DTF = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.MEDIUM);
     }
 
     private final Path currPath;
-    private StringBuilder logHistory;
+    private final FileWriter writer;
+    private final StringBuilder strBuilder;
 
     public Logger(Path filePath) {
+        rotateLogs(filePath);
+        
         this.currPath = filePath.resolve(FOLDER_PREFIX + FILE_DTF.format(LocalDateTime.now()));
         currPath.toFile().mkdirs();
-        rotateLogs(filePath);
+
+        writer = getFileWriter(currPath.resolve(FILE_NAME), false);
+        strBuilder = new StringBuilder();
     }
 
-    public void addInfo(String str) {
-        logHistory = new StringBuilder();
-
-        logHistory
+    public @NotNull Boolean addInfo(String str) {
+        strBuilder
                 .append(DTF.format(LocalDateTime.now()))
                 .append(" >>> ")
                 .append(str)
                 .append("\n");
 
-        write(logHistory.toString());
+        return write();
     }
 
-    public void addError(@NotNull Exception e) {
-        logHistory = new StringBuilder();
-
-        logHistory
+    public @NotNull Boolean addError(@NotNull Exception e) {
+        strBuilder
                 .append(DTF.format(LocalDateTime.now()))
                 .append(" !!! An exception has been thrown, stack trace:\n")
                 .append(e.getClass().getName())
@@ -80,22 +83,28 @@ public final class Logger {
                 .append("\n");
 
         for (StackTraceElement element : e.getStackTrace()) {
-            logHistory.append("        ").append(element).append('\n');
+            strBuilder.append("        ").append(element).append('\n');
         }
 
-        write(logHistory.toString());
+        return write();
     }
 
-    public String getLogHistory() {
-        return logHistory.toString();
+    public void closeStream() {
+        try {
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    private boolean write(String str) {
-        try (FileWriter w = new FileWriter(currPath.resolve(FILE_NAME).toFile(), true)) {
-            w.write(str);
+    private @NotNull Boolean write() {
+        try {
+            writer.write(strBuilder.toString());
+            writer.flush();
+            strBuilder.setLength(0);
             return true;
         } catch (IOException e) {
-            addError(e);
+            e.printStackTrace();
             return false;
         }
     }
@@ -106,12 +115,12 @@ public final class Logger {
             File logDir = filePath.toFile();
             File[] logDirs = logDir.listFiles((dir, name) -> name.startsWith(FOLDER_PREFIX));
 
-            if (logDirs != null && logDirs.length > MAX_LOG_FILES) {
+            if (logDirs != null && logDirs.length > MAX_LOG_FILES - 1) {
                 // Sort the directories by last modified date, oldest first
                 Arrays.sort(logDirs, Comparator.comparingLong(File::lastModified));
 
                 // Delete the oldest directories if the count exceeds MAX_LOG_FILES
-                for (int i = 0; i < logDirs.length - MAX_LOG_FILES; i++) {
+                for (int i = 0; i < logDirs.length - MAX_LOG_FILES + 1; i++) {
                     deleteDirectory(logDirs[i].toPath());
                 }
             }

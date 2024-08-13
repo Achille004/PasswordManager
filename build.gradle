@@ -20,14 +20,14 @@ repositories {
     mavenCentral()
 }
 
-testModuleInfo {
-    requires('org.junit.jupiter.api')
+mainModuleInfo {
     annotationProcessor('lombok')
 }
 
-dependencies {
-    // https://mvnrepository.com/artifact/org.projectlombok/lombok
-    annotationProcessor 'org.projectlombok:lombok:1.18.32'
+testModuleInfo {
+    annotationProcessor('lombok')
+    requiresStatic('org.junit.jupiter.api')
+    requires('org.junit.jupiter.engine')
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

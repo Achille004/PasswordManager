@@ -18,6 +18,10 @@
 
 package password.manager.utils;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.text.Collator;
 import java.util.Arrays;
 import java.util.Base64;
@@ -53,7 +57,7 @@ public final class Utils {
     public static final Locale DEFAULT_LOCALE;
 
     static {
-        SUPPORTED_LOCALE = new Locale[]{Locale.ENGLISH, Locale.ITALIAN};
+        SUPPORTED_LOCALE = new Locale[] { Locale.ENGLISH, Locale.ITALIAN };
 
         Locale systemLang = Locale.forLanguageTag(Locale.getDefault().getLanguage());
         DEFAULT_LOCALE = Arrays.asList(SUPPORTED_LOCALE).contains(systemLang)
@@ -66,7 +70,7 @@ public final class Utils {
     private static final Nbvcxz NBVCXZ = new Nbvcxz();
 
     @SafeVarargs
-    public static <T> SortedList<T> getFXSortedList(T... items) {
+    public static <T> SortedList<T> getFXSortedList(T @NotNull... items) {
         return FXCollections.observableArrayList(items).sorted(null);
     }
 
@@ -97,10 +101,10 @@ public final class Utils {
     }
 
     @SafeVarargs
-    public static <T extends TextField> boolean checkTextFields(T @NotNull ... fields) {
+    public static <T extends TextField> boolean checkTextFields(T @NotNull... fields) {
         boolean nonEmpty = true;
 
-        for (T field : fields) {
+        for (@NotNull T field : fields) {
             if (field.getText().isBlank()) {
                 nonEmpty = false;
                 field.setStyle("-fx-border-color: #ff5f5f");
@@ -113,15 +117,15 @@ public final class Utils {
     }
 
     @SafeVarargs
-    public static <T extends TextField> void clearTextFields(T @NotNull ... fields) {
-        for (T field : fields) {
+    public static <T extends TextField> void clearTextFields(T @NotNull... fields) {
+        for (@NotNull T field : fields) {
             field.clear();
         }
     }
 
     @SafeVarargs
-    public static <T extends Node> void clearStyle(T @NotNull ... nodes) {
-        for (T node : nodes) {
+    public static <T extends Node> void clearStyle(T @NotNull... nodes) {
+        for (@NotNull T node : nodes) {
             node.setStyle("");
         }
     }
@@ -134,17 +138,17 @@ public final class Utils {
      * @param index    The index of the element.
      * @return The index.
      */
-    public static @NotNull String addZerosToIndex(int listSize, int index) {
+    public static @NotNull String addZerosToIndex(@NotNull Integer listSize, @NotNull Integer index) {
         int listDigits = (int) Math.log10(listSize) + 1;
         return String.format("%0" + listDigits + "d", index);
     }
 
-    public static String byteToBase64(byte[] src) {
+    public static String byteToBase64(@NotNull byte[] src) {
         // Base64-encode the encrypted password for a readable representation
         return BASE64ENC.encodeToString(src);
     }
 
-    public static byte[] base64ToByte(String src) {
+    public static byte[] base64ToByte(@NotNull String src) {
         // Base64-encode the encrypted password for a readable representation
         return BASE64DEC.decode(src);
     }
@@ -154,7 +158,7 @@ public final class Utils {
     }
 
     @Contract(value = "_ -> new", pure = true)
-    public static <T> @NotNull StringConverter<T> toStringConverter(Callback<? super T, String> converter) {
+    public static <T> @NotNull StringConverter<T> toStringConverter(@NotNull Callback<? super T, String> converter) {
         return new StringConverter<>() {
             @Override
             public T fromString(String string) {
@@ -168,8 +172,8 @@ public final class Utils {
         };
     }
 
-    public static <T> @NotNull ObservableValue<Comparator<T>> comparatorBinding(ObjectProperty<Locale> locale,
-                                                                                ObjectProperty<? extends StringConverter<T>> converter) {
+    public static <T> @NotNull ObservableValue<Comparator<T>> comparatorBinding(@NotNull ObjectProperty<Locale> locale,
+            @NotNull ObjectProperty<? extends StringConverter<T>> converter) {
         return Bindings.createObjectBinding(
                 () -> Comparator.comparing(
                         converter.getValue()::toString,
@@ -178,13 +182,15 @@ public final class Utils {
                 converter);
     }
 
-    public static <T> void bindValueConverter(@NotNull ComboBox<T> comboBox, @NotNull ObjectProperty<Locale> locale,
-                                              Function<Locale, StringConverter<T>> mapper) {
+    public static <T> void bindValueConverter(@NotNull ComboBox<T> comboBox,
+            @NotNull ObjectProperty<Locale> locale,
+            @NotNull Function<Locale, StringConverter<T>> mapper) {
         comboBox.converterProperty().bind(locale.map(mapper));
     }
 
-    public static <T> void bindValueComparator(@NotNull SortedList<T> sortedList, ObjectProperty<Locale> locale,
-                                               @NotNull ComboBox<T> comboBox) {
+    public static <T> void bindValueComparator(@NotNull SortedList<T> sortedList,
+            @NotNull ObjectProperty<Locale> locale,
+            @NotNull ComboBox<T> comboBox) {
         sortedList.comparatorProperty().bind(comparatorBinding(locale, comboBox.converterProperty()));
     }
 
@@ -196,12 +202,13 @@ public final class Utils {
         return alert;
     }
 
-    // Ideal gap is from 20 to 50, represented with linear progress bar with gaps of 1
-    public static double passwordStrength(String password) {
+    // Ideal gap is from 20 to 50, represented with linear progress bar with gaps of
+    // 1
+    public static double passwordStrength(@NotNull String password) {
         return NBVCXZ.estimate(password).getEntropy();
     }
 
-    public static String passwordStrengthGradient(double progress) throws IllegalArgumentException {
+    public static String passwordStrengthGradient(@NotNull Double progress) throws IllegalArgumentException {
         if (progress < 0 || progress > 1) {
             throw new IllegalArgumentException("Progress must be between 0 and 1");
         }
@@ -224,5 +231,17 @@ public final class Utils {
         gradientStr += ")";
 
         return gradientStr;
+    }
+
+    public static FileWriter getFileWriter(@NotNull Path path, @NotNull Boolean append) {
+        return getFileWriter(path.toFile(), append);
+    }
+
+    public static FileWriter getFileWriter(@NotNull File file, @NotNull Boolean append) {
+        try {
+            return new FileWriter(file, append);
+        } catch (IOException e) {
+            return null;
+        }
     }
 }
