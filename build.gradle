@@ -13,7 +13,7 @@ plugins {
     id 'org.gradlex.java-module-dependencies' version '1.6.4'
 }
 
-project.version = '3.0.1'
+project.version = '3.0.2'
 
 repositories {
     // Use Maven Central for resolving dependencies.
@@ -32,7 +32,6 @@ testModuleInfo {
 
 // Apply a specific Java toolchain to ease working on different environments.
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
     sourceCompatibility = JavaVersion.VERSION_21
 
     toolchain {
@@ -69,24 +68,19 @@ signing {
     sign distTar
 }
 
-tasks.register('assemblePortables') {
-    dependsOn('signDistZip', 'signDistTar')
+tasks.register('dist', Copy) {
+    dependsOn('distZip', 'signDistZip')
+    dependsOn('distTar', 'signDistTar')
 
-    doLast {
-        copy {
-            from(layout.buildDirectory.dir('/distributions'))
-            into(layout.projectDirectory.dir('/compiled/portable'))
-        }
-    }
+    from(tasks.distZip, tasks.signDistZip, tasks.distTar, tasks.signDistTar)
+    into(layout.projectDirectory.dir('/compiled/distributions'))
 }
 
 tasks.register('copyJars', Copy) {
-    dependsOn('compileJava', 'signJar')
+    dependsOn('jar', 'signJar')
 
-    copy {
-        from(configurations.runtimeClasspath, tasks.jar)
-        into(layout.buildDirectory.dir('/jars'))
-    }
+    from(configurations.runtimeClasspath, tasks.jar, tasks.signJar)
+    into(layout.buildDirectory.dir('/jars'))
 }
 
 jpackage {
@@ -100,11 +94,11 @@ jpackage {
 	// type = 'deb'
 
     aboutUrl = 'https://github.com/Achille004/PasswordManager'
-    appDescription = 'Password Manager is an application able to add, modify and delete locally saved accounts, characterized by a software, a username and an AES-encrypted password.'
+    appDescription = 'Password Manager'
     appName = 'Password Manager'
     appVersion = project.version
-    copyright = 'Copyright (c) 2022-2024 Francesco Marras'
-    destination = layout.projectDirectory.dir('/compiled/installer')
+    copyright = '© Francesco Marras'
+    destination = layout.projectDirectory.dir('/compiled/installers')
     icon =  layout.projectDirectory.file('/src/main/resources/locker.ico')
     javaOptions = ['-Dfile.encoding=UTF-8']
     licenseFile	= layout.projectDirectory.dir('/src/main/resources/license.txt')
@@ -127,7 +121,7 @@ jpackage {
     mac {
         macAppCategory  = 'security'
         macAppStore = false
-        macPackageIdentifier = 'PasswordManager-3.0.0'
+        macPackageIdentifier = 'PasswordManager-3.0.2'
         macPackageName = 'PasswordManager'
         macSigningKeyUserName = 'Francesco Marras'
     }
