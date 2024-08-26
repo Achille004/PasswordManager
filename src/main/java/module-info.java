@@ -25,7 +25,8 @@ module password.manager {
     requires transitive javafx.graphics;
     // requires javafx.web;
 
-    // requires jdk.jsobject;
+    requires com.fasterxml.jackson.databind;
+    // requires org.json;
     
     requires static lombok;
 
@@ -45,4 +46,6 @@ module password.manager {
     exports password.manager.utils;
     
     opens password.manager to javafx.fxml;
+    opens password.manager.utils to com.fasterxml.jackson.databind;
+    opens password.manager.security to com.fasterxml.jackson.databind;
 }

@@ -19,10 +19,6 @@
 package password.manager.security;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serial;
-import java.io.Serializable;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
@@ -31,17 +27,27 @@ import java.util.Locale;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JacksonException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 import password.manager.enums.SortingOrder;
+import password.manager.security.UserPreferences.UserPreferencesDeserializer;
 import password.manager.utils.Utils;
 
-public final class UserPreferences implements Serializable {
-    private transient @Getter ObjectProperty<Locale> localeProperty;
-    private transient @Getter ObjectProperty<SortingOrder> sortingOrderProperty;
-    private byte[] hashedPassword;
-    private final byte[] salt;
+@JsonDeserialize(using = UserPreferencesDeserializer.class)
+public final class UserPreferences {
+    private @Getter @JsonIgnore ObjectProperty<Locale> localeProperty;
+    private @Getter @JsonIgnore ObjectProperty<SortingOrder> sortingOrderProperty;
+    private @Getter byte[] hashedPassword;
+    private final @Getter byte[] salt;
 
     public UserPreferences() {
         this.localeProperty = new SimpleObjectProperty<>(Utils.DEFAULT_LOCALE);
@@ -57,6 +63,15 @@ public final class UserPreferences implements Serializable {
 
         this.salt = new byte[16];
         setPassword(password);
+    }
+
+    protected UserPreferences(ObjectProperty<Locale> localeProperty, ObjectProperty<SortingOrder> sortingOrderProperty,
+            byte[] hashedPassword, byte[] salt) {
+        this.localeProperty = localeProperty;
+        this.sortingOrderProperty = sortingOrderProperty;
+
+        this.hashedPassword = hashedPassword;
+        this.salt = salt;
     }
 
     public Locale getLocale() {
@@ -75,16 +90,16 @@ public final class UserPreferences implements Serializable {
         sortingOrderProperty.set(sortingOrder);
     }
 
-    public @NotNull Boolean isEmpty() {
+    public @NotNull @JsonIgnore Boolean isEmpty() {
         return this.hashedPassword == null;
     }
 
     public @NotNull Boolean verifyPassword(String passwordToVerify) throws InvalidKeySpecException {
-        if(hashedPassword == null) {
+        if (hashedPassword == null) {
             return true;
         }
 
-        if(passwordToVerify == null) {
+        if (passwordToVerify == null) {
             return false;
         }
 
@@ -117,21 +132,21 @@ public final class UserPreferences implements Serializable {
         return new UserPreferences();
     }
 
-    @Serial
-    private void writeObject(@NotNull ObjectOutputStream out) throws IOException {
-        out.writeObject(getLocale());
-        out.writeObject(getSortingOrder());
-        out.defaultWriteObject();
-    }
+    protected static class UserPreferencesDeserializer extends StdDeserializer<UserPreferences> {
+        protected UserPreferencesDeserializer() {
+            super(UserPreferences.class);
+        }
 
-    @Serial
-    private void readObject(@NotNull ObjectInputStream in) throws IOException, ClassNotFoundException {
-        Locale localeValue = (Locale) in.readObject();
-        this.localeProperty = new SimpleObjectProperty<>(localeValue);
+        @Override
+        public UserPreferences deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JacksonException {
+            JsonNode node = jp.getCodec().readTree(jp);
 
-        SortingOrder sortingOrderValue = (SortingOrder) in.readObject();
-        this.sortingOrderProperty = new SimpleObjectProperty<>(sortingOrderValue);
+            ObjectProperty<Locale> localeProperty = new SimpleObjectProperty<>(Locale.forLanguageTag(node.get("locale").asText()));
+            ObjectProperty<SortingOrder> sortingOrderProperty = new SimpleObjectProperty<>(SortingOrder.valueOf(node.get("sortingOrder").asText()));;
+            byte[] hashedPassword = Utils.base64ToByte(node.get("hashedPassword").asText());
+            byte[] salt = Utils.base64ToByte(node.get("salt").asText());
 
-        in.defaultReadObject();
+            return new UserPreferences(localeProperty, sortingOrderProperty, hashedPassword, salt);
+        }
     }
 }

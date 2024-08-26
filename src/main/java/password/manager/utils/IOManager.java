@@ -21,20 +21,19 @@ package password.manager.utils;
 import static password.manager.utils.Utils.*;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InvalidClassException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -64,7 +63,7 @@ public final class IOManager {
         DESKTOP_PATH = Path.of(USER_HOME, "Desktop");
 
         // define data file name
-        DATA_FILE = "passwords.psmg";
+        DATA_FILE = "data.json";
     }
 
     private final @Getter Logger logger;
@@ -76,7 +75,7 @@ public final class IOManager {
 
     public IOManager() {
         logger = new Logger(FILE_PATH);
-        accountList = FXCollections.observableArrayList(new Account[0]);
+        accountList = FXCollections.observableArrayList();
         userPreferences = UserPreferences.empty();
 
         loginPassword = null;
@@ -86,7 +85,7 @@ public final class IOManager {
 
     public void loadData(final ObservableResourceFactory langResources) {
         if (!userPreferences.isEmpty()) {
-            logger.addError(new UnsupportedOperationException("Cannot read data file: it would overwrite non-empty user preferences."));
+            logger.addError(new UnsupportedOperationException("Cannot read data file: it would overwrite non-empty user preferences"));
             return;
         }
 
@@ -105,29 +104,17 @@ public final class IOManager {
             return;
         }
 
-        try (FileInputStream f = new FileInputStream(data_file)) {
-            ObjectInputStream fIN = new ObjectInputStream(f);
-            Object obj;
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            AccountData data = objectMapper.readValue(FILE_PATH.resolve(DATA_FILE).toFile(), AccountData.class);
 
-            obj = fIN.readObject();
-            if (obj instanceof UserPreferences usrPrfcs) {
-                userPreferences = usrPrfcs;
-            } else {
-                throw new InvalidClassException("Unexpected object class. Expecting: " + UserPreferences.class);
-            }
-
-            obj = fIN.readObject();
-            if (obj instanceof Account[] accounts) {
-                accountList.addAll(accounts);
-            } else {
-                throw new InvalidClassException("Unexpected object class. Expecting: " + ArrayList.class);
-            }
+            this.userPreferences = data.userPreferences();
+            accountList.addAll(Collections.nCopies(data.accountList().size(), null));
+            FXCollections.copy(this.accountList, data.accountList());
 
             logger.addInfo("File loaded: '" + data_file + "'");
-
-            // All the data was loaded successfully
             isFirstRun = false;
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
             logger.addError(e);
 
             Alert alert = new Alert(AlertType.ERROR, langResources.getValue("load_error"), ButtonType.YES,
@@ -168,7 +155,7 @@ public final class IOManager {
     }
 
     public @NotNull Boolean editAccount(@NotNull Account account, @Nullable String software, @Nullable String username, @Nullable String password) {
-        if(software == null || username == null || password == null) {
+        if (software == null || username == null || password == null) {
             return false;
         }
 
@@ -287,9 +274,11 @@ public final class IOManager {
     }
 
     private boolean saveAccountFile() {
-        try (ObjectOutputStream fOUT = new ObjectOutputStream(new FileOutputStream(FILE_PATH.resolve(DATA_FILE).toFile()))) {
-            fOUT.writeObject(this.userPreferences);
-            fOUT.writeObject(this.accountList.toArray(new Account[0]));
+        ObjectWriter objectWriter = new ObjectMapper().writer().withDefaultPrettyPrinter();
+
+        try {
+            AccountData data = new AccountData(this.userPreferences, this.accountList);
+            objectWriter.writeValue(FILE_PATH.resolve(DATA_FILE).toFile(), data);
 
             logger.addInfo("Data file saved");
             return true;
@@ -297,6 +286,10 @@ public final class IOManager {
             logger.addError(e);
             return false;
         }
+    }
+
+    // Wrapper class for data
+    private static record AccountData(UserPreferences userPreferences, List<Account> accountList) {
     }
 
     public @NotNull Boolean saveAll() {
