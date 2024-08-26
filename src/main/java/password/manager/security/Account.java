@@ -18,19 +18,32 @@
 
 package password.manager.security;
 
-import java.io.Serializable;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import lombok.Getter;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public final class Account implements Serializable {
-    private @Getter String software, username;
+import lombok.Data;
+
+@Data
+public final class Account {
+    private String software, username;
     private byte[] encryptedPassword;
     private final byte[] iv;
+
+    public Account(
+            @JsonProperty("software") String software,
+            @JsonProperty("username") String username,
+            @JsonProperty("encryptedPassword") byte[] encryptedPassword, 
+            @JsonProperty("iv") byte[] iv) {
+        this.software = software;
+        this.username = username;
+        this.encryptedPassword = encryptedPassword;
+        this.iv = iv;
+    }
 
     public Account(@NotNull String software, @NotNull String username, @NotNull String password, @NotNull String loginPassword) throws GeneralSecurityException {
         this.software = software;
@@ -55,7 +68,7 @@ public final class Account implements Serializable {
     }
 
     public @NotNull Boolean setData(@NotNull String software, @NotNull String username, @NotNull String password, String loginPassword) throws GeneralSecurityException {
-        if(software.isEmpty() || password.isEmpty() || username.isEmpty()) {
+        if (software.isEmpty() || password.isEmpty() || username.isEmpty()) {
             return false;
         }
 
@@ -64,7 +77,7 @@ public final class Account implements Serializable {
         this.software = software;
         this.username = username;
 
-        return false;
+        return true;
     }
 
     public void changeLoginPassword(@NotNull String oldLoginPassword, @NotNull String newLoginPassword) throws GeneralSecurityException {
