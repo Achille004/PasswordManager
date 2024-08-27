@@ -26,13 +26,14 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import org.jetbrains.annotations.NotNull;
 
 public class App extends Application {
     private AppManager appManager;
     private HostServices hostServices;
 
     @Override
-    public void start(Stage primaryStage) {
+    public void start(@NotNull Stage primaryStage) {
         hostServices = getHostServices();
 
         AnchorPane scenePane = new AnchorPane();

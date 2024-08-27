@@ -18,8 +18,6 @@
 
 package password.manager.controllers;
 
-import static password.manager.utils.Utils.*;
-
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -72,7 +70,7 @@ public class LoginController extends AbstractController {
         langResources.bindTextProperty(loginTitle, "welcome_back");
         langResources.bindTextProperty(loginSubmitBtn, "lets_go");
 
-        bindPasswordFields(loginPasswordHidden, loginPasswordVisible);
+        bindTextProperty(loginPasswordHidden, loginPasswordVisible);
     }
 
     @FXML

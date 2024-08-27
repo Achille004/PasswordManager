@@ -24,24 +24,17 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import javafx.application.HostServices;
-
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
-import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
-import javafx.util.Duration;
 import javafx.util.StringConverter;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -81,29 +74,8 @@ public class DecrypterController extends AbstractViewController {
         langResources.bindTextProperty(decryptUsernameLbl, "username");
         langResources.bindTextProperty(decryptPasswordLbl, "password");
 
-        bindPasswordFields(decryptPasswordHidden, decryptPasswordVisible);
-
-        ObservableList<Node> passStrChildren = decryptPassStr.getChildrenUnmodifiable();
-        decryptPasswordVisible.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (!passStrChildren.isEmpty() && !decryptCB.getSelectionModel().isEmpty()) {
-                double passwordStrength = passwordStrength(newValue);
-                passwordStrength = Math.max(20d, passwordStrength);
-                passwordStrength = Math.min(50d, passwordStrength);
-
-                double progress = (passwordStrength - 20) / 30;
-
-                Node bar = passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst();
-                bar.setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
-
-                Timeline timeline = new Timeline(
-                        new KeyFrame(Duration.ZERO,
-                                new KeyValue(decryptPassStr.progressProperty(), decryptPassStr.getProgress())),
-                        new KeyFrame(new Duration(200),
-                                new KeyValue(decryptPassStr.progressProperty(), progress)));
-
-                timeline.play();
-            }
-        });
+        bindTextProperty(decryptPasswordHidden, decryptPasswordVisible);
+        bindPasswordStrength(decryptPassStr, decryptPasswordVisible);
 
         SortedList<Account> accountList = ioManager.getSortedAccountList();
         decryptCB.setItems(accountList);

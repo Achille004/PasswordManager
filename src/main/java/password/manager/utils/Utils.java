@@ -22,34 +22,23 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.text.Collator;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
-import java.util.Comparator;
 import java.util.Locale;
-import java.util.function.Function;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import javafx.beans.binding.Bindings;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.SortedList;
-import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DialogPane;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
 import javafx.scene.paint.Color;
-import javafx.util.Callback;
-import javafx.util.StringConverter;
 import me.gosimple.nbvcxz.Nbvcxz;
 
 public final class Utils {
@@ -95,41 +84,6 @@ public final class Utils {
         return comboBox.getSelectionModel().getSelectedItem();
     }
 
-    public static void bindPasswordFields(@NotNull PasswordField hidden, @NotNull TextField visible) {
-        hidden.textProperty().addListener((options, oldValue, newValue) -> visible.setText(newValue));
-        visible.textProperty().addListener((options, oldValue, newValue) -> hidden.setText(newValue));
-    }
-
-    @SafeVarargs
-    public static <T extends TextField> boolean checkTextFields(T @NotNull... fields) {
-        boolean nonEmpty = true;
-
-        for (@NotNull T field : fields) {
-            if (field.getText().isBlank()) {
-                nonEmpty = false;
-                field.setStyle("-fx-border-color: #ff5f5f");
-            } else {
-                field.setStyle("-fx-border-color: #a7acb1");
-            }
-        }
-
-        return nonEmpty;
-    }
-
-    @SafeVarargs
-    public static <T extends TextField> void clearTextFields(T @NotNull... fields) {
-        for (@NotNull T field : fields) {
-            field.clear();
-        }
-    }
-
-    @SafeVarargs
-    public static <T extends Node> void clearStyle(T @NotNull... nodes) {
-        for (@NotNull T node : nodes) {
-            node.setStyle("");
-        }
-    }
-
     /**
      * Returns a string containing the index, preceded by zero to match up the same
      * number of digits of the size of the list.
@@ -155,43 +109,6 @@ public final class Utils {
 
     public static @NotNull String capitalizeWord(@NotNull String str) {
         return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
-    }
-
-    @Contract(value = "_ -> new", pure = true)
-    public static <T> @NotNull StringConverter<T> toStringConverter(@NotNull Callback<? super T, String> converter) {
-        return new StringConverter<>() {
-            @Override
-            public T fromString(String string) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public String toString(@NotNull T object) {
-                return converter.call(object);
-            }
-        };
-    }
-
-    public static <T> @NotNull ObservableValue<Comparator<T>> comparatorBinding(@NotNull ObjectProperty<Locale> locale,
-            @NotNull ObjectProperty<? extends StringConverter<T>> converter) {
-        return Bindings.createObjectBinding(
-                () -> Comparator.comparing(
-                        converter.getValue()::toString,
-                        Collator.getInstance(locale.getValue())),
-                locale,
-                converter);
-    }
-
-    public static <T> void bindValueConverter(@NotNull ComboBox<T> comboBox,
-            @NotNull ObjectProperty<Locale> locale,
-            @NotNull Function<Locale, StringConverter<T>> mapper) {
-        comboBox.converterProperty().bind(locale.map(mapper));
-    }
-
-    public static <T> void bindValueComparator(@NotNull SortedList<T> sortedList,
-            @NotNull ObjectProperty<Locale> locale,
-            @NotNull ComboBox<T> comboBox) {
-        sortedList.comparatorProperty().bind(comparatorBinding(locale, comboBox.converterProperty()));
     }
 
     @Contract("_, _ -> param1")
