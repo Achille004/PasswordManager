@@ -22,39 +22,27 @@ import static password.manager.utils.Utils.passwordStrength;
 import static password.manager.utils.Utils.passwordStrengthGradient;
 
 import java.io.IOException;
-import java.text.Collator;
-import java.util.Comparator;
-import java.util.Locale;
 import java.util.Objects;
-import java.util.function.Function;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.HostServices;
-import javafx.beans.binding.Bindings;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
-import javafx.util.Callback;
 import javafx.util.Duration;
-import javafx.util.StringConverter;
 import password.manager.controllers.extra.EulaController;
 import password.manager.utils.IOManager;
 import password.manager.utils.ObservableResourceFactory;
@@ -107,7 +95,7 @@ public abstract class AbstractController implements Initializable {
         }
     }
 
-    protected static <T extends TextInputControl> void bindPasswordStrength(ProgressBar progressBar, T textElement) {
+    protected static <T extends TextInputControl> void bindPasswordStrength(@NotNull ProgressBar progressBar, @NotNull T textElement) {
         ObservableList<Node> passStrChildren = progressBar.getChildrenUnmodifiable();
         textElement.textProperty().addListener((observable, oldValue, newValue) -> {
             double passwordStrength = passwordStrength(newValue);
@@ -163,42 +151,5 @@ public abstract class AbstractController implements Initializable {
         for (@NotNull T node : nodes) {
             node.setStyle("");
         }
-    }
-
-    @Contract(value = "_ -> new", pure = true)
-    protected static <T> @NotNull StringConverter<T> toStringConverter(@NotNull Callback<? super T, String> converter) {
-        return new StringConverter<>() {
-            @Override
-            public T fromString(String string) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public String toString(@NotNull T object) {
-                return converter.call(object);
-            }
-        };
-    }
-
-    protected static <T> @NotNull ObservableValue<Comparator<T>> comparatorBinding(@NotNull ObjectProperty<Locale> locale,
-            @NotNull ObjectProperty<? extends StringConverter<T>> converter) {
-        return Bindings.createObjectBinding(
-                () -> Comparator.comparing(
-                        converter.getValue()::toString,
-                        Collator.getInstance(locale.getValue())),
-                locale,
-                converter);
-    }
-
-    protected static <T> void bindValueConverter(@NotNull ComboBox<T> comboBox,
-            @NotNull ObjectProperty<Locale> locale,
-            @NotNull Function<Locale, StringConverter<T>> mapper) {
-        comboBox.converterProperty().bind(locale.map(mapper));
-    }
-
-    protected static <T> void bindValueComparator(@NotNull SortedList<T> sortedList,
-            @NotNull ObjectProperty<Locale> locale,
-            @NotNull ComboBox<T> comboBox) {
-        sortedList.comparatorProperty().bind(comparatorBinding(locale, comboBox.converterProperty()));
     }
 }
