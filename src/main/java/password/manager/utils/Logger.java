@@ -18,7 +18,7 @@
 
 package password.manager.utils;
 
-import static password.manager.utils.Utils.*;
+import static password.manager.utils.Utils.getFileWriter;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -30,11 +30,12 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
 
 public final class Logger {
-    private static final String FOLDER_PREFIX, FILE_NAME;
+    private static final String FOLDER_PREFIX, LOG_FILE_NAME, STACKTRACE_FILE_NAME;
     private static final int MAX_LOG_FILES;
 
     private static final DateTimeFormatter FILE_DTF;
@@ -42,7 +43,8 @@ public final class Logger {
 
     static {
         FOLDER_PREFIX = "log_";
-        FILE_NAME = "report.log";
+        LOG_FILE_NAME = "report.log";
+        STACKTRACE_FILE_NAME = "stacktrace.log";
         MAX_LOG_FILES = 5;
 
         FILE_DTF = DateTimeFormatter.ofPattern("yyyy.MM.dd_HH.mm.ss");
@@ -50,58 +52,81 @@ public final class Logger {
     }
 
     private final Path currPath;
-    private final FileWriter writer;
-    private final StringBuilder strBuilder;
+    private final FileWriter logWriter, stacktraceWriter;
 
     public Logger(Path filePath) {
         rotateLogs(filePath);
-        
+
         this.currPath = filePath.resolve(FOLDER_PREFIX + FILE_DTF.format(LocalDateTime.now()));
         currPath.toFile().mkdirs();
 
-        writer = getFileWriter(currPath.resolve(FILE_NAME), false);
-        strBuilder = new StringBuilder();
+        logWriter = getFileWriter(currPath.resolve(LOG_FILE_NAME), false);
+        Objects.requireNonNull(logWriter, "logWriter must not be null");
+
+        stacktraceWriter = getFileWriter(currPath.resolve(STACKTRACE_FILE_NAME), false);
+        Objects.requireNonNull(stacktraceWriter, "stacktraceWriter must not be null");
     }
 
     public @NotNull Boolean addInfo(String str) {
-        strBuilder
+        StringBuilder logStrBuilder = new StringBuilder();
+        logStrBuilder
                 .append(DTF.format(LocalDateTime.now()))
                 .append(" >>> ")
                 .append(str)
                 .append("\n");
 
-        return write();
+        return write(logWriter, logStrBuilder);
     }
 
     public @NotNull Boolean addError(@NotNull Exception e) {
-        strBuilder
+        StringBuilder logStrBuilder = new StringBuilder();
+        logStrBuilder
                 .append(DTF.format(LocalDateTime.now()))
-                .append(" !!! An exception has been thrown, stack trace:\n")
-                .append(e.getClass().getName())
+                .append(" !!! An exception has been thrown. See '")
+                .append(STACKTRACE_FILE_NAME)
+                .append("' for details.\n");
+
+        // Write the stack trace to the stacktrace log file
+        StringBuilder stacktraceStrBuilder = new StringBuilder();
+        stacktraceStrBuilder
+                .append(DTF.format(LocalDateTime.now()))
+                .append(" => Exception thrown while executing '")
+                .append(getCurrentMethodName(1))
+                .append("', follows error and full stack trace:\n");
+        stacktraceStrBuilder.append(e.getClass().getName())
                 .append(": ")
                 .append(e.getMessage())
                 .append("\n");
-
         for (StackTraceElement element : e.getStackTrace()) {
-            strBuilder.append("        ").append(element).append('\n');
+            stacktraceStrBuilder.append("        ").append(element).append('\n');
         }
 
-        return write();
+        return write(logWriter, logStrBuilder) && write(stacktraceWriter, stacktraceStrBuilder);
     }
 
-    public void closeStream() {
+    private static @NotNull String getCurrentMethodName(@NotNull Integer walkDist) {
+        StackTraceElement[] sckTrc = Thread.currentThread().getStackTrace();
+        if (sckTrc.length >= walkDist + 2) {
+            StackTraceElement stckTrcElem = sckTrc[walkDist + 2];
+            return stckTrcElem.getClassName() + '.' + stckTrcElem.getMethodName();
+        } else {
+            return "unknown";
+        }
+    }
+
+    public void closeStreams() {
         try {
-            writer.close();
+            logWriter.close();
+            stacktraceWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private @NotNull Boolean write() {
+    private @NotNull Boolean write(@NotNull FileWriter writer, @NotNull StringBuilder builder) {
         try {
-            writer.write(strBuilder.toString());
+            writer.write(builder.toString());
             writer.flush();
-            strBuilder.setLength(0);
             return true;
         } catch (IOException e) {
             e.printStackTrace();
@@ -109,7 +134,7 @@ public final class Logger {
         }
     }
 
-    private void rotateLogs(Path filePath) {
+    private void rotateLogs(@NotNull Path filePath) {
         try {
             // Get the list of log directories
             File logDir = filePath.toFile();

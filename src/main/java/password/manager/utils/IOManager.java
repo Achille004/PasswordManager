@@ -211,20 +211,22 @@ public final class IOManager {
             return false;
         }
 
-        boolean[] error = new boolean[1];
-        accountList.forEach(account -> {
-            Thread.startVirtualThread(() -> {
-                try {
-                    account.changeLoginPassword(oldLoginPassword, newLoginPassword);
-                } catch (GeneralSecurityException e) {
-                    logger.addError(e);
-                    error[0] = true;
-                }
+        if(oldLoginPassword != null) {
+            boolean[] error = new boolean[1];
+            accountList.forEach(account -> {
+                Thread.startVirtualThread(() -> {
+                    try {
+                        account.changeLoginPassword(oldLoginPassword, newLoginPassword);
+                    } catch (GeneralSecurityException e) {
+                        logger.addError(e);
+                        error[0] = true;
+                    }
+                });
+                // to wait until threads are finished, use threadInstance.join()
             });
-            // to wait until threads are finished, use threadInstance.join()
-        });
-        if (error[0]) {
-            return false;
+            if (error[0]) {
+                return false;
+            }
         }
 
         this.loginPassword = newLoginPassword;
@@ -299,7 +301,7 @@ public final class IOManager {
         if (!isFirstRun() || isAuthenticated()) {
             logger.addInfo("Shutting down");
             result = saveAccountFile();
-            logger.closeStream();
+            logger.closeStreams();
         }
 
         return result;

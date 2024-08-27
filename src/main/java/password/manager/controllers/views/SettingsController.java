@@ -22,8 +22,11 @@ import static password.manager.utils.Utils.capitalizeWord;
 import static password.manager.utils.Utils.getFXSortedList;
 
 import java.net.URL;
+import java.text.Collator;
+import java.util.Comparator;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.function.Function;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -31,6 +34,7 @@ import org.jetbrains.annotations.NotNull;
 import javafx.application.HostServices;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -40,6 +44,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
+import javafx.util.Callback;
 import javafx.util.StringConverter;
 import password.manager.enums.SortingOrder;
 import password.manager.utils.IOManager;
@@ -139,5 +144,44 @@ public class SettingsController extends AbstractViewController {
     @Contract(value = "_ -> new", pure = true)
     private @NotNull StringConverter<SortingOrder> sortingOrderStringConverter(Locale locale) {
         return toStringConverter(item -> item != null ? langResources.getValue(item.getI18nKey()) : null);
+    }
+
+    ///// Utility methods /////
+
+    @Contract(value = "_ -> new", pure = true)
+    private static <T> @NotNull StringConverter<T> toStringConverter(@NotNull Callback<? super T, String> converter) {
+        return new StringConverter<>() {
+            @Override
+            public T fromString(String string) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public String toString(@NotNull T object) {
+                return converter.call(object);
+            }
+        };
+    }
+
+    private static <T> @NotNull ObservableValue<Comparator<T>> comparatorBinding(@NotNull ObjectProperty<Locale> locale,
+            @NotNull ObjectProperty<? extends StringConverter<T>> converter) {
+        return Bindings.createObjectBinding(
+                () -> Comparator.comparing(
+                        converter.getValue()::toString,
+                        Collator.getInstance(locale.getValue())),
+                locale,
+                converter);
+    }
+
+    private static <T> void bindValueConverter(@NotNull ComboBox<T> comboBox,
+            @NotNull ObjectProperty<Locale> locale,
+            @NotNull Function<Locale, StringConverter<T>> mapper) {
+        comboBox.converterProperty().bind(locale.map(mapper));
+    }
+
+    private static <T> void bindValueComparator(@NotNull SortedList<T> sortedList,
+            @NotNull ObjectProperty<Locale> locale,
+            @NotNull ComboBox<T> comboBox) {
+        sortedList.comparatorProperty().bind(comparatorBinding(locale, comboBox.converterProperty()));
     }
 }
