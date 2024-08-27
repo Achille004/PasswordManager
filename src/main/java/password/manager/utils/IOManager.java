@@ -289,7 +289,7 @@ public final class IOManager {
     }
 
     // Wrapper class for data
-    private static record AccountData(UserPreferences userPreferences, List<Account> accountList) {
+    private record AccountData(UserPreferences userPreferences, List<Account> accountList) {
     }
 
     public @NotNull Boolean saveAll() {

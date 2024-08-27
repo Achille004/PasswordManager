@@ -28,7 +28,6 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -42,12 +41,13 @@ import password.manager.enums.SortingOrder;
 import password.manager.security.UserPreferences.UserPreferencesDeserializer;
 import password.manager.utils.Utils;
 
+@Getter
 @JsonDeserialize(using = UserPreferencesDeserializer.class)
 public final class UserPreferences {
-    private @Getter @JsonIgnore ObjectProperty<Locale> localeProperty;
-    private @Getter @JsonIgnore ObjectProperty<SortingOrder> sortingOrderProperty;
-    private @Getter byte[] hashedPassword;
-    private final @Getter byte[] salt;
+    private final @JsonIgnore ObjectProperty<Locale> localeProperty;
+    private final @JsonIgnore ObjectProperty<SortingOrder> sortingOrderProperty;
+    private byte[] hashedPassword;
+    private final byte[] salt;
 
     public UserPreferences() {
         this.localeProperty = new SimpleObjectProperty<>(Utils.DEFAULT_LOCALE);
@@ -65,8 +65,8 @@ public final class UserPreferences {
         setPassword(password);
     }
 
-    protected UserPreferences(ObjectProperty<Locale> localeProperty, ObjectProperty<SortingOrder> sortingOrderProperty,
-            byte[] hashedPassword, byte[] salt) {
+    private UserPreferences(ObjectProperty<Locale> localeProperty, ObjectProperty<SortingOrder> sortingOrderProperty,
+                byte[] hashedPassword, byte[] salt) {
         this.localeProperty = localeProperty;
         this.sortingOrderProperty = sortingOrderProperty;
 
@@ -107,7 +107,7 @@ public final class UserPreferences {
         return Arrays.equals(hashedPassword, hashedPasswordToVerify);
     }
 
-    public @NotNull Boolean setPasswordVerified(@NotNull String oldPassword, @NotNull String newPassword) throws InvalidKeySpecException {
+    public @NotNull Boolean setPasswordVerified(String oldPassword, @NotNull String newPassword) throws InvalidKeySpecException {
         boolean res = verifyPassword(oldPassword);
         if (res) {
             setPassword(newPassword);
@@ -138,11 +138,11 @@ public final class UserPreferences {
         }
 
         @Override
-        public UserPreferences deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JacksonException {
+        public UserPreferences deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
             JsonNode node = jp.getCodec().readTree(jp);
 
             ObjectProperty<Locale> localeProperty = new SimpleObjectProperty<>(Locale.forLanguageTag(node.get("locale").asText()));
-            ObjectProperty<SortingOrder> sortingOrderProperty = new SimpleObjectProperty<>(SortingOrder.valueOf(node.get("sortingOrder").asText()));;
+            ObjectProperty<SortingOrder> sortingOrderProperty = new SimpleObjectProperty<>(SortingOrder.valueOf(node.get("sortingOrder").asText()));
             byte[] hashedPassword = Utils.base64ToByte(node.get("hashedPassword").asText());
             byte[] salt = Utils.base64ToByte(node.get("salt").asText());
 

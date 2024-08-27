@@ -18,33 +18,29 @@
 
 package password.manager.controllers.views;
 
-import static password.manager.utils.Utils.*;
+import static password.manager.utils.Utils.capitalizeWord;
+import static password.manager.utils.Utils.getFXSortedList;
 
 import java.net.URL;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+
 import javafx.application.HostServices;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
-import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
-import javafx.util.Duration;
 import javafx.util.StringConverter;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import password.manager.enums.SortingOrder;
 import password.manager.utils.IOManager;
 import password.manager.utils.ObservableResourceFactory;
@@ -125,29 +121,9 @@ public class SettingsController extends AbstractViewController {
         };
         settingsLoginPasswordVisible.setOnAction(changeLoginPasswordEvent);
         settingsLoginPasswordHidden.setOnAction(changeLoginPasswordEvent);
-        bindPasswordFields(settingsLoginPasswordHidden, settingsLoginPasswordVisible);
 
-        ObservableList<Node> passStrChildren = settingsLoginPassStr.getChildrenUnmodifiable();
-        settingsLoginPasswordVisible.textProperty().addListener((observable, oldValue, newValue) -> {
-            double passwordStrength = passwordStrength(newValue);
-            passwordStrength = Math.max(20d, passwordStrength);
-            passwordStrength = Math.min(50d, passwordStrength);
-
-            double progress = (passwordStrength - 20) / 30;
-            if (!passStrChildren.isEmpty()) {
-                Node bar = passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst();
-                bar.setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
-
-                Timeline timeline = new Timeline(
-                        new KeyFrame(Duration.ZERO,
-                                new KeyValue(settingsLoginPassStr.progressProperty(),
-                                        settingsLoginPassStr.getProgress())),
-                        new KeyFrame(new Duration(200),
-                                new KeyValue(settingsLoginPassStr.progressProperty(), progress)));
-
-                timeline.play();
-            }
-        });
+        bindTextProperty(settingsLoginPasswordHidden, settingsLoginPasswordVisible);
+        bindPasswordStrength(settingsLoginPassStr, settingsLoginPasswordVisible);
     }
 
     public void reset() {

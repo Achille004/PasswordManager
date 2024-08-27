@@ -18,20 +18,43 @@
 
 package password.manager.controllers;
 
-import java.io.IOException;
-import java.util.Objects;
+import static password.manager.utils.Utils.passwordStrength;
+import static password.manager.utils.Utils.passwordStrengthGradient;
 
+import java.io.IOException;
+import java.text.Collator;
+import java.util.Comparator;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.function.Function;
+
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.application.HostServices;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
-import org.jetbrains.annotations.NotNull;
+import javafx.util.Callback;
+import javafx.util.Duration;
+import javafx.util.StringConverter;
 import password.manager.controllers.extra.EulaController;
 import password.manager.utils.IOManager;
 import password.manager.utils.ObservableResourceFactory;
@@ -49,8 +72,7 @@ public abstract class AbstractController implements Initializable {
 
         eulaStage = new Stage();
         eulaStage.setTitle(langResources.getValue("terms_credits"));
-        eulaStage.getIcons()
-                .add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/locker.png"))));
+        eulaStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/locker.png"))));
         eulaStage.setResizable(false);
         eulaStage.setScene(new Scene(loadFxml("/fxml/extra/eula.fxml", new EulaController(ioManager, hostServices)), 900, 600));
     }
@@ -83,5 +105,100 @@ public abstract class AbstractController implements Initializable {
             ioManager.getLogger().addError(e);
             return null;
         }
+    }
+
+    protected static <T extends TextInputControl> void bindPasswordStrength(ProgressBar progressBar, T textElement) {
+        ObservableList<Node> passStrChildren = progressBar.getChildrenUnmodifiable();
+        textElement.textProperty().addListener((observable, oldValue, newValue) -> {
+            double passwordStrength = passwordStrength(newValue);
+            passwordStrength = Math.max(20d, passwordStrength);
+            passwordStrength = Math.min(50d, passwordStrength);
+
+            double progress = (passwordStrength - 20) / 30;
+            if (!passStrChildren.isEmpty()) {
+                Node bar = passStrChildren.filtered(node -> node.getStyleClass().contains("bar")).getFirst();
+                bar.setStyle("-fx-background-color:" + passwordStrengthGradient(progress));
+
+                Timeline timeline = new Timeline(
+                        new KeyFrame(Duration.ZERO,
+                                new KeyValue(progressBar.progressProperty(), progressBar.getProgress())),
+                        new KeyFrame(new Duration(200),
+                                new KeyValue(progressBar.progressProperty(), progress)));
+
+                timeline.play();
+            }
+        });
+    }
+
+    protected static <T extends TextInputControl, S extends TextInputControl> void bindTextProperty(@NotNull T e1, @NotNull S e2) {
+        e1.textProperty().addListener((options, oldValue, newValue) -> e2.setText(newValue));
+        e2.textProperty().addListener((options, oldValue, newValue) -> e1.setText(newValue));
+    }
+
+    @SafeVarargs
+    protected static <T extends TextInputControl> boolean checkTextFields(T @NotNull... fields) {
+        boolean nonEmpty = true;
+
+        for (@NotNull T field : fields) {
+            if (field.getText().isBlank()) {
+                nonEmpty = false;
+                field.setStyle("-fx-border-color: #ff5f5f");
+            } else {
+                field.setStyle("-fx-border-color: #a7acb1");
+            }
+        }
+
+        return nonEmpty;
+    }
+
+    @SafeVarargs
+    protected static <T extends TextInputControl> void clearTextFields(T @NotNull... fields) {
+        for (@NotNull T field : fields) {
+            field.clear();
+        }
+    }
+
+    @SafeVarargs
+    protected static <T extends Node> void clearStyle(T @NotNull... nodes) {
+        for (@NotNull T node : nodes) {
+            node.setStyle("");
+        }
+    }
+
+    @Contract(value = "_ -> new", pure = true)
+    protected static <T> @NotNull StringConverter<T> toStringConverter(@NotNull Callback<? super T, String> converter) {
+        return new StringConverter<>() {
+            @Override
+            public T fromString(String string) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public String toString(@NotNull T object) {
+                return converter.call(object);
+            }
+        };
+    }
+
+    protected static <T> @NotNull ObservableValue<Comparator<T>> comparatorBinding(@NotNull ObjectProperty<Locale> locale,
+            @NotNull ObjectProperty<? extends StringConverter<T>> converter) {
+        return Bindings.createObjectBinding(
+                () -> Comparator.comparing(
+                        converter.getValue()::toString,
+                        Collator.getInstance(locale.getValue())),
+                locale,
+                converter);
+    }
+
+    protected static <T> void bindValueConverter(@NotNull ComboBox<T> comboBox,
+            @NotNull ObjectProperty<Locale> locale,
+            @NotNull Function<Locale, StringConverter<T>> mapper) {
+        comboBox.converterProperty().bind(locale.map(mapper));
+    }
+
+    protected static <T> void bindValueComparator(@NotNull SortedList<T> sortedList,
+            @NotNull ObjectProperty<Locale> locale,
+            @NotNull ComboBox<T> comboBox) {
+        sortedList.comparatorProperty().bind(comparatorBinding(locale, comboBox.converterProperty()));
     }
 }
