@@ -87,7 +87,7 @@ public class DecrypterController extends AbstractViewController {
         }, sortingOrderProperty));
 
         decryptCB.getSelectionModel().selectedItemProperty().addListener(
-                (options, oldItem, newItem) -> {
+                (observable, oldItem, newItem) -> {
                     resetKeepSelection();
                     if (newItem != null) {
                         // shows the software, username and account of the selected account
