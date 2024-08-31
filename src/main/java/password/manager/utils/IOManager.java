@@ -93,14 +93,16 @@ public final class IOManager {
         logger.addInfo("user.home: '" + USER_HOME + "'");
 
         if (FILE_PATH.toFile().mkdirs()) {
-            logger.addInfo("Directory '" + FILE_PATH + "' did not exist and was therefore created");
+            logger.addInfo("Directory '" + FILE_PATH + "' did not exist and was therefore created, skipping data loading");
             return;
         }
 
         File data_file = FILE_PATH.resolve(DATA_FILE).toFile();
+        logger.addInfo("Loading data (" + data_file + ")...");
+
         // if the data file exists, it will try to read its contents
         if (!data_file.exists()) {
-            logger.addInfo("File not found: '" + data_file + "'");
+            logger.addInfo("File not found");
             return;
         }
 
@@ -112,13 +114,13 @@ public final class IOManager {
             accountList.addAll(Collections.nCopies(data.accountList().size(), null));
             FXCollections.copy(this.accountList, data.accountList());
 
-            logger.addInfo("File loaded: '" + data_file + "'");
+            logger.addInfo("Success");
             isFirstRun = false;
         } catch (IOException e) {
             logger.addError(e);
 
-            Alert alert = new Alert(AlertType.ERROR, langResources.getValue("load_error"), ButtonType.YES,
-                    ButtonType.NO);
+            Alert alert = new Alert(AlertType.ERROR, langResources.getValue("data_error"),
+                    ButtonType.YES, ButtonType.NO);
             setDefaultButton(alert, ButtonType.NO);
             alert.showAndWait();
 
@@ -211,7 +213,7 @@ public final class IOManager {
             return false;
         }
 
-        if(oldLoginPassword != null) {
+        if (oldLoginPassword != null) {
             boolean[] error = new boolean[1];
             accountList.forEach(account -> {
                 Thread.startVirtualThread(() -> {

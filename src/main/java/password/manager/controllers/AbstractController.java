@@ -119,8 +119,8 @@ public abstract class AbstractController implements Initializable {
     }
 
     protected static <T extends TextInputControl, S extends TextInputControl> void bindTextProperty(@NotNull T e1, @NotNull S e2) {
-        e1.textProperty().addListener((options, oldValue, newValue) -> e2.setText(newValue));
-        e2.textProperty().addListener((options, oldValue, newValue) -> e1.setText(newValue));
+        e1.textProperty().addListener((observable, oldValue, newValue) -> e2.setText(newValue));
+        e2.textProperty().addListener((observable, oldValue, newValue) -> e1.setText(newValue));
     }
 
     @SafeVarargs

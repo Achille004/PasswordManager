@@ -37,7 +37,7 @@ public class App extends Application {
         hostServices = getHostServices();
 
         AnchorPane scenePane = new AnchorPane();
-        appManager = new AppManager(scenePane, hostServices);
+        appManager = new AppManager(scenePane, hostServices, getParameters());
 
         primaryStage.setTitle("Password Manager");
         primaryStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/locker.png"))));

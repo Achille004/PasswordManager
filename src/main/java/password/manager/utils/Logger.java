@@ -116,6 +116,7 @@ public final class Logger {
 
     public void closeStreams() {
         try {
+            addInfo("Closing logger streams");
             logWriter.close();
             stacktraceWriter.close();
         } catch (IOException e) {
