@@ -18,23 +18,22 @@
 
 package password.manager.utils;
 
-import static password.manager.utils.Utils.setDefaultButton;
+import static password.manager.utils.Utils.*;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InvalidClassException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.ArrayList;
-import java.util.Locale;
+import java.util.Collections;
+import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -45,109 +44,97 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.TextInputControl;
 import lombok.Getter;
 import password.manager.enums.Exporter;
-import password.manager.enums.SortingOrder;
 import password.manager.security.Account;
-import password.manager.security.LoginAccount;
+import password.manager.security.UserPreferences;
 
-public class IOManager {
-    static final String WINDOWS_PATH, DATA_FILE, LOG_FILE;
+public final class IOManager {
+    static final String OS, USER_HOME, DATA_FILE;
+    public static final Path FILE_PATH, DESKTOP_PATH;
+
     static {
-        WINDOWS_PATH = Path.of("AppData", "Local", "Password Manager").toString();
-        DATA_FILE = "passwords.psmg";
-        LOG_FILE = "report.log";
-    }
-
-    private final @Getter String OS, USER_HOME;
-
-    private final @Getter Logger logger;
-
-    private @Getter LoginAccount loginAccount;
-    private final ObservableList<Account> accountList;
-    private final @Getter Path filePath, desktopPath;
-
-    private String loginPassword;
-
-    public IOManager() {
-        // initialize objects
-        accountList = FXCollections.observableArrayList(new Account[0]);
-        loginAccount = null;
-        loginPassword = null;
-
         // gets system properties
         OS = System.getProperty("os.name");
         USER_HOME = System.getProperty("user.home");
 
         // gets the paths
-        filePath = Path.of(USER_HOME, OS.toLowerCase().contains("windows") ? WINDOWS_PATH : ".passwordmanager");
-        desktopPath = Path.of(USER_HOME, "Desktop");
+        String WINDOWS_PATH = Path.of("AppData", "Local", "Password Manager").toString();
+        String OS_FALLBACK_PATH = ".password-manager";
+        FILE_PATH = Path.of(USER_HOME, OS.toLowerCase().contains("windows") ? WINDOWS_PATH : OS_FALLBACK_PATH);
+        DESKTOP_PATH = Path.of(USER_HOME, "Desktop");
 
-        logger = new Logger(filePath.resolve(LOG_FILE).toFile());
+        // define data file name
+        DATA_FILE = "data.json";
     }
 
-    public boolean loadDataFile(final ObservableResourceFactory langResources) {
+    private final @Getter Logger logger;
+    private final ObservableList<Account> accountList;
+    private @Getter UserPreferences userPreferences;
+
+    private String masterPassword;
+    private @Getter boolean isFirstRun, isAuthenticated;
+
+    public IOManager() {
+        logger = new Logger(FILE_PATH);
+        accountList = FXCollections.observableArrayList();
+        userPreferences = UserPreferences.empty();
+
+        masterPassword = null;
+        isFirstRun = true;
+        isAuthenticated = false;
+    }
+
+    public void loadData(final ObservableResourceFactory langResources) {
+        if (!userPreferences.isEmpty()) {
+            logger.addError(new UnsupportedOperationException("Cannot read data file: it would overwrite non-empty user preferences"));
+            return;
+        }
+
         logger.addInfo("os.name: '" + OS + "'");
         logger.addInfo("user.home: '" + USER_HOME + "'");
 
-        if (filePath.toFile().mkdirs()) {
-            logger.addInfo("Directory '" + filePath + "' did not exist and was therefore created");
-
-            return true;
+        if (FILE_PATH.toFile().mkdirs()) {
+            logger.addInfo("Directory '" + FILE_PATH + "' did not exist and was therefore created, skipping data loading");
+            return;
         }
 
-        // gets the log history
-        logger.readFile();
-
-        File data_file = filePath.resolve(DATA_FILE).toFile();
+        File data_file = FILE_PATH.resolve(DATA_FILE).toFile();
+        logger.addInfo("Loading data (" + data_file + ")...");
 
         // if the data file exists, it will try to read its contents
         if (!data_file.exists()) {
-            logger.addInfo("File not found: '" + data_file + "'");
-
-            return true;
+            logger.addInfo("File not found");
+            return;
         }
 
-        try (FileInputStream f = new FileInputStream(data_file)) {
-            ObjectInputStream fIN = new ObjectInputStream(f);
-            Object obj;
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            AccountData data = objectMapper.readValue(FILE_PATH.resolve(DATA_FILE).toFile(), AccountData.class);
 
-            obj = fIN.readObject();
-            if (obj instanceof LoginAccount) {
-                loginAccount = (LoginAccount) obj;
-            } else {
-                throw new InvalidClassException(
-                        "Unexpected object class. Expecting: " + LoginAccount.class);
-            }
+            this.userPreferences = data.userPreferences();
+            accountList.addAll(Collections.nCopies(data.accountList().size(), null));
+            FXCollections.copy(this.accountList, data.accountList());
 
-            obj = fIN.readObject();
-            if (obj instanceof Account[]) {
-                accountList.addAll((Account[]) obj);
-            } else {
-                throw new InvalidClassException(
-                        "Unexpected object class. Expecting: " + ArrayList.class);
-            }
-
-            logger.addInfo("File loaded: '" + data_file + "'");
-
-            // All the data was loaded successfully, so user can now log in
-            return false;
-        } catch (IOException | ClassNotFoundException e) {
+            logger.addInfo("Success");
+            isFirstRun = false;
+        } catch (IOException e) {
             logger.addError(e);
 
-            Alert alert = new Alert(AlertType.ERROR, langResources.getValue("load_error"), ButtonType.YES,
-                    ButtonType.NO);
+            Alert alert = new Alert(AlertType.ERROR, langResources.getValue("data_error"),
+                    ButtonType.YES, ButtonType.NO);
             setDefaultButton(alert, ButtonType.NO);
             alert.showAndWait();
 
             if (alert.getResult() != ButtonType.YES) {
                 logger.addInfo("Data overwriting denied");
-                logger.save();
                 System.exit(0);
             } else {
                 logger.addInfo("Data overwriting accepted");
             }
         }
 
-        return true;
+        // TODO Add logging
+        // userPreferences.getLocaleProperty().addListener((observable, oldValue, newValue) -> logger.addInfo("Changed locale to: " + newValue));
+        // userPreferences.getSortingOrderProperty().addListener((observable, oldValue, newValue) -> logger.addInfo("Changed sorting order to: " + newValue));
     }
 
     public SortedList<Account> getSortedAccountList() {
@@ -155,36 +142,42 @@ public class IOManager {
     }
 
     // #region Account methods
-    public boolean addAccount(String software, String username, String password) {
-        try {
-            if (isAuthenticated() && accountList.add(Account.of(software, username, password, loginPassword))) {
+    public @NotNull Boolean addAccount(String software, String username, String password) {
+        if (isAuthenticated()) {
+            try {
+                accountList.add(Account.of(software, username, password, masterPassword));
                 logger.addInfo("Account added");
                 return true;
+            } catch (GeneralSecurityException e) {
+                logger.addError(e);
             }
-        } catch (GeneralSecurityException e) {
-            logger.addError(e);
         }
 
         return false;
     }
 
-    public boolean editAccount(@NotNull Account account, String software, String username, String password) {
-        try {
-            int index = accountList.indexOf(account);
-            if (isAuthenticated() && index >= 0 && account.setData(software, username, password, loginPassword)) {
+    public @NotNull Boolean editAccount(@NotNull Account account, @Nullable String software, @Nullable String username, @Nullable String password) {
+        if (software == null || username == null || password == null) {
+            return false;
+        }
+
+        int index = accountList.indexOf(account);
+        if (isAuthenticated() && index >= 0) {
+            try {
+                account.setData(software, username, password, masterPassword);
                 // Substitute the account with itself to trigger the SortedList wrapper
                 accountList.set(index, account);
                 logger.addInfo("Account edited");
                 return true;
+            } catch (GeneralSecurityException e) {
+                logger.addError(e);
             }
-        } catch (GeneralSecurityException e) {
-            logger.addError(e);
         }
 
         return false;
     }
 
-    public boolean removeAccount(@NotNull Account account) {
+    public @NotNull Boolean removeAccount(@NotNull Account account) {
         if (isAuthenticated() && accountList.remove(account)) {
             logger.addInfo("Account deleted");
             return true;
@@ -193,10 +186,10 @@ public class IOManager {
         return false;
     }
 
-    public String getAccountPassword(@NotNull Account account) {
+    public @Nullable String getAccountPassword(@NotNull Account account) {
         try {
             if (isAuthenticated()) {
-                return account.getPassword(loginPassword);
+                return account.getPassword(masterPassword);
             }
         } catch (GeneralSecurityException e) {
             logger.addError(e);
@@ -207,98 +200,91 @@ public class IOManager {
     // #endregion
 
     // #region LoginAccount methods
-    public boolean setLoginAccount(SortingOrder sortingOrder, Locale locale, @NotNull String loginPassword) {
-        try {
-            this.loginAccount = LoginAccount.of(sortingOrder, locale, loginPassword);
-            this.loginPassword = loginPassword;
-
-            logger.addInfo("Login account created");
-            return true;
-        } catch (InvalidKeySpecException e) {
-            logger.addError(e);
-        }
-
-        return false;
-    }
-
-    public final boolean changeLoginPassword(String newLoginPassword) {
-        if (!isAuthenticated()) {
+    public @NotNull Boolean changeMasterPassword(String newMasterPassword) {
+        String oldMasterPassword = this.masterPassword;
+        if (oldMasterPassword != null && !isAuthenticated()) {
             return false;
         }
-        String oldLoginPassword = this.loginPassword;
 
         try {
-            loginAccount.setPasswordVerified(oldLoginPassword, newLoginPassword);
+            userPreferences.setPasswordVerified(oldMasterPassword, newMasterPassword);
         } catch (InvalidKeySpecException e) {
             logger.addError(e);
             return false;
         }
 
-        if (!accountList.isEmpty()) {
+        if (oldMasterPassword != null) {
+            boolean[] error = new boolean[1];
             accountList.forEach(account -> {
-                new Thread(() -> {
+                Thread.startVirtualThread(() -> {
                     try {
-                        account.changeLoginPassword(oldLoginPassword, newLoginPassword);
+                        account.changeMasterPassword(oldMasterPassword, newMasterPassword);
                     } catch (GeneralSecurityException e) {
-                        e.printStackTrace();
+                        logger.addError(e);
+                        error[0] = true;
                     }
-                }).start();
+                });
+                // to wait until threads are finished, use threadInstance.join()
             });
+            if (error[0]) {
+                return false;
+            }
         }
 
-        this.loginPassword = newLoginPassword;
-        logger.addInfo("Login password changed");
+        this.masterPassword = newMasterPassword;
+        if (oldMasterPassword != null) {
+            logger.addInfo("Master password changed");
+        } else {
+            isAuthenticated = true;
+        }
 
         return true;
     }
 
     @SafeVarargs
-    public final <T extends TextInputControl> void displayLoginPassword(T... elements) {
+    public final <T extends TextInputControl> void displayMasterPassword(T @NotNull... elements) {
         for (T element : elements) {
-            element.setText(loginPassword);
+            element.setText(masterPassword);
         }
     }
 
-    public boolean authenticate(String loginPassword) {
-        try {
-            if (isAuthenticated() || !loginAccount.verifyPassword(loginPassword)) {
-                return false;
-            }
-        } catch (InvalidKeySpecException e) {
-            logger.addError(e);
+    public @NotNull Boolean authenticate(String masterPassword) {
+        if (isAuthenticated()) {
             return false;
         }
 
-        this.loginPassword = loginPassword;
-        logger.addInfo("User authenticated");
+        try {
+            isAuthenticated = userPreferences.verifyPassword(masterPassword);
+        } catch (InvalidKeySpecException e) {
+            logger.addError(e);
+        }
 
-        return true;
-    }
+        if (isAuthenticated) {
+            this.masterPassword = masterPassword;
+            logger.addInfo("User authenticated");
+        }
 
-    public boolean isAuthenticated() {
-        return loginPassword != null;
+        return isAuthenticated;
     }
     // #endregion
 
-    public void export(Exporter exporter, ObservableResourceFactory langResources) {
-        try (FileWriter file = new FileWriter(
-                desktopPath.resolve("Passwords." + exporter.name().toLowerCase()).toFile())) {
-            file.write(exporter.getExporter().apply(accountList, langResources, loginPassword));
+    public void export(@NotNull Exporter exporter, ObservableResourceFactory langResources) {
+        try (FileWriter file = new FileWriter(DESKTOP_PATH.resolve("Passwords." + exporter.name().toLowerCase()).toFile())) {
+            file.write(exporter.getExporter().apply(accountList, langResources, masterPassword));
             file.flush();
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.addError(e);
         }
     }
 
     private boolean saveAccountFile() {
-        try (ObjectOutputStream fOUT = new ObjectOutputStream(
-                new FileOutputStream(filePath.resolve(DATA_FILE).toFile()))) {
-            fOUT.writeObject(this.loginAccount);
-            fOUT.writeObject(this.accountList.toArray(new Account[0]));
-            fOUT.close();
+        ObjectWriter objectWriter = new ObjectMapper().writer().withDefaultPrettyPrinter();
+
+        try {
+            AccountData data = new AccountData(this.userPreferences, this.accountList);
+            objectWriter.writeValue(FILE_PATH.resolve(DATA_FILE).toFile(), data);
 
             logger.addInfo("Data file saved");
-
             return true;
         } catch (IOException e) {
             logger.addError(e);
@@ -306,13 +292,18 @@ public class IOManager {
         }
     }
 
-    public boolean saveAll() {
-        boolean result = true;
+    // Wrapper class for data
+    private record AccountData(UserPreferences userPreferences, List<Account> accountList) {
+    }
+
+    public @NotNull Boolean saveAll() {
+        boolean result = false;
 
         // when the user shuts down the program on the first run, it won't save
-        if (loginAccount != null) {
+        if (!isFirstRun() || isAuthenticated()) {
             logger.addInfo("Shutting down");
-            result = saveAccountFile() && logger.save();
+            result = saveAccountFile();
+            logger.closeStreams();
         }
 
         return result;

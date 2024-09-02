@@ -19,7 +19,7 @@
 package main;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static password.manager.utils.Utils.passwordStrength;
+import static password.manager.utils.Utils.*;
 
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
@@ -31,7 +31,7 @@ import password.manager.security.Encrypter;
 class AppTest {
     @Test
     void testAES() throws GeneralSecurityException {
-        String loginPassword = "logPass";
+        String masterPassword = "logPass";
         String s = "soft", u = "user", p = "pass";
 
         // Generate IV
@@ -42,7 +42,7 @@ class AppTest {
         // Generate salt
         byte[] salt = (s + u).getBytes();
 
-        byte[] key = Encrypter.getKey(loginPassword, salt);
+        byte[] key = Encrypter.getKey(masterPassword, salt);
 
         byte[] e = Encrypter.encryptAES(p, key, iv);
         String d = Encrypter.decryptAES(e, key, iv);

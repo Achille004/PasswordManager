@@ -31,9 +31,10 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jetbrains.annotations.NotNull;
 
-public class Encrypter {
+public final class Encrypter {
     private static SecretKeyFactory keyFactory;
 
     private static final int ITERATIONS = 65536;
@@ -41,7 +42,7 @@ public class Encrypter {
     private static final int AES_KEY_LENGTH = 256;
 
     static {
-        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+        Security.addProvider(new BouncyCastleProvider());
         Security.setProperty("crypto.policy", "unlimited");
 
         try {
@@ -59,22 +60,22 @@ public class Encrypter {
      * @return The hashed password.
      * @throws InvalidKeySpecException
      */
-    public static byte[] hash(@NotNull String password, byte[] salt) throws InvalidKeySpecException {
+    public static byte[] hash(String password, @NotNull byte[] salt) throws InvalidKeySpecException {
         KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITERATIONS, HASH_KEY_LENGTH);
         return keyFactory.generateSecret(spec).getEncoded();
     }
 
     /**
-     * Derives an AES key from the login password (used as method to keep the key
+     * Derives an AES key from the master password (used as method to keep the key
      * secret) and salt (used to add randomness).
      * 
-     * @param loginPassword The login password to generate the key from.
+     * @param masterPassword The master password to generate the key from.
      * @param salt          The salt used to encrypt.
      * @return The hashed password.
      * @throws InvalidKeySpecException
      */
-    public static byte[] getKey(@NotNull String loginPassword, byte[] salt) throws InvalidKeySpecException {
-        KeySpec spec = new PBEKeySpec(loginPassword.toCharArray(), salt, ITERATIONS, AES_KEY_LENGTH);
+    public static byte[] getKey(@NotNull String masterPassword, @NotNull byte[] salt) throws InvalidKeySpecException {
+        KeySpec spec = new PBEKeySpec(masterPassword.toCharArray(), salt, ITERATIONS, AES_KEY_LENGTH);
         SecretKey secretKey = keyFactory.generateSecret(spec);
         SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getEncoded(), "AES");
         return secretKeySpec.getEncoded();
@@ -89,7 +90,7 @@ public class Encrypter {
      * @return The encrypted password.
      * @throws GeneralSecurityException
      */
-    public static byte[] encryptAES(@NotNull String password, byte[] key, byte[] iv) throws GeneralSecurityException {
+    public static byte[] encryptAES(@NotNull String password, @NotNull byte[] key, @NotNull byte[] iv) throws GeneralSecurityException {
         // Create Cipher object to encrypt
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
         cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(128, iv));
@@ -107,7 +108,7 @@ public class Encrypter {
      * @return The decrypted password.
      * @throws GeneralSecurityException
      */
-    public static @NotNull String decryptAES(byte[] encryptedPassword, byte[] key, byte[] iv) throws GeneralSecurityException {
+    public static @NotNull String decryptAES(@NotNull byte[] encryptedPassword, @NotNull byte[] key, @NotNull byte[] iv) throws GeneralSecurityException {
         // Create Cipher object to decrypt
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
         cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(128, iv));

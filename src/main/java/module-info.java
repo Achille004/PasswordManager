@@ -17,30 +17,35 @@
  */
 
 module password.manager {
-    requires java.base;
     requires java.desktop;
     
     requires javafx.base;
     requires transitive javafx.controls;
     requires javafx.fxml;
     requires transitive javafx.graphics;
-    requires javafx.web;
+    // requires javafx.web;
 
-    // requires jdk.jsobject;
+    requires com.fasterxml.jackson.databind;
+    // requires org.json;
     
     requires static lombok;
 
     requires me.gosimple.nbvcxz;
-    
+
     requires org.bouncycastle.provider;
     
     requires org.jetbrains.annotations;
     
     exports password.manager;
+    exports password.manager.controllers;
+    exports password.manager.controllers.extra;
+    exports password.manager.controllers.views;
     exports password.manager.enums;
     exports password.manager.inerfaces;
     exports password.manager.security;
     exports password.manager.utils;
     
     opens password.manager to javafx.fxml;
+    opens password.manager.utils to com.fasterxml.jackson.databind;
+    opens password.manager.security to com.fasterxml.jackson.databind;
 }

@@ -18,76 +18,90 @@
 
 package password.manager.security;
 
-import java.io.Serializable;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import lombok.Getter;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Account implements Serializable {
-    private @Getter String software, username;
+import lombok.Data;
+
+@Data
+public final class Account {
+    private String software, username;
     private byte[] encryptedPassword;
     private final byte[] iv;
 
-    public Account(String software, String username, String password, String loginPassword) throws GeneralSecurityException {
+    public Account(
+            @JsonProperty("software") String software,
+            @JsonProperty("username") String username,
+            @JsonProperty("encryptedPassword") byte[] encryptedPassword,
+            @JsonProperty("iv") byte[] iv) {
+        this.software = software;
+        this.username = username;
+        this.encryptedPassword = encryptedPassword;
+        this.iv = iv;
+    }
+
+    public Account(@NotNull String software, @NotNull String username, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
         this.software = software;
         this.username = username;
 
         iv = new byte[16];
-        setPassword(password, loginPassword);
+        setPassword(password, masterPassword);
     }
 
-    private void setPassword(String password, String loginPassword) throws GeneralSecurityException {
+    private void setPassword(@NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
         // Generate IV
         SecureRandom random = new SecureRandom();
         random.nextBytes(iv);
 
-        byte[] key = Encrypter.getKey(loginPassword, getSalt());
+        byte[] key = Encrypter.getKey(masterPassword, getSalt());
         this.encryptedPassword = Encrypter.encryptAES(password, key, iv);
     }
 
-    public String getPassword(String loginPassword) throws GeneralSecurityException {
-        byte[] key = Encrypter.getKey(loginPassword, getSalt());
+    public String getPassword(@NotNull String masterPassword) throws GeneralSecurityException {
+        byte[] key = Encrypter.getKey(masterPassword, getSalt());
         return Encrypter.decryptAES(encryptedPassword, key, iv);
     }
 
-    public boolean setData(@Nullable String software, @Nullable String username, @Nullable String password,
-            String loginPassword) throws GeneralSecurityException {
-        if (password == null) {
-            String oldPassword = getPassword(loginPassword);
-
-            if (oldPassword == null) {
-                return false;
-            }
-
-            password = oldPassword;
+    public @NotNull Boolean setData(@NotNull String software, @NotNull String username, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
+        if (software.isEmpty() || password.isEmpty() || username.isEmpty()) {
+            return false;
         }
 
-        if (software != null) {
+        // Save current values in case of rollback
+        String oldSoftware = this.software;
+        String oldUsername = this.username;
+        byte[] oldEncryptedPassword = this.encryptedPassword;
+        byte[] oldIv = this.iv.clone();
+
+        try {
             this.software = software;
-        }
-
-        if (username != null) {
             this.username = username;
+            setPassword(password, masterPassword);
+
+            return true;
+        } catch (GeneralSecurityException e) {
+            this.software = oldSoftware;
+            this.username = oldUsername;
+            this.encryptedPassword = oldEncryptedPassword;
+            System.arraycopy(oldIv, 0, iv, 0, oldIv.length);
+
+            throw e;
         }
-
-        setPassword(password, loginPassword);
-
-        return true;
     }
 
-    public void changeLoginPassword(String oldLoginPassword, String newLoginPassword) throws GeneralSecurityException {
-        setPassword(getPassword(oldLoginPassword), newLoginPassword);
+    public void changeMasterPassword(@NotNull String oldMasterPassword, @NotNull String newMasterPassword) throws GeneralSecurityException {
+        setPassword(getPassword(oldMasterPassword), newMasterPassword);
     }
 
     @Contract("_, _, _, _ -> new")
-    public static @NotNull Account of(String software, String username, String password, String loginPassword) throws GeneralSecurityException {
+    public static @NotNull Account of(@NotNull String software, @NotNull String username, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
         // creates the account, adding its attributes by constructor
-        return new Account(software, username, password, loginPassword);
+        return new Account(software, username, password, masterPassword);
     }
 
     /**

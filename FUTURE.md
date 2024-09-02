@@ -1,14 +1,15 @@
 # Next up:
-- Add language flags to its selector
-- Embed fonts (as they only work on Windows) + msix packaging
-- Better code comments and documentation
-- Add export (add xml and json) + choose export directory + character-checking from fields
-- Better readme
+- Better code comments and documentation + code flow analysis (especially for null values) + deeper logging
+- Embed fonts (as they only work on Windows)
+- Add export (add xml and json) + choose export directory (FileChooser/DirectoryChooser)
+- Add account search and filters (like descendant order)
 
 # Future:
+- Add language flags to their selector
 - Google drive linking
+- More animations
 
 # Ideas:
-- Divide `index.fxml` into separate parts
+- Resizable window
 - Switch from `ArrayList` to embedded database
-- More animations
+- msix packaging

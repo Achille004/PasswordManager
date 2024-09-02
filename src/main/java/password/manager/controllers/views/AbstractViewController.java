@@ -16,17 +16,17 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package password.manager.inerfaces;
+package password.manager.controllers.views;
 
-import java.util.Objects;
-import java.util.function.Function;
+import javafx.application.HostServices;
+import password.manager.controllers.AbstractController;
+import password.manager.utils.IOManager;
+import password.manager.utils.ObservableResourceFactory;
 
-@FunctionalInterface
-public interface TriFunction<T, U, V, R> {
-    R apply(T t, U u, V v) throws Exception;
-
-    default <S> TriFunction<T, U, V, S> andThen(Function<? super R, ? extends S> after) {
-        Objects.requireNonNull(after);
-        return (T t, U u, V v) -> after.apply(apply(t, u, v));
+public abstract class AbstractViewController extends AbstractController {
+    protected AbstractViewController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices) {
+        super(ioManager, langResources, hostServices);
     }
+
+    public abstract void reset();
 }

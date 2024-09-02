@@ -18,86 +18,147 @@
 
 package password.manager.utils;
 
+import static password.manager.utils.Utils.getFileWriter;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.Scanner;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Logger {
-    private static final DateTimeFormatter dtf = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT,
-            FormatStyle.MEDIUM);
+public final class Logger {
+    private static final String FOLDER_PREFIX, LOG_FILE_NAME, STACKTRACE_FILE_NAME;
+    private static final int MAX_LOG_FILES;
 
-    private final File logFile;
-    private final StringBuilder logHistory;
+    private static final DateTimeFormatter FILE_DTF;
+    private static final DateTimeFormatter DTF;
 
-    public Logger(File logFile) {
-        this.logFile = logFile;
-        logHistory = new StringBuilder();
+    static {
+        FOLDER_PREFIX = "log_";
+        LOG_FILE_NAME = "report.log";
+        STACKTRACE_FILE_NAME = "stacktrace.log";
+        MAX_LOG_FILES = 5;
+
+        FILE_DTF = DateTimeFormatter.ofPattern("yyyy.MM.dd_HH.mm.ss");
+        DTF = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.MEDIUM);
     }
 
-    public void addInfo(String str) {
-        logHistory
-                .append(dtf.format(LocalDateTime.now()))
+    private final Path currPath;
+    private final FileWriter logWriter, stacktraceWriter;
+
+    public Logger(Path filePath) {
+        rotateLogs(filePath);
+
+        this.currPath = filePath.resolve(FOLDER_PREFIX + FILE_DTF.format(LocalDateTime.now()));
+        currPath.toFile().mkdirs();
+
+        logWriter = getFileWriter(currPath.resolve(LOG_FILE_NAME), false);
+        Objects.requireNonNull(logWriter, "logWriter must not be null");
+
+        stacktraceWriter = getFileWriter(currPath.resolve(STACKTRACE_FILE_NAME), false);
+        Objects.requireNonNull(stacktraceWriter, "stacktraceWriter must not be null");
+    }
+
+    public @NotNull Boolean addInfo(String str) {
+        StringBuilder logStrBuilder = new StringBuilder();
+        logStrBuilder
+                .append(DTF.format(LocalDateTime.now()))
                 .append(" >>> ")
                 .append(str)
                 .append("\n");
+
+        return write(logWriter, logStrBuilder);
     }
 
-    public void addError(@NotNull Exception e) {
-        logHistory
-                .append(dtf.format(LocalDateTime.now()))
-                .append(" !!! An exception has been thrown, stack trace:\n")
-                .append(e.getClass().getName())
+    public @NotNull Boolean addError(@NotNull Exception e) {
+        StringBuilder logStrBuilder = new StringBuilder();
+        logStrBuilder
+                .append(DTF.format(LocalDateTime.now()))
+                .append(" !!! An exception has been thrown. See '")
+                .append(STACKTRACE_FILE_NAME)
+                .append("' for details.\n");
+
+        // Write the stack trace to the stacktrace log file
+        StringBuilder stacktraceStrBuilder = new StringBuilder();
+        stacktraceStrBuilder
+                .append(DTF.format(LocalDateTime.now()))
+                .append(" => Exception thrown while executing '")
+                .append(getCurrentMethodName(1))
+                .append("', follows error and full stack trace:\n");
+        stacktraceStrBuilder.append(e.getClass().getName())
                 .append(": ")
                 .append(e.getMessage())
                 .append("\n");
-
         for (StackTraceElement element : e.getStackTrace()) {
-            logHistory.append("        ").append(element).append('\n');
+            stacktraceStrBuilder.append("        ").append(element).append('\n');
+        }
+
+        return write(logWriter, logStrBuilder) && write(stacktraceWriter, stacktraceStrBuilder);
+    }
+
+    private static @NotNull String getCurrentMethodName(@NotNull Integer walkDist) {
+        StackTraceElement[] sckTrc = Thread.currentThread().getStackTrace();
+        if (sckTrc.length >= walkDist + 2) {
+            StackTraceElement stckTrcElem = sckTrc[walkDist + 2];
+            return stckTrcElem.getClassName() + '.' + stckTrcElem.getMethodName();
+        } else {
+            return "unknown";
         }
     }
 
-    public String getLogHistory() {
-        return logHistory.toString();
+    public void closeStreams() {
+        try {
+            addInfo("Closing logger streams");
+            logWriter.close();
+            stacktraceWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public boolean readFile() {
-        if (!logFile.exists()) {
-            addInfo("File not found: '" + logFile + "'");
+    private @NotNull Boolean write(@NotNull FileWriter writer, @NotNull StringBuilder builder) {
+        try {
+            writer.write(builder.toString());
+            writer.flush();
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
             return false;
         }
+    }
 
-        String prevContent = logHistory.toString();
-        logHistory.setLength(0);
+    private void rotateLogs(@NotNull Path filePath) {
+        try {
+            // Get the list of log directories
+            File logDir = filePath.toFile();
+            File[] logDirs = logDir.listFiles((dir, name) -> name.startsWith(FOLDER_PREFIX));
 
-        try (Scanner scanner = new Scanner(logFile)) {
-            logHistory.append(scanner.useDelimiter("\\Z").next()).append("\n\n");
+            if (logDirs != null && logDirs.length > MAX_LOG_FILES - 1) {
+                // Sort the directories by last modified date, oldest first
+                Arrays.sort(logDirs, Comparator.comparingLong(File::lastModified));
+
+                // Delete the oldest directories if the count exceeds MAX_LOG_FILES
+                for (int i = 0; i < logDirs.length - MAX_LOG_FILES + 1; i++) {
+                    deleteDirectory(logDirs[i].toPath());
+                }
+            }
         } catch (IOException e) {
             addError(e);
-            return false;
         }
-
-        logHistory.append(prevContent);
-
-        addInfo("File loaded: '" + logFile + "'");
-        return true;
     }
 
-    public boolean save() {
-        try (FileWriter w = new FileWriter(logFile)) {
-            addInfo("Log file saved");
-
-            w.write(logHistory.toString());
-            w.close();
-
-            return true;
-        } catch (IOException ex) {
-            return false;
-        }
+    private void deleteDirectory(Path path) throws IOException {
+        Files.walk(path)
+                .sorted(Comparator.reverseOrder())
+                .map(Path::toFile)
+                .forEach(File::delete);
     }
 }
