@@ -32,7 +32,7 @@ import password.manager.utils.ObservableResourceFactory;
 @Getter
 @RequiredArgsConstructor
 public enum Exporter {
-    HTML((accountList, langResources, loginPassword) -> {
+    HTML((accountList, langResources, masterPassword) -> {
         StringBuilder stb = new StringBuilder();
 
         stb.append("<!DOCTYPE html>\n<html>\n<style>\n");
@@ -72,14 +72,14 @@ public enum Exporter {
                     .append(addZerosToIndex(listSize, counter)).append("</td>\n<td>")
                     .append(currentAccount.getSoftware()).append("</td>\n<td>")
                     .append(currentAccount.getUsername()).append("</td>\n<td>")
-                    .append(currentAccount.getPassword(loginPassword)).append("</td>\n</tr>");
+                    .append(currentAccount.getPassword(masterPassword)).append("</td>\n</tr>");
         }
 
         stb.append("</table>\n</body>\n</html>");
 
         return stb.toString();
     }),
-    CSV((accountList, langResources, loginPassword) -> {
+    CSV((accountList, langResources, masterPassword) -> {
         StringBuilder stb = new StringBuilder();
 
         final int listSize = accountList.size();
@@ -90,7 +90,7 @@ public enum Exporter {
             stb.append(addZerosToIndex(listSize, counter)).append(",")
                     .append(currentAccount.getSoftware()).append(",")
                     .append(currentAccount.getUsername()).append(",")
-                    .append(currentAccount.getPassword(loginPassword)).append("\n");
+                    .append(currentAccount.getPassword(masterPassword)).append("\n");
         }
 
         return stb.toString();

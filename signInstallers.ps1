@@ -1,5 +1,5 @@
 # Path to the folder containing the files to sign
-$folder = "./compiled/installer"
+$folder = "./compiled/installers"
 
 # Search for signtool.exe in the system's PATH
 $signtoolPath = Get-Command -Name 'signtool.exe' | Select-Object -ExpandProperty Source
@@ -7,7 +7,7 @@ $signtoolPath = Get-Command -Name 'signtool.exe' | Select-Object -ExpandProperty
 # Check if the folder exists
 if (Test-Path $folder -PathType Container) {
     # Get all files in the folder
-    $files = Get-ChildItem -Path $folder -File
+    $files = Get-ChildItem -Recurse -Path $folder -File 
 
     # Loop to sign each file
     foreach ($file in $files) {
