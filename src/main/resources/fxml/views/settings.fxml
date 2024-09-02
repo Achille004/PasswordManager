@@ -101,7 +101,7 @@
          <Font name="System Bold Italic" size="24.0"/>
       </font>
    </Label>
-   <Label fx:id="settingsLoginPasswordLbl" prefHeight="35.0" prefWidth="264.0" text="Login Password:" textFill="WHITE"
+   <Label fx:id="settingsMasterPasswordLbl" prefHeight="35.0" prefWidth="264.0" text="Master Password:" textFill="WHITE"
           GridPane.rowIndex="2">
       <font>
          <Font name="System Bold Italic" size="24.0"/>
@@ -109,7 +109,7 @@
    </Label>
    <StackPane prefHeight="91.0" prefWidth="628.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
       <AnchorPane prefHeight="91.0" prefWidth="256.0">
-         <TextField fx:id="settingsLoginPasswordVisible" layoutY="32.0" prefHeight="27.0" prefWidth="460.0"
+         <TextField fx:id="settingsMasterPasswordVisible" layoutY="32.0" prefHeight="27.0" prefWidth="460.0"
                     styleClass="textField"/>
          <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="428.0" layoutY="34.0"
                     onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">
@@ -117,13 +117,13 @@
          </ImageView>
       </AnchorPane>
       <AnchorPane prefHeight="0.0" prefWidth="502.0">
-         <Label fx:id="settingsLoginPasswordDesc" alignment="CENTER_RIGHT" layoutX="2.0" layoutY="12.0"
+         <Label fx:id="settingsMasterPasswordDesc" alignment="CENTER_RIGHT" layoutX="2.0" layoutY="12.0"
                 prefHeight="20.0" prefWidth="459.0" text="Press ENTER to confirm." textFill="WHITE">
             <font>
                <Font name="System Italic" size="14.0"/>
             </font>
          </Label>
-         <PasswordField fx:id="settingsLoginPasswordHidden" layoutY="32.0" prefHeight="27.0" prefWidth="460.0"
+         <PasswordField fx:id="settingsMasterPasswordHidden" layoutY="32.0" prefHeight="27.0" prefWidth="460.0"
                         styleClass="textField"/>
          <ImageView fitHeight="30.0" fitWidth="30.0" layoutX="428.0" layoutY="34.0"
                     onMouseClicked="#showPassword" pickOnBounds="true" preserveRatio="true">

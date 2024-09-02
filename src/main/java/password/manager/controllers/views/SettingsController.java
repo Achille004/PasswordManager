@@ -62,13 +62,13 @@ public class SettingsController extends AbstractViewController {
     public ComboBox<SortingOrder> settingsOrderCB;
 
     @FXML
-    public TextField settingsLoginPasswordVisible;
+    public TextField settingsMasterPasswordVisible;
     @FXML
-    public PasswordField settingsLoginPasswordHidden;
+    public PasswordField settingsMasterPasswordHidden;
 
     @FXML
     public Label settingsLangLbl, selectedLangLbl, settingsSortingOrderLbl, selectedOrderLbl,
-            settingsLoginPasswordLbl, settingsLoginPasswordDesc, settingsDriveConnLbl, wip;
+            settingsMasterPasswordLbl, settingsMasterPasswordDesc, settingsDriveConnLbl, wip;
 
     @FXML
     public ProgressBar settingsLoginPassStr;
@@ -79,8 +79,8 @@ public class SettingsController extends AbstractViewController {
 
         langResources.bindTextProperty(settingsLangLbl, "language");
         langResources.bindTextProperty(settingsSortingOrderLbl, "sorting_ord");
-        langResources.bindTextProperty(settingsLoginPasswordLbl, "login_pas");
-        langResources.bindTextProperty(settingsLoginPasswordDesc, "login_pas.desc");
+        langResources.bindTextProperty(settingsMasterPasswordLbl, "master_pas");
+        langResources.bindTextProperty(settingsMasterPasswordDesc, "master_pas.desc");
         langResources.bindTextProperty(settingsDriveConnLbl, "drive_con");
         langResources.bindTextProperty(wip, "wip");
 
@@ -117,23 +117,23 @@ public class SettingsController extends AbstractViewController {
 
         sortingOrderProperty.bind(settingsOrderCB.valueProperty());
 
-        // Login password
+        // Master password
 
-        EventHandler<ActionEvent> changeLoginPasswordEvent = event -> {
-            if (checkTextFields(settingsLoginPasswordVisible, settingsLoginPasswordHidden)) {
-                ioManager.changeLoginPassword(settingsLoginPasswordVisible.getText());
+        EventHandler<ActionEvent> changeMasterPasswordEvent = event -> {
+            if (checkTextFields(settingsMasterPasswordVisible, settingsMasterPasswordHidden)) {
+                ioManager.changeMasterPassword(settingsMasterPasswordVisible.getText());
             }
         };
-        settingsLoginPasswordVisible.setOnAction(changeLoginPasswordEvent);
-        settingsLoginPasswordHidden.setOnAction(changeLoginPasswordEvent);
+        settingsMasterPasswordVisible.setOnAction(changeMasterPasswordEvent);
+        settingsMasterPasswordHidden.setOnAction(changeMasterPasswordEvent);
 
-        bindTextProperty(settingsLoginPasswordHidden, settingsLoginPasswordVisible);
-        bindPasswordStrength(settingsLoginPassStr, settingsLoginPasswordVisible);
+        bindTextProperty(settingsMasterPasswordHidden, settingsMasterPasswordVisible);
+        bindPasswordStrength(settingsLoginPassStr, settingsMasterPasswordVisible);
     }
 
     public void reset() {
-        clearStyle(settingsLoginPasswordHidden, settingsLoginPasswordVisible);
-        ioManager.displayLoginPassword(settingsLoginPasswordVisible, settingsLoginPasswordHidden);
+        clearStyle(settingsMasterPasswordHidden, settingsMasterPasswordVisible);
+        ioManager.displayMasterPassword(settingsMasterPasswordVisible, settingsMasterPasswordHidden);
     }
 
     @Contract(value = "_ -> new", pure = true)

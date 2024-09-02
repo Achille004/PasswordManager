@@ -70,7 +70,7 @@ public final class IOManager {
     private final ObservableList<Account> accountList;
     private @Getter UserPreferences userPreferences;
 
-    private String loginPassword;
+    private String masterPassword;
     private @Getter boolean isFirstRun, isAuthenticated;
 
     public IOManager() {
@@ -78,7 +78,7 @@ public final class IOManager {
         accountList = FXCollections.observableArrayList();
         userPreferences = UserPreferences.empty();
 
-        loginPassword = null;
+        masterPassword = null;
         isFirstRun = true;
         isAuthenticated = false;
     }
@@ -145,7 +145,7 @@ public final class IOManager {
     public @NotNull Boolean addAccount(String software, String username, String password) {
         if (isAuthenticated()) {
             try {
-                accountList.add(Account.of(software, username, password, loginPassword));
+                accountList.add(Account.of(software, username, password, masterPassword));
                 logger.addInfo("Account added");
                 return true;
             } catch (GeneralSecurityException e) {
@@ -161,17 +161,17 @@ public final class IOManager {
             return false;
         }
 
-        try {
-            int index = accountList.indexOf(account);
-            if (isAuthenticated() && index >= 0) {
-                account.setData(software, username, password, loginPassword);
+        int index = accountList.indexOf(account);
+        if (isAuthenticated() && index >= 0) {
+            try {
+                account.setData(software, username, password, masterPassword);
                 // Substitute the account with itself to trigger the SortedList wrapper
                 accountList.set(index, account);
                 logger.addInfo("Account edited");
                 return true;
+            } catch (GeneralSecurityException e) {
+                logger.addError(e);
             }
-        } catch (GeneralSecurityException e) {
-            logger.addError(e);
         }
 
         return false;
@@ -189,7 +189,7 @@ public final class IOManager {
     public @Nullable String getAccountPassword(@NotNull Account account) {
         try {
             if (isAuthenticated()) {
-                return account.getPassword(loginPassword);
+                return account.getPassword(masterPassword);
             }
         } catch (GeneralSecurityException e) {
             logger.addError(e);
@@ -200,25 +200,25 @@ public final class IOManager {
     // #endregion
 
     // #region LoginAccount methods
-    public @NotNull Boolean changeLoginPassword(String newLoginPassword) {
-        String oldLoginPassword = this.loginPassword;
-        if (oldLoginPassword != null && !isAuthenticated()) {
+    public @NotNull Boolean changeMasterPassword(String newMasterPassword) {
+        String oldMasterPassword = this.masterPassword;
+        if (oldMasterPassword != null && !isAuthenticated()) {
             return false;
         }
 
         try {
-            userPreferences.setPasswordVerified(oldLoginPassword, newLoginPassword);
+            userPreferences.setPasswordVerified(oldMasterPassword, newMasterPassword);
         } catch (InvalidKeySpecException e) {
             logger.addError(e);
             return false;
         }
 
-        if (oldLoginPassword != null) {
+        if (oldMasterPassword != null) {
             boolean[] error = new boolean[1];
             accountList.forEach(account -> {
                 Thread.startVirtualThread(() -> {
                     try {
-                        account.changeLoginPassword(oldLoginPassword, newLoginPassword);
+                        account.changeMasterPassword(oldMasterPassword, newMasterPassword);
                     } catch (GeneralSecurityException e) {
                         logger.addError(e);
                         error[0] = true;
@@ -231,9 +231,9 @@ public final class IOManager {
             }
         }
 
-        this.loginPassword = newLoginPassword;
-        if (oldLoginPassword != null) {
-            logger.addInfo("Login password changed");
+        this.masterPassword = newMasterPassword;
+        if (oldMasterPassword != null) {
+            logger.addInfo("Master password changed");
         } else {
             isAuthenticated = true;
         }
@@ -242,25 +242,25 @@ public final class IOManager {
     }
 
     @SafeVarargs
-    public final <T extends TextInputControl> void displayLoginPassword(T @NotNull... elements) {
+    public final <T extends TextInputControl> void displayMasterPassword(T @NotNull... elements) {
         for (T element : elements) {
-            element.setText(loginPassword);
+            element.setText(masterPassword);
         }
     }
 
-    public @NotNull Boolean authenticate(String loginPassword) {
+    public @NotNull Boolean authenticate(String masterPassword) {
         if (isAuthenticated()) {
             return false;
         }
 
         try {
-            isAuthenticated = userPreferences.verifyPassword(loginPassword);
+            isAuthenticated = userPreferences.verifyPassword(masterPassword);
         } catch (InvalidKeySpecException e) {
             logger.addError(e);
         }
 
         if (isAuthenticated) {
-            this.loginPassword = loginPassword;
+            this.masterPassword = masterPassword;
             logger.addInfo("User authenticated");
         }
 
@@ -270,7 +270,7 @@ public final class IOManager {
 
     public void export(@NotNull Exporter exporter, ObservableResourceFactory langResources) {
         try (FileWriter file = new FileWriter(DESKTOP_PATH.resolve("Passwords." + exporter.name().toLowerCase()).toFile())) {
-            file.write(exporter.getExporter().apply(accountList, langResources, loginPassword));
+            file.write(exporter.getExporter().apply(accountList, langResources, masterPassword));
             file.flush();
         } catch (Exception e) {
             logger.addError(e);

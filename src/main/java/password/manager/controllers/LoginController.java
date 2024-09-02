@@ -46,10 +46,10 @@ public class LoginController extends AbstractController {
     public Label loginTitle;
 
     @FXML
-    public TextField loginPasswordVisible;
+    public TextField masterPasswordVisible;
 
     @FXML
-    public PasswordField loginPasswordHidden;
+    public PasswordField masterPasswordHidden;
 
     @FXML
     public Button loginSubmitBtn;
@@ -70,14 +70,14 @@ public class LoginController extends AbstractController {
         langResources.bindTextProperty(loginTitle, "welcome_back");
         langResources.bindTextProperty(loginSubmitBtn, "lets_go");
 
-        bindTextProperty(loginPasswordHidden, loginPasswordVisible);
+        bindTextProperty(masterPasswordHidden, masterPasswordVisible);
     }
 
     @FXML
     public void doLogin() {
-        if (checkTextFields(loginPasswordVisible, loginPasswordHidden)) {
+        if (checkTextFields(masterPasswordVisible, masterPasswordHidden)) {
             wrongPasswordsTimeline.stop();
-            ioManager.authenticate(loginPasswordVisible.getText());
+            ioManager.authenticate(masterPasswordVisible.getText());
 
             if (ioManager.isAuthenticated()) {
                 switchToMain.set(true);
@@ -85,7 +85,7 @@ public class LoginController extends AbstractController {
                 wrongPasswordsTimeline.play();
             }
 
-            clearTextFields(loginPasswordHidden, loginPasswordVisible);
+            clearTextFields(masterPasswordHidden, masterPasswordVisible);
         }
     }
 }

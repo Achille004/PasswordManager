@@ -37,7 +37,7 @@ public final class Account {
     public Account(
             @JsonProperty("software") String software,
             @JsonProperty("username") String username,
-            @JsonProperty("encryptedPassword") byte[] encryptedPassword, 
+            @JsonProperty("encryptedPassword") byte[] encryptedPassword,
             @JsonProperty("iv") byte[] iv) {
         this.software = software;
         this.username = username;
@@ -45,49 +45,63 @@ public final class Account {
         this.iv = iv;
     }
 
-    public Account(@NotNull String software, @NotNull String username, @NotNull String password, @NotNull String loginPassword) throws GeneralSecurityException {
+    public Account(@NotNull String software, @NotNull String username, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
         this.software = software;
         this.username = username;
 
         iv = new byte[16];
-        setPassword(password, loginPassword);
+        setPassword(password, masterPassword);
     }
 
-    private void setPassword(@NotNull String password, @NotNull String loginPassword) throws GeneralSecurityException {
+    private void setPassword(@NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
         // Generate IV
         SecureRandom random = new SecureRandom();
         random.nextBytes(iv);
 
-        byte[] key = Encrypter.getKey(loginPassword, getSalt());
+        byte[] key = Encrypter.getKey(masterPassword, getSalt());
         this.encryptedPassword = Encrypter.encryptAES(password, key, iv);
     }
 
-    public String getPassword(@NotNull String loginPassword) throws GeneralSecurityException {
-        byte[] key = Encrypter.getKey(loginPassword, getSalt());
+    public String getPassword(@NotNull String masterPassword) throws GeneralSecurityException {
+        byte[] key = Encrypter.getKey(masterPassword, getSalt());
         return Encrypter.decryptAES(encryptedPassword, key, iv);
     }
 
-    public @NotNull Boolean setData(@NotNull String software, @NotNull String username, @NotNull String password, String loginPassword) throws GeneralSecurityException {
+    public @NotNull Boolean setData(@NotNull String software, @NotNull String username, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
         if (software.isEmpty() || password.isEmpty() || username.isEmpty()) {
             return false;
         }
 
-        // First the password, so that if any error occurs it exits before software and username get reassigned
-        setPassword(password, loginPassword);
-        this.software = software;
-        this.username = username;
+        // Save current values in case of rollback
+        String oldSoftware = this.software;
+        String oldUsername = this.username;
+        byte[] oldEncryptedPassword = this.encryptedPassword;
+        byte[] oldIv = this.iv.clone();
 
-        return true;
+        try {
+            this.software = software;
+            this.username = username;
+            setPassword(password, masterPassword);
+
+            return true;
+        } catch (GeneralSecurityException e) {
+            this.software = oldSoftware;
+            this.username = oldUsername;
+            this.encryptedPassword = oldEncryptedPassword;
+            System.arraycopy(oldIv, 0, iv, 0, oldIv.length);
+
+            throw e;
+        }
     }
 
-    public void changeLoginPassword(@NotNull String oldLoginPassword, @NotNull String newLoginPassword) throws GeneralSecurityException {
-        setPassword(getPassword(oldLoginPassword), newLoginPassword);
+    public void changeMasterPassword(@NotNull String oldMasterPassword, @NotNull String newMasterPassword) throws GeneralSecurityException {
+        setPassword(getPassword(oldMasterPassword), newMasterPassword);
     }
 
     @Contract("_, _, _, _ -> new")
-    public static @NotNull Account of(@NotNull String software, @NotNull String username, @NotNull String password, @NotNull String loginPassword) throws GeneralSecurityException {
+    public static @NotNull Account of(@NotNull String software, @NotNull String username, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
         // creates the account, adding its attributes by constructor
-        return new Account(software, username, password, loginPassword);
+        return new Account(software, username, password, masterPassword);
     }
 
     /**

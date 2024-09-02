@@ -1,3 +1,6 @@
+import org.panteleyev.jpackage.ImageType
+import org.panteleyev.jpackage.JPackageTask
+
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     id 'java'
@@ -68,47 +71,91 @@ signing {
     sign distTar
 }
 
-tasks.register('dist', Copy) {
-    dependsOn('distZip', 'signDistZip')
-    dependsOn('distTar', 'signDistTar')
+def resourceDir = layout.projectDirectory.dir('/src/main/resources')
+def compileDir = layout.projectDirectory.dir('/compiled')
+def distDir = compileDir.dir('/distributions')
+def installerDir = compileDir.dir('/installers')
 
-    from(tasks.distZip, tasks.signDistZip, tasks.distTar, tasks.signDistTar)
-    into(layout.projectDirectory.dir('/compiled/distributions'))
+tasks.register('copyDistTar', Copy) {
+    dependsOn tasks.distTar, tasks.signDistTar
+    from tasks.distTar, tasks.signDistTar
+    into distDir.dir('/tar')
 }
 
-tasks.register('copyJars', Copy) {
-    dependsOn('jar', 'signJar')
-
-    from(configurations.runtimeClasspath, tasks.jar, tasks.signJar)
-    into(layout.buildDirectory.dir('/jars'))
+tasks.register('copyDistZip', Copy) {
+    dependsOn tasks.distZip, tasks.signDistZip
+    from tasks.distZip, tasks.signDistZip
+    into distDir.dir('/zip')
 }
 
-jpackage {
-    dependsOn('copyJars')
+tasks.register('copyDist', Delete) {
+    delete distDir
+    finalizedBy tasks.copyDistTar, tasks.copyDistZip
+}
 
-    // type = 'dmg'
-    // type = 'pkg'
-	// type = 'exe'
-	// type = 'msi'
-	// type = 'rpm'
-	// type = 'deb'
+
+class FullJPackageTask extends JPackageTask {
+    @Internal
+    def osName = System.getProperty('os.name').toLowerCase()
+    @Internal
+    def isWindows = osName.contains('windows')
+    @Internal
+    def isMac = osName.contains('mac')
+    @Internal
+    def isLinux = osName.contains('nix') || osName.contains('nux') || osName.contains('aix')
+    @Internal
+    def isInCI =  System.getenv('CI') != null
+
+    @TaskAction
+    @Override
+    void action() {
+        List<ImageType> types
+        if (isWindows) {
+            types = [ImageType.EXE, ImageType.MSI]
+        } else if (isMac) {
+            types = [ImageType.DMG, ImageType.PKG]
+        } else if (isLinux) {
+            types = [ImageType.DEB, ImageType.RPM]
+        } else {
+            types = []
+        }
+        types.each { type ->
+            setType(type)
+            super.action()
+        }
+    }
+}
+
+tasks.jpackage {
+    enabled = false
+}
+
+tasks.register('copyForPackaging', Copy) {
+    dependsOn tasks.jar, tasks.signJar
+    from configurations.runtimeClasspath, tasks.jar, tasks.signJar
+    into layout.buildDirectory.dir('/jars')
+}
+
+// jpackage {
+tasks.register('jpackageFull', FullJPackageTask) {
+    dependsOn tasks.copyForPackaging
 
     aboutUrl = 'https://github.com/Achille004/PasswordManager'
     appDescription = 'Password Manager'
     appName = 'Password Manager'
     appVersion = project.version
     copyright = '© Francesco Marras'
-    destination = layout.projectDirectory.dir('/compiled/installers')
-    icon =  layout.projectDirectory.file('/src/main/resources/locker.ico')
+    icon =  resourceDir.file('/locker.ico')
     javaOptions = ['-Dfile.encoding=UTF-8']
-    licenseFile	= layout.projectDirectory.dir('/src/main/resources/license.txt')
+    licenseFile	= resourceDir.file('/license.txt')
     module = 'password.manager/password.manager.App'
-    modulePaths = Arrays.asList('/build/jars')
-    resourceDir = layout.projectDirectory.dir('/src/main/resources')
+    modulePaths = ['/build/jars']
+    resourceDir = resourceDir
     runtimeImage = System.getProperty('java.home')
     vendor = 'Francesco Marras'
     
     windows {
+        destination = installerDir.dir('/windows')
         winConsole = false
         winDirChooser = true
         winHelpUrl = 'https://github.com/Achille004/PasswordManager'
@@ -119,6 +166,7 @@ jpackage {
     }
 
     mac {
+        destination = installerDir.dir('/mac')
         macAppCategory  = 'security'
         macAppStore = false
         macPackageIdentifier = 'PasswordManager-3.0.2'
@@ -127,10 +175,16 @@ jpackage {
     }
 
     linux {
+        destination = installerDir.dir('/linux')
         linuxAppCategory = 'security'
         linuxDebMaintainer = '2004marras@gmail.com'
         linuxMenuGroup = 'Francesco Marras'
         linuxRpmLicenseType = 'GPLv3'
         linuxShortcut = true
     }
+}
+
+tasks.register('dryJpackageFull') {
+    System.setProperty("jpackage.dryRun", "true")
+    finalizedBy tasks.jpackageFull
 }

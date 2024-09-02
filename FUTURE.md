@@ -1,10 +1,8 @@
 # Next up:
-- Change data file from dat to a more portable type
-- Better readme
-- Better code comments and documentation + code flow analysis (especially for null values) + logging
+- Better code comments and documentation + code flow analysis (especially for null values) + deeper logging
 - Embed fonts (as they only work on Windows)
 - Add export (add xml and json) + choose export directory (FileChooser/DirectoryChooser)
-- Add account search
+- Add account search and filters (like descendant order)
 
 # Future:
 - Add language flags to their selector
