@@ -51,18 +51,14 @@ public abstract class AbstractController implements Initializable {
     protected final IOManager ioManager;
     protected final ObservableResourceFactory langResources;
     protected final HostServices hostServices;
-    protected final Stage eulaStage;
+    protected Stage eulaStage;
 
     protected AbstractController(@NotNull IOManager ioManager, @NotNull ObservableResourceFactory langResources, @NotNull HostServices hostServices) {
         this.ioManager = ioManager;
         this.langResources = langResources;
         this.hostServices = hostServices;
 
-        eulaStage = new Stage();
-        eulaStage.setTitle(langResources.getValue("terms_credits"));
-        eulaStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/locker.png"))));
-        eulaStage.setResizable(false);
-        eulaStage.setScene(new Scene(loadFxml("/fxml/extra/eula.fxml", new EulaController(ioManager, hostServices)), 900, 600));
+        eulaStage = null;
     }
 
     @FXML
@@ -77,11 +73,25 @@ public abstract class AbstractController implements Initializable {
     @FXML
     public void showEula(MouseEvent event) {
         if (eulaStage == null) {
-            ioManager.getLogger().addError(new IOException("Could not load 'eula.fxml'"));
-            return;
+            ioManager.getLogger().addError(new UnsupportedOperationException("Eula stage not initialized."));
+        } else {
+            eulaStage.show();
         }
+    }
 
-        eulaStage.show();
+    protected void loadEula() {
+        eulaStage = new Stage();
+        eulaStage.setTitle(langResources.getValue("terms_credits"));
+        eulaStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/locker.png"))));
+        eulaStage.setResizable(false);
+        
+        Parent eulaParent = loadFxml("/fxml/extra/eula.fxml", new EulaController(ioManager, hostServices));
+        if (eulaParent == null) {
+            eulaStage = null;
+            ioManager.getLogger().addError(new IOException("Could not load 'eula.fxml'"));
+        } else {
+            eulaStage.setScene(new Scene(eulaParent, 900, 600));
+        }
     }
 
     protected <S extends Initializable> Parent loadFxml(String path, S controller) {

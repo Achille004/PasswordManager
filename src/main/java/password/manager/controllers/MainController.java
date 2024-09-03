@@ -126,6 +126,7 @@ public class MainController extends AbstractController {
             folderButton.setVisible(false);
         }
 
+        super.loadEula();
         homeButton(null);
     }
 

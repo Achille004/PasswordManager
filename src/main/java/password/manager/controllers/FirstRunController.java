@@ -70,6 +70,8 @@ public class FirstRunController extends AbstractController {
 
         bindTextProperty(firstRunPasswordHidden, firstRunPasswordVisible);
         bindPasswordStrength(firstRunPassStr, firstRunPasswordVisible);
+
+        super.loadEula();
     }
 
     @FXML
