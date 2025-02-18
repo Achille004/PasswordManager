@@ -1,0 +1,59 @@
+plugins {
+    id 'java'
+    // id 'java-library'
+    id 'application'
+
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+    id 'io.franzbecker.gradle-lombok' version '5.0.0'
+    id 'org.javamodularity.moduleplugin' version '1.8.13'
+
+    // https://github.com/gradlex-org/java-module-dependencies
+    id 'org.gradlex.java-module-dependencies' version '1.6.4'
+}
+
+repositories {
+    // Use Maven Central for resolving dependencies.
+    mavenCentral()
+}
+
+mainModuleInfo {
+    annotationProcessor 'lombok'
+}
+
+testModuleInfo {
+    annotationProcessor 'lombok'
+    requiresStatic 'org.junit.jupiter.api'
+    requires 'org.junit.jupiter.engine'
+}
+
+// Apply a specific Java toolchain to ease working on different environments.
+java {
+    sourceCompatibility = JavaVersion.VERSION_23
+
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(23)
+    }
+}
+
+tasks.named('test') {
+    // Use JUnit Platform for unit tests.
+    useJUnitPlatform()
+}
+
+javafx {
+    version = '23.0.2'
+    modules = [ 'javafx.base', 'javafx.controls', 'javafx.fxml', 'javafx.graphics', 'javafx.web' ]
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'Custom components for Password Manager'
+    }
+    archiveBaseName.set(rootProject.name + 'Components')
+}
+
+application {
+    // Define the main class for the application.
+    mainModule = 'password.manager.lib'
+    mainClass = 'password.manager.lib.Main'
+}

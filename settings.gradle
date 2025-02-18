@@ -1,6 +1,6 @@
 pluginManagement {
     repositories {
-        maven { url "https://plugins.gradle.org/m2/" }
+        maven { url = "https://plugins.gradle.org/m2/" }
         gradlePluginPortal()
     }
 }
@@ -12,4 +12,5 @@ plugins {
 
 rootProject.name = 'PasswordManager'
 
-includeBuild '.'
+include 'app'
+include 'lib'

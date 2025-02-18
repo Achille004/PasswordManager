@@ -1,0 +1,76 @@
+/* https://gist.github.com/maxd/63691840fc372f22f470 */
+
+.body {
+    -fx-background-color: #202428;
+}
+
+.sidebarButton {
+    -fx-background-color: #202428;
+    -fx-background-radius: 8deg;
+}
+
+.decryptButton {
+    -fx-background-color: #a7acb1;
+    -fx-background-radius: 8deg;
+}
+
+.textField {
+    -fx-background-color: #2e3136;
+    -fx-border-color: #a7acb1;
+    -fx-border-radius: 3deg;
+    -fx-text-inner-color: white;
+}
+
+.readablePasswordField > * {
+    -fx-background-color: #2e3136;
+    -fx-border-color: #a7acb1;
+    -fx-border-radius: 3deg;
+    -fx-text-inner-color: white;
+}
+
+.greenButton {
+    -fx-text-inner-color: white;
+    -fx-background-color: none;
+    -fx-border-color: #0aba4d;
+    -fx-border-width: 3px;
+    -fx-border-radius: 8deg;
+}
+
+.eulaText:hover {
+    -fx-underline: true;
+}
+
+.check-box>.box {
+    /* background color of unselected checkbox */
+    -fx-background-color: #2e3136;
+    -fx-border-color: #a7acb1;
+    -fx-border-radius: 4deg;
+}
+.check-box:selected>.box>.mark {
+    /* modify mark color */
+    -fx-background-color: #a7acb1;
+}
+
+/* .combo-box > .list-cell -> This is the part where you click */
+.combo-box-popup>.list-view {
+    -fx-background-color: #2e3136;
+    -fx-border-color: #a7acb1;
+    -fx-border-radius: 4deg;
+}
+.combo-box-popup>.list-view>.virtual-flow>.clipped-container>.sheet>.list-cell {
+    -fx-background-color: #2e3136;
+    -fx-text-fill: white;
+    -fx-border-radius: 4deg;
+}
+.combo-box-popup>.list-view>.virtual-flow>.clipped-container>.sheet>.list-cell:filled:hover,
+.combo-box-popup>.list-view>.virtual-flow>.clipped-container>.sheet>.list-cell:filled:selected {
+    -fx-background-color: #202428;
+    -fx-border-radius: 4deg;
+}
+
+.progress-bar>.bar {  
+    -fx-background-color: linear-gradient(to right, #F00, #FF0, #0F0);
+}
+.progress-bar>.track {  
+    -fx-background-color: transparent;
+}
