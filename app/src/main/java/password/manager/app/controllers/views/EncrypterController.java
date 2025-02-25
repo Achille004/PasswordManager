@@ -60,6 +60,16 @@ public class EncrypterController extends AbstractViewController {
         langResources.bindTextProperty(encryptPasswordLbl, "password");
 
         encryptPassword.bindPasswordStrength(encryptPassStr);
+
+        encryptSoftware.setOnAction(event -> {
+            encryptUsername.requestFocus();
+        });
+        encryptUsername.setOnAction(event -> {
+            encryptPassword.requestFocus();
+        });
+        encryptPassword.setOnAction(event -> {
+            encryptSave(event);
+        });
     }
 
     public void reset() {

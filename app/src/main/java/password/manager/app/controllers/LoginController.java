@@ -38,7 +38,8 @@ import password.manager.lib.ReadablePasswordField;
 public class LoginController extends AbstractController {
     private final BooleanProperty switchToMain;
 
-    public LoginController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices, BooleanProperty switchToMain) {
+    public LoginController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices,
+            BooleanProperty switchToMain) {
         super(ioManager, langResources, hostServices);
         this.switchToMain = switchToMain;
     }
@@ -67,6 +68,10 @@ public class LoginController extends AbstractController {
 
         langResources.bindTextProperty(loginTitle, "welcome_back");
         langResources.bindTextProperty(loginSubmitBtn, "lets_go");
+
+        loginPassword.setOnAction(event -> {
+            doLogin();
+        });
     }
 
     @FXML

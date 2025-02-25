@@ -45,18 +45,10 @@
         <Image url="@../../images/background.png"/>
     </ImageView>
     <Label fx:id="homeDescTop" alignment="CENTER" layoutX="207.0" layoutY="457.0" prefHeight="53.0" prefWidth="414.0"
-           text="Your Accounts." textFill="#0aba4d" AnchorPane.bottomAnchor="46.19999999999999"
-           AnchorPane.leftAnchor="207.0" AnchorPane.rightAnchor="208.20000000000005" AnchorPane.topAnchor="457.0">
-        <font>
-            <Font name="System Bold Italic" size="24.0"/>
-        </font>
-    </Label>
+           styleClass="bold-italic, sz24, green-text" text="Your Accounts." AnchorPane.bottomAnchor="46.19999999999999"
+           AnchorPane.leftAnchor="207.0" AnchorPane.rightAnchor="208.20000000000005" AnchorPane.topAnchor="457.0" />
     <Label fx:id="homeDescBtm" alignment="CENTER" contentDisplay="CENTER" layoutX="205.0" layoutY="483.0"
-           prefHeight="53.0" prefWidth="418.0" text="In a Safe Place." textAlignment="CENTER" textFill="#0aba4d"
-           AnchorPane.bottomAnchor="20.200000000000045" AnchorPane.leftAnchor="205.0"
-           AnchorPane.rightAnchor="205.39999999999998" AnchorPane.topAnchor="483.0">
-        <font>
-            <Font name="System Bold Italic" size="24.0"/>
-        </font>
-    </Label>
+           prefHeight="53.0" prefWidth="418.0" styleClass="bold-italic, sz24, green-text" text="In a Safe Place." 
+           textAlignment="CENTER" AnchorPane.bottomAnchor="20.200000000000045" 
+           AnchorPane.leftAnchor="205.0" AnchorPane.rightAnchor="205.39999999999998" AnchorPane.topAnchor="483.0" />
 </AnchorPane>

@@ -18,31 +18,22 @@
 
 package password.manager.app.controllers;
 
-import static password.manager.app.utils.Utils.*;
-
 import java.io.IOException;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
 import javafx.application.HostServices;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 import password.manager.app.controllers.extra.EulaController;
 import password.manager.app.utils.IOManager;
 import password.manager.app.utils.ObservableResourceFactory;
@@ -76,6 +67,7 @@ public abstract class AbstractController implements Initializable {
             ioManager.getLogger().addError(new UnsupportedOperationException("Eula stage not initialized."));
         } else {
             eulaStage.show();
+            eulaStage.toFront();
         }
     }
 

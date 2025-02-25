@@ -62,7 +62,7 @@ public class DecrypterController extends AbstractViewController {
     private boolean decryptDeleteCounter = false;
 
     @FXML
-    public Label decryptAccSelLbl, decryptSelectedAccLbl, decryptSoftwareLbl, decryptUsernameLbl, decryptPasswordLbl;
+    public Label decryptAccSelLbl, decryptSoftwareLbl, decryptUsernameLbl, decryptPasswordLbl;
 
     @FXML
     public ProgressBar decryptPassStr;
@@ -76,6 +76,16 @@ public class DecrypterController extends AbstractViewController {
         langResources.bindTextProperty(decryptPasswordLbl, "password");
 
         decryptPassword.bindPasswordStrength(decryptPassStr);
+
+        decryptSoftware.setOnAction(event -> {
+            decryptUsername.requestFocus();
+        });
+        decryptUsername.setOnAction(event -> {
+            decryptPassword.requestFocus();
+        });
+        decryptPassword.setOnAction(event -> {
+            decryptSave(event);
+        });
 
         SortedList<Account> accountList = ioManager.getSortedAccountList();
         decryptCB.setItems(accountList);
@@ -99,13 +109,6 @@ public class DecrypterController extends AbstractViewController {
                 });
 
         ObjectProperty<Account> selectedAccount = decryptCB.valueProperty();
-        decryptSelectedAccLbl.textProperty().bind(Bindings.createStringBinding(
-                () -> {
-                    SortingOrder sortingOrderValue = sortingOrderProperty.getValue();
-                    return sortingOrderValue != null
-                            ? accountStringConverter(sortingOrderValue).toString(selectedAccount.getValue())
-                            : null;
-                }, sortingOrderProperty, selectedAccount));
     }
 
     public void reset() {

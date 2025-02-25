@@ -1,8 +1,9 @@
 package password.manager.lib;
 
+import static password.manager.lib.Utils.*;
+
 import java.io.IOException;
 import java.net.URL;
-import java.util.NoSuchElementException;
 import java.util.ResourceBundle;
 
 import org.jetbrains.annotations.NotNull;
@@ -12,13 +13,11 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
@@ -27,8 +26,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.util.Duration;
-
-import static password.manager.lib.Utils.*;
 
 public class ReadablePasswordField extends AnchorPane implements Initializable {
 
@@ -161,6 +158,15 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
     public void setOnAction(EventHandler<ActionEvent> value) {
         passwordField.setOnAction(value);
         textField.setOnAction(value);
+    }
+
+    @Override
+    public void requestFocus() {
+        if(isReadable()) {
+            textField.requestFocus();
+        } else {
+            passwordField.requestFocus();
+        }
     }
 
     public void bindPasswordStrength(@NotNull ProgressBar progressBar) {

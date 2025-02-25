@@ -60,59 +60,25 @@
       <Insets bottom="80.0" left="50.0" right="50.0" top="20.0" />
    </padding>
    <AnchorPane prefHeight="123.0" prefWidth="738.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-      <ComboBox fx:id="settingsOrderCB" layoutY="33.0" prefHeight="30.0" prefWidth="461.0" styleClass="textField" />
-      <Label fx:id="selectedOrderLbl" layoutX="5.0" layoutY="34.0" mouseTransparent="true" pickOnBounds="false" prefHeight="27.0" prefWidth="430.0" text="Selected Order" textFill="WHITE">
-         <font>
-            <Font size="18.0" />
-         </font>
-      </Label>
+      <ComboBox fx:id="settingsOrderCB" layoutY="33.0" prefHeight="30.0" prefWidth="461.0" />
    </AnchorPane>
    <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1">
-      <ComboBox fx:id="settingsLangCB" layoutY="33.0" prefHeight="30.0" prefWidth="461.0" styleClass="textField" />
-      <Label fx:id="selectedLangLbl" layoutX="5.0" layoutY="33.0" mouseTransparent="true" pickOnBounds="false" prefHeight="29.0" prefWidth="430.0" text="Selected Language" textFill="WHITE">
-         <font>
-            <Font size="18.0" />
-         </font>
-      </Label>
+      <ComboBox fx:id="settingsLangCB" layoutY="33.0" prefHeight="30.0" prefWidth="461.0" />
    </AnchorPane>
-   <Label fx:id="settingsSortingOrderLbl" prefHeight="35.0" prefWidth="263.0" text="Order by:" textFill="WHITE" GridPane.rowIndex="1">
-      <font>
-         <Font name="System Bold Italic" size="24.0" />
-      </font>
-   </Label>
+   <Label fx:id="settingsSortingOrderLbl" prefHeight="35.0" prefWidth="263.0" styleClass="bold-italic, sz24" text="Order by:" GridPane.rowIndex="1" />
    <AnchorPane prefHeight="0.0" prefWidth="730.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
-      <Label fx:id="wip" layoutY="28.0" prefHeight="35.0" prefWidth="506.0" text="Work in progress..." textFill="WHITE">
-         <font>
-            <Font name="System Italic" size="24.0" />
-         </font>
-      </Label>
+      <Label fx:id="wip" layoutY="28.0" prefHeight="35.0" prefWidth="506.0" styleClass="italic, sz24" text="Work in progress..." />
    </AnchorPane>
-   <Label fx:id="settingsLangLbl" prefHeight="35.0" prefWidth="264.0" text="Language:" textFill="WHITE">
-      <font>
-         <Font name="System Bold Italic" size="24.0" />
-      </font>
-   </Label>
-   <Label fx:id="settingsMasterPasswordLbl" prefHeight="35.0" prefWidth="264.0" text="Master Password:" textFill="WHITE" GridPane.rowIndex="2">
-      <font>
-         <Font name="System Bold Italic" size="24.0" />
-      </font>
-   </Label>
-   <Label fx:id="settingsDriveConnLbl" prefHeight="35.0" prefWidth="269.0" text="Drive Connection:" textFill="WHITE" GridPane.rowIndex="3">
-      <font>
-         <Font name="System Bold Italic" size="24.0" />
-      </font>
-   </Label>
+   <Label fx:id="settingsLangLbl" prefHeight="35.0" prefWidth="264.0" styleClass="bold-italic, sz24" text="Language:" />
+   <Label fx:id="settingsMasterPasswordLbl" prefHeight="35.0" prefWidth="264.0" styleClass="bold-italic, sz24" text="Master Password:" GridPane.rowIndex="2" />
+   <Label fx:id="settingsDriveConnLbl" prefHeight="35.0" prefWidth="269.0" styleClass="bold-italic, sz24" text="Drive Connection:" GridPane.rowIndex="3" />
    <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="4" />
    <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
    <AnchorPane prefHeight="0.0" prefWidth="502.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
       <children>
-         <Label fx:id="settingsMasterPasswordDesc" alignment="CENTER_RIGHT" layoutX="2.0" layoutY="12.0" prefHeight="20.0" prefWidth="459.0" text="Press ENTER to confirm." textFill="WHITE">
-            <font>
-               <Font name="System Italic" size="14.0" />
-            </font>
-         </Label>
+         <Label fx:id="settingsMasterPasswordDesc" alignment="CENTER_RIGHT" layoutX="2.0" layoutY="12.0" prefHeight="20.0" prefWidth="459.0" styleClass="italic, sz14" text="Press ENTER to confirm." />
          <ProgressBar fx:id="settingsLoginPassStr" layoutY="64.0" prefHeight="10.0" prefWidth="460.0" progress="0.0" />
-         <ReadablePasswordField fx:id="settingsMasterPassword" layoutY="31.0" maxHeight="30.0" maxWidth="465.0" minHeight="30.0" minWidth="459.0" prefWidth="459.0" styleClass="readablePasswordField" />
+         <ReadablePasswordField fx:id="settingsMasterPassword" layoutY="31.0" maxHeight="30.0" maxWidth="465.0" minHeight="30.0" minWidth="459.0" prefWidth="459.0" styleClass="readable-password-field" />
       </children>
    </AnchorPane>
 </GridPane>

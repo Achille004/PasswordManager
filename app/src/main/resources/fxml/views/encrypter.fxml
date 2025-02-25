@@ -60,40 +60,24 @@
       <Insets bottom="80.0" left="50.0" right="50.0" top="20.0" />
    </padding>
    <AnchorPane prefHeight="123.0" prefWidth="738.0">
-      <TextField fx:id="encryptSoftware" layoutY="45.0" prefHeight="30.0" prefWidth="735.0" styleClass="textField" />
-      <Label fx:id="encryptSoftwareLbl" layoutX="-1.0" layoutY="18.0" prefHeight="27.0" prefWidth="273.0" text="Software" textFill="WHITE">
-         <font>
-            <Font size="18.0" />
-         </font>
-      </Label>
+      <TextField fx:id="encryptSoftware" layoutY="45.0" prefHeight="30.0" prefWidth="735.0" />
+      <Label fx:id="encryptSoftwareLbl" layoutX="-1.0" layoutY="18.0" prefHeight="27.0" prefWidth="273.0" text="Software" />
    </AnchorPane>
    <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="1">
-      <TextField fx:id="encryptUsername" layoutY="45.0" prefHeight="30.0" prefWidth="735.0" styleClass="textField" />
-      <Label fx:id="encryptUsernameLbl" layoutY="18.0" prefHeight="27.0" prefWidth="250.0" text="Username" textFill="WHITE">
-         <font>
-            <Font size="18.0" />
-         </font>
-      </Label>
+      <TextField fx:id="encryptUsername" layoutY="45.0" prefHeight="30.0" prefWidth="735.0" />
+      <Label fx:id="encryptUsernameLbl" layoutY="18.0" prefHeight="27.0" prefWidth="250.0" text="Username" />
    </AnchorPane>
    <AnchorPane prefHeight="0.0" prefWidth="730.0" GridPane.rowIndex="2">
       <children>
-         <Label fx:id="encryptPasswordLbl" layoutY="19.0" prefHeight="27.0" prefWidth="257.0" text="Password" textFill="WHITE">
-            <font>
-               <Font size="18.0" />
-            </font>
-         </Label>
+         <Label fx:id="encryptPasswordLbl" layoutY="19.0" prefHeight="27.0" prefWidth="257.0" text="Password" />
          <ProgressBar fx:id="encryptPassStr" layoutX="1.0" layoutY="77.0" prefHeight="10.0" prefWidth="734.0" progress="0.0" />
-         <ReadablePasswordField fx:id="encryptPassword" layoutY="46.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="735.0" styleClass="readablePasswordField" />
+         <ReadablePasswordField fx:id="encryptPassword" layoutY="46.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="735.0" styleClass="readable-password-field" />
       </children>
    </AnchorPane>
    <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="3">
       <GridPane.margin>
          <Insets />
       </GridPane.margin>
-      <Button fx:id="encryptSubmitBtn" alignment="CENTER" contentDisplay="CENTER" layoutX="637.0" layoutY="24.0" mnemonicParsing="false" nodeOrientation="LEFT_TO_RIGHT" onAction="#encryptSave" styleClass="greenButton" text="Submit" textAlignment="CENTER" textFill="WHITE" AnchorPane.rightAnchor="0.0">
-         <font>
-            <Font name="System Bold" size="18.0" />
-         </font>
-      </Button>
+      <Button fx:id="encryptSubmitBtn" alignment="CENTER" contentDisplay="CENTER" layoutX="637.0" layoutY="24.0" mnemonicParsing="false" nodeOrientation="LEFT_TO_RIGHT" onAction="#encryptSave" styleClass="green-button, bold" text="Submit" textAlignment="CENTER" AnchorPane.rightAnchor="0.0" />
    </AnchorPane>
 </GridPane>

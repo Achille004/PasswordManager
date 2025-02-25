@@ -68,6 +68,10 @@ public class FirstRunController extends AbstractController {
 
         firstRunPassword.bindPasswordStrength(firstRunPassStr);
 
+        firstRunPassword.setOnAction(event -> {
+            doFirstRun();
+        });
+
         super.loadEula();
     }
 

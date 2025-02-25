@@ -66,7 +66,7 @@ public class SettingsController extends AbstractViewController {
     public ReadablePasswordField settingsMasterPassword;
 
     @FXML
-    public Label settingsLangLbl, selectedLangLbl, settingsSortingOrderLbl, selectedOrderLbl,
+    public Label settingsLangLbl, settingsSortingOrderLbl,
             settingsMasterPasswordLbl, settingsMasterPasswordDesc, settingsDriveConnLbl, wip;
 
     @FXML
@@ -92,13 +92,6 @@ public class SettingsController extends AbstractViewController {
         bindValueConverter(settingsLangCB, localeProperty, this::languageStringConverter);
         bindValueComparator(languages, localeProperty, settingsLangCB);
 
-        selectedLangLbl.textProperty().bind(Bindings.createStringBinding(
-                () -> {
-                    Locale locale = localeProperty.getValue();
-                    return languageStringConverter(locale).toString(locale);
-                },
-                localeProperty));
-
         localeProperty.bind(settingsLangCB.valueProperty());
 
         // Sorting order box
@@ -109,10 +102,6 @@ public class SettingsController extends AbstractViewController {
         settingsOrderCB.getSelectionModel().select(ioManager.getUserPreferences().getSortingOrder());
         bindValueConverter(settingsOrderCB, localeProperty, this::sortingOrderStringConverter);
         bindValueComparator(sortingOrders, localeProperty, settingsOrderCB);
-
-        selectedOrderLbl.textProperty().bind(Bindings.createStringBinding(
-                () -> sortingOrderStringConverter(localeProperty.getValue()).toString(sortingOrderProperty.getValue()),
-                localeProperty, sortingOrderProperty));
 
         sortingOrderProperty.bind(settingsOrderCB.valueProperty());
 

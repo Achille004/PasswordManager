@@ -25,6 +25,7 @@ import javafx.application.HostServices;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import org.jetbrains.annotations.NotNull;
 
@@ -36,6 +37,12 @@ public class App extends Application {
     public void start(@NotNull Stage primaryStage) {
         hostServices = getHostServices();
 
+        Font.loadFont(getClass().getResourceAsStream("/font/Roboto-Bold.ttf"), 14);
+        Font.loadFont(getClass().getResourceAsStream("/font/Roboto-BoldItalic.ttf"), 14);
+        Font.loadFont(getClass().getResourceAsStream("/font/Roboto-Italic.ttf"), 14);
+        Font.loadFont(getClass().getResourceAsStream("/font/Roboto-Regular.ttf"), 14);
+        Font.loadFont(getClass().getResourceAsStream("/font/Charm-Bold.ttf"), 14);
+        
         AnchorPane scenePane = new AnchorPane();
         appManager = new AppManager(scenePane, hostServices, getParameters());
 
