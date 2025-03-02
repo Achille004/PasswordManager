@@ -32,7 +32,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.util.StringConverter;
@@ -77,15 +76,9 @@ public class DecrypterController extends AbstractViewController {
 
         decryptPassword.bindPasswordStrength(decryptPassStr);
 
-        decryptSoftware.setOnAction(event -> {
-            decryptUsername.requestFocus();
-        });
-        decryptUsername.setOnAction(event -> {
-            decryptPassword.requestFocus();
-        });
-        decryptPassword.setOnAction(event -> {
-            decryptSave(event);
-        });
+        decryptSoftware.setOnAction(_ -> decryptUsername.requestFocus());
+        decryptUsername.setOnAction(_ -> decryptPassword.requestFocus());
+        decryptPassword.setOnAction(this::decryptSave);
 
         SortedList<Account> accountList = ioManager.getSortedAccountList();
         decryptCB.setItems(accountList);

@@ -17,7 +17,7 @@
  */
 
 module password.manager.lib {
-    requires java.desktop;
+    // requires java.desktop;
     
     requires javafx.base;
     requires transitive javafx.controls;
@@ -25,7 +25,7 @@ module password.manager.lib {
     requires transitive javafx.graphics;
     // requires javafx.web;
     
-    requires static lombok;
+    // requires static lombok;
 
     requires me.gosimple.nbvcxz;
 

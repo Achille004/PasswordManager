@@ -10,13 +10,14 @@ plugins {
     id 'org.openjfx.javafxplugin' version '0.1.0'
     id 'io.franzbecker.gradle-lombok' version '5.0.0'
     id 'org.javamodularity.moduleplugin' version '1.8.13'
-    id 'org.panteleyev.jpackageplugin' version '1.6.0'
+
+    id 'org.panteleyev.jpackageplugin' version '1.6.1'
 
     // https://github.com/gradlex-org/java-module-dependencies
     id 'org.gradlex.java-module-dependencies' version '1.6.4'
 }
 
-project.version = '3.0.2'
+project.version = '3.0.3'
 
 repositories {
     // Use Maven Central for resolving dependencies.
@@ -52,11 +53,6 @@ application {
     mainClass = 'password.manager.app.App'
 }
 
-tasks.named('test') {
-    // Use JUnit Platform for unit tests.
-    useJUnitPlatform()
-}
-
 javafx {
     version = '23.0.2'
     modules = [ 'javafx.base', 'javafx.controls', 'javafx.fxml', 'javafx.graphics', 'javafx.web' ]
@@ -76,7 +72,7 @@ signing {
 }
 
 def resourceDir = layout.projectDirectory.dir('/src/main/resources')
-def compileDir = layout.projectDirectory.dir('/compiled')
+def compileDir = rootProject.layout.projectDirectory.dir('/compiled')
 def distDir = compileDir.dir('/distributions')
 def installerDir = compileDir.dir('/installers')
 
@@ -173,7 +169,7 @@ tasks.register('jpackageFull', FullJPackageTask) {
         destination = installerDir.dir('/mac')
         macAppCategory  = 'security'
         macAppStore = false
-        macPackageIdentifier = 'PasswordManager-3.0.2'
+        macPackageIdentifier = 'PasswordManager-3.0.3'
         macPackageName = 'PasswordManager'
         macSigningKeyUserName = 'Francesco Marras'
     }

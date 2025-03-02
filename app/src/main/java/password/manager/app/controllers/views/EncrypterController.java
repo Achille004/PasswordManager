@@ -26,7 +26,6 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import password.manager.app.utils.IOManager;
@@ -61,15 +60,9 @@ public class EncrypterController extends AbstractViewController {
 
         encryptPassword.bindPasswordStrength(encryptPassStr);
 
-        encryptSoftware.setOnAction(event -> {
-            encryptUsername.requestFocus();
-        });
-        encryptUsername.setOnAction(event -> {
-            encryptPassword.requestFocus();
-        });
-        encryptPassword.setOnAction(event -> {
-            encryptSave(event);
-        });
+        encryptSoftware.setOnAction(_ -> encryptUsername.requestFocus());
+        encryptUsername.setOnAction(_ -> encryptPassword.requestFocus());
+        encryptPassword.setOnAction(this::encryptSave);
     }
 
     public void reset() {

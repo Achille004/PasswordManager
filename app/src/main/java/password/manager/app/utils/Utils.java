@@ -94,7 +94,7 @@ public final class Utils {
         return String.format("%0" + listDigits + "d", index);
     }
 
-    public static String byteToBase64(@NotNull byte[] src) {
+    public static String byteToBase64(byte[] src) {
         // Base64-encode the encrypted password for a readable representation
         return BASE64ENC.encodeToString(src);
     }

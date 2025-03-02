@@ -26,8 +26,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,7 +43,6 @@ import javafx.collections.transformation.SortedList;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.TextInputControl;
 import lombok.Getter;
 import password.manager.app.enums.Exporter;
 import password.manager.app.security.Account;
@@ -120,8 +121,7 @@ public final class IOManager {
         } catch (IOException e) {
             logger.addError(e);
 
-            Alert alert = new Alert(AlertType.ERROR, langResources.getValue("data_error"),
-                    ButtonType.YES, ButtonType.NO);
+            Alert alert = new Alert(AlertType.ERROR, langResources.getValue("data_error"), ButtonType.YES, ButtonType.NO);
             setDefaultButton(alert, ButtonType.NO);
             alert.showAndWait();
 
@@ -216,17 +216,15 @@ public final class IOManager {
 
         if (oldMasterPassword != null) {
             boolean[] error = new boolean[1];
-            accountList.forEach(account -> {
-                Thread.startVirtualThread(() -> {
-                    try {
-                        account.changeMasterPassword(oldMasterPassword, newMasterPassword);
-                    } catch (GeneralSecurityException e) {
-                        logger.addError(e);
-                        error[0] = true;
-                    }
-                });
-                // to wait until threads are finished, use threadInstance.join()
+            accountListTaskMultiThreaded(account -> {
+                try {
+                    account.changeMasterPassword(oldMasterPassword, newMasterPassword);
+                } catch (GeneralSecurityException e) {
+                    logger.addError(e);
+                    error[0] = true;
+                }
             });
+
             if (error[0]) {
                 return false;
             }
@@ -242,7 +240,7 @@ public final class IOManager {
         return true;
     }
 
-    public final void displayMasterPassword(ReadablePasswordField element) {
+    public void displayMasterPassword(ReadablePasswordField element) {
         element.setText(masterPassword);
     }
 
@@ -251,6 +249,7 @@ public final class IOManager {
             return false;
         }
 
+        boolean isLatestSecurity = userPreferences.isLatestVersion();
         try {
             isAuthenticated = userPreferences.verifyPassword(masterPassword);
         } catch (InvalidKeySpecException e) {
@@ -260,9 +259,33 @@ public final class IOManager {
         if (isAuthenticated) {
             this.masterPassword = masterPassword;
             logger.addInfo("User authenticated");
+
+            if(!isLatestSecurity) {
+                accountListTaskMultiThreaded(account -> {
+                    try {
+                        account.updateToLatestVersion(masterPassword);
+                    } catch (GeneralSecurityException e) {
+                        logger.addError(e);
+                    }
+                });
+                logger.addInfo("Updated to latest security version");
+            }
         }
 
         return isAuthenticated;
+    }
+
+    private void accountListTaskMultiThreaded(Consumer<? super Account> action) {
+        ArrayList<Thread> threads = new ArrayList<>(this.accountList.size());
+        this.accountList.forEach(account -> threads.add(Thread.startVirtualThread(() -> action.accept(account))));
+
+        threads.forEach(thread -> {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                logger.addError(e);
+            }
+        });
     }
     // #endregion
 

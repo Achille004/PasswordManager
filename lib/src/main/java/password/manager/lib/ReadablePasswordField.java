@@ -45,13 +45,9 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        try {
-            assert (imageView != null) : "fx:id=\"imageView\" was not injected.";
-            assert (textField != null) : "fx:id=\"textField\" was not injected.";
-            assert (passwordField != null) : "fx:id=\"passwordField\" was not injected.";
-        } catch (AssertionError e) {
-            throw e;
-        }
+        assert (imageView != null) : "fx:id=\"imageView\" was not injected.";
+        assert (textField != null) : "fx:id=\"textField\" was not injected.";
+        assert (passwordField != null) : "fx:id=\"passwordField\" was not injected.";
 
         textField.textProperty().bindBidirectional(passwordField.textProperty());
 
@@ -81,12 +77,8 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
             }
         });
 
-        imageView.addEventFilter(MouseEvent.MOUSE_PRESSED, (e) -> {
-            setReadable(true);
-        });
-        imageView.addEventFilter(MouseEvent.MOUSE_RELEASED, (e) -> {
-            setReadable(false);
-        });
+        imageView.addEventFilter(MouseEvent.MOUSE_PRESSED, _ -> setReadable(true));
+        imageView.addEventFilter(MouseEvent.MOUSE_RELEASED, _ -> setReadable(false));
 
         imageView.setImage(showImage);
     }

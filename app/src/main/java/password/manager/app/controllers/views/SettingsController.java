@@ -35,17 +35,12 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.transformation.SortedList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.control.TextField;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
-import lombok.Locked.Read;
 import password.manager.app.enums.SortingOrder;
 import password.manager.app.utils.IOManager;
 import password.manager.app.utils.ObservableResourceFactory;
@@ -106,7 +101,7 @@ public class SettingsController extends AbstractViewController {
         sortingOrderProperty.bind(settingsOrderCB.valueProperty());
 
         // Master password
-        settingsMasterPassword.setOnAction(event -> {
+        settingsMasterPassword.setOnAction(_ -> {
             if (checkTextFields(settingsMasterPassword.textField, settingsMasterPassword.passwordField)) {
                 ioManager.changeMasterPassword(settingsMasterPassword.getText());
             }

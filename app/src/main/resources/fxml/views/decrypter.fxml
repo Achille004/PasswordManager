@@ -46,7 +46,6 @@
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
-<?import javafx.scene.text.Font?>
 <?import password.manager.lib.ReadablePasswordField?>
 
 <GridPane prefHeight="557.0" prefWidth="835.0" style="-fx-background-color: #202428;" stylesheets="@../style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
@@ -78,11 +77,9 @@
       <Label fx:id="decryptUsernameLbl" layoutY="24.0" prefHeight="27.0" prefWidth="375.0" text="Username" />
    </AnchorPane>
    <AnchorPane prefHeight="96.0" prefWidth="690.0" GridPane.rowIndex="3">
-      <children>
-         <Label fx:id="decryptPasswordLbl" layoutY="22.0" prefHeight="27.0" prefWidth="364.0" text="Password" />
-         <ProgressBar fx:id="decryptPassStr" layoutY="77.0" prefHeight="10.0" prefWidth="720.0" progress="0.0" />
-         <ReadablePasswordField fx:id="decryptPassword" layoutY="49.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="720.0" styleClass="readable-password-field" />
-      </children>
+      <Label fx:id="decryptPasswordLbl" layoutY="22.0" prefHeight="27.0" prefWidth="364.0" text="Password" />
+      <ProgressBar fx:id="decryptPassStr" layoutY="77.0" prefHeight="10.0" prefWidth="720.0" progress="0.0" />
+      <ReadablePasswordField fx:id="decryptPassword" layoutY="49.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="720.0" styleClass="readable-password-field" />
    </AnchorPane>
    <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="4">
       <Button fx:id="decryptDelete" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="624.0" layoutY="21.0" mnemonicParsing="false" onAction="#decryptDelete" prefHeight="50.0" prefWidth="50.0" styleClass="decrypt-button" text="D">

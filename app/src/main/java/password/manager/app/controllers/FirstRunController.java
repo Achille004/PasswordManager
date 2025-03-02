@@ -27,9 +27,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.control.TextField;
 import password.manager.app.utils.IOManager;
 import password.manager.app.utils.ObservableResourceFactory;
 import password.manager.lib.ReadablePasswordField;
@@ -68,9 +66,7 @@ public class FirstRunController extends AbstractController {
 
         firstRunPassword.bindPasswordStrength(firstRunPassStr);
 
-        firstRunPassword.setOnAction(event -> {
-            doFirstRun();
-        });
+        firstRunPassword.setOnAction(_ -> doFirstRun());
 
         super.loadEula();
     }

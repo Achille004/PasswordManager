@@ -7,7 +7,7 @@ import javafx.scene.layout.VBox;
 
 public class Main extends Application {
     @Override
-    public void start(Stage stage) throws Exception {
+    public void start(Stage stage) {
         ReadablePasswordField custom1 = new ReadablePasswordField();
         ReadablePasswordField custom2 = new ReadablePasswordField();
 

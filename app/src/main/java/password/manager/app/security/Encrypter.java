@@ -31,15 +31,25 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.bouncycastle.crypto.generators.Argon2BytesGenerator;
+import org.bouncycastle.crypto.params.Argon2Parameters;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jetbrains.annotations.NotNull;
 
 public final class Encrypter {
     private static SecretKeyFactory keyFactory;
 
+    // Keep old parameters for compatibility
     private static final int ITERATIONS = 65536;
     private static final int HASH_KEY_LENGTH = 512;
     private static final int AES_KEY_LENGTH = 256;
+
+    // Argon2 parameters
+    private static final int ARGON2_MEMORY = 65536;       // 64MB in KB
+    private static final int ARGON2_ITERATIONS = 4;       // Time cost
+    private static final int ARGON2_PARALLELISM = 4;      // Parallelism factor
+    private static final int ARGON2_HASH_LENGTH = 64;     // 512 bits
+    private static final int ARGON2_AES_KEY_LENGTH = 32;  // 256 bits
 
     static {
         Security.addProvider(new BouncyCastleProvider());
@@ -53,31 +63,49 @@ public final class Encrypter {
     }
 
     /**
-     * Hashes the given password with salt using PBKDF2 hashing.
+     * Hashes the given password using Argon2id.
      * 
-     * @param password The password to encrypt.
-     * @param salt     The salt used to encrypt.
+     * @param password The password to hash.
+     * @param salt     The salt used for hashing.
      * @return The hashed password.
-     * @throws InvalidKeySpecException
      */
-    public static byte[] hash(String password, @NotNull byte[] salt) throws InvalidKeySpecException {
-        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITERATIONS, HASH_KEY_LENGTH);
-        return keyFactory.generateSecret(spec).getEncoded();
+    public static byte[] hash(String password, byte[] salt) {
+        Argon2Parameters params = new Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
+                .withSalt(salt)
+                .withParallelism(ARGON2_PARALLELISM)
+                .withMemoryAsKB(ARGON2_MEMORY)
+                .withIterations(ARGON2_ITERATIONS)
+                .build();
+
+        Argon2BytesGenerator generator = new Argon2BytesGenerator();
+        generator.init(params);
+
+        byte[] result = new byte[ARGON2_HASH_LENGTH];
+        generator.generateBytes(password.toCharArray(), result);
+        return result;
     }
 
     /**
-     * Derives an AES key from the master password (used as method to keep the key
-     * secret) and salt (used to add randomness).
+     * Derives an AES key from the master password using Argon2id.
      * 
      * @param masterPassword The master password to generate the key from.
-     * @param salt          The salt used to encrypt.
-     * @return The hashed password.
-     * @throws InvalidKeySpecException
+     * @param salt           The salt used for key derivation.
+     * @return The derived AES key.
      */
-    public static byte[] getKey(@NotNull String masterPassword, @NotNull byte[] salt) throws InvalidKeySpecException {
-        KeySpec spec = new PBEKeySpec(masterPassword.toCharArray(), salt, ITERATIONS, AES_KEY_LENGTH);
-        SecretKey secretKey = keyFactory.generateSecret(spec);
-        SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getEncoded(), "AES");
+    public static byte[] getKey(@NotNull String masterPassword, byte[] salt) {
+        Argon2Parameters params = new Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
+                .withSalt(salt)
+                .withParallelism(ARGON2_PARALLELISM)
+                .withMemoryAsKB(ARGON2_MEMORY)
+                .withIterations(ARGON2_ITERATIONS)
+                .build();
+
+        Argon2BytesGenerator generator = new Argon2BytesGenerator();
+        generator.init(params);
+
+        byte[] keyBytes = new byte[ARGON2_AES_KEY_LENGTH];
+        generator.generateBytes(masterPassword.toCharArray(), keyBytes);
+        SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
         return secretKeySpec.getEncoded();
     }
 
@@ -90,7 +118,7 @@ public final class Encrypter {
      * @return The encrypted password.
      * @throws GeneralSecurityException
      */
-    public static byte[] encryptAES(@NotNull String password, @NotNull byte[] key, @NotNull byte[] iv) throws GeneralSecurityException {
+    public static byte[] encryptAES(@NotNull String password, byte[] key, byte[] iv) throws GeneralSecurityException {
         // Create Cipher object to encrypt
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
         cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(128, iv));
@@ -108,7 +136,7 @@ public final class Encrypter {
      * @return The decrypted password.
      * @throws GeneralSecurityException
      */
-    public static @NotNull String decryptAES(@NotNull byte[] encryptedPassword, @NotNull byte[] key, @NotNull byte[] iv) throws GeneralSecurityException {
+    public static @NotNull String decryptAES(byte[] encryptedPassword, byte[] key, byte[] iv) throws GeneralSecurityException {
         // Create Cipher object to decrypt
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
         cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(128, iv));
@@ -118,5 +146,39 @@ public final class Encrypter {
 
         // Convert it to String
         return new String(password);
+    }
+
+    /* OLD PBKDF2 METHODS */
+
+    /**
+     * Hashes the given password with salt using PBKDF2.
+     * @deprecated Should only be used to compare old hashes, use {@link #hash(String, byte[])} instead.
+     * 
+     * @param password The password to hash.
+     * @param salt     The salt used for hashing.
+     * @return The hashed password.
+     */
+    @Deprecated
+    public static byte[] hashOld(String password, byte[] salt) throws InvalidKeySpecException {
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITERATIONS, HASH_KEY_LENGTH);
+        return keyFactory.generateSecret(spec).getEncoded();
+    }
+
+    /**
+     * Derives an AES key from the master password (used as method to keep the key
+     * secret) and salt (used to add randomness).
+     * @deprecated Should only be used to read old passwords, use {@link #getKey(String, byte[])} instead.
+     * 
+     * @param masterPassword The master password to generate the key from.
+     * @param salt          The salt used to encrypt.
+     * @return The hashed password.
+     * @throws InvalidKeySpecException if the key specification derived from the masterPassword is inappropriate
+     */
+    @Deprecated
+    public static byte[] getKeyOld(@NotNull String masterPassword, byte[] salt) throws InvalidKeySpecException {
+        KeySpec spec = new PBEKeySpec(masterPassword.toCharArray(), salt, ITERATIONS, AES_KEY_LENGTH);
+        SecretKey secretKey = keyFactory.generateSecret(spec);
+        SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getEncoded(), "AES");
+        return secretKeySpec.getEncoded();
     }
 }

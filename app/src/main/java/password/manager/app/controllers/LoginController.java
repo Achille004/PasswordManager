@@ -28,8 +28,6 @@ import javafx.beans.property.BooleanProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
 import javafx.util.Duration;
 import password.manager.app.utils.IOManager;
 import password.manager.app.utils.ObservableResourceFactory;
@@ -57,11 +55,11 @@ public class LoginController extends AbstractController {
 
     public void initialize(URL location, ResourceBundle resources) {
         wrongPasswordsTimeline = new Timeline(
-                new KeyFrame(Duration.ZERO, evt -> {
+                new KeyFrame(Duration.ZERO, _ -> {
                     loginSubmitBtn.setDisable(true);
                     loginSubmitBtn.setStyle("-fx-border-color: #ff5f5f");
                 }),
-                new KeyFrame(Duration.seconds(1), evt -> {
+                new KeyFrame(Duration.seconds(1), _ -> {
                     loginSubmitBtn.setDisable(false);
                     clearStyle(loginSubmitBtn);
                 }));
@@ -69,9 +67,7 @@ public class LoginController extends AbstractController {
         langResources.bindTextProperty(loginTitle, "welcome_back");
         langResources.bindTextProperty(loginSubmitBtn, "lets_go");
 
-        loginPassword.setOnAction(event -> {
-            doLogin();
-        });
+        loginPassword.setOnAction(_ -> doLogin());
     }
 
     @FXML

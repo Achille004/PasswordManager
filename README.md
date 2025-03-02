@@ -1,4 +1,4 @@
-# Password Manager <img src="https://wakatime.com/badge/github/Achille004/PasswordManager.svg?style=flat" alt="wakatime"> <img src="https://img.shields.io/badge/version-3.0.2-green" alt="version"> <img alt="license" src="https://img.shields.io/github/license/Achille004/PasswordManager">
+# Password Manager <img src="https://wakatime.com/badge/github/Achille004/PasswordManager.svg?style=flat" alt="wakatime"> <img src="https://img.shields.io/badge/version-3.0.3-green" alt="version"> <img alt="license" src="https://img.shields.io/github/license/Achille004/PasswordManager">
 
 Password Manager is a secure and efficient application designed to manage your locally stored accounts. Each account entry includes software details, username, and a password encrypted using [AES](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard) ([GCM](https://en.wikipedia.org/wiki/Galois/Counter_Mode) mode). The application itself is protected by a master password that the user must remember.
 
@@ -10,16 +10,10 @@ Password Manager is a secure and efficient application designed to manage your l
 
 ## Installation
 
-### Windows
+[Available Releases](https://github.com/Achille004/PasswordManager/releases)
 
-**Installers (exe and msi) are available:**
-
-- [Releases Page](https://github.com/Achille004/PasswordManager/releases)
-- [Installers Folder](https://github.com/Achille004/PasswordManager/tree/main/compiled/installer) (These might be newer but unstable or bugged).
-
-### Portable Versions
-
-The portable versions are available [here](https://github.com/Achille004/PasswordManager/tree/main/compiled/portable) and require a Java Runtime Environment (JRE) to run as they do not come bundled with one.
+Installer versions are completely standalone, as they come with a bundled runtime environment.
+On the other hand, portable versions require a Java Runtime Environment (JRE).
 
 ## Data Storage
 
@@ -28,7 +22,7 @@ The portable versions are available [here](https://github.com/Achille004/Passwor
 
 ## Exporting Data
 
-The software previously supported exporting to `passwords.html` and `passwords.csv` files, which were saved on the desktop. However, this feature is currently being rewritten and is not available in version 3.0.2. Please note that these files are not encrypted and are thus extremely vulnerable.
+The software previously supported exporting to `passwords.html` and `passwords.csv` files, which were saved on the desktop. However, this feature is currently being rewritten and is not available in version 3.0.3. Please note that these files are not encrypted and are thus extremely vulnerable.
 
 ## Contribution
 

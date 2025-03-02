@@ -26,44 +26,65 @@ import org.jetbrains.annotations.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 @Data
 public final class Account {
     private String software, username;
     private byte[] encryptedPassword;
-    private final byte[] iv;
+    private final byte[] salt, iv;
+
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @Getter(AccessLevel.NONE)
+    private final boolean isOlderVersion;
 
     public Account(
             @JsonProperty("software") String software,
             @JsonProperty("username") String username,
             @JsonProperty("encryptedPassword") byte[] encryptedPassword,
+            @JsonProperty("salt") byte[] salt,
             @JsonProperty("iv") byte[] iv) {
         this.software = software;
         this.username = username;
         this.encryptedPassword = encryptedPassword;
+
         this.iv = iv;
+
+        isOlderVersion = salt == null;
+        if(isOlderVersion) {
+            salt = new byte[16];
+        }
+        this.salt = salt;
     }
 
     public Account(@NotNull String software, @NotNull String username, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
         this.software = software;
         this.username = username;
 
+        salt = new byte[16];
         iv = new byte[16];
         setPassword(password, masterPassword);
+
+        isOlderVersion = false;
     }
 
     private void setPassword(@NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
-        // Generate IV
+        // Generate salt and IV
         SecureRandom random = new SecureRandom();
+        random.nextBytes(salt);
         random.nextBytes(iv);
 
-        byte[] key = Encrypter.getKey(masterPassword, getSalt());
+        byte[] key = Encrypter.getKey(masterPassword, salt);
         this.encryptedPassword = Encrypter.encryptAES(password, key, iv);
     }
 
     public String getPassword(@NotNull String masterPassword) throws GeneralSecurityException {
-        byte[] key = Encrypter.getKey(masterPassword, getSalt());
+        byte[] key = Encrypter.getKey(masterPassword, salt);
         return Encrypter.decryptAES(encryptedPassword, key, iv);
     }
 
@@ -72,30 +93,35 @@ public final class Account {
             return false;
         }
 
-        // Save current values in case of rollback
-        String oldSoftware = this.software;
-        String oldUsername = this.username;
+        // Save current password in case of rollback
         byte[] oldEncryptedPassword = this.encryptedPassword;
+        byte[] oldSalt = this.salt.clone();
         byte[] oldIv = this.iv.clone();
 
         try {
-            this.software = software;
-            this.username = username;
             setPassword(password, masterPassword);
-
-            return true;
         } catch (GeneralSecurityException e) {
-            this.software = oldSoftware;
-            this.username = oldUsername;
             this.encryptedPassword = oldEncryptedPassword;
+            System.arraycopy(oldSalt, 0, salt, 0, oldSalt.length);
             System.arraycopy(oldIv, 0, iv, 0, oldIv.length);
-
             throw e;
         }
+
+        this.software = software;
+        this.username = username;
+        return true;
     }
 
     public void changeMasterPassword(@NotNull String oldMasterPassword, @NotNull String newMasterPassword) throws GeneralSecurityException {
         setPassword(getPassword(oldMasterPassword), newMasterPassword);
+    }
+
+    public void updateToLatestVersion(@NotNull String masterPassword) throws GeneralSecurityException {
+        if (isOlderVersion) {
+            byte[] key = Encrypter.getKeyOld(masterPassword, (software + username).getBytes());
+            String oldPassword = Encrypter.decryptAES(encryptedPassword, key, iv);
+            setPassword(oldPassword, masterPassword);
+        }
     }
 
     @Contract("_, _, _, _ -> new")
@@ -104,13 +130,5 @@ public final class Account {
         return new Account(software, username, password, masterPassword);
     }
 
-    /**
-     * Custom salt based on software and username
-     * 
-     * @return The salt.
-     */
-    @Contract(value = " -> new", pure = true)
-    private byte @NotNull [] getSalt() {
-        return (software + username).getBytes();
-    }
+    
 }

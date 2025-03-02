@@ -46,6 +46,7 @@ import password.manager.app.utils.Utils;
 public final class UserPreferences {
     private final @JsonIgnore ObjectProperty<Locale> localeProperty;
     private final @JsonIgnore ObjectProperty<SortingOrder> sortingOrderProperty;
+    private SecurityVersion securityVersion;
     private byte[] hashedPassword;
     private final byte[] salt;
 
@@ -53,22 +54,22 @@ public final class UserPreferences {
         this.localeProperty = new SimpleObjectProperty<>(Utils.DEFAULT_LOCALE);
         this.sortingOrderProperty = new SimpleObjectProperty<>(SortingOrder.SOFTWARE);
 
+        this.securityVersion = SecurityVersion.ARGON2;
+
         this.salt = new byte[16];
         this.hashedPassword = null;
     }
 
-    public UserPreferences(@NotNull String password) throws InvalidKeySpecException {
-        this.localeProperty = new SimpleObjectProperty<>(Utils.DEFAULT_LOCALE);
-        this.sortingOrderProperty = new SimpleObjectProperty<>(SortingOrder.SOFTWARE);
-
-        this.salt = new byte[16];
+    public UserPreferences(@NotNull String password) {
+        this();
         setPassword(password);
     }
 
-    private UserPreferences(ObjectProperty<Locale> localeProperty, ObjectProperty<SortingOrder> sortingOrderProperty,
-                byte[] hashedPassword, byte[] salt) {
-        this.localeProperty = localeProperty;
-        this.sortingOrderProperty = sortingOrderProperty;
+    private UserPreferences(Locale locale, SortingOrder sortingOrder, SecurityVersion securityVersion, byte[] hashedPassword, byte[] salt) {
+        this.localeProperty = new SimpleObjectProperty<>(locale);
+        this.sortingOrderProperty = new SimpleObjectProperty<>(sortingOrder);
+
+        this.securityVersion = securityVersion;
 
         this.hashedPassword = hashedPassword;
         this.salt = salt;
@@ -94,6 +95,10 @@ public final class UserPreferences {
         return this.hashedPassword == null;
     }
 
+    public @NotNull @JsonIgnore Boolean isLatestVersion() {
+        return this.securityVersion == SecurityVersion.ARGON2;
+    }
+
     public @NotNull Boolean verifyPassword(String passwordToVerify) throws InvalidKeySpecException {
         if (hashedPassword == null) {
             return true;
@@ -103,8 +108,20 @@ public final class UserPreferences {
             return false;
         }
 
-        byte[] hashedPasswordToVerify = Encrypter.hash(passwordToVerify, salt);
-        return Arrays.equals(hashedPassword, hashedPasswordToVerify);
+        // Bacwards compatibility
+        boolean isLatestSecurityVersion = isLatestVersion();
+        byte[] hashedPasswordToVerify;
+        if (isLatestSecurityVersion) {
+            hashedPasswordToVerify = Encrypter.hash(passwordToVerify, salt);
+        } else {
+            hashedPasswordToVerify = Encrypter.hashOld(passwordToVerify, salt);
+        }
+
+        boolean res = Arrays.equals(hashedPassword, hashedPasswordToVerify);
+        if (res && !isLatestSecurityVersion) {
+            setPassword(passwordToVerify);
+        }
+        return res;
     }
 
     public @NotNull Boolean setPasswordVerified(String oldPassword, @NotNull String newPassword) throws InvalidKeySpecException {
@@ -115,10 +132,11 @@ public final class UserPreferences {
         return res;
     }
 
-    private void setPassword(@NotNull String password) throws InvalidKeySpecException {
+    private void setPassword(@NotNull String password) {
         SecureRandom random = new SecureRandom();
         random.nextBytes(salt);
 
+        this.securityVersion = SecurityVersion.ARGON2;
         hashedPassword = Encrypter.hash(password, salt);
     }
 
@@ -141,12 +159,24 @@ public final class UserPreferences {
         public UserPreferences deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
             JsonNode node = jp.getCodec().readTree(jp);
 
-            ObjectProperty<Locale> localeProperty = new SimpleObjectProperty<>(Locale.forLanguageTag(node.get("locale").asText()));
-            ObjectProperty<SortingOrder> sortingOrderProperty = new SimpleObjectProperty<>(SortingOrder.valueOf(node.get("sortingOrder").asText()));
+            Locale locale = Locale.forLanguageTag(node.get("locale").asText());
+            SortingOrder sortingOrder = SortingOrder.valueOf(node.get("sortingOrder").asText());
             byte[] hashedPassword = Utils.base64ToByte(node.get("hashedPassword").asText());
             byte[] salt = Utils.base64ToByte(node.get("salt").asText());
 
-            return new UserPreferences(localeProperty, sortingOrderProperty, hashedPassword, salt);
+            SecurityVersion securityVersion = node.has("securityVersion")
+                    ? SecurityVersion.fromString(node.get("securityVersion").asText())
+                    : SecurityVersion.PBKDF2;
+
+            return new UserPreferences(locale, sortingOrder, securityVersion, hashedPassword, salt);
+        }
+    }
+
+    protected enum SecurityVersion {
+        PBKDF2, ARGON2;
+
+        public static SecurityVersion fromString(String version) {
+            return SecurityVersion.valueOf(version);
         }
     }
 }

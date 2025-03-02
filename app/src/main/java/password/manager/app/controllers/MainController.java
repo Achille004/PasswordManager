@@ -118,7 +118,7 @@ public class MainController extends AbstractController {
         titleAnimation = new Timeline();
         for (int i = 0; i < titleStages.length; i++) {
             final String str = titleStages[i];
-            titleAnimation.getKeyFrames().add(new KeyFrame(Duration.millis(8 * i), event -> psmgTitle.setText(str)));
+            titleAnimation.getKeyFrames().add(new KeyFrame(Duration.millis(8 * i), _ -> psmgTitle.setText(str)));
         }
 
         if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
