@@ -145,7 +145,7 @@ tasks.register('jpackageFull', FullJPackageTask) {
     appName = 'Password Manager'
     appVersion = project.version
     copyright = '© Francesco Marras'
-    icon =  resourceDir.file('/locker.ico')
+    icon =  resourceDir.file('/icon.ico')
     javaOptions = ['-Dfile.encoding=UTF-8']
     licenseFile	= resourceDir.file('/license.txt')
     module = 'password.manager.app/password.manager.app.App'

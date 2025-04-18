@@ -74,7 +74,7 @@ public abstract class AbstractController implements Initializable {
     protected void loadEula() {
         eulaStage = new Stage();
         eulaStage.setTitle(langResources.getValue("terms_credits"));
-        eulaStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/locker.png"))));
+        eulaStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/icon.png"))));
         eulaStage.setResizable(false);
 
         Parent eulaParent = loadFxml("/fxml/extra/eula.fxml", new EulaController(ioManager, hostServices));

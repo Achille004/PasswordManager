@@ -22,6 +22,7 @@ import java.util.Objects;
 
 import javafx.application.Application;
 import javafx.application.HostServices;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
@@ -47,7 +48,8 @@ public class App extends Application {
         appManager = new AppManager(scenePane, hostServices, getParameters());
 
         primaryStage.setTitle("Password Manager");
-        primaryStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/locker.png"))));
+        primaryStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/icon.png"))));
+        primaryStage.setOnCloseRequest(event -> Platform.exit());
         primaryStage.setResizable(false);
         primaryStage.setScene(new Scene(scenePane, 900, 600));
         primaryStage.show();

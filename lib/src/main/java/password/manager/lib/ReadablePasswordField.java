@@ -29,8 +29,8 @@ import javafx.util.Duration;
 
 public class ReadablePasswordField extends AnchorPane implements Initializable {
 
-    private final Image showImage = new Image(getClass().getResourceAsStream("/readablePasswordField/open-eye.png"));
-    private final Image hideImage = new Image(getClass().getResourceAsStream("/readablePasswordField/closed-eye.png"));
+    private final Image showingImage = new Image(getClass().getResourceAsStream("/readablePasswordField/open-eye.png"));
+    private final Image hiddenImage = new Image(getClass().getResourceAsStream("/readablePasswordField/closed-eye.png"));
 
     private final BooleanProperty readable = new SimpleBooleanProperty(false);
 
@@ -67,20 +67,21 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
 
         readable.addListener((observable, oldValue, newValue) -> {
             if (newValue) {
-                imageView.setImage(hideImage);
+                imageView.setImage(showingImage);
                 textField.setVisible(true);
                 passwordField.setVisible(false);
             } else {
-                imageView.setImage(showImage);
+                imageView.setImage(hiddenImage);
                 textField.setVisible(false);
                 passwordField.setVisible(true);
             }
         });
 
-        imageView.addEventFilter(MouseEvent.MOUSE_PRESSED, _ -> setReadable(true));
-        imageView.addEventFilter(MouseEvent.MOUSE_RELEASED, _ -> setReadable(false));
+        imageView.addEventFilter(MouseEvent.MOUSE_PRESSED, _ -> toggleReadable());
+        // imageView.addEventFilter(MouseEvent.MOUSE_PRESSED, _ -> setReadable(true));
+        // imageView.addEventFilter(MouseEvent.MOUSE_RELEASED, _ -> setReadable(false));
 
-        imageView.setImage(showImage);
+        imageView.setImage(hiddenImage);
     }
 
     public ReadablePasswordField() {
