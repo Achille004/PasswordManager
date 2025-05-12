@@ -4,6 +4,7 @@ import static password.manager.lib.Utils.*;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Objects;
 import java.util.ResourceBundle;
 
 import org.jetbrains.annotations.NotNull;
@@ -29,8 +30,8 @@ import javafx.util.Duration;
 
 public class ReadablePasswordField extends AnchorPane implements Initializable {
 
-    private final Image showingImage = new Image(getClass().getResourceAsStream("/readablePasswordField/open-eye.png"));
-    private final Image hiddenImage = new Image(getClass().getResourceAsStream("/readablePasswordField/closed-eye.png"));
+    private final Image showingImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/readablePasswordField/open-eye.png")));
+    private final Image hiddenImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/readablePasswordField/closed-eye.png")));
 
     private final BooleanProperty readable = new SimpleBooleanProperty(false);
 
@@ -124,14 +125,14 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
         passwordField.setPrefSize(width, height);
         textField.setPrefSize(width, height);
 
-        imageView.setFitWidth(height * 1.2);
-        imageView.setFitHeight(height * 1.2);
+        imageView.setFitWidth(height);
+        imageView.setFitHeight(height);
 
-        imageView.setX(width - height * 1.3);
-        imageView.setY(height * 0.066);
+        imageView.setX(width - height * 1.1);
+        imageView.setY(0);
 
-        AnchorPane.setLeftAnchor(imageView, width - height * 1.3);
-        AnchorPane.setTopAnchor(imageView, height * 0.066);
+        AnchorPane.setLeftAnchor(imageView, width - height * 1.1);
+        AnchorPane.setTopAnchor(imageView, 0.0);
     }
 
     @Override

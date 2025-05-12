@@ -22,6 +22,7 @@ import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedList;
+import java.util.Objects;
 import java.util.ResourceBundle;
 
 import org.jetbrains.annotations.NotNull;
@@ -34,6 +35,8 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
@@ -87,6 +90,7 @@ public class MainController extends AbstractController {
     }
 
     private Button lastSidebarButton = null;
+    private String lastMainTitleKey = "";
     private Timeline titleAnimation;
 
     @FXML
@@ -178,14 +182,26 @@ public class MainController extends AbstractController {
         langResources.bindTextProperty(mainTitle, mainTitleKey);
 
         // Lowlight the previous button, if there is one
-        if (lastSidebarButton != null) {
+        if (lastSidebarButton != null && lastSidebarButton.getStyleClass().contains("navBtn")) {
             lastSidebarButton.pseudoClassStateChanged(PSEUDOCLASS_NOTCH, false);
+            lastSidebarButton.getChildrenUnmodifiable().filtered(node -> node instanceof ImageView).forEach(node -> {
+                ImageView imageView = (ImageView) node;
+                imageView.setImage(new Image(Objects.requireNonNull(getClass().getResource("/images/icons/sidebar/" + lastMainTitleKey + "-outlined.png")).toExternalForm()));
+            });
         }
 
-        // Get and highlight the new button
-        if (event != null && event.getSource() instanceof Button) {
-            lastSidebarButton = (Button) event.getSource();
-            lastSidebarButton.pseudoClassStateChanged(PSEUDOCLASS_NOTCH, true);
-        } 
+        // Get and highlight the new button, if it's a navigation button
+        Button newSidebarButton = (event != null && event.getSource() instanceof Button) ? (Button) event.getSource() : null;
+        // Checking isNotHome is optional, but it can help avoid unnecessary processing.
+        if(isNotHome && newSidebarButton != null && newSidebarButton.getStyleClass().contains("navBtn")) {
+            newSidebarButton.pseudoClassStateChanged(PSEUDOCLASS_NOTCH, true);
+            newSidebarButton.getChildrenUnmodifiable().filtered(node -> node instanceof ImageView).forEach(node -> {
+                ImageView imageView = (ImageView) node;
+                imageView.setImage(new Image(Objects.requireNonNull(getClass().getResource("/images/icons/sidebar/" + mainTitleKey + "-solid.png")).toExternalForm()));
+            });
+        }
+        
+        lastMainTitleKey = mainTitleKey;
+        lastSidebarButton = newSidebarButton;
     }
 }
