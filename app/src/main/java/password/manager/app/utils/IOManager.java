@@ -125,11 +125,11 @@ public final class IOManager {
             setDefaultButton(alert, ButtonType.NO);
             alert.showAndWait();
 
-            if (alert.getResult() != ButtonType.YES) {
+            if (alert.getResult() == ButtonType.YES) {
+                logger.addInfo("Data overwriting accepted");
+            } else {
                 logger.addInfo("Data overwriting denied");
                 System.exit(0);
-            } else {
-                logger.addInfo("Data overwriting accepted");
             }
         }
 

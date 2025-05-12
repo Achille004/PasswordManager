@@ -18,6 +18,9 @@
 
 package password.manager.app;
 
+import static password.manager.app.utils.Utils.*;
+
+import java.awt.Desktop;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
@@ -79,13 +82,23 @@ public class AppManager {
                 },
                 locale));
 
-        Alert alert = new Alert(AlertType.ERROR, langResources.getValue("ui_error"), ButtonType.OK);
+        Alert alert = new Alert(AlertType.ERROR, langResources.getValue("ui_error"), ButtonType.YES, ButtonType.NO);
+        setDefaultButton(alert, ButtonType.NO);
 
         ioManager.getLogger().addInfo("Loading main pane...");
         final MainController mainController = new MainController(ioManager, langResources, hostServices);
         final BorderPane mainPane = (BorderPane) loadFxml("/fxml/main.fxml", mainController);
         if (mainPane == null) {
             alert.showAndWait();
+            if (alert.getResult() == ButtonType.YES) {
+                Thread.startVirtualThread(() -> {
+                    try {
+                        Desktop.getDesktop().open(ioManager.getLogger().getLoggingPath().toFile());
+                    } catch (IOException e) {
+                        ioManager.getLogger().addError(e);
+                    }
+                });
+            }
             Platform.exit();
             return;
         }
@@ -127,6 +140,15 @@ public class AppManager {
 
             if (pane == null) {
                 alert.showAndWait();
+                if (alert.getResult() == ButtonType.YES) {
+                    Thread.startVirtualThread(() -> {
+                        try {
+                            Desktop.getDesktop().open(ioManager.getLogger().getLoggingPath().toFile());
+                        } catch (IOException e) {
+                            ioManager.getLogger().addError(e);
+                        }
+                    });
+                }
                 Platform.exit();
                 return;
             } else {

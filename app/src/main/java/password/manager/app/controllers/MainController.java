@@ -19,7 +19,6 @@
 package password.manager.app.controllers;
 
 import java.awt.Desktop;
-import java.awt.EventQueue;
 import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedList;
@@ -30,7 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.HostServices;
-import javafx.application.Platform;
+import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -49,6 +48,7 @@ import password.manager.app.utils.IOManager;
 import password.manager.app.utils.ObservableResourceFactory;
 
 public class MainController extends AbstractController {
+    public static final PseudoClass PSEUDOCLASS_NOTCH = PseudoClass.getPseudoClass("notch");
     private static final String[] titleStages;
 
     static {
@@ -157,15 +157,13 @@ public class MainController extends AbstractController {
 
     @FXML
     public void folderSidebarButton(ActionEvent event) {
-        Platform.runLater(() ->
-            EventQueue.invokeLater(() -> {
-                try {
-                    Desktop.getDesktop().open(IOManager.FILE_PATH.toFile());
-                } catch (IOException e) {
-                    ioManager.getLogger().addError(e);
-                }
-            })
-        );
+        Thread.startVirtualThread(() -> {
+            try {
+                Desktop.getDesktop().open(IOManager.FILE_PATH.toFile());
+            } catch (IOException e) {
+                ioManager.getLogger().addError(e);
+            }
+        });
     }
 
     private <T extends AbstractViewController, S extends Pane> void sidebarButtonAction(ActionEvent event, @NotNull T destinationController, S destinationPane, @NotNull String mainTitleKey) {
@@ -181,13 +179,13 @@ public class MainController extends AbstractController {
 
         // Lowlight the previous button, if there is one
         if (lastSidebarButton != null) {
-            lastSidebarButton.setStyle("-fx-background-color: #202428");
+            lastSidebarButton.pseudoClassStateChanged(PSEUDOCLASS_NOTCH, false);
         }
 
         // Get and highlight the new button
-        if (event != null) {
+        if (event != null && event.getSource() instanceof Button) {
             lastSidebarButton = (Button) event.getSource();
-            lastSidebarButton.setStyle("-fx-background-color: #42464a");
-        }
+            lastSidebarButton.pseudoClassStateChanged(PSEUDOCLASS_NOTCH, true);
+        } 
     }
 }

@@ -76,6 +76,6 @@
    <AnchorPane prefHeight="0.0" prefWidth="502.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
       <Label fx:id="settingsMasterPasswordDesc" alignment="CENTER_RIGHT" layoutX="2.0" layoutY="12.0" prefHeight="20.0" prefWidth="459.0" styleClass="italic, sz14" text="Press ENTER to confirm." />
       <ProgressBar fx:id="settingsLoginPassStr" layoutY="64.0" prefHeight="10.0" prefWidth="460.0" progress="0.0" />
-      <ReadablePasswordField fx:id="settingsMasterPassword" layoutY="31.0" maxHeight="30.0" maxWidth="465.0" minHeight="30.0" minWidth="459.0" prefWidth="459.0" styleClass="readable-password-field" />
+      <ReadablePasswordField fx:id="settingsMasterPassword" layoutY="31.0" maxHeight="30.0" maxWidth="465.0" minHeight="30.0" minWidth="459.0" prefWidth="459.0" />
    </AnchorPane>
 </GridPane>

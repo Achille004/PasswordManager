@@ -22,7 +22,6 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import javafx.application.HostServices;
-import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -54,6 +53,6 @@ public class EulaController implements Initializable {
     }
 
     private void browse(String uri) {
-        Platform.runLater(() -> hostServices.showDocument(uri));
+        Thread.startVirtualThread(() -> hostServices.showDocument(uri));
     }
 }

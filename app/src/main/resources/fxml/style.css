@@ -3,7 +3,7 @@
 /* ROOT VARIABLES */
 * {
   /* Colors */
-  -fx-fx-color-background: #202428;
+  -fx-color-background: #202428;
   -fx-color-element-bg: #2e3136;
   -fx-color-textarea-bg: #303434;
   -fx-color-text: white;
@@ -79,7 +79,7 @@
 /* DEFAULT COMPONENTS STYLING */
 
 .body {
-  -fx-background-color: -fx-fx-color-background;
+  -fx-background-color: -fx-color-background;
 }
 
 .text-field {
@@ -154,7 +154,7 @@
 }
 .combo-box-popup>.list-view>.virtual-flow>.clipped-container>.sheet>.list-cell:filled:hover,
 .combo-box-popup>.list-view>.virtual-flow>.clipped-container>.sheet>.list-cell:filled:selected {
-  -fx-background-color: -fx-fx-color-background;
+  -fx-background-color: -fx-color-background;
   -fx-border-radius: 4deg;
 }
 
@@ -167,22 +167,25 @@
 
 /*  CUSTOM */
 
-.sidebar-button {
-  -fx-background-color: -fx-fx-color-background;
-  -fx-background-radius: 8deg;
+.titlebar {
+  -fx-background-color: -fx-color-green;
 }
 
-.decrypt-button {
-  -fx-background-color: -fx-color-grey;
-  -fx-background-radius: 8deg;
+.sidebar {
+  -fx-border-color: -fx-color-element-bg;
+  -fx-border-width: 0 2px 0 0;
 }
 
-.readable-password-field > * {
-  -fx-background-color: -fx-color-element-bg;
-  -fx-border-color: -fx-color-grey;
-  -fx-border-radius: 3deg;
-  -fx-text-inner-color: -fx-color-text;
-  -fx-font-size: 14px;
+.titlebar > Button,
+.sidebar > Button {
+  -fx-background-color: -fx-color-background;
+  -fx-background-radius: 8deg;
+  transition: -fx-background-color 0.2s linear;  
+}
+
+.sidebar > Button.navBtn:hover,
+.sidebar > Button.navBtn:notch {
+  -fx-background-color: linear-gradient(to right, -fx-color-green 0%, -fx-color-green 4%, -fx-color-background 5%, -fx-color-background 100%);
 }
 
 .green-button {
@@ -191,6 +194,24 @@
   -fx-border-color: -fx-color-green;
   -fx-border-width: 3px;
   -fx-border-radius: 8deg;
+}
+
+.decrypt-button {
+  -fx-background-color: -fx-color-grey;
+  -fx-background-radius: 8deg;
+}
+
+ReadablePasswordField > * {
+  -fx-background-color: -fx-color-element-bg;
+  -fx-border-color: -fx-color-grey;
+  -fx-border-radius: 3deg;
+  -fx-text-inner-color: -fx-color-text;
+  -fx-font-size: 14px;
+}
+
+.eula-button {
+  -fx-background-color: transparent;
+  -fx-background-radius: 50%;
 }
 
 .eula-text:hover {

@@ -67,6 +67,10 @@ public final class Logger {
         Objects.requireNonNull(stacktraceWriter, "stacktraceWriter must not be null");
     }
 
+    public Path getLoggingPath() {
+        return currPath;
+    }
+
     public @NotNull Boolean addInfo(String str) {
         StringBuilder logStrBuilder = new StringBuilder();
         logStrBuilder
