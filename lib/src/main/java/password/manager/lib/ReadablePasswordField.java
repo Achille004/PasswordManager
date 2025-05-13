@@ -14,11 +14,13 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
@@ -164,20 +166,52 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
     }
 
     public void bindPasswordStrength(@NotNull ProgressBar progressBar) {
-        textField.textProperty().addListener((observable, oldValue, newValue) -> {
+        Timeline timeline[] = new Timeline[1];
+        timeline[0] = null;
+
+        ChangeListener<String> listener = (observable, oldValue, newValue) -> {
             double passwordStrength = passwordStrength(newValue);
             passwordStrength = Math.max(20d, passwordStrength);
             passwordStrength = Math.min(50d, passwordStrength);
 
+            double initialProgress = progressBar.getProgress();
             double progress = (passwordStrength - 20) / 30;
-            // TODO PROGRESSIVE BAR
-            progressBar.setStyle("* > bar { -fx-background-color:" + passwordStrengthGradient(progress) + "; }");
 
-            Timeline timeline = new Timeline(
-                    new KeyFrame(Duration.ZERO, new KeyValue(progressBar.progressProperty(), progressBar.getProgress())),
-                    new KeyFrame(Duration.millis(200), new KeyValue(progressBar.progressProperty(), progress)));
+            if(progress == initialProgress) {
+                return;
+            }
 
-            timeline.play();
+            Node bar = progressBar.lookup(".bar");
+            if(bar == null) {
+                return;
+            }
+
+            KeyFrame[] keyFrames = new KeyFrame[200];
+            for (int i = 0; i < 200; i++) {
+                double curProg = initialProgress + (progress - initialProgress) * i / 200;
+                keyFrames[i] = new KeyFrame(Duration.millis(i),
+                        new KeyValue(progressBar.progressProperty(), curProg),
+                        new KeyValue(bar.styleProperty(), "-fx-background-color:" + passwordStrengthGradient(curProg) + ";")
+                );
+            }
+
+            if (timeline[0] != null) {
+                timeline[0].stop();
+            }
+            
+            timeline[0] = new Timeline(keyFrames);
+            timeline[0].play();
+        };
+
+        // Listen for text changes
+        textField.textProperty().addListener(listener);
+
+        // Trigger initial update once the ProgressBar skin is ready
+        // This is a workaround for the fact that the skin may not be ready immediately
+        progressBar.skinProperty().addListener((obs, oldSkin, newSkin) -> {
+            if (newSkin != null) {
+                listener.changed(textField.textProperty(), "", textField.getText());
+            }
         });
     }
 }

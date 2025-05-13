@@ -70,23 +70,23 @@ signing {
     sign distTar
 }
 
-def resourceDir = layout.projectDirectory.dir('/src/main/resources')
-def compileDir = rootProject.layout.projectDirectory.dir('/compiled')
-def distDir = compileDir.dir('/distributions')
-def installerDir = compileDir.dir('/installers')
+def resourceDir = layout.projectDirectory.dir('src/main/resources')
+def compileDir = rootProject.layout.projectDirectory.dir('compiled')
+def distDir = compileDir.dir('distributions')
+def installerDir = compileDir.dir('installers')
 
-tasks.register('assemblePortable', Delete) {
+tasks.register('assemblePortables', Delete) {
     delete distDir
     dependsOn tasks.distTar, tasks.signDistTar, tasks.distZip, tasks.signDistZip
     doLast {
         mkdir distDir
         copy {
             from tasks.distTar, tasks.signDistTar
-            into distDir.dir('/tar')
+            into distDir.dir('tar')
         }
         copy {
             from tasks.distZip, tasks.signDistZip
-            into distDir.dir('/zip')
+            into distDir.dir('zip')
         }
     }
 }

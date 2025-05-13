@@ -66,6 +66,7 @@ public class EncrypterController extends AbstractViewController {
     }
 
     public void reset() {
+        encryptPassStr.setProgress(0);
         clearStyle(encryptSoftware, encryptUsername, encryptPassword.textField, encryptPassword.passwordField);
         clearTextFields(encryptSoftware, encryptUsername, encryptPassword.textField, encryptPassword.passwordField);
     }

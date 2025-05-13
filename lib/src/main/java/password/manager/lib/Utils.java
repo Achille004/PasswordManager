@@ -8,8 +8,7 @@ import me.gosimple.nbvcxz.Nbvcxz;
 public class Utils {
     private static final Nbvcxz NBVCXZ = new Nbvcxz();
 
-    // Ideal gap is from 20 to 50, represented with linear progress bar with gaps of
-    // 1
+    // Ideal gap is from 20 to 50, represented with linear progress bar with gaps of 1
     public static double passwordStrength(@NotNull String password) {
         return NBVCXZ.estimate(password).getEntropy();
     }
@@ -18,19 +17,23 @@ public class Utils {
         if (progress < 0 || progress > 1) {
             throw new IllegalArgumentException("Progress must be between 0 and 1");
         }
-        String gradientStr = "linear-gradient(to right, #f00 0%";
+        StringBuilder gradientStr = new StringBuilder("linear-gradient(to right, #f00 0%, ");
         boolean isHalfProgress = progress >= 0.5;
 
+        // .replace("0x", "#") -> change 0x to # for color
+        // .replace("ffx", "") -> remove alpha from color, used with x to not remove other ff by accident
         if (isHalfProgress) {
+            gradientStr.append("#ff0 50%, ");
+
             double halfProgress = progress - 0.5;
-
-            gradientStr += ", #ff0 " + (1 - halfProgress) * 100 + "%";
-            gradientStr += ", " + (Color.YELLOW.interpolate(Color.GREEN, halfProgress * 2) + "x").replace("0x", "#").replace("ffx", "") + " 100%";
+            gradientStr.append((Color.YELLOW.interpolate(Color.LIME, halfProgress * 2) + "x").replace("0x", "#").replace("ffx", ""));
+            gradientStr.append(" 100%");
         } else {
-            gradientStr += ", " + (Color.RED.interpolate(Color.YELLOW, progress * 2) + "x").replace("0x", "#").replace("ffx", "") + " 100%";
+            gradientStr.append((Color.RED.interpolate(Color.YELLOW, progress * 2) + "x").replace("0x", "#").replace("ffx", ""));
+            gradientStr.append(" 100%");
         }
-        gradientStr += ")";
+        gradientStr.append(")");
 
-        return gradientStr;
+        return gradientStr.toString();
     }
 }

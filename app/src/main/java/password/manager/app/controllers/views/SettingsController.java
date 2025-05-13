@@ -61,8 +61,7 @@ public class SettingsController extends AbstractViewController {
     public ReadablePasswordField settingsMasterPassword;
 
     @FXML
-    public Label settingsLangLbl, settingsSortingOrderLbl,
-            settingsMasterPasswordLbl, settingsMasterPasswordDesc, settingsDriveConnLbl, wip;
+    public Label settingsLangLbl, settingsSortingOrderLbl, settingsMasterPasswordLbl, settingsMasterPasswordDesc, settingsDriveConnLbl, wip;
 
     @FXML
     public ProgressBar settingsLoginPassStr;
@@ -142,8 +141,7 @@ public class SettingsController extends AbstractViewController {
         };
     }
 
-    private static <T> @NotNull ObservableValue<Comparator<T>> comparatorBinding(@NotNull ObjectProperty<Locale> locale,
-            @NotNull ObjectProperty<? extends StringConverter<T>> converter) {
+    private static <T> @NotNull ObservableValue<Comparator<T>> comparatorBinding(@NotNull ObjectProperty<Locale> locale, @NotNull ObjectProperty<? extends StringConverter<T>> converter) {
         return Bindings.createObjectBinding(
                 () -> Comparator.comparing(
                         converter.getValue()::toString,
@@ -152,15 +150,11 @@ public class SettingsController extends AbstractViewController {
                 converter);
     }
 
-    private static <T> void bindValueConverter(@NotNull ComboBox<T> comboBox,
-            @NotNull ObjectProperty<Locale> locale,
-            @NotNull Function<Locale, StringConverter<T>> mapper) {
+    private static <T> void bindValueConverter(@NotNull ComboBox<T> comboBox, @NotNull ObjectProperty<Locale> locale, @NotNull Function<Locale, StringConverter<T>> mapper) {
         comboBox.converterProperty().bind(locale.map(mapper));
     }
 
-    private static <T> void bindValueComparator(@NotNull SortedList<T> sortedList,
-            @NotNull ObjectProperty<Locale> locale,
-            @NotNull ComboBox<T> comboBox) {
+    private static <T> void bindValueComparator(@NotNull SortedList<T> sortedList, @NotNull ObjectProperty<Locale> locale, @NotNull ComboBox<T> comboBox) {
         sortedList.comparatorProperty().bind(comparatorBinding(locale, comboBox.converterProperty()));
     }
 }

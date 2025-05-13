@@ -111,6 +111,7 @@ public class DecrypterController extends AbstractViewController {
 
     private void resetKeepSelection() {
         decryptDeleteCounter = false;
+        decryptPassStr.setProgress(0);
         clearStyle(decryptSoftware, decryptUsername, decryptPassword.textField, decryptPassword.passwordField, decryptDelete);
         clearTextFields(decryptSoftware, decryptUsername, decryptPassword.textField, decryptPassword.passwordField);
     }
