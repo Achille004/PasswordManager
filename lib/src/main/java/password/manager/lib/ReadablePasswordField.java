@@ -28,6 +28,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.text.Text;
 import javafx.util.Duration;
 
 public class ReadablePasswordField extends AnchorPane implements Initializable {
@@ -38,13 +39,13 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
     private final BooleanProperty readable = new SimpleBooleanProperty(false);
 
     @FXML
-    public ImageView imageView;
+    private ImageView imageView;
 
     @FXML
-    public TextField textField;
+    private TextField textField;
 
     @FXML
-    public PasswordField passwordField;
+    private PasswordField passwordField;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -53,6 +54,7 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
         assert (passwordField != null) : "fx:id=\"passwordField\" was not injected.";
 
         textField.textProperty().bindBidirectional(passwordField.textProperty());
+        textField.styleProperty().bindBidirectional(passwordField.styleProperty());
 
         this.prefWidthProperty().addListener((observable, oldValue, newValue) -> {
             double width = newValue.doubleValue(), height = this.getPrefHeight();
@@ -97,6 +99,10 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
         } catch (IOException exception) {
             throw new RuntimeException(exception);
         }
+    }
+
+    public TextField getTextField() {
+        return textField;
     }
 
     public void setReadable(boolean readable) {

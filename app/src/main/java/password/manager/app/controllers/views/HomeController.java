@@ -33,7 +33,7 @@ public class HomeController extends AbstractViewController {
     }
 
     @FXML
-    public Label homeDescTop, homeDescBtm;
+    private Label homeDescTop, homeDescBtm;
 
     public void initialize(URL location, ResourceBundle resources) {
         langResources.bindTextProperty(homeDescTop, "home_desc.top");

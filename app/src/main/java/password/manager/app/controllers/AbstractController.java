@@ -18,6 +18,8 @@
 
 package password.manager.app.controllers;
 
+import static password.manager.app.utils.Utils.*;
+
 import java.io.IOException;
 import java.util.Objects;
 
@@ -33,6 +35,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import password.manager.app.controllers.extra.EulaController;
 import password.manager.app.utils.IOManager;
@@ -51,39 +54,24 @@ public abstract class AbstractController implements Initializable {
 
         eulaStage = null;
     }
-
-    @FXML
-    public void showPassword(@NotNull MouseEvent event) {
-        Object obj = event.getSource();
-
-        if (obj instanceof Node) {
-            ((Node) obj).getParent().toBack();
-        }
-    }
-
+    
     @FXML
     public void showEula(MouseEvent event) {
         if (eulaStage == null) {
-            ioManager.getLogger().addError(new UnsupportedOperationException("Eula stage not initialized."));
-        } else {
-            eulaStage.show();
-            eulaStage.toFront();
-        }
-    }
-
-    protected void loadEula() {
-        eulaStage = new Stage();
-        eulaStage.setTitle(langResources.getValue("terms_credits"));
-        eulaStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/icon.png"))));
-        eulaStage.setResizable(false);
-
-        Parent eulaParent = loadFxml("/fxml/extra/eula.fxml", new EulaController(ioManager, hostServices));
-        if (eulaParent == null) {
-            eulaStage = null;
-            ioManager.getLogger().addError(new IOException("Could not load 'eula.fxml'"));
-        } else {
+            eulaStage = new Stage();
+            eulaStage.setTitle(langResources.getValue("terms_credits"));
+            eulaStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/icon.png"))));
+            eulaStage.setResizable(false);
+            
+            ioManager.getLogger().addInfo("Loading eula pane...");
+            AnchorPane eulaParent = (AnchorPane) loadFxml("/fxml/extra/eula.fxml", new EulaController(ioManager, hostServices));
+            triggerUiErrorIfNull(eulaParent, ioManager, langResources);
+            ioManager.getLogger().addInfo("Success");
             eulaStage.setScene(new Scene(eulaParent, 900, 600));
         }
+
+        eulaStage.show();
+        eulaStage.toFront();
     }
 
     protected <S extends Initializable> Parent loadFxml(String path, S controller) {

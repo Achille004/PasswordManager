@@ -49,22 +49,22 @@ public class DecrypterController extends AbstractViewController {
     }
 
     @FXML
-    public ComboBox<Account> decryptCB;
+    private ComboBox<Account> decryptCB;
 
     @FXML
-    public TextField decryptSoftware, decryptUsername;
+    private TextField decryptSoftware, decryptUsername;
     @FXML
-    public ReadablePasswordField decryptPassword;
+    private ReadablePasswordField decryptPassword;
 
     @FXML
-    public Button decryptDelete;
+    private Button decryptDelete;
     private boolean decryptDeleteCounter = false;
 
     @FXML
-    public Label decryptAccSelLbl, decryptSoftwareLbl, decryptUsernameLbl, decryptPasswordLbl;
+    private Label decryptAccSelLbl, decryptSoftwareLbl, decryptUsernameLbl, decryptPasswordLbl;
 
     @FXML
-    public ProgressBar decryptPassStr;
+    private ProgressBar decryptPassStr;
 
     public void initialize(URL location, ResourceBundle resources) {
         ObjectProperty<SortingOrder> sortingOrderProperty = ioManager.getUserPreferences().getSortingOrderProperty();
@@ -112,8 +112,8 @@ public class DecrypterController extends AbstractViewController {
     private void resetKeepSelection() {
         decryptDeleteCounter = false;
         decryptPassStr.setProgress(0);
-        clearStyle(decryptSoftware, decryptUsername, decryptPassword.textField, decryptPassword.passwordField, decryptDelete);
-        clearTextFields(decryptSoftware, decryptUsername, decryptPassword.textField, decryptPassword.passwordField);
+        clearStyle(decryptSoftware, decryptUsername, decryptPassword.getTextField(), decryptDelete);
+        clearTextFields(decryptSoftware, decryptUsername, decryptPassword.getTextField());
     }
 
     @FXML
@@ -123,7 +123,7 @@ public class DecrypterController extends AbstractViewController {
             return;
         }
 
-        if (checkTextFields(decryptSoftware, decryptUsername, decryptPassword.textField, decryptPassword.passwordField)) {
+        if (checkTextFields(decryptSoftware, decryptUsername, decryptPassword.getTextField())) {
             // get the new software, username and password
             String software = decryptSoftware.getText();
             String username = decryptUsername.getText();

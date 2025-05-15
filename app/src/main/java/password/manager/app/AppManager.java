@@ -82,41 +82,16 @@ public class AppManager {
                 },
                 locale));
 
-        Alert alert = new Alert(AlertType.ERROR, langResources.getValue("ui_error"), ButtonType.YES, ButtonType.NO);
-        setDefaultButton(alert, ButtonType.NO);
-
-        ioManager.getLogger().addInfo("Loading main pane...");
-        final MainController mainController = new MainController(ioManager, langResources, hostServices);
-        final BorderPane mainPane = (BorderPane) loadFxml("/fxml/main.fxml", mainController);
-        if (mainPane == null) {
-            alert.showAndWait();
-            if (alert.getResult() == ButtonType.YES) {
-                Thread.startVirtualThread(() -> {
-                    try {
-                        Desktop.getDesktop().open(ioManager.getLogger().getLoggingPath().toFile());
-                    } catch (IOException e) {
-                        ioManager.getLogger().addError(e);
-                    }
-                });
-            }
-            Platform.exit();
-            return;
-        }
-        ioManager.getLogger().addInfo("Success");
-
         final BooleanProperty switchToMain = new SimpleBooleanProperty(false);
         switchToMain.addListener((observable, oldValue, newValue) -> {
             if (newValue) {
-                scenePane.getChildren().clear();
-                scenePane.getChildren().add(mainPane);
-                mainController.mainTitleAnimation();
+                loadMainPane();
             }
         });
 
         List<String> list = this.parameters.getRaw();
         ioManager.getLogger().addInfo("Found " + list.size() + " parameters");
-        if (list.size() > 1 && !ioManager.isFirstRun()
-                && ("-p".equals(list.get(0)) || "--password".equals(list.get(0)))) {
+        if (!ioManager.isFirstRun() && list.size() > 1 && ("-p".equals(list.get(0)) || "--password".equals(list.get(0)))) {
             ioManager.getLogger().addInfo("Trying to authenticate via arguments");
             if (ioManager.authenticate(list.get(1))) {
                 ioManager.getLogger().addInfo("Success, skipping login");
@@ -130,34 +105,30 @@ public class AppManager {
             AnchorPane pane;
             if (ioManager.isFirstRun()) {
                 ioManager.getLogger().addInfo("Loading first run pane...");
-                pane = (AnchorPane) loadFxml("/fxml/first_run.fxml",
-                        new FirstRunController(ioManager, langResources, hostServices, switchToMain));
+                pane = (AnchorPane) loadFxml("/fxml/first_run.fxml", new FirstRunController(ioManager, langResources, hostServices, switchToMain));
             } else {
                 ioManager.getLogger().addInfo("Loading login pane...");
-                pane = (AnchorPane) loadFxml("/fxml/login.fxml",
-                        new LoginController(ioManager, langResources, hostServices, switchToMain));
+                pane = (AnchorPane) loadFxml("/fxml/login.fxml", new LoginController(ioManager, langResources, hostServices, switchToMain));
             }
 
-            if (pane == null) {
-                alert.showAndWait();
-                if (alert.getResult() == ButtonType.YES) {
-                    Thread.startVirtualThread(() -> {
-                        try {
-                            Desktop.getDesktop().open(ioManager.getLogger().getLoggingPath().toFile());
-                        } catch (IOException e) {
-                            ioManager.getLogger().addError(e);
-                        }
-                    });
-                }
-                Platform.exit();
-                return;
-            } else {
-                ioManager.getLogger().addInfo("Success");
-            }
+            triggerUiErrorIfNull(pane, ioManager, langResources);
+            ioManager.getLogger().addInfo("Success");
 
             scenePane.getChildren().clear();
             scenePane.getChildren().add(pane);
         }
+    }
+
+    private void loadMainPane() {
+        ioManager.getLogger().addInfo("Loading main pane...");
+        final MainController mainController = new MainController(ioManager, langResources, hostServices);
+        final BorderPane mainPane = (BorderPane) loadFxml("/fxml/main.fxml", mainController);
+        triggerUiErrorIfNull(mainPane, ioManager, langResources);
+        ioManager.getLogger().addInfo("Success");
+        
+        scenePane.getChildren().clear();
+        scenePane.getChildren().add(mainPane);
+        mainController.mainTitleAnimation();
     }
 
     private <S extends Initializable> @Nullable Parent loadFxml(String path, S controller) {

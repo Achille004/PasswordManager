@@ -53,18 +53,18 @@ public class SettingsController extends AbstractViewController {
     }
 
     @FXML
-    public ComboBox<Locale> settingsLangCB;
+    private ComboBox<Locale> settingsLangCB;
     @FXML
-    public ComboBox<SortingOrder> settingsOrderCB;
+    private ComboBox<SortingOrder> settingsOrderCB;
 
     @FXML
-    public ReadablePasswordField settingsMasterPassword;
+    private ReadablePasswordField settingsMasterPassword;
 
     @FXML
-    public Label settingsLangLbl, settingsSortingOrderLbl, settingsMasterPasswordLbl, settingsMasterPasswordDesc, settingsDriveConnLbl, wip;
+    private Label settingsLangLbl, settingsSortingOrderLbl, settingsMasterPasswordLbl, settingsMasterPasswordDesc, settingsDriveConnLbl, wip;
 
     @FXML
-    public ProgressBar settingsLoginPassStr;
+    private ProgressBar settingsLoginPassStr;
 
     public void initialize(URL location, ResourceBundle resources) {
         ObjectProperty<Locale> localeProperty = ioManager.getUserPreferences().getLocaleProperty();
@@ -101,7 +101,7 @@ public class SettingsController extends AbstractViewController {
 
         // Master password
         settingsMasterPassword.setOnAction(_ -> {
-            if (checkTextFields(settingsMasterPassword.textField, settingsMasterPassword.passwordField)) {
+            if (checkTextFields(settingsMasterPassword.getTextField())) {
                 ioManager.changeMasterPassword(settingsMasterPassword.getText());
             }
         });
@@ -110,7 +110,7 @@ public class SettingsController extends AbstractViewController {
     }
 
     public void reset() {
-        clearStyle(settingsMasterPassword.textField, settingsMasterPassword.passwordField);
+        clearStyle(settingsMasterPassword.getTextField());
         ioManager.displayMasterPassword(settingsMasterPassword);
     }
 

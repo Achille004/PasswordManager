@@ -46,6 +46,10 @@ module password.manager.app {
     exports password.manager.app.utils;
     
     opens password.manager.app to javafx.fxml;
+    opens password.manager.app.controllers to javafx.fxml;
+    opens password.manager.app.controllers.extra to javafx.fxml;
+    opens password.manager.app.controllers.views to javafx.fxml;
+    
     opens password.manager.app.utils to com.fasterxml.jackson.databind;
     opens password.manager.app.security to com.fasterxml.jackson.databind;
 }

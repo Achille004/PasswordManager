@@ -43,18 +43,18 @@ public class LoginController extends AbstractController {
     }
 
     @FXML
-    public Label loginTitle;
+    private Label loginTitle;
 
     @FXML
-    public ReadablePasswordField loginPassword;
+    private ReadablePasswordField loginPassword;
 
     @FXML
-    public Button loginSubmitBtn;
+    private Button loginSubmitBtn;
 
-    private Timeline wrongPasswordsTimeline;
+    private Timeline wrongPasswordTimeline;
 
     public void initialize(URL location, ResourceBundle resources) {
-        wrongPasswordsTimeline = new Timeline(
+        wrongPasswordTimeline = new Timeline(
                 new KeyFrame(Duration.ZERO, _ -> {
                     loginSubmitBtn.setDisable(true);
                     loginSubmitBtn.setStyle("-fx-border-color: #ff5f5f");
@@ -72,17 +72,17 @@ public class LoginController extends AbstractController {
 
     @FXML
     public void doLogin() {
-        if (checkTextFields(loginPassword.textField, loginPassword.passwordField)) {
-            wrongPasswordsTimeline.stop();
+        if (checkTextFields(loginPassword.getTextField())) {
+            wrongPasswordTimeline.stop();
             ioManager.authenticate(loginPassword.getText());
 
             if (ioManager.isAuthenticated()) {
                 switchToMain.set(true);
             } else {
-                wrongPasswordsTimeline.play();
+                wrongPasswordTimeline.play();
             }
 
-            clearTextFields(loginPassword.textField, loginPassword.passwordField);
+            clearTextFields(loginPassword.getTextField());
         }
     }
 }
