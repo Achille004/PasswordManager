@@ -32,14 +32,10 @@ import org.jetbrains.annotations.NotNull;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.HostServices;
-import javafx.application.Platform;
 import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -191,7 +187,7 @@ public class MainController extends AbstractController {
         });
     }
 
-    private <T extends AbstractViewController, S extends Pane> void sidebarButtonAction(ActionEvent event, @NotNull T destinationController, S destinationPane, @NotNull String mainTitleKey) {
+    private void sidebarButtonAction(ActionEvent event, @NotNull AbstractViewController destinationController, Pane destinationPane, @NotNull String mainTitleKey) {
         // Show selected pane
         destinationController.reset();
         mainPane.centerProperty().set(destinationPane);

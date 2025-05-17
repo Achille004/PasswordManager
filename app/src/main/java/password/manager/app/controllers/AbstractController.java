@@ -74,7 +74,7 @@ public abstract class AbstractController implements Initializable {
         eulaStage.toFront();
     }
 
-    protected <S extends Initializable> Parent loadFxml(String path, S controller) {
+    protected Parent loadFxml(String path, Initializable controller) {
         try {
             FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource(path)));
             loader.setController(controller);
@@ -86,10 +86,10 @@ public abstract class AbstractController implements Initializable {
     }
 
     @SafeVarargs
-    protected static <T extends TextInputControl> boolean checkTextFields(T @NotNull... fields) {
+    protected static boolean checkTextFields(TextInputControl @NotNull... fields) {
         boolean nonEmpty = true;
 
-        for (@NotNull T field : fields) {
+        for (@NotNull TextInputControl field : fields) {
             if (field.getText().isBlank()) {
                 nonEmpty = false;
                 field.setStyle("-fx-border-color: #ff5f5f");
@@ -102,15 +102,15 @@ public abstract class AbstractController implements Initializable {
     }
 
     @SafeVarargs
-    protected static <T extends Node> void clearStyle(T @NotNull... nodes) {
-        for (@NotNull T node : nodes) {
+    protected static void clearStyle(Node @NotNull... nodes) {
+        for (@NotNull Node node : nodes) {
             node.setStyle("");
         }
     }
 
     @SafeVarargs
-    protected static <T extends TextInputControl> void clearTextFields(T @NotNull... fields) {
-        for (@NotNull T field : fields) {
+    protected static void clearTextFields(TextInputControl @NotNull... fields) {
+        for (@NotNull TextInputControl field : fields) {
             field.clear();
         }
     }

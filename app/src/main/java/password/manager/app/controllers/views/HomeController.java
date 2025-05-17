@@ -40,6 +40,5 @@ public class HomeController extends AbstractViewController {
         langResources.bindTextProperty(homeDescBtm, "home_desc.btm");
     }
 
-    public void reset() {
-    }
+    public void reset() {}
 }

@@ -29,6 +29,11 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import org.jetbrains.annotations.NotNull;
@@ -37,6 +42,7 @@ import org.jetbrains.annotations.Nullable;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -52,6 +58,8 @@ import password.manager.lib.ReadablePasswordField;
 public final class IOManager {
     static final String OS, USER_HOME, DATA_FILE;
     public static final Path FILE_PATH, DESKTOP_PATH;
+
+    private static final ExecutorService ACCOUNT_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
 
     static {
         // gets system properties
@@ -77,7 +85,7 @@ public final class IOManager {
 
     public IOManager() {
         logger = new Logger(FILE_PATH);
-        accountList = FXCollections.observableArrayList();
+        accountList = FXCollections.observableList(Collections.synchronizedList(new ArrayList<>()));
         userPreferences = UserPreferences.empty();
 
         masterPassword = null;
@@ -110,7 +118,7 @@ public final class IOManager {
 
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            AccountData data = objectMapper.readValue(FILE_PATH.resolve(DATA_FILE).toFile(), AccountData.class);
+            AppData data = objectMapper.readValue(FILE_PATH.resolve(DATA_FILE).toFile(), AppData.class);
 
             this.userPreferences = data.userPreferences();
             accountList.addAll(Collections.nCopies(data.accountList().size(), null));
@@ -134,8 +142,8 @@ public final class IOManager {
         }
 
         // TODO Add logging
-        // userPreferences.getLocaleProperty().addListener((observable, oldValue, newValue) -> logger.addInfo("Changed locale to: " + newValue));
-        // userPreferences.getSortingOrderProperty().addListener((observable, oldValue, newValue) -> logger.addInfo("Changed sorting order to: " + newValue));
+        // userPreferences.getLocaleProperty().addListener((_, _, newValue) -> logger.addInfo("Changed locale to: " + newValue));
+        // userPreferences.getSortingOrderProperty().addListener((_, _, newValue) -> logger.addInfo("Changed sorting order to: " + newValue));
     }
 
     public SortedList<Account> getSortedAccountList() {
@@ -143,18 +151,37 @@ public final class IOManager {
     }
 
     // #region Account methods
-    public @NotNull Boolean addAccount(String software, String username, String password) {
-        if (isAuthenticated()) {
-            try {
-                accountList.add(Account.of(software, username, password, masterPassword));
-                logger.addInfo("Account added");
-                return true;
-            } catch (GeneralSecurityException e) {
-                logger.addError(e);
-            }
+    public @NotNull Boolean addAccount(@Nullable String software, @Nullable String username, @Nullable String password) {
+        if (software == null || username == null || password == null) {
+            return false;
+        }
+        
+        if (!isAuthenticated()) {
+            return false; 
         }
 
-        return false;
+        boolean[] ok = {true};
+        CompletableFuture
+                .supplyAsync(() -> {
+                    try {
+                        return Account.of(software, username, password, masterPassword);
+                    } catch (GeneralSecurityException e) {
+                        logger.addError(e);
+                        ok[0] = false;
+                        return null;
+                    }
+                }, ACCOUNT_EXECUTOR)
+                .thenAccept(account -> Platform.runLater(() -> {
+                    accountList.add(account);
+                    logger.addInfo("Account added");
+                }))
+                .exceptionally(t -> { 
+                    logger.addError(t); 
+                    ok[0] = false;
+                    return null;
+                });
+
+        return ok[0];
     }
 
     public @NotNull Boolean editAccount(@NotNull Account account, @Nullable String software, @Nullable String username, @Nullable String password) {
@@ -162,29 +189,55 @@ public final class IOManager {
             return false;
         }
 
-        int index = accountList.indexOf(account);
-        if (isAuthenticated() && index >= 0) {
-            try {
-                account.setData(software, username, password, masterPassword);
-                // Substitute the account with itself to trigger the SortedList wrapper
-                accountList.set(index, account);
-                logger.addInfo("Account edited");
-                return true;
-            } catch (GeneralSecurityException e) {
-                logger.addError(e);
-            }
+        int idx = accountList.indexOf(account);
+        if (!isAuthenticated() || idx < 0) {
+            return false;
         }
 
-        return false;
+        boolean[] ok = {true};
+        CompletableFuture
+                .runAsync(() -> { 
+                    try {
+                        account.setData(software, username, password, masterPassword);
+                    } catch (GeneralSecurityException e) {
+                        logger.addError(e);
+                        ok[0] = false;
+                    }
+                }, ACCOUNT_EXECUTOR)
+                .thenRun(() -> Platform.runLater(() -> {
+                    // trigger SortedList refresh
+                    accountList.set(idx, account);   
+                    logger.addInfo("Account edited");
+                }))
+                .exceptionally(t -> {
+                    logger.addError(t); 
+                    ok[0] = false;
+                    return null;
+                });
+
+        return ok[0];
     }
 
-    public @NotNull Boolean removeAccount(@NotNull Account account) {
-        if (isAuthenticated() && accountList.remove(account)) {
-            logger.addInfo("Account deleted");
-            return true;
+    public @NotNull Boolean removeAccount(Account account) {
+        if (!isAuthenticated()) {
+            return false;
         }
 
-        return false;
+        boolean[] ok = {true};
+        CompletableFuture
+                .runAsync(() -> { /* nothing to do off-thread */ }, ACCOUNT_EXECUTOR)
+                .thenRun(() -> Platform.runLater(() -> {
+                    if (accountList.remove(account)) {
+                        logger.addInfo("Account deleted");
+                    }
+                }))
+                .exceptionally(t -> { 
+                    logger.addError(t); 
+                    ok[0] = false;
+                    return null;
+                });
+
+        return ok[0];
     }
 
     public @Nullable String getAccountPassword(@NotNull Account account) {
@@ -216,7 +269,7 @@ public final class IOManager {
 
         if (oldMasterPassword != null) {
             boolean[] error = new boolean[1];
-            accountListTaskMultiThreaded(account -> {
+            accountListTaskExec(account -> {
                 try {
                     account.changeMasterPassword(oldMasterPassword, newMasterPassword);
                 } catch (GeneralSecurityException e) {
@@ -261,7 +314,7 @@ public final class IOManager {
             logger.addInfo("User authenticated");
 
             if(!isLatestSecurity) {
-                accountListTaskMultiThreaded(account -> {
+                accountListTaskExec(account -> {
                     try {
                         account.updateToLatestVersion(masterPassword);
                     } catch (GeneralSecurityException e) {
@@ -275,34 +328,62 @@ public final class IOManager {
         return isAuthenticated;
     }
 
-    private void accountListTaskMultiThreaded(Consumer<? super Account> action) {
-        ArrayList<Thread> threads = new ArrayList<>(this.accountList.size());
-        this.accountList.forEach(account -> threads.add(Thread.startVirtualThread(() -> action.accept(account))));
-
-        threads.forEach(thread -> {
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                logger.addError(e);
-            }
-        });
+    private void accountListTaskExec(Consumer<? super Account> action) {
+        // MUST wrap iteration in synchronized(...) when using Collections.synchronizedList
+        synchronized(accountList) {
+            accountList.forEach(account -> ACCOUNT_EXECUTOR.submit(() -> {
+                        try {
+                            action.accept(account);
+                        } catch (Exception e) {
+                            logger.addError(e);
+                        }
+                    }));
+        }
     }
     // #endregion
 
     public void export(@NotNull Exporter exporter, ObservableResourceFactory langResources) {
-        try (FileWriter file = new FileWriter(DESKTOP_PATH.resolve("Passwords." + exporter.name().toLowerCase()).toFile())) {
-            file.write(exporter.getExporter().apply(accountList, langResources, masterPassword));
-            file.flush();
-        } catch (Exception e) {
-            logger.addError(e);
-        }
+        CompletableFuture
+                .supplyAsync(() -> {
+                    synchronized(accountList) {
+                        return new ArrayList<>(accountList);
+                    }
+                }, ACCOUNT_EXECUTOR)
+                .thenAcceptAsync(snapshot -> {
+                    File exportFile = DESKTOP_PATH.resolve("passwords." + exporter.name().toLowerCase()).toFile();
+                    try (FileWriter file = new FileWriter(exportFile)) {
+                        String out = exporter.getExporter().apply(snapshot, langResources, masterPassword);
+                        file.write(out);
+                        logger.addInfo("Export succeeded: " + exportFile.getName());
+                    } catch (Exception e) {
+                        logger.addError(e);
+                    }
+                }, ACCOUNT_EXECUTOR)
+                .exceptionally(t -> { 
+                    logger.addError(t); 
+                    return null;
+                });
     }
 
     private boolean saveAccountFile() {
         ObjectWriter objectWriter = new ObjectMapper().writer().withDefaultPrettyPrinter();
 
+        ACCOUNT_EXECUTOR.shutdown();
         try {
-            AccountData data = new AccountData(this.userPreferences, this.accountList);
+            ACCOUNT_EXECUTOR.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            logger.addError(e);
+            ACCOUNT_EXECUTOR.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+
+        List<Account> snapshot;
+        synchronized(accountList) {
+            snapshot = new ArrayList<>(accountList);
+        }
+
+        try {
+            AppData data = new AppData(this.userPreferences, this.accountList);
             objectWriter.writeValue(FILE_PATH.resolve(DATA_FILE).toFile(), data);
 
             logger.addInfo("Data file saved");
@@ -313,13 +394,11 @@ public final class IOManager {
         }
     }
 
-    // Wrapper class for data
-    private record AccountData(UserPreferences userPreferences, List<Account> accountList) {
-    }
+    // Wrapper class for application data
+    private record AppData(UserPreferences userPreferences, List<Account> accountList) {}
 
-    public @NotNull Boolean saveAll() {
+    public @NotNull Boolean saveAll() {    
         boolean result = false;
-
         // when the user shuts down the program on the first run, it won't save
         if (!isFirstRun() || isAuthenticated()) {
             logger.addInfo("Shutting down");

@@ -59,7 +59,7 @@ public final class ObservableResourceFactory {
         return getResources().getString(key);
     }
 
-    public <T extends Labeled> void bindTextProperty(@NotNull T field, @NotNull String key) {
+    public void bindTextProperty(@NotNull Labeled field, @NotNull String key) {
         if (key.isBlank()) {
             field.textProperty().unbind();
         } else {

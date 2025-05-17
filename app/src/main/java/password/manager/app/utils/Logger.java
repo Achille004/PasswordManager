@@ -82,7 +82,7 @@ public final class Logger {
         return write(logWriter, logStrBuilder);
     }
 
-    public @NotNull Boolean addError(@NotNull Exception e) {
+    public @NotNull Boolean addError(@NotNull Throwable e) {
         StringBuilder logStrBuilder = new StringBuilder();
         logStrBuilder
                 .append(DTF.format(LocalDateTime.now()))
@@ -143,7 +143,7 @@ public final class Logger {
         try {
             // Get the list of log directories
             File logDir = filePath.toFile();
-            File[] logDirs = logDir.listFiles((dir, name) -> name.startsWith(FOLDER_PREFIX));
+            File[] logDirs = logDir.listFiles((_, name) -> name.startsWith(FOLDER_PREFIX));
 
             if (logDirs != null && logDirs.length > MAX_LOG_FILES - 1) {
                 // Sort the directories by last modified date, oldest first

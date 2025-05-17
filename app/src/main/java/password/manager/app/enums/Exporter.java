@@ -20,9 +20,10 @@ package password.manager.app.enums;
 
 import static password.manager.app.utils.Utils.*;
 
+import java.util.List;
+
 import org.jetbrains.annotations.NotNull;
 
-import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import password.manager.app.inerfaces.TriFunction;
@@ -79,7 +80,7 @@ public enum Exporter {
 
         return stb.toString();
     }),
-    CSV((accountList, langResources, masterPassword) -> {
+    CSV((accountList, _, masterPassword) -> {
         StringBuilder stb = new StringBuilder();
 
         final int listSize = accountList.size();
@@ -96,5 +97,5 @@ public enum Exporter {
         return stb.toString();
     });
 
-    private final TriFunction<@NotNull ObservableList<Account>, ObservableResourceFactory, String, String> exporter;
+    private final TriFunction<@NotNull List<Account>, ObservableResourceFactory, String, String> exporter;
 }

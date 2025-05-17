@@ -69,6 +69,7 @@ public class EncrypterController extends AbstractViewController {
         encryptPassStr.setProgress(0);
         clearStyle(encryptSoftware, encryptUsername, encryptPassword.getTextField());
         clearTextFields(encryptSoftware, encryptUsername, encryptPassword.getTextField());
+        encryptPassword.setReadable(false);
     }
 
     @FXML

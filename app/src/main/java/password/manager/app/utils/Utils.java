@@ -41,9 +41,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DialogPane;
-import javafx.scene.layout.Pane;
-import lombok.Getter;
-
 public final class Utils {
     public static final Locale[] SUPPORTED_LOCALE;
     public static final Locale DEFAULT_LOCALE;

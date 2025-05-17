@@ -112,6 +112,7 @@ public class SettingsController extends AbstractViewController {
     public void reset() {
         clearStyle(settingsMasterPassword.getTextField());
         ioManager.displayMasterPassword(settingsMasterPassword);
+        settingsMasterPassword.setReadable(false);
     }
 
     @Contract(value = "_ -> new", pure = true)

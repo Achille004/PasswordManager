@@ -20,7 +20,6 @@ package password.manager.app;
 
 import static password.manager.app.utils.Utils.*;
 
-import java.awt.Desktop;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
@@ -31,7 +30,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javafx.application.Application.Parameters;
 import javafx.application.HostServices;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -39,9 +37,6 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import lombok.Getter;
@@ -83,7 +78,7 @@ public class AppManager {
                 locale));
 
         final BooleanProperty switchToMain = new SimpleBooleanProperty(false);
-        switchToMain.addListener((observable, oldValue, newValue) -> {
+        switchToMain.addListener((_, _, newValue) -> {
             if (newValue) {
                 loadMainPane();
             }
@@ -131,7 +126,7 @@ public class AppManager {
         mainController.mainTitleAnimation();
     }
 
-    private <S extends Initializable> @Nullable Parent loadFxml(String path, S controller) {
+    private @Nullable Parent loadFxml(String path, Initializable controller) {
         try {
             FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource(path)));
             loader.setController(controller);
