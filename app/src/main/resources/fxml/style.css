@@ -184,6 +184,7 @@
 }
 
 .sidebar > Button.navBtn:hover,
+.sidebar > Button.navBtn:focused,
 .sidebar > Button.navBtn:notch {
   -fx-background-color: linear-gradient(to right, -fx-color-green 0%, -fx-color-green 4%, -fx-color-background 5%, -fx-color-background 100%);
 }

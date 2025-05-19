@@ -23,6 +23,8 @@ import static password.manager.app.utils.Utils.*;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.HostServices;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
@@ -34,6 +36,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
+import javafx.util.Duration;
 import javafx.util.StringConverter;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -55,11 +58,15 @@ public class DecrypterController extends AbstractViewController {
     private TextField decryptSoftware, decryptUsername;
     @FXML
     private ReadablePasswordField decryptPassword;
+    
+    @FXML
+    private Button decryptSaveBtn;
+    private Timeline decryptSaveTimeline;
 
     @FXML
-    private Button decryptDelete;
+    private Button decryptDeleteBtn;
     private boolean decryptDeleteCounter = false;
-
+    
     @FXML
     private Label decryptAccSelLbl, decryptSoftwareLbl, decryptUsernameLbl, decryptPasswordLbl;
 
@@ -79,6 +86,12 @@ public class DecrypterController extends AbstractViewController {
         decryptSoftware.setOnAction(_ -> decryptUsername.requestFocus());
         decryptUsername.setOnAction(_ -> decryptPassword.requestFocus());
         decryptPassword.setOnAction(this::decryptSave);
+
+        decryptSoftware.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                decryptSoftware.requestFocus();
+            }
+        });
 
         SortedList<Account> accountList = ioManager.getSortedAccountList();
         decryptCB.setItems(accountList);
@@ -102,19 +115,24 @@ public class DecrypterController extends AbstractViewController {
                 });
 
         ObjectProperty<Account> selectedAccount = decryptCB.valueProperty();
+
+        decryptSaveTimeline = new Timeline(
+                new KeyFrame(Duration.ZERO, _ -> decryptSaveBtn.setStyle("-fx-background-color: #0e0")),
+                new KeyFrame(Duration.seconds(1), _ -> clearStyle(decryptSaveBtn)));
     }
 
     public void reset() {
+        decryptPassStr.setProgress(0);
         resetKeepSelection();
+        clearTextFields(decryptSoftware, decryptUsername, decryptPassword.getTextField());
         decryptCB.getSelectionModel().clearSelection();
         decryptPassword.setReadable(false);
     }
-
+    
     private void resetKeepSelection() {
         decryptDeleteCounter = false;
-        decryptPassStr.setProgress(0);
-        clearStyle(decryptSoftware, decryptUsername, decryptPassword.getTextField(), decryptDelete);
-        clearTextFields(decryptSoftware, decryptUsername, decryptPassword.getTextField());
+        clearStyle(decryptSoftware, decryptUsername, decryptPassword.getTextField(), decryptDeleteBtn);
+        decryptSoftware.requestFocus();
     }
 
     @FXML
@@ -124,14 +142,16 @@ public class DecrypterController extends AbstractViewController {
             return;
         }
 
+        // when the deleteCounter is true it means that the user has confirmed the
+        // elimination
         if (checkTextFields(decryptSoftware, decryptUsername, decryptPassword.getTextField())) {
+            resetKeepSelection();
+            decryptSaveTimeline.playFromStart();
+
             // get the new software, username and password
             String software = decryptSoftware.getText();
             String username = decryptUsername.getText();
             String password = decryptPassword.getText();
-
-            reset();
-
             // save the new attributes of the account
             ioManager.editAccount(account, software, username, password);
         }
@@ -152,7 +172,7 @@ public class DecrypterController extends AbstractViewController {
             // removes the selected account from the list
             ioManager.removeAccount(account);
         } else {
-            decryptDelete.setStyle("-fx-background-color: #ff5f5f");
+            decryptDeleteBtn.setStyle("-fx-background-color: #ff5f5f");
             decryptDeleteCounter = true;
         }
     }

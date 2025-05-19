@@ -66,7 +66,7 @@ public abstract class AbstractController implements Initializable {
             ioManager.getLogger().addInfo("Loading eula pane...");
             AnchorPane eulaParent = (AnchorPane) loadFxml("/fxml/extra/eula.fxml", new EulaController(ioManager, hostServices));
             triggerUiErrorIfNull(eulaParent, ioManager, langResources);
-            ioManager.getLogger().addInfo("Success");
+            ioManager.getLogger().addInfo("Success [eula]");
             eulaStage.setScene(new Scene(eulaParent, 900, 600));
         }
 

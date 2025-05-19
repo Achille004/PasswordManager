@@ -82,7 +82,7 @@
       <ReadablePasswordField fx:id="decryptPassword" layoutY="49.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="720.0" />
    </AnchorPane>
    <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="4">
-      <Button fx:id="decryptDelete" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="624.0" layoutY="21.0" mnemonicParsing="false" onAction="#decryptDelete" prefHeight="50.0" prefWidth="50.0" styleClass="decrypt-button" text="D">
+      <Button fx:id="decryptDeleteBtn" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="624.0" layoutY="21.0" mnemonicParsing="false" onAction="#decryptDelete" prefHeight="50.0" prefWidth="50.0" styleClass="decrypt-button" text="D">
          <graphic>
             <ImageView fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
                <Image url="@../../images/icons/delete.png" />
@@ -95,7 +95,7 @@
             <Insets bottom="0.1" left="0.1" right="0.1" top="0.1" />
          </padding>
       </Button>
-      <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="681.0" layoutY="21.0" mnemonicParsing="false" onAction="#decryptSave" prefHeight="50.0" prefWidth="50.0" styleClass="decrypt-button" text="S">
+      <Button fx:id="decryptSaveBtn" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="681.0" layoutY="21.0" mnemonicParsing="false" onAction="#decryptSave" prefHeight="50.0" prefWidth="50.0" styleClass="decrypt-button" text="S">
          <padding>
             <Insets bottom="0.1" left="0.1" right="0.1" top="0.1" />
          </padding>

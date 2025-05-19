@@ -63,6 +63,12 @@ public class EncrypterController extends AbstractViewController {
         encryptSoftware.setOnAction(_ -> encryptUsername.requestFocus());
         encryptUsername.setOnAction(_ -> encryptPassword.requestFocus());
         encryptPassword.setOnAction(this::encryptSave);
+
+        encryptSoftware.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                encryptSoftware.requestFocus();
+            }
+        });
     }
 
     public void reset() {

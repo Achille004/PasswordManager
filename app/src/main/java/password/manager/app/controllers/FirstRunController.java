@@ -66,6 +66,11 @@ public class FirstRunController extends AbstractController {
 
         firstRunPassword.bindPasswordStrength(firstRunPassStr);
         firstRunPassword.setOnAction(_ -> doFirstRun());
+        firstRunPassword.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                firstRunPassword.requestFocus();
+            }
+        });
     }
 
     @FXML

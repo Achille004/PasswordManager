@@ -135,7 +135,7 @@ public class MainController extends AbstractController {
             homeController = new HomeController(ioManager, langResources, hostServices);
             homePane = (AnchorPane) loadFxml("/fxml/views/home.fxml", homeController);
             triggerUiErrorIfNull(homePane, ioManager, langResources);
-            ioManager.getLogger().addInfo("Success");
+            ioManager.getLogger().addInfo("Success [home]");
         }
         sidebarButtonAction(null, homeController, homePane, "");
     }
@@ -147,7 +147,7 @@ public class MainController extends AbstractController {
             encrypterController = new EncrypterController(ioManager, langResources, hostServices);
             encrypterPane = (GridPane) loadFxml("/fxml/views/encrypter.fxml", encrypterController);
             triggerUiErrorIfNull(encrypterPane, ioManager, langResources);
-            ioManager.getLogger().addInfo("Success");
+            ioManager.getLogger().addInfo("Success [encrypter]");
         }
         sidebarButtonAction(event, encrypterController, encrypterPane, "encryption");
     }
@@ -159,7 +159,7 @@ public class MainController extends AbstractController {
             decrypterController = new DecrypterController(ioManager, langResources, hostServices);
             decrypterPane = (GridPane) loadFxml("/fxml/views/decrypter.fxml", decrypterController);
             triggerUiErrorIfNull(decrypterPane, ioManager, langResources);
-            ioManager.getLogger().addInfo("Success");
+            ioManager.getLogger().addInfo("Success [decrypter]");
         }
         sidebarButtonAction(event, decrypterController, decrypterPane, "decryption");
     }
@@ -171,7 +171,7 @@ public class MainController extends AbstractController {
             settingsController = new SettingsController(ioManager, langResources, hostServices);
             settingsPane = (GridPane) loadFxml("/fxml/views/settings.fxml", settingsController);
             triggerUiErrorIfNull(settingsPane, ioManager, langResources);
-            ioManager.getLogger().addInfo("Success");
+            ioManager.getLogger().addInfo("Success [settings]");
         }
         sidebarButtonAction(event, settingsController, settingsPane, "settings");
     }

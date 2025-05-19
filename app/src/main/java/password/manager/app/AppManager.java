@@ -89,7 +89,7 @@ public class AppManager {
         if (!ioManager.isFirstRun() && list.size() > 1 && ("-p".equals(list.get(0)) || "--password".equals(list.get(0)))) {
             ioManager.getLogger().addInfo("Trying to authenticate via arguments");
             if (ioManager.authenticate(list.get(1))) {
-                ioManager.getLogger().addInfo("Success, skipping login");
+                ioManager.getLogger().addInfo("Correct password, skipping login");
                 switchToMain.set(true);
             } else {
                 ioManager.getLogger().addInfo("Incorrect password, redirecting to login");
@@ -98,16 +98,19 @@ public class AppManager {
 
         if (!switchToMain.get()) {
             AnchorPane pane;
+            String paneName;
             if (ioManager.isFirstRun()) {
                 ioManager.getLogger().addInfo("Loading first run pane...");
                 pane = (AnchorPane) loadFxml("/fxml/first_run.fxml", new FirstRunController(ioManager, langResources, hostServices, switchToMain));
+                paneName = "first_run";
             } else {
                 ioManager.getLogger().addInfo("Loading login pane...");
                 pane = (AnchorPane) loadFxml("/fxml/login.fxml", new LoginController(ioManager, langResources, hostServices, switchToMain));
+                paneName = "login";
             }
 
             triggerUiErrorIfNull(pane, ioManager, langResources);
-            ioManager.getLogger().addInfo("Success");
+            ioManager.getLogger().addInfo("Success [" + paneName + "]");
 
             scenePane.getChildren().clear();
             scenePane.getChildren().add(pane);
@@ -119,7 +122,7 @@ public class AppManager {
         final MainController mainController = new MainController(ioManager, langResources, hostServices);
         final BorderPane mainPane = (BorderPane) loadFxml("/fxml/main.fxml", mainController);
         triggerUiErrorIfNull(mainPane, ioManager, langResources);
-        ioManager.getLogger().addInfo("Success");
+        ioManager.getLogger().addInfo("Success [main]");
         
         scenePane.getChildren().clear();
         scenePane.getChildren().add(mainPane);

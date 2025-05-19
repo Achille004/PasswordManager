@@ -68,6 +68,11 @@ public class LoginController extends AbstractController {
         langResources.bindTextProperty(loginSubmitBtn, "lets_go");
 
         loginPassword.setOnAction(_ -> doLogin());
+        loginPassword.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                loginPassword.requestFocus();
+            }
+        });
     }
 
     @FXML
@@ -79,7 +84,7 @@ public class LoginController extends AbstractController {
             if (ioManager.isAuthenticated()) {
                 switchToMain.set(true);
             } else {
-                wrongPasswordTimeline.play();
+                wrongPasswordTimeline.playFromStart();
             }
 
             clearTextFields(loginPassword.getTextField());

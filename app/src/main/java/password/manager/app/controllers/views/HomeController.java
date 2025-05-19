@@ -40,5 +40,11 @@ public class HomeController extends AbstractViewController {
         langResources.bindTextProperty(homeDescBtm, "home_desc.btm");
     }
 
-    public void reset() {}
+    public void reset() {
+        homeDescTop.sceneProperty().addListener((_, _, newScene) -> {
+            if (newScene != null) {
+                homeDescTop.requestFocus();
+            }
+        });
+    }
 }
