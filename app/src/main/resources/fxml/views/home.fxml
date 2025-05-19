@@ -37,17 +37,10 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane prefHeight="557.0" prefWidth="835.0" style="-fx-background-color: #202428;" stylesheets="@../style.css"
-            xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
-    <ImageView fitHeight="457.0" fitWidth="457.0" layoutX="186.0" nodeOrientation="INHERIT" pickOnBounds="true"
-               preserveRatio="true">
-        <Image url="@../../images/background.png"/>
+<AnchorPane prefHeight="557.0" prefWidth="835.0" style="-fx-background-color: #202428;" stylesheets="@../style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+    <ImageView fitHeight="457.0" fitWidth="457.0" layoutX="189.0" layoutY="20.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true">
+        <Image url="@../../images/background.png" />
     </ImageView>
-    <Label fx:id="homeDescTop" alignment="CENTER" layoutX="207.0" layoutY="457.0" prefHeight="53.0" prefWidth="414.0"
-           styleClass="bold-italic, sz24, green-text" text="Your Accounts." AnchorPane.bottomAnchor="46.19999999999999"
-           AnchorPane.leftAnchor="207.0" AnchorPane.rightAnchor="208.20000000000005" AnchorPane.topAnchor="457.0" />
-    <Label fx:id="homeDescBtm" alignment="CENTER" contentDisplay="CENTER" layoutX="205.0" layoutY="483.0"
-           prefHeight="53.0" prefWidth="418.0" styleClass="bold-italic, sz24, green-text" text="In a Safe Place." 
-           textAlignment="CENTER" AnchorPane.bottomAnchor="20.200000000000045" 
-           AnchorPane.leftAnchor="205.0" AnchorPane.rightAnchor="205.39999999999998" AnchorPane.topAnchor="483.0" />
+    <Label fx:id="homeDescTop" alignment="CENTER" layoutX="207.0" layoutY="460.0" prefHeight="53.0" prefWidth="414.0" styleClass="bold-italic, sz24, green-text" text="Your Accounts." AnchorPane.bottomAnchor="46.19999999999999" AnchorPane.leftAnchor="207.0" AnchorPane.rightAnchor="208.20000000000005" AnchorPane.topAnchor="457.0" />
+    <Label fx:id="homeDescBtm" alignment="CENTER" contentDisplay="CENTER" layoutX="205.0" layoutY="480.0" prefHeight="60.0" prefWidth="425.0" styleClass="bold-italic, sz24, green-text" text="In a Safe Place." textAlignment="CENTER" AnchorPane.bottomAnchor="16.0" AnchorPane.leftAnchor="205.0" AnchorPane.rightAnchor="205.0" AnchorPane.topAnchor="481.0" />
 </AnchorPane>

@@ -8,5 +8,5 @@
 <fx:root maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30" prefWidth="560" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
     <PasswordField fx:id="passwordField" prefHeight="30" prefWidth="560" />
     <TextField fx:id="textField" prefHeight="30" prefWidth="560" visible="false" />
-    <ImageView fx:id="imageView" fitHeight="36" fitWidth="36" layoutX="521" layoutY="2" pickOnBounds="true" preserveRatio="true" />
+    <ImageView fx:id="imageView" fitHeight="30.0" fitWidth="30.0" layoutX="527.0" pickOnBounds="true" preserveRatio="true" />
 </fx:root>

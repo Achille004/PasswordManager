@@ -41,19 +41,19 @@ public class FirstRunController extends AbstractController {
     }
 
     @FXML
-    public Label firstRunTitle, firstRunDescTop, firstRunDescBtm, firstRunTermsCred, firstRunDisclaimer;
+    private Label firstRunTitle, firstRunDescTop, firstRunDescBtm, firstRunTermsCred, firstRunDisclaimer;
 
     @FXML
-    public ReadablePasswordField firstRunPassword;
+    private ReadablePasswordField firstRunPassword;
 
     @FXML
-    public CheckBox firstRunCheckBox;
+    private CheckBox firstRunCheckBox;
 
     @FXML
-    public Button firstRunSubmitBtn;
+    private Button firstRunSubmitBtn;
 
     @FXML
-    public ProgressBar firstRunPassStr;
+    private ProgressBar firstRunPassStr;
 
     public void initialize(URL location, ResourceBundle resources) {
         langResources.bindTextProperty(firstRunTitle, "hi");
@@ -65,15 +65,17 @@ public class FirstRunController extends AbstractController {
         langResources.bindTextProperty(firstRunDisclaimer, "first_run.disclaimer");
 
         firstRunPassword.bindPasswordStrength(firstRunPassStr);
-
         firstRunPassword.setOnAction(_ -> doFirstRun());
-
-        super.loadEula();
+        firstRunPassword.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                firstRunPassword.requestFocus();
+            }
+        });
     }
 
     @FXML
     public void doFirstRun() {
-        if (checkTextFields(firstRunPassword.textField, firstRunPassword.passwordField) && firstRunCheckBox.isSelected()) {
+        if (checkTextFields(firstRunPassword.getTextField()) && firstRunCheckBox.isSelected()) {
             ioManager.changeMasterPassword(firstRunPassword.getText());
             switchToMain.set(true);
         }

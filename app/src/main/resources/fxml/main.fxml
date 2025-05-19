@@ -41,125 +41,101 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 
-<BorderPane fx:id="mainPane" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #202428;" stylesheets="@style.css"
-    xmlns="http://javafx.com/javafx/21"
-    xmlns:fx="http://javafx.com/fxml/1">
+<BorderPane fx:id="mainPane" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #202428;" stylesheets="@style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
     <top>
-        <AnchorPane minHeight="-Infinity" prefHeight="43.0" prefWidth="900.0" BorderPane.alignment="CENTER">
-            <BorderPane.margin>
-                <Insets/>
-            </BorderPane.margin>
-            <Label fx:id="psmgTitle" layoutX="14.0" minWidth="60.0" prefHeight="46.0" prefWidth="222.0" styleClass="bold-italic, sz24, green-text" text="Password Manager" />
-            <Button fx:id="homeButton" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="857.0"
-                    mnemonicParsing="false" onAction="#homeButton" prefHeight="43.0" prefWidth="43.0"
-                    style="-fx-background-color: #202428;" text="H" visible="false">
+        <AnchorPane minHeight="-Infinity" prefHeight="35.0" prefWidth="900.0" styleClass="titlebar" BorderPane.alignment="CENTER">
+            <Label fx:id="psmgTitle" layoutX="6.0" minWidth="60.0" prefHeight="35.0" prefWidth="222.0" styleClass="bold-italic, sz24" text="Password Manager" />
+            <Button fx:id="homeButton" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="860.0" layoutY="-5.0" mnemonicParsing="false" onAction="#homeButton" prefHeight="43.0" prefWidth="43.0" style="-fx-background-color: transparent;" text="H" visible="false">
                 <graphic>
                     <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
-                        <Image url="@../images/icons/home.png"/>
+                        <Image url="@../images/icons/home.png" />
                     </ImageView>
                 </graphic>
                 <padding>
-                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                 </padding>
                 <cursor>
-                    <Cursor fx:constant="HAND"/>
+                    <Cursor fx:constant="HAND" />
                 </cursor>
             </Button>
-            <Label fx:id="mainTitle" layoutX="226.0" layoutY="1.0" minWidth="60.0" prefHeight="43.0" prefWidth="560.0"
-                   styleClass="bold-italic, sz24, green-text" text="Section" visible="false">
+            <Label fx:id="mainTitle" layoutX="217.0" minWidth="60.0" prefHeight="35.0" prefWidth="571.0" styleClass="bold-italic, sz24" text="Section" visible="false">
                 <graphic>
-                    <Label minWidth="17.0" prefHeight="43.0" prefWidth="17.0" text="&gt;"
-                           styleClass="bold-italic, sz24, green-text" />
+                    <Label minWidth="17.0" prefHeight="35.0" prefWidth="17.0" styleClass="bold-italic, sz24" text="&gt;" />
                 </graphic>
             </Label>
         </AnchorPane>
     </top>
     <left>
-        <AnchorPane prefHeight="557.0" prefWidth="64.0" style="-fx-border-color: white; -fx-border-width: 0 2px 0 0;"
-                    BorderPane.alignment="CENTER">
+        <AnchorPane prefHeight="557.0" prefWidth="64.0" styleClass="sidebar" BorderPane.alignment="CENTER">
             <BorderPane.margin>
-                <Insets left="2.0"/>
+                <Insets left="2.0" />
             </BorderPane.margin>
             <padding>
-                <Insets right="2.0"/>
+                <Insets right="2.0" />
             </padding>
-            <Button alignment="CENTER" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" mnemonicParsing="false"
-                    onAction="#encryptSidebarButton" prefHeight="60.0" prefWidth="60.0" styleClass="sidebar-button"
-                    text="E">
+            <Button alignment="CENTER" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutY="2.0" mnemonicParsing="false" onAction="#encryptSidebarButton" prefHeight="60.0" prefWidth="60.0" styleClass="navBtn" text="E">
                 <graphic>
                     <ImageView fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
-                        <Image url="@../images/icons/sidebar/encrypt.png"/>
+                        <Image url="@../images/icons/sidebar/encryption-outlined.png" />
                     </ImageView>
                 </graphic>
                 <padding>
-                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                 </padding>
                 <cursor>
-                    <Cursor fx:constant="HAND"/>
+                    <Cursor fx:constant="HAND" />
                 </cursor>
             </Button>
-            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutY="60.0" mnemonicParsing="false"
-                    onAction="#decryptSidebarButton" prefHeight="60.0" prefWidth="60.0" styleClass="sidebar-button"
-                    text="D">
-                
+            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutY="62.0" mnemonicParsing="false" onAction="#decryptSidebarButton" prefHeight="60.0" prefWidth="60.0" styleClass="navBtn" text="D">
                 <graphic>
                     <ImageView fitHeight="50.0" fitWidth="50.0" onMouseClicked="#decryptSidebarButton" pickOnBounds="true" preserveRatio="true">
-                        <Image url="@../images/icons/sidebar/decrypt.png"/>
+                        <Image url="@../images/icons/sidebar/decryption-outlined.png" />
                     </ImageView>
                 </graphic>
                 <padding>
-                    <Insets bottom="5.0" left="3.0" right="7.0" top="5.0"/>
+                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                 </padding>
                 <cursor>
-                    <Cursor fx:constant="HAND"/>
+                    <Cursor fx:constant="HAND" />
                 </cursor>
             </Button>
-            <Button fx:id="folderButton" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="2.0"
-                    layoutY="464.0" mnemonicParsing="false" onAction="#folderSidebarButton" prefHeight="29.0"
-                    prefWidth="29.0" styleClass="sidebar-button" text="F">
-                
+            <Button fx:id="folderButton" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="2.0" layoutY="472.0" mnemonicParsing="false" onAction="#folderSidebarButton" prefHeight="29.0" prefWidth="29.0" text="F">
                 <graphic>
                     <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
-                        <Image url="@../images/icons/sidebar/folder.png"/>
+                        <Image url="@../images/icons/sidebar/folder.png" />
                     </ImageView>
                 </graphic>
                 <padding>
-                    <Insets bottom="2.0" left="2.0" right="2.0" top="2.0"/>
+                    <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
                 </padding>
                 <cursor>
-                    <Cursor fx:constant="HAND"/>
+                    <Cursor fx:constant="HAND" />
                 </cursor>
             </Button>
-            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="30.0" layoutY="464.0"
-                    mnemonicParsing="false" onMouseClicked="#showEula" prefHeight="29.0" prefWidth="29.0"
-                    styleClass="sidebar-button" text="E">
-                
+            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="30.0" layoutY="472.0" mnemonicParsing="false" onMouseClicked="#showEula" prefHeight="29.0" prefWidth="29.0" text="E">
                 <graphic>
                     <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
-                        <Image url="@../images/icons/sidebar/license.png"/>
+                        <Image url="@../images/icons/sidebar/info.png" />
                     </ImageView>
                 </graphic>
                 <padding>
-                    <Insets bottom="2.0" left="2.0" right="2.0" top="2.0"/>
+                    <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
                 </padding>
                 <cursor>
-                    <Cursor fx:constant="HAND"/>
+                    <Cursor fx:constant="HAND" />
                 </cursor>
             </Button>
-            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutY="494.0" mnemonicParsing="false"
-                    onAction="#settingsSidebarButton" prefHeight="60.0" prefWidth="60.0" styleClass="sidebar-button"
-                    text="S">
-                
+            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutY="502.0" mnemonicParsing="false" onAction="#settingsSidebarButton" prefHeight="60.0" prefWidth="60.0" styleClass="navBtn" text="S">
                 <graphic>
                     <ImageView fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
-                        <Image url="@../images/icons/sidebar/settings.png"/>
+                        <Image url="@../images/icons/sidebar/settings-outlined.png" />
                     </ImageView>
                 </graphic>
                 <padding>
-                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                 </padding>
                 <cursor>
-                    <Cursor fx:constant="HAND"/>
+                    <Cursor fx:constant="HAND" />
                 </cursor>
             </Button>
         </AnchorPane>

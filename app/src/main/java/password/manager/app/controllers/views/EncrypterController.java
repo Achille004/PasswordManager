@@ -38,19 +38,19 @@ public class EncrypterController extends AbstractViewController {
     }
 
     @FXML
-    public TextField encryptSoftware, encryptUsername;
+    private TextField encryptSoftware, encryptUsername;
 
     @FXML
-    public ReadablePasswordField encryptPassword;
+    private ReadablePasswordField encryptPassword;
 
     @FXML
-    public Button encryptSubmitBtn;
+    private Button encryptSubmitBtn;
 
     @FXML
-    public Label encryptSoftwareLbl, encryptUsernameLbl, encryptPasswordLbl;
+    private Label encryptSoftwareLbl, encryptUsernameLbl, encryptPasswordLbl;
 
     @FXML
-    public ProgressBar encryptPassStr;
+    private ProgressBar encryptPassStr;
 
     public void initialize(URL location, ResourceBundle resources) {
         langResources.bindTextProperty(encryptSubmitBtn, "submit");
@@ -63,16 +63,24 @@ public class EncrypterController extends AbstractViewController {
         encryptSoftware.setOnAction(_ -> encryptUsername.requestFocus());
         encryptUsername.setOnAction(_ -> encryptPassword.requestFocus());
         encryptPassword.setOnAction(this::encryptSave);
+
+        encryptSoftware.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                encryptSoftware.requestFocus();
+            }
+        });
     }
 
     public void reset() {
-        clearStyle(encryptSoftware, encryptUsername, encryptPassword.textField, encryptPassword.passwordField);
-        clearTextFields(encryptSoftware, encryptUsername, encryptPassword.textField, encryptPassword.passwordField);
+        encryptPassStr.setProgress(0);
+        clearStyle(encryptSoftware, encryptUsername, encryptPassword.getTextField());
+        clearTextFields(encryptSoftware, encryptUsername, encryptPassword.getTextField());
+        encryptPassword.setReadable(false);
     }
 
     @FXML
     public void encryptSave(ActionEvent event) {
-        if (checkTextFields(encryptSoftware, encryptUsername, encryptPassword.textField, encryptPassword.passwordField)) {
+        if (checkTextFields(encryptSoftware, encryptUsername, encryptPassword.getTextField())) {
             // gets software, username and password written by the user
             String software = encryptSoftware.getText();
             String username = encryptUsername.getText();

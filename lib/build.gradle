@@ -28,23 +28,22 @@ testModuleInfo {
 
 // Apply a specific Java toolchain to ease working on different environments.
 java {
-    sourceCompatibility = JavaVersion.VERSION_23
-
+    sourceCompatibility = JavaVersion.VERSION_24
     toolchain {
-        languageVersion = JavaLanguageVersion.of(23)
+        languageVersion = JavaLanguageVersion.of(24)
     }
 }
 
 javafx {
-    version = '23.0.2'
+    version = '24.0.1'
     modules = [ 'javafx.base', 'javafx.controls', 'javafx.fxml', 'javafx.graphics', 'javafx.web' ]
 }
 
 jar {
+    archiveBaseName.set(rootProject.name + 'Components')
     manifest {
         attributes 'Implementation-Title': 'Custom components for Password Manager'
     }
-    archiveBaseName.set(rootProject.name + 'Components')
 }
 
 application {

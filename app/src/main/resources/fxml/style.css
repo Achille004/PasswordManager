@@ -1,5 +1,23 @@
 /* https://gist.github.com/maxd/63691840fc372f22f470 */
 
+/* ROOT VARIABLES */
+* {
+  /* Colors */
+  -fx-color-background: #202428;
+  -fx-color-element-bg: #2e3136;
+  -fx-color-textarea-bg: #303434;
+  -fx-color-text: white;
+  -fx-color-green: #0aba4d;
+  -fx-color-grey: #a7acb1;
+
+  /* Font Sizes, not used */
+  -fx-font-size-small: 14px;
+  -fx-font-size-regular: 18px;
+  -fx-font-size-medium: 24px;
+  -fx-font-size-large: 36px;
+  -fx-font-size-title: 48px;
+}
+
 /* FONT */
 
 .label,
@@ -8,8 +26,8 @@
 .button,
 .check-box {
   -fx-font-family: "Roboto Regular";
-  -fx-text-fill: white;
-  -fx-text-inner-color: white;
+  -fx-text-fill: -fx-color-text;
+  -fx-text-inner-color: -fx-color-text;
 }
 
 .label,
@@ -51,97 +69,97 @@
 }
 
 .green-text {
-  -fx-text-fill: #0aba4d;
+  -fx-text-fill: -fx-color-green;
 }
 
 .light-grey-text {
-  -fx-text-fill: #a7acb1;
+  -fx-text-fill: -fx-color-grey;
 }
 
 /* DEFAULT COMPONENTS STYLING */
 
 .body {
-  -fx-background-color: #202428;
+  -fx-background-color: -fx-color-background;
 }
 
 .text-field {
-  -fx-background-color: #2e3136;
-  -fx-border-color: #a7acb1;
+  -fx-background-color: -fx-color-element-bg;
+  -fx-border-color: -fx-color-grey;
   -fx-border-radius: 3deg;
 }
 
 .text-area {
-  -fx-control-inner-background: #303434;
-  -fx-border-color: #a7acb1;
+  -fx-control-inner-background: -fx-color-textarea-bg;
+  -fx-border-color: -fx-color-grey;
   -fx-border-radius: 4deg;
 }
 
 /* Styling the ScrollBar in TextArea */
 .text-area .scroll-bar {
-  -fx-background-color: #303434;
+  -fx-background-color: -fx-color-textarea-bg;
 }
 
 /* The thumb (the moving part of the scrollbar) */
 .text-area .scroll-bar .thumb {
-  -fx-background-color: #a7acb1;
-  -fx-background-radius: 5px;
+  -fx-background-color: -fx-color-grey;
+  -fx-background-radius: 5deg;
 }
 
 /* The increment and decrement buttons */
 .text-area .scroll-bar .increment-button,
 .text-area .scroll-bar .decrement-button {
-    -fx-background-color: #2e3136;
-    -fx-padding: 2px;
+  -fx-background-color: -fx-color-element-bg;
+  -fx-padding: 2px;
 }
 
 /* The increment and decrement arrows */
 .text-area .scroll-bar .increment-arrow,
 .text-area .scroll-bar .decrement-arrow {
-    -fx-background-color: #a7acb1;
+  -fx-background-color: -fx-color-grey;
 }
 
 /* The track of the scroll bar */
 .text-area .scroll-bar .track {
-    -fx-background-color: #2e3136;
+  -fx-background-color: -fx-color-element-bg;
 }
 
 .check-box>.box {
   /* background color of unselected checkbox */
-  -fx-background-color: #2e3136;
-  -fx-border-color: #a7acb1;
+  -fx-background-color: -fx-color-element-bg;
+  -fx-border-color: -fx-color-grey;
   -fx-border-radius: 4deg;
 }
 .check-box:selected>.box>.mark {
   /* modify mark color */
-  -fx-background-color: #a7acb1;
+  -fx-background-color: -fx-color-grey;
 }
 
 .combo-box {
-  -fx-background-color: #2e3136;
-  -fx-border-color: #a7acb1;
+  -fx-background-color: -fx-color-element-bg;
+  -fx-border-color: -fx-color-grey;
   -fx-border-radius: 3deg;
 }
 .combo-box>.list-cell {
-  -fx-text-fill: white;
+  -fx-text-fill: -fx-color-text;
 }
 .combo-box-popup>.list-view {
-  -fx-background-color: #2e3136;
-  -fx-border-color: #a7acb1;
+  -fx-background-color: -fx-color-element-bg;
+  -fx-border-color: -fx-color-grey;
   -fx-border-radius: 4deg;
 }
 .combo-box-popup>.list-view>.virtual-flow>.clipped-container>.sheet>.list-cell {
-  -fx-background-color: #2e3136;
-  -fx-text-fill: white;
+  -fx-background-color: -fx-color-element-bg;
+  -fx-text-fill: -fx-color-text;
   -fx-border-radius: 4deg;
 }
 .combo-box-popup>.list-view>.virtual-flow>.clipped-container>.sheet>.list-cell:filled:hover,
 .combo-box-popup>.list-view>.virtual-flow>.clipped-container>.sheet>.list-cell:filled:selected {
-  -fx-background-color: #202428;
+  -fx-background-color: -fx-color-background;
   -fx-border-radius: 4deg;
 }
 
 .progress-bar>.bar {
-  -fx-background-color: linear-gradient(to right, #f00, #ff0, #0f0);
+  -fx-background-color: transparent;
 }
 .progress-bar>.track {
   -fx-background-color: transparent;
@@ -149,31 +167,52 @@
 
 /*  CUSTOM */
 
-.sidebar-button {
-  -fx-background-color: #202428;
-  -fx-background-radius: 8deg;
+.titlebar {
+  -fx-background-color: -fx-color-green;
 }
 
-.decrypt-button {
-  -fx-background-color: #a7acb1;
-  -fx-background-radius: 8deg;
+.sidebar {
+  -fx-border-color: -fx-color-element-bg;
+  -fx-border-width: 0 2px 0 0;
 }
 
-.readable-password-field > * {
-  -fx-background-color: #2e3136;
-  -fx-border-color: #a7acb1;
-  -fx-border-radius: 3deg;
-  -fx-text-inner-color: white;
-  -fx-font-size: 10px;
+.titlebar > Button,
+.sidebar > Button {
+  -fx-background-color: -fx-color-background;
+  -fx-background-radius: 8deg;
+  transition: -fx-background-color 0.5s ease;  
+}
 
+.sidebar > Button.navBtn:hover,
+.sidebar > Button.navBtn:focused,
+.sidebar > Button.navBtn:notch {
+  -fx-background-color: linear-gradient(to right, -fx-color-green 0%, -fx-color-green 4%, -fx-color-background 5%, -fx-color-background 100%);
 }
 
 .green-button {
-  -fx-text-inner-color: white;
+  -fx-text-inner-color: -fx-color-text;
   -fx-background-color: none;
-  -fx-border-color: #0aba4d;
+  -fx-border-color: -fx-color-green;
   -fx-border-width: 3px;
   -fx-border-radius: 8deg;
+}
+
+.decrypt-button {
+  -fx-background-color: -fx-color-grey;
+  -fx-background-radius: 8deg;
+}
+
+ReadablePasswordField > * {
+  -fx-background-color: -fx-color-element-bg;
+  -fx-border-color: -fx-color-grey;
+  -fx-border-radius: 3deg;
+  -fx-text-inner-color: -fx-color-text;
+  -fx-font-size: 14px;
+}
+
+.eula-button {
+  -fx-background-color: transparent;
+  -fx-background-radius: 50%;
 }
 
 .eula-text:hover {

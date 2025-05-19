@@ -18,6 +18,7 @@
 
 package password.manager.app.utils;
 
+import java.awt.Desktop;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -31,9 +32,11 @@ import java.util.Locale;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
@@ -125,6 +128,26 @@ public final class Utils {
             return new FileWriter(file, append);
         } catch (IOException e) {
             return null;
+        }
+    }
+
+    public static void triggerUiErrorIfNull(Object pane, @NotNull IOManager ioManager, @NotNull ObservableResourceFactory langResources) {
+        if(pane == null) {
+            // Since it's a one-time error, just create it during the error process
+            Alert alert = new Alert(AlertType.ERROR, langResources.getValue("ui_error"), ButtonType.YES, ButtonType.NO);
+            setDefaultButton(alert, ButtonType.NO);
+
+            alert.showAndWait();
+            if (alert.getResult() == ButtonType.YES) {
+                Thread.startVirtualThread(() -> {
+                    try {
+                        Desktop.getDesktop().open(Logger.getInstance().getLoggingPath().toFile());
+                    } catch (IOException e) {
+                        Logger.getInstance().addError(e);
+                    }
+                });
+            }
+            Platform.exit();
         }
     }
 }

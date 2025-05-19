@@ -69,12 +69,9 @@
    <AnchorPane prefHeight="0.0" prefWidth="730.0" GridPane.rowIndex="2">
       <Label fx:id="encryptPasswordLbl" layoutY="19.0" prefHeight="27.0" prefWidth="257.0" text="Password" />
       <ProgressBar fx:id="encryptPassStr" layoutX="1.0" layoutY="77.0" prefHeight="10.0" prefWidth="734.0" progress="0.0" />
-      <ReadablePasswordField fx:id="encryptPassword" layoutY="46.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="735.0" styleClass="readable-password-field" />
+      <ReadablePasswordField fx:id="encryptPassword" layoutY="46.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="735.0" />
    </AnchorPane>
    <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="3">
-      <GridPane.margin>
-         <Insets />
-      </GridPane.margin>
       <Button fx:id="encryptSubmitBtn" alignment="CENTER" contentDisplay="CENTER" layoutX="637.0" layoutY="24.0" mnemonicParsing="false" nodeOrientation="LEFT_TO_RIGHT" onAction="#encryptSave" styleClass="green-button, bold" text="Submit" textAlignment="CENTER" AnchorPane.rightAnchor="0.0" />
    </AnchorPane>
 </GridPane>

@@ -18,6 +18,8 @@
 
 package password.manager.app;
 
+import static password.manager.app.utils.Utils.*;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
@@ -28,7 +30,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javafx.application.Application.Parameters;
 import javafx.application.HostServices;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -36,9 +37,6 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import lombok.Getter;
@@ -46,6 +44,7 @@ import password.manager.app.controllers.FirstRunController;
 import password.manager.app.controllers.LoginController;
 import password.manager.app.controllers.MainController;
 import password.manager.app.utils.IOManager;
+import password.manager.app.utils.Logger;
 import password.manager.app.utils.ObservableResourceFactory;
 
 public class AppManager {
@@ -79,72 +78,65 @@ public class AppManager {
                 },
                 locale));
 
-        Alert alert = new Alert(AlertType.ERROR, langResources.getValue("ui_error"), ButtonType.OK);
-
-        ioManager.getLogger().addInfo("Loading main pane...");
-        final MainController mainController = new MainController(ioManager, langResources, hostServices);
-        final BorderPane mainPane = (BorderPane) loadFxml("/fxml/main.fxml", mainController);
-        if (mainPane == null) {
-            alert.showAndWait();
-            Platform.exit();
-            return;
-        }
-        ioManager.getLogger().addInfo("Success");
-
         final BooleanProperty switchToMain = new SimpleBooleanProperty(false);
-        switchToMain.addListener((observable, oldValue, newValue) -> {
+        switchToMain.addListener((_, _, newValue) -> {
             if (newValue) {
-                scenePane.getChildren().clear();
-                scenePane.getChildren().add(mainPane);
-                mainController.mainTitleAnimation();
+                loadMainPane();
             }
         });
 
         List<String> list = this.parameters.getRaw();
-        ioManager.getLogger().addInfo("Found " + list.size() + " parameters");
-        if (list.size() > 1 && !ioManager.isFirstRun()
-                && ("-p".equals(list.get(0)) || "--password".equals(list.get(0)))) {
-            ioManager.getLogger().addInfo("Trying to authenticate via arguments");
+        Logger.getInstance().addInfo("Found " + list.size() + " parameters");
+        if (!ioManager.isFirstRun() && list.size() > 1 && ("-p".equals(list.get(0)) || "--password".equals(list.get(0)))) {
+            Logger.getInstance().addInfo("Trying to authenticate via arguments");
             if (ioManager.authenticate(list.get(1))) {
-                ioManager.getLogger().addInfo("Success, skipping login");
+                Logger.getInstance().addInfo("Correct password, skipping login");
                 switchToMain.set(true);
             } else {
-                ioManager.getLogger().addInfo("Incorrect password, redirecting to login");
+                Logger.getInstance().addInfo("Incorrect password, redirecting to login");
             }
         }
 
         if (!switchToMain.get()) {
             AnchorPane pane;
+            String paneName;
             if (ioManager.isFirstRun()) {
-                ioManager.getLogger().addInfo("Loading first run pane...");
-                pane = (AnchorPane) loadFxml("/fxml/first_run.fxml",
-                        new FirstRunController(ioManager, langResources, hostServices, switchToMain));
+                Logger.getInstance().addInfo("Loading first run pane...");
+                pane = (AnchorPane) loadFxml("/fxml/first_run.fxml", new FirstRunController(ioManager, langResources, hostServices, switchToMain));
+                paneName = "first_run";
             } else {
-                ioManager.getLogger().addInfo("Loading login pane...");
-                pane = (AnchorPane) loadFxml("/fxml/login.fxml",
-                        new LoginController(ioManager, langResources, hostServices, switchToMain));
+                Logger.getInstance().addInfo("Loading login pane...");
+                pane = (AnchorPane) loadFxml("/fxml/login.fxml", new LoginController(ioManager, langResources, hostServices, switchToMain));
+                paneName = "login";
             }
 
-            if (pane == null) {
-                alert.showAndWait();
-                Platform.exit();
-                return;
-            } else {
-                ioManager.getLogger().addInfo("Success");
-            }
+            triggerUiErrorIfNull(pane, ioManager, langResources);
+            Logger.getInstance().addInfo("Success [" + paneName + "]");
 
             scenePane.getChildren().clear();
             scenePane.getChildren().add(pane);
         }
     }
 
-    private <S extends Initializable> @Nullable Parent loadFxml(String path, S controller) {
+    private void loadMainPane() {
+        Logger.getInstance().addInfo("Loading main pane...");
+        final MainController mainController = new MainController(ioManager, langResources, hostServices);
+        final BorderPane mainPane = (BorderPane) loadFxml("/fxml/main.fxml", mainController);
+        triggerUiErrorIfNull(mainPane, ioManager, langResources);
+        Logger.getInstance().addInfo("Success [main]");
+        
+        scenePane.getChildren().clear();
+        scenePane.getChildren().add(mainPane);
+        mainController.mainTitleAnimation();
+    }
+
+    private @Nullable Parent loadFxml(String path, Initializable controller) {
         try {
             FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource(path)));
             loader.setController(controller);
             return loader.load();
         } catch (IOException e) {
-            ioManager.getLogger().addError(e);
+            Logger.getInstance().addError(e);
             return null;
         }
     }

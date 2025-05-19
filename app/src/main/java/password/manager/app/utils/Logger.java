@@ -34,6 +34,8 @@ import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
 
+import lombok.Getter;
+
 public final class Logger {
     private static final String FOLDER_PREFIX, LOG_FILE_NAME, STACKTRACE_FILE_NAME;
     private static final int MAX_LOG_FILES;
@@ -54,6 +56,18 @@ public final class Logger {
     private final Path currPath;
     private final FileWriter logWriter, stacktraceWriter;
 
+    private static @Getter Logger instance = null;
+
+    /**
+     * Creates the singleton Logger.
+     */
+    public static synchronized void createInstance(Path baseLogPath) throws IllegalStateException {
+        if (instance != null) {
+            throw new IllegalStateException("Logger instance already created");
+        }
+        instance = new Logger(baseLogPath);
+    }
+
     public Logger(Path filePath) {
         rotateLogs(filePath);
 
@@ -67,6 +81,10 @@ public final class Logger {
         Objects.requireNonNull(stacktraceWriter, "stacktraceWriter must not be null");
     }
 
+    public Path getLoggingPath() {
+        return currPath;
+    }
+
     public @NotNull Boolean addInfo(String str) {
         StringBuilder logStrBuilder = new StringBuilder();
         logStrBuilder
@@ -78,7 +96,7 @@ public final class Logger {
         return write(logWriter, logStrBuilder);
     }
 
-    public @NotNull Boolean addError(@NotNull Exception e) {
+    public @NotNull Boolean addError(@NotNull Throwable e) {
         StringBuilder logStrBuilder = new StringBuilder();
         logStrBuilder
                 .append(DTF.format(LocalDateTime.now()))
@@ -116,7 +134,7 @@ public final class Logger {
 
     public void closeStreams() {
         try {
-            addInfo("Closing logger streams");
+            addInfo("Closing logger streams...");
             logWriter.close();
             stacktraceWriter.close();
         } catch (IOException e) {
@@ -139,7 +157,7 @@ public final class Logger {
         try {
             // Get the list of log directories
             File logDir = filePath.toFile();
-            File[] logDirs = logDir.listFiles((dir, name) -> name.startsWith(FOLDER_PREFIX));
+            File[] logDirs = logDir.listFiles((_, name) -> name.startsWith(FOLDER_PREFIX));
 
             if (logDirs != null && logDirs.length > MAX_LOG_FILES - 1) {
                 // Sort the directories by last modified date, oldest first
@@ -156,9 +174,10 @@ public final class Logger {
     }
 
     private void deleteDirectory(Path path) throws IOException {
-        Files.walk(path)
-                .sorted(Comparator.reverseOrder())
-                .map(Path::toFile)
-                .forEach(File::delete);
+        try (var paths = Files.walk(path)) {
+            paths.sorted(Comparator.reverseOrder())
+                 .map(Path::toFile)
+                 .forEach(File::delete);
+        }
     }
 }

@@ -33,7 +33,7 @@ public class HomeController extends AbstractViewController {
     }
 
     @FXML
-    public Label homeDescTop, homeDescBtm;
+    private Label homeDescTop, homeDescBtm;
 
     public void initialize(URL location, ResourceBundle resources) {
         langResources.bindTextProperty(homeDescTop, "home_desc.top");
@@ -41,5 +41,10 @@ public class HomeController extends AbstractViewController {
     }
 
     public void reset() {
+        homeDescTop.sceneProperty().addListener((_, _, newScene) -> {
+            if (newScene != null) {
+                homeDescTop.requestFocus();
+            }
+        });
     }
 }

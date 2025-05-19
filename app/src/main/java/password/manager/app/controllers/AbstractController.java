@@ -18,6 +18,8 @@
 
 package password.manager.app.controllers;
 
+import static password.manager.app.utils.Utils.*;
+
 import java.io.IOException;
 import java.util.Objects;
 
@@ -33,9 +35,11 @@ import javafx.scene.Scene;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import password.manager.app.controllers.extra.EulaController;
 import password.manager.app.utils.IOManager;
+import password.manager.app.utils.Logger;
 import password.manager.app.utils.ObservableResourceFactory;
 
 public abstract class AbstractController implements Initializable {
@@ -51,57 +55,42 @@ public abstract class AbstractController implements Initializable {
 
         eulaStage = null;
     }
-
-    @FXML
-    public void showPassword(@NotNull MouseEvent event) {
-        Object obj = event.getSource();
-
-        if (obj instanceof Node) {
-            ((Node) obj).getParent().toBack();
-        }
-    }
-
+    
     @FXML
     public void showEula(MouseEvent event) {
         if (eulaStage == null) {
-            ioManager.getLogger().addError(new UnsupportedOperationException("Eula stage not initialized."));
-        } else {
-            eulaStage.show();
-            eulaStage.toFront();
-        }
-    }
-
-    protected void loadEula() {
-        eulaStage = new Stage();
-        eulaStage.setTitle(langResources.getValue("terms_credits"));
-        eulaStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/locker.png"))));
-        eulaStage.setResizable(false);
-
-        Parent eulaParent = loadFxml("/fxml/extra/eula.fxml", new EulaController(ioManager, hostServices));
-        if (eulaParent == null) {
-            eulaStage = null;
-            ioManager.getLogger().addError(new IOException("Could not load 'eula.fxml'"));
-        } else {
+            eulaStage = new Stage();
+            eulaStage.setTitle(langResources.getValue("terms_credits"));
+            eulaStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/icon.png"))));
+            eulaStage.setResizable(false);
+            
+            Logger.getInstance().addInfo("Loading eula pane...");
+            AnchorPane eulaParent = (AnchorPane) loadFxml("/fxml/extra/eula.fxml", new EulaController(ioManager, hostServices));
+            triggerUiErrorIfNull(eulaParent, ioManager, langResources);
+            Logger.getInstance().addInfo("Success [eula]");
             eulaStage.setScene(new Scene(eulaParent, 900, 600));
         }
+
+        eulaStage.show();
+        eulaStage.toFront();
     }
 
-    protected <S extends Initializable> Parent loadFxml(String path, S controller) {
+    protected Parent loadFxml(String path, Initializable controller) {
         try {
             FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource(path)));
             loader.setController(controller);
             return loader.load();
         } catch (IOException e) {
-            ioManager.getLogger().addError(e);
+            Logger.getInstance().addError(e);
             return null;
         }
     }
 
     @SafeVarargs
-    protected static <T extends TextInputControl> boolean checkTextFields(T @NotNull... fields) {
+    protected static boolean checkTextFields(TextInputControl @NotNull... fields) {
         boolean nonEmpty = true;
 
-        for (@NotNull T field : fields) {
+        for (@NotNull TextInputControl field : fields) {
             if (field.getText().isBlank()) {
                 nonEmpty = false;
                 field.setStyle("-fx-border-color: #ff5f5f");
@@ -114,15 +103,15 @@ public abstract class AbstractController implements Initializable {
     }
 
     @SafeVarargs
-    protected static <T extends Node> void clearStyle(T @NotNull... nodes) {
-        for (@NotNull T node : nodes) {
+    protected static void clearStyle(Node @NotNull... nodes) {
+        for (@NotNull Node node : nodes) {
             node.setStyle("");
         }
     }
 
     @SafeVarargs
-    protected static <T extends TextInputControl> void clearTextFields(T @NotNull... fields) {
-        for (@NotNull T field : fields) {
+    protected static void clearTextFields(TextInputControl @NotNull... fields) {
+        for (@NotNull TextInputControl field : fields) {
             field.clear();
         }
     }

@@ -55,5 +55,5 @@
       </graphic>
    </Label>
    <ProgressBar fx:id="firstRunPassStr" layoutX="170.0" layoutY="365.0" prefHeight="10.0" prefWidth="560.0" progress="0.0" />
-   <ReadablePasswordField fx:id="firstRunPassword" layoutX="171.0" layoutY="340.0" prefWidth="560.0" styleClass="readable-password-field" />
+   <ReadablePasswordField fx:id="firstRunPassword" layoutX="171.0" layoutY="340.0" prefWidth="560.0" />
 </AnchorPane>

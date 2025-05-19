@@ -4,8 +4,10 @@ import static password.manager.lib.Utils.*;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Objects;
 import java.util.ResourceBundle;
 
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import javafx.animation.KeyFrame;
@@ -13,11 +15,13 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
@@ -29,19 +33,19 @@ import javafx.util.Duration;
 
 public class ReadablePasswordField extends AnchorPane implements Initializable {
 
-    private final Image showImage = new Image(getClass().getResourceAsStream("/readablePasswordField/open-eye.png"));
-    private final Image hideImage = new Image(getClass().getResourceAsStream("/readablePasswordField/closed-eye.png"));
+    private final Image showingImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/readablePasswordField/open-eye.png")));
+    private final Image hiddenImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/readablePasswordField/closed-eye.png")));
 
     private final BooleanProperty readable = new SimpleBooleanProperty(false);
 
     @FXML
-    public ImageView imageView;
+    private ImageView imageView;
 
     @FXML
-    public TextField textField;
+    private @Getter TextField textField;
 
     @FXML
-    public PasswordField passwordField;
+    private PasswordField passwordField;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -50,37 +54,39 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
         assert (passwordField != null) : "fx:id=\"passwordField\" was not injected.";
 
         textField.textProperty().bindBidirectional(passwordField.textProperty());
+        textField.styleProperty().bindBidirectional(passwordField.styleProperty());
 
-        this.prefWidthProperty().addListener((observable, oldValue, newValue) -> {
+        this.prefWidthProperty().addListener((_, _, newValue) -> {
             double width = newValue.doubleValue(), height = this.getPrefHeight();
             setPrefSize(width, height);
             setMinSize(width, height);
             setMaxSize(width, height);
         });
 
-        this.prefHeightProperty().addListener((observable, oldValue, newValue) -> {
+        this.prefHeightProperty().addListener((_, _, newValue) -> {
             double width = this.getPrefWidth(), height = newValue.doubleValue();
             setPrefSize(width, height);
             setMinSize(width, height);
             setMaxSize(width, height);
         });
 
-        readable.addListener((observable, oldValue, newValue) -> {
+        readable.addListener((_, _, newValue) -> {
             if (newValue) {
-                imageView.setImage(hideImage);
+                imageView.setImage(showingImage);
                 textField.setVisible(true);
                 passwordField.setVisible(false);
             } else {
-                imageView.setImage(showImage);
+                imageView.setImage(hiddenImage);
                 textField.setVisible(false);
                 passwordField.setVisible(true);
             }
         });
 
-        imageView.addEventFilter(MouseEvent.MOUSE_PRESSED, _ -> setReadable(true));
-        imageView.addEventFilter(MouseEvent.MOUSE_RELEASED, _ -> setReadable(false));
+        imageView.addEventFilter(MouseEvent.MOUSE_PRESSED, _ -> toggleReadable());
+        // imageView.addEventFilter(MouseEvent.MOUSE_PRESSED, _ -> setReadable(true));
+        // imageView.addEventFilter(MouseEvent.MOUSE_RELEASED, _ -> setReadable(false));
 
-        imageView.setImage(showImage);
+        imageView.setImage(hiddenImage);
     }
 
     public ReadablePasswordField() {
@@ -123,14 +129,14 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
         passwordField.setPrefSize(width, height);
         textField.setPrefSize(width, height);
 
-        imageView.setFitWidth(height * 1.2);
-        imageView.setFitHeight(height * 1.2);
+        imageView.setFitWidth(height);
+        imageView.setFitHeight(height);
 
-        imageView.setX(width - height * 1.3);
-        imageView.setY(height * 0.066);
+        imageView.setX(width - height * 1.1);
+        imageView.setY(0);
 
-        AnchorPane.setLeftAnchor(imageView, width - height * 1.3);
-        AnchorPane.setTopAnchor(imageView, height * 0.066);
+        AnchorPane.setLeftAnchor(imageView, width - height * 1.1);
+        AnchorPane.setTopAnchor(imageView, 0.0);
     }
 
     @Override
@@ -162,20 +168,52 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
     }
 
     public void bindPasswordStrength(@NotNull ProgressBar progressBar) {
-        textField.textProperty().addListener((observable, oldValue, newValue) -> {
+        Timeline[] timeline = new Timeline[1];
+        timeline[0] = null;
+
+        ChangeListener<String> listener = (_, _, newValue) -> {
             double passwordStrength = passwordStrength(newValue);
             passwordStrength = Math.max(20d, passwordStrength);
             passwordStrength = Math.min(50d, passwordStrength);
 
+            double initialProgress = progressBar.getProgress();
             double progress = (passwordStrength - 20) / 30;
-            // TODO PROGRESSIVE BAR
-            progressBar.setStyle("* > bar { -fx-background-color:" + passwordStrengthGradient(progress) + "; }");
 
-            Timeline timeline = new Timeline(
-                    new KeyFrame(Duration.ZERO, new KeyValue(progressBar.progressProperty(), progressBar.getProgress())),
-                    new KeyFrame(Duration.millis(200), new KeyValue(progressBar.progressProperty(), progress)));
+            if(progress == initialProgress) {
+                return;
+            }
 
-            timeline.play();
+            Node bar = progressBar.lookup(".bar");
+            if(bar == null) {
+                return;
+            }
+
+            KeyFrame[] keyFrames = new KeyFrame[200];
+            for (int i = 0; i < 200; i++) {
+                double curProg = initialProgress + (progress - initialProgress) * i / 200;
+                keyFrames[i] = new KeyFrame(Duration.millis(i),
+                        new KeyValue(progressBar.progressProperty(), curProg),
+                        new KeyValue(bar.styleProperty(), "-fx-background-color:" + passwordStrengthGradient(curProg) + ";")
+                );
+            }
+
+            if (timeline[0] != null) {
+                timeline[0].stop();
+            }
+            
+            timeline[0] = new Timeline(keyFrames);
+            timeline[0].play();
+        };
+
+        // Listen for text changes
+        textField.textProperty().addListener(listener);
+
+        // Trigger initial update once the ProgressBar skin is ready
+        // This is a workaround for the fact that the skin may not be ready immediately
+        progressBar.skinProperty().addListener((_, _, newSkin) -> {
+            if (newSkin != null) {
+                listener.changed(textField.textProperty(), "", textField.getText());
+            }
         });
     }
 }

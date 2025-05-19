@@ -141,7 +141,7 @@ public final class UserPreferences {
     }
 
     @Contract("_ -> new")
-    public static @NotNull UserPreferences of(String password) throws InvalidKeySpecException {
+    public static @NotNull UserPreferences of(String password) {
         return password != null ? new UserPreferences(password) : new UserPreferences();
     }
 
