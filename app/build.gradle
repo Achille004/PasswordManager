@@ -1,6 +1,3 @@
-import org.panteleyev.jpackage.ImageType
-import org.panteleyev.jpackage.JPackageTask
-
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     id 'java'
@@ -11,13 +8,11 @@ plugins {
     id 'io.franzbecker.gradle-lombok' version '5.0.0'
     id 'org.javamodularity.moduleplugin' version '1.8.13'
 
-    id 'org.panteleyev.jpackageplugin' version '1.6.1'
-
     // https://github.com/gradlex-org/java-module-dependencies
     id 'org.gradlex.java-module-dependencies' version '1.6.4'
 }
 
-project.version = '3.0.3'
+project.version = '3.0.4'
 
 repositories {
     // Use Maven Central for resolving dependencies.
@@ -64,10 +59,16 @@ jar {
     }
 }
 
+def gpgSignable = project.hasProperty('signing.keyId') && project.hasProperty('signing.password') && project.hasProperty('signing.secretKeyRingFile')
+
 signing {
-    sign jar
-    sign distZip
-    sign distTar
+    if(gpgSignable) {
+        println "Gpg signing enabled"
+        useGpgCmd()
+        sign jar
+        sign distZip
+        sign distTar
+    }
 }
 
 def resourceDir = layout.projectDirectory.dir('src/main/resources')
@@ -77,58 +78,43 @@ def installerDir = compileDir.dir('installers')
 
 tasks.register('assemblePortables', Delete) {
     delete distDir
-    dependsOn tasks.distTar, tasks.signDistTar, tasks.distZip, tasks.signDistZip
+    
+    dependsOn tasks.distTar, tasks.distZip
+    if(gpgSignable) {
+        dependsOn tasks.signDistTar, tasks.signDistZip
+    }
+
     doLast {
         mkdir distDir
         copy {
-            from tasks.distTar, tasks.signDistTar
+            from tasks.distTar
+            if(gpgSignable) {
+                from tasks.signDistTar
+            } 
             into distDir.dir('tar')
         }
         copy {
-            from tasks.distZip, tasks.signDistZip
+            from tasks.distZip
+            if(gpgSignable) {
+                from tasks.signDistZip
+            }
             into distDir.dir('zip')
         }
     }
 }
 
-class FullJPackageTask extends JPackageTask {
-    @Internal
-    def osName = System.getProperty('os.name').toLowerCase()
-    @Internal
-    def isWindows = osName.contains('windows')
-    @Internal
-    def isMac = osName.contains('mac')
-    @Internal
-    def isLinux = osName.contains('nix') || osName.contains('nux') || osName.contains('aix')
-
-    @TaskAction
-    @Override
-    void action() {
-        List<ImageType> types
-        if (isWindows) {
-            types = [ImageType.EXE, ImageType.MSI]
-        } else if (isMac) {
-            types = [ImageType.DMG, ImageType.PKG]
-        } else if (isLinux) {
-            types = [ImageType.DEB, ImageType.RPM]
-        } else {
-            types = []
-        }
-        types.each { type ->
-            setType(type)
-            super.action()
-        }
-    }
-}
-
 tasks.register('readyAllJars', Copy) {
-    dependsOn tasks.jar, tasks.signJar
-    from configurations.runtimeClasspath, tasks.jar, tasks.signJar
-    into layout.buildDirectory.dir('/jars')
+    dependsOn tasks.jar
+    if(gpgSignable) {
+        dependsOn tasks.signJar
+    }
+    from configurations.runtimeClasspath, tasks.jar
+    if(gpgSignable) {
+        from tasks.signJar
+    }
+    into layout.buildDirectory.dir('jars')
 }
 
-tasks.jpackage { enabled = false }
-// jpackage {
 tasks.register('assembleInstallers', FullJPackageTask) {
     dependsOn tasks.readyAllJars
 
@@ -137,17 +123,17 @@ tasks.register('assembleInstallers', FullJPackageTask) {
     appName = 'Password Manager'
     appVersion = project.version
     copyright = '© Francesco Marras'
-    icon =  resourceDir.file('/icon.ico')
     javaOptions = ['-Dfile.encoding=UTF-8']
-    licenseFile	= resourceDir.file('/license.txt')
+    licenseFile	= resourceDir.file('license.txt')
     module = 'password.manager.app/password.manager.app.App'
-    modulePaths = ['/build/jars']
+    modulePaths = ['build/jars']
     resourceDir = resourceDir
     runtimeImage = System.getProperty('java.home')
     vendor = 'Francesco Marras'
     
     windows {
-        destination = installerDir.dir('/windows')
+        icon =  resourceDir.file('icon.ico')
+        destination = installerDir.dir('windows')
         winConsole = false
         winDirChooser = true
         winHelpUrl = 'https://github.com/Achille004/PasswordManager'
@@ -158,16 +144,18 @@ tasks.register('assembleInstallers', FullJPackageTask) {
     }
 
     mac {
-        destination = installerDir.dir('/mac')
+        icon =  resourceDir.file('icon.icns')
+        destination = installerDir.dir('mac')
         macAppCategory  = 'security'
         macAppStore = false
-        macPackageIdentifier = 'PasswordManager-3.0.3'
+        macPackageIdentifier = 'PasswordManager-3.0.4'
         macPackageName = 'PasswordManager'
         macSigningKeyUserName = 'Francesco Marras'
     }
 
     linux {
-        destination = installerDir.dir('/linux')
+        icon =  resourceDir.file('icon.ico')
+        destination = installerDir.dir('linux')
         linuxAppCategory = 'security'
         linuxDebMaintainer = '2004marras@gmail.com'
         linuxMenuGroup = 'Francesco Marras'
@@ -179,4 +167,16 @@ tasks.register('assembleInstallers', FullJPackageTask) {
 tasks.register('dryAssembleInstallers') {
     System.setProperty("jpackage.dryRun", "true")
     finalizedBy tasks.assembleInstallers
+}
+
+tasks.register('generateChecksums') {
+    def out = compileDir.file("checksums.txt").asFile
+    def digest = java.security.MessageDigest.getInstance('SHA-256')
+    out.withWriter { w -> fileTree(compileDir).each { f ->
+        if(!f.name.endsWith('.asc') && !f.name.endsWith('.txt')) {
+            println "Generating checksum for ${f.name}"
+            def sha = digest.digest(f.bytes).collect{String.format("%02x", it)}.join()
+            w << "${sha}  ${f.name}\n"
+        }
+    }}
 }

@@ -1,0 +1,8 @@
+repositories {
+    mavenCentral()
+    gradlePluginPortal()
+}
+
+dependencies {
+    implementation 'org.panteleyev:jpackage-gradle-plugin:1.6.1'
+}

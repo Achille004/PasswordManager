@@ -44,6 +44,7 @@ import password.manager.app.controllers.FirstRunController;
 import password.manager.app.controllers.LoginController;
 import password.manager.app.controllers.MainController;
 import password.manager.app.utils.IOManager;
+import password.manager.app.utils.Logger;
 import password.manager.app.utils.ObservableResourceFactory;
 
 public class AppManager {
@@ -85,14 +86,14 @@ public class AppManager {
         });
 
         List<String> list = this.parameters.getRaw();
-        ioManager.getLogger().addInfo("Found " + list.size() + " parameters");
+        Logger.getInstance().addInfo("Found " + list.size() + " parameters");
         if (!ioManager.isFirstRun() && list.size() > 1 && ("-p".equals(list.get(0)) || "--password".equals(list.get(0)))) {
-            ioManager.getLogger().addInfo("Trying to authenticate via arguments");
+            Logger.getInstance().addInfo("Trying to authenticate via arguments");
             if (ioManager.authenticate(list.get(1))) {
-                ioManager.getLogger().addInfo("Correct password, skipping login");
+                Logger.getInstance().addInfo("Correct password, skipping login");
                 switchToMain.set(true);
             } else {
-                ioManager.getLogger().addInfo("Incorrect password, redirecting to login");
+                Logger.getInstance().addInfo("Incorrect password, redirecting to login");
             }
         }
 
@@ -100,17 +101,17 @@ public class AppManager {
             AnchorPane pane;
             String paneName;
             if (ioManager.isFirstRun()) {
-                ioManager.getLogger().addInfo("Loading first run pane...");
+                Logger.getInstance().addInfo("Loading first run pane...");
                 pane = (AnchorPane) loadFxml("/fxml/first_run.fxml", new FirstRunController(ioManager, langResources, hostServices, switchToMain));
                 paneName = "first_run";
             } else {
-                ioManager.getLogger().addInfo("Loading login pane...");
+                Logger.getInstance().addInfo("Loading login pane...");
                 pane = (AnchorPane) loadFxml("/fxml/login.fxml", new LoginController(ioManager, langResources, hostServices, switchToMain));
                 paneName = "login";
             }
 
             triggerUiErrorIfNull(pane, ioManager, langResources);
-            ioManager.getLogger().addInfo("Success [" + paneName + "]");
+            Logger.getInstance().addInfo("Success [" + paneName + "]");
 
             scenePane.getChildren().clear();
             scenePane.getChildren().add(pane);
@@ -118,11 +119,11 @@ public class AppManager {
     }
 
     private void loadMainPane() {
-        ioManager.getLogger().addInfo("Loading main pane...");
+        Logger.getInstance().addInfo("Loading main pane...");
         final MainController mainController = new MainController(ioManager, langResources, hostServices);
         final BorderPane mainPane = (BorderPane) loadFxml("/fxml/main.fxml", mainController);
         triggerUiErrorIfNull(mainPane, ioManager, langResources);
-        ioManager.getLogger().addInfo("Success [main]");
+        Logger.getInstance().addInfo("Success [main]");
         
         scenePane.getChildren().clear();
         scenePane.getChildren().add(mainPane);
@@ -135,7 +136,7 @@ public class AppManager {
             loader.setController(controller);
             return loader.load();
         } catch (IOException e) {
-            ioManager.getLogger().addError(e);
+            Logger.getInstance().addError(e);
             return null;
         }
     }

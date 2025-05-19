@@ -7,6 +7,7 @@ import java.net.URL;
 import java.util.Objects;
 import java.util.ResourceBundle;
 
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import javafx.animation.KeyFrame;
@@ -41,7 +42,7 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
     private ImageView imageView;
 
     @FXML
-    private TextField textField;
+    private @Getter TextField textField;
 
     @FXML
     private PasswordField passwordField;
@@ -98,10 +99,6 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
         } catch (IOException exception) {
             throw new RuntimeException(exception);
         }
-    }
-
-    public TextField getTextField() {
-        return textField;
     }
 
     public void setReadable(boolean readable) {
@@ -171,7 +168,7 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
     }
 
     public void bindPasswordStrength(@NotNull ProgressBar progressBar) {
-        Timeline timeline[] = new Timeline[1];
+        Timeline[] timeline = new Timeline[1];
         timeline[0] = null;
 
         ChangeListener<String> listener = (_, _, newValue) -> {

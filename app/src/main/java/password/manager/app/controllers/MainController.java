@@ -50,6 +50,7 @@ import password.manager.app.controllers.views.EncrypterController;
 import password.manager.app.controllers.views.HomeController;
 import password.manager.app.controllers.views.SettingsController;
 import password.manager.app.utils.IOManager;
+import password.manager.app.utils.Logger;
 import password.manager.app.utils.ObservableResourceFactory;
 
 public class MainController extends AbstractController {
@@ -117,7 +118,7 @@ public class MainController extends AbstractController {
         }
 
         if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
-            ioManager.getLogger().addInfo("Unsupported action: Desktop.Action.OPEN");
+            Logger.getInstance().addInfo("Unsupported action: Desktop.Action.OPEN");
             folderButton.setVisible(false);
         }
         homeButton(null);
@@ -131,11 +132,11 @@ public class MainController extends AbstractController {
     @FXML
     public void homeButton(ActionEvent event) {
         if(homePane == null || homeController == null) {
-            ioManager.getLogger().addInfo("Loading home pane...");
+            Logger.getInstance().addInfo("Loading home pane...");
             homeController = new HomeController(ioManager, langResources, hostServices);
             homePane = (AnchorPane) loadFxml("/fxml/views/home.fxml", homeController);
             triggerUiErrorIfNull(homePane, ioManager, langResources);
-            ioManager.getLogger().addInfo("Success [home]");
+            Logger.getInstance().addInfo("Success [home]");
         }
         sidebarButtonAction(null, homeController, homePane, "");
     }
@@ -143,11 +144,11 @@ public class MainController extends AbstractController {
     @FXML
     public void encryptSidebarButton(ActionEvent event) {
         if(encrypterPane == null || encrypterController == null) {
-            ioManager.getLogger().addInfo("Loading encrypter pane...");
+            Logger.getInstance().addInfo("Loading encrypter pane...");
             encrypterController = new EncrypterController(ioManager, langResources, hostServices);
             encrypterPane = (GridPane) loadFxml("/fxml/views/encrypter.fxml", encrypterController);
             triggerUiErrorIfNull(encrypterPane, ioManager, langResources);
-            ioManager.getLogger().addInfo("Success [encrypter]");
+            Logger.getInstance().addInfo("Success [encrypter]");
         }
         sidebarButtonAction(event, encrypterController, encrypterPane, "encryption");
     }
@@ -155,11 +156,11 @@ public class MainController extends AbstractController {
     @FXML
     public void decryptSidebarButton(ActionEvent event) {
         if(decrypterPane == null || decrypterController == null) {
-            ioManager.getLogger().addInfo("Loading decrypter pane...");
+            Logger.getInstance().addInfo("Loading decrypter pane...");
             decrypterController = new DecrypterController(ioManager, langResources, hostServices);
             decrypterPane = (GridPane) loadFxml("/fxml/views/decrypter.fxml", decrypterController);
             triggerUiErrorIfNull(decrypterPane, ioManager, langResources);
-            ioManager.getLogger().addInfo("Success [decrypter]");
+            Logger.getInstance().addInfo("Success [decrypter]");
         }
         sidebarButtonAction(event, decrypterController, decrypterPane, "decryption");
     }
@@ -167,11 +168,11 @@ public class MainController extends AbstractController {
     @FXML
     public void settingsSidebarButton(ActionEvent event) {
         if(settingsPane == null || settingsController == null) {
-            ioManager.getLogger().addInfo("Loading settings pane...");
+            Logger.getInstance().addInfo("Loading settings pane...");
             settingsController = new SettingsController(ioManager, langResources, hostServices);
             settingsPane = (GridPane) loadFxml("/fxml/views/settings.fxml", settingsController);
             triggerUiErrorIfNull(settingsPane, ioManager, langResources);
-            ioManager.getLogger().addInfo("Success [settings]");
+            Logger.getInstance().addInfo("Success [settings]");
         }
         sidebarButtonAction(event, settingsController, settingsPane, "settings");
     }
@@ -182,7 +183,7 @@ public class MainController extends AbstractController {
             try {
                 Desktop.getDesktop().open(IOManager.FILE_PATH.toFile());
             } catch (IOException e) {
-                ioManager.getLogger().addError(e);
+                Logger.getInstance().addError(e);
             }
         });
     }

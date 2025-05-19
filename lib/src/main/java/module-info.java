@@ -30,7 +30,8 @@ module password.manager.lib {
     requires me.gosimple.nbvcxz;
 
     requires org.jetbrains.annotations;
-    
+    requires static lombok;
+
     exports password.manager.lib;
     
     opens password.manager.lib to javafx.fxml;

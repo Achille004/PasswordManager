@@ -39,6 +39,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import password.manager.app.controllers.extra.EulaController;
 import password.manager.app.utils.IOManager;
+import password.manager.app.utils.Logger;
 import password.manager.app.utils.ObservableResourceFactory;
 
 public abstract class AbstractController implements Initializable {
@@ -63,10 +64,10 @@ public abstract class AbstractController implements Initializable {
             eulaStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/icon.png"))));
             eulaStage.setResizable(false);
             
-            ioManager.getLogger().addInfo("Loading eula pane...");
+            Logger.getInstance().addInfo("Loading eula pane...");
             AnchorPane eulaParent = (AnchorPane) loadFxml("/fxml/extra/eula.fxml", new EulaController(ioManager, hostServices));
             triggerUiErrorIfNull(eulaParent, ioManager, langResources);
-            ioManager.getLogger().addInfo("Success [eula]");
+            Logger.getInstance().addInfo("Success [eula]");
             eulaStage.setScene(new Scene(eulaParent, 900, 600));
         }
 
@@ -80,7 +81,7 @@ public abstract class AbstractController implements Initializable {
             loader.setController(controller);
             return loader.load();
         } catch (IOException e) {
-            ioManager.getLogger().addError(e);
+            Logger.getInstance().addError(e);
             return null;
         }
     }

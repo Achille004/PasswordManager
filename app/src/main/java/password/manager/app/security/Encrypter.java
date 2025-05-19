@@ -36,6 +36,8 @@ import org.bouncycastle.crypto.params.Argon2Parameters;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jetbrains.annotations.NotNull;
 
+import password.manager.app.utils.Logger;
+
 public final class Encrypter {
     private static SecretKeyFactory keyFactory;
 
@@ -58,7 +60,7 @@ public final class Encrypter {
         try {
             keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            Logger.getInstance().addError(e);
         }
     }
 

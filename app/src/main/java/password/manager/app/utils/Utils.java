@@ -41,6 +41,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DialogPane;
+
 public final class Utils {
     public static final Locale[] SUPPORTED_LOCALE;
     public static final Locale DEFAULT_LOCALE;
@@ -140,9 +141,9 @@ public final class Utils {
             if (alert.getResult() == ButtonType.YES) {
                 Thread.startVirtualThread(() -> {
                     try {
-                        Desktop.getDesktop().open(ioManager.getLogger().getLoggingPath().toFile());
+                        Desktop.getDesktop().open(Logger.getInstance().getLoggingPath().toFile());
                     } catch (IOException e) {
-                        ioManager.getLogger().addError(e);
+                        Logger.getInstance().addError(e);
                     }
                 });
             }

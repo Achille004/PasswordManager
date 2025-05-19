@@ -29,11 +29,9 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -76,32 +74,34 @@ public final class IOManager {
         String OS_FALLBACK_PATH = ".password-manager";
         FILE_PATH = Path.of(USER_HOME, OS.toLowerCase().contains("windows") ? WINDOWS_PATH : OS_FALLBACK_PATH);
         DESKTOP_PATH = Path.of(USER_HOME, "Desktop");
+
+        Logger.createInstance(FILE_PATH);
     }
 
-    private final @Getter Logger logger;
-    private final ObservableList<Account> accountList;
+    private final ObservableList<Account> ACCOUNT_LIST;
     private @Getter UserPreferences userPreferences;
 
     private String masterPassword;
     private @Getter boolean isFirstRun, isAuthenticated;
     
-    private File dataFile;
-    private AtomicBoolean hasChanged = new AtomicBoolean(false);
+    private final File DATA_FILE;
+    private final AtomicBoolean HAS_CHANGED;
     
     private final ScheduledExecutorService FLUSH_SCHEDULER;
     private final ObjectWriter OBJECT_WRITER;
     private final ExecutorService ACCOUNT_EXECUTOR;
 
     public IOManager() {
-        logger = new Logger(FILE_PATH);
-        accountList = FXCollections.observableList(Collections.synchronizedList(new ArrayList<>()));
+        ACCOUNT_LIST = FXCollections.observableList(Collections.synchronizedList(new ArrayList<>()));
         userPreferences = UserPreferences.empty();
         setupPreferencesListeners();
 
         masterPassword = null;
-        dataFile = FILE_PATH.resolve(DATA_FILE_NAME).toFile();
         isFirstRun = true;
         isAuthenticated = false;
+
+        DATA_FILE = FILE_PATH.resolve(DATA_FILE_NAME).toFile();
+        HAS_CHANGED = new AtomicBoolean(false);
 
         OBJECT_WRITER = new ObjectMapper().writer().withDefaultPrettyPrinter();
         ACCOUNT_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
@@ -114,7 +114,7 @@ public final class IOManager {
     private void setupPreferencesListeners() {
         ChangeListener<? super Object> listener = (_, oldValue, newValue) -> {
             if (oldValue != newValue) {
-                hasChanged.set(true);
+                HAS_CHANGED.set(true);
             }
         };
         
@@ -124,61 +124,61 @@ public final class IOManager {
 
     public void loadData(final ObservableResourceFactory langResources) {
         if (!userPreferences.isEmpty()) {
-            logger.addError(new UnsupportedOperationException("Cannot read data file: it would overwrite non-empty user preferences"));
+            Logger.getInstance().addError(new UnsupportedOperationException("Cannot read data file: it would overwrite non-empty user preferences"));
             return;
         }
 
-        logger.addInfo("os.name: '" + OS + "'");
-        logger.addInfo("user.home: '" + USER_HOME + "'");
+        Logger.getInstance().addInfo("os.name: '" + OS + "'");
+        Logger.getInstance().addInfo("user.home: '" + USER_HOME + "'");
 
         if (FILE_PATH.toFile().mkdirs()) {
-            logger.addInfo("Directory '" + FILE_PATH + "' did not exist and was therefore created, skipping data loading");
+            Logger.getInstance().addInfo("Directory '" + FILE_PATH + "' did not exist and was therefore created, skipping data loading");
             return;
         }
 
-        logger.addInfo("Loading data (" + dataFile + ")...");
+        Logger.getInstance().addInfo("Loading data (" + DATA_FILE + ")...");
 
         // if the data file exists, it will try to read its contents
-        if (!dataFile.exists()) {
-            logger.addInfo("File not found");
+        if (!DATA_FILE.exists()) {
+            Logger.getInstance().addInfo("File not found");
             return;
         }
 
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            AppData data = objectMapper.readValue(dataFile, AppData.class);
+            AppData data = objectMapper.readValue(DATA_FILE, AppData.class);
 
             this.userPreferences = data.userPreferences();
             setupPreferencesListeners();
 
-            accountList.addAll(Collections.nCopies(data.accountList().size(), null));
-            FXCollections.copy(this.accountList, data.accountList());
+            ACCOUNT_LIST.addAll(Collections.nCopies(data.accountList().size(), null));
+            FXCollections.copy(this.ACCOUNT_LIST, data.accountList());
 
-            logger.addInfo("Data OK");
+            Logger.getInstance().addInfo("Data OK");
             isFirstRun = false;
         } catch (IOException e) {
-            logger.addError(e);
-            logger.addInfo("Data not OK, overwrite?");
+            Logger.getInstance().addError(e);
+            Logger.getInstance().addInfo("Data not OK, overwrite?");
 
             Alert alert = new Alert(AlertType.ERROR, langResources.getValue("data_error"), ButtonType.YES, ButtonType.NO);
             setDefaultButton(alert, ButtonType.NO);
             alert.showAndWait();
 
             if (alert.getResult() == ButtonType.YES) {
-                logger.addInfo("Data overwriting accepted");
+                Logger.getInstance().addInfo("Data overwriting accepted");
             } else {
-                logger.addInfo("Data overwriting denied");
+                Logger.getInstance().addInfo("Data overwriting denied");
                 System.exit(0);
             }
         }
 
         // TODO Add logging
-        // userPreferences.getLocaleProperty().addListener((_, _, newValue) -> logger.addInfo("Changed locale to: " + newValue));
-        // userPreferences.getSortingOrderProperty().addListener((_, _, newValue) -> logger.addInfo("Changed sorting order to: " + newValue));
+        // userPreferences.getLocaleProperty().addListener((_, _, newValue) -> Logger.getInstance().addInfo("Changed locale to: " + newValue));
+        // userPreferences.getSortingOrderProperty().addListener((_, _, newValue) -> Logger.getInstance().addInfo("Changed sorting order to: " + newValue));
     }
 
     public SortedList<Account> getSortedAccountList() {
-        return this.accountList.sorted(null);
+        return this.ACCOUNT_LIST.sorted(null);
     }
 
     // #region Account methods
@@ -197,18 +197,18 @@ public final class IOManager {
                     try {
                         return Account.of(software, username, password, masterPassword);
                     } catch (GeneralSecurityException e) {
-                        logger.addError(e);
+                        Logger.getInstance().addError(e);
                         ok[0] = false;
                         return null;
                     }
                 }, ACCOUNT_EXECUTOR)
                 .thenAccept(account -> Platform.runLater(() -> {
-                    accountList.add(account);
-                    hasChanged.set(true);
-                    logger.addInfo("Account added");
+                    ACCOUNT_LIST.add(account);
+                    HAS_CHANGED.set(true);
+                    Logger.getInstance().addInfo("Account added");
                 }))
                 .exceptionally(t -> { 
-                    logger.addError(t); 
+                    Logger.getInstance().addError(t); 
                     ok[0] = false;
                     return null;
                 });
@@ -221,7 +221,7 @@ public final class IOManager {
             return false;
         }
 
-        int idx = accountList.indexOf(account);
+        int idx = ACCOUNT_LIST.indexOf(account);
         if (!isAuthenticated() || idx < 0) {
             return false;
         }
@@ -232,18 +232,18 @@ public final class IOManager {
                     try {
                         account.setData(software, username, password, masterPassword);
                     } catch (GeneralSecurityException e) {
-                        logger.addError(e);
+                        Logger.getInstance().addError(e);
                         ok[0] = false;
                     }
                 }, ACCOUNT_EXECUTOR)
                 .thenRun(() -> Platform.runLater(() -> {
                     // trigger SortedList refresh
-                    accountList.set(idx, account);   
-                    hasChanged.set(true);
-                    logger.addInfo("Account edited");
+                    ACCOUNT_LIST.set(idx, account);   
+                    HAS_CHANGED.set(true);
+                    Logger.getInstance().addInfo("Account edited");
                 }))
                 .exceptionally(t -> {
-                    logger.addError(t); 
+                    Logger.getInstance().addError(t); 
                     ok[0] = false;
                     return null;
                 });
@@ -260,13 +260,13 @@ public final class IOManager {
         CompletableFuture
                 .runAsync(() -> { /* nothing to do off-thread */ }, ACCOUNT_EXECUTOR)
                 .thenRun(() -> Platform.runLater(() -> {
-                    if (accountList.remove(account)) {
-                        hasChanged.set(true);
-                        logger.addInfo("Account deleted");
+                    if (ACCOUNT_LIST.remove(account)) {
+                        HAS_CHANGED.set(true);
+                        Logger.getInstance().addInfo("Account deleted");
                     }
                 }))
                 .exceptionally(t -> { 
-                    logger.addError(t); 
+                    Logger.getInstance().addError(t); 
                     ok[0] = false;
                     return null;
                 });
@@ -280,7 +280,7 @@ public final class IOManager {
                 return account.getPassword(masterPassword);
             }
         } catch (GeneralSecurityException e) {
-            logger.addError(e);
+            Logger.getInstance().addError(e);
         }
 
         return null;
@@ -297,25 +297,25 @@ public final class IOManager {
         try {
             userPreferences.setPasswordVerified(oldMasterPassword, newMasterPassword);
         } catch (InvalidKeySpecException e) {
-            logger.addError(e);
+            Logger.getInstance().addError(e);
             return false;
         }
 
         this.masterPassword = newMasterPassword;
         if (oldMasterPassword != null) {
-            logger.addInfo("Master password changed");
+            Logger.getInstance().addInfo("Master password changed");
 
             accountListTaskExec(account -> {
                 try {
                     account.changeMasterPassword(oldMasterPassword, newMasterPassword);
                 } catch (GeneralSecurityException e) {
-                    logger.addError(e);
+                    Logger.getInstance().addError(e);
                 }
             });
             
-            hasChanged.set(true);
+            HAS_CHANGED.set(true);
         } else {
-            logger.addInfo("Master password set");
+            Logger.getInstance().addInfo("Master password set");
             isAuthenticated = true;
         }
 
@@ -335,23 +335,23 @@ public final class IOManager {
         try {
             isAuthenticated = userPreferences.verifyPassword(masterPassword);
         } catch (InvalidKeySpecException e) {
-            logger.addError(e);
+            Logger.getInstance().addError(e);
         }
 
         if (isAuthenticated) {
             this.masterPassword = masterPassword;
-            logger.addInfo("User authenticated");
+            Logger.getInstance().addInfo("User authenticated");
 
             if(!isLatestSecurity) {
                 accountListTaskExec(account -> {
                     try {
                         account.updateToLatestVersion(masterPassword);
                     } catch (GeneralSecurityException e) {
-                        logger.addError(e);
+                        Logger.getInstance().addError(e);
                     }
                 });
-                hasChanged.set(true);
-                logger.addInfo("Updated to latest security version");
+                HAS_CHANGED.set(true);
+                Logger.getInstance().addInfo("Updated to latest security version");
             }
         }
 
@@ -360,24 +360,24 @@ public final class IOManager {
 
     private void accountListTaskExec(Consumer<? super Account> action) {
         // MUST wrap iteration in synchronized(...) when using Collections.synchronizedList
-        synchronized(accountList) {
-            accountList.forEach(account -> ACCOUNT_EXECUTOR.submit(() -> {
+        synchronized(ACCOUNT_LIST) {
+            ACCOUNT_LIST.forEach(account -> ACCOUNT_EXECUTOR.submit(() -> {
                 try {
                     action.accept(account);
                 } catch (Exception e) {
-                    logger.addError(e);
+                    Logger.getInstance().addError(e);
                 }
             }));
         }
-        hasChanged.set(true);
+        HAS_CHANGED.set(true);
     }
     // #endregion
 
     public void export(@NotNull Exporter exporter, ObservableResourceFactory langResources) {
         CompletableFuture
                 .supplyAsync(() -> {
-                    synchronized(accountList) {
-                        return new ArrayList<>(accountList);
+                    synchronized(ACCOUNT_LIST) {
+                        return new ArrayList<>(ACCOUNT_LIST);
                     }
                 }, ACCOUNT_EXECUTOR)
                 .thenAcceptAsync(snapshot -> {
@@ -385,52 +385,51 @@ public final class IOManager {
                     try (FileWriter file = new FileWriter(exportFile)) {
                         String out = exporter.getExporter().apply(snapshot, langResources, masterPassword);
                         file.write(out);
-                        logger.addInfo("Export succeeded: " + exportFile.getName());
+                        Logger.getInstance().addInfo("Export succeeded: " + exportFile.getName());
                     } catch (Exception e) {
-                        logger.addError(e);
+                        Logger.getInstance().addError(e);
                     }
                 }, ACCOUNT_EXECUTOR)
                 .exceptionally(t -> { 
-                    logger.addError(t); 
+                    Logger.getInstance().addError(t); 
                     return null;
                 });
     }
 
     private void saveDataFile(boolean shutdown) {
-        if (!isAuthenticated()) {
-            logger.addInfo("Not authenticated, skipping save");
-            return;
-        }
-
-        if (hasChanged.compareAndSet(true, false)) {
-            // Save asynchronously
-            ACCOUNT_EXECUTOR.submit(() -> {
-                List<Account> snapshot;
-                synchronized(accountList) {
-                    snapshot = new ArrayList<>(accountList);
-                }
-                
-                logger.addInfo("Saving data...");
-                try {
-                    AppData data = new AppData(this.userPreferences, this.accountList);
-                    OBJECT_WRITER.writeValue(dataFile, data);
-                    logger.addInfo("Save OK");
-                } catch (IOException e) {
-                    logger.addError(e);
-                }
-            });
+        if (isAuthenticated()) {
+            if (HAS_CHANGED.compareAndSet(true, false)) {
+                // Save asynchronously
+                ACCOUNT_EXECUTOR.submit(() -> {
+                    List<Account> snapshot;
+                    synchronized(ACCOUNT_LIST) {
+                        snapshot = new ArrayList<>(ACCOUNT_LIST);
+                    }
+                    
+                    Logger.getInstance().addInfo("Saving data...");
+                    try {
+                        AppData data = new AppData(this.userPreferences, snapshot);
+                        OBJECT_WRITER.writeValue(DATA_FILE, data);
+                        Logger.getInstance().addInfo("Save OK");
+                    } catch (IOException e) {
+                        Logger.getInstance().addError(e);
+                    }
+                });
+            } else {
+                Logger.getInstance().addInfo("Nothing to save");
+            }
         } else {
-            logger.addInfo("Nothing to save");
+            Logger.getInstance().addInfo("Not authenticated, skipping save");
         }
-        
+            
         if(shutdown) {
-            logger.addInfo("Shutting down executor services");
+            Logger.getInstance().addInfo("Shutting down executor services");
             FLUSH_SCHEDULER.shutdown();
             ACCOUNT_EXECUTOR.shutdown();
             try {
                 ACCOUNT_EXECUTOR.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
             } catch (InterruptedException e) {
-                logger.addError(e);
+                Logger.getInstance().addError(e);
                 ACCOUNT_EXECUTOR.shutdownNow();
                 Thread.currentThread().interrupt();
             }
@@ -442,8 +441,8 @@ public final class IOManager {
 
     public void saveAll() {
         // when the user shuts down the program on the first run, it won't save
-        logger.addInfo("Shutdown requested");
+        Logger.getInstance().addInfo("Shutdown requested");
         saveDataFile(true);
-        logger.closeStreams();
+        Logger.getInstance().closeStreams();
     }
 }
