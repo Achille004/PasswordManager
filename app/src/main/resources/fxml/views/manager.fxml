@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+
+<BorderPane prefHeight="565.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <left>
+      <AnchorPane prefHeight="565.0" prefWidth="300.0" styleClass="sidebar" BorderPane.alignment="CENTER">
+         <children>
+            <TextField layoutX="11.0" layoutY="12.0" prefHeight="27.0" prefWidth="278.0" />
+            <Separator layoutY="50.0" prefHeight="1.0" prefWidth="300.0" style="-fx-background-color: #2e3136;" />
+            <ListView layoutY="52.0" prefHeight="513.0" prefWidth="300.0" />
+         </children>
+      </AnchorPane>
+   </left>
+   <center>
+      <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+        <tabs>
+          <Tab styleClass="sz14" text="Example" />
+          <Tab styleClass="add-tab" text="+">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+            </content>
+          </Tab>
+        </tabs>
+      </TabPane>
+   </center>
+   <stylesheets>
+      <URL value="@../css/style.css" />
+      <URL value="@../css/components/tabpane.css" />
+   </stylesheets>
+</BorderPane>

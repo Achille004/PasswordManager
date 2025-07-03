@@ -34,7 +34,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
@@ -44,7 +43,7 @@ import password.manager.app.enums.SortingOrder;
 import password.manager.app.security.Account;
 import password.manager.app.utils.IOManager;
 import password.manager.app.utils.ObservableResourceFactory;
-import password.manager.lib.ReadablePasswordField;
+import password.manager.lib.ReadablePasswordFieldWithStr;
 
 public class DecrypterController extends AbstractViewController {
     public DecrypterController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices) {
@@ -57,7 +56,7 @@ public class DecrypterController extends AbstractViewController {
     @FXML
     private TextField decryptSoftware, decryptUsername;
     @FXML
-    private ReadablePasswordField decryptPassword;
+    private ReadablePasswordFieldWithStr decryptPassword;
     
     @FXML
     private Button decryptSaveBtn;
@@ -70,9 +69,6 @@ public class DecrypterController extends AbstractViewController {
     @FXML
     private Label decryptAccSelLbl, decryptSoftwareLbl, decryptUsernameLbl, decryptPasswordLbl;
 
-    @FXML
-    private ProgressBar decryptPassStr;
-
     public void initialize(URL location, ResourceBundle resources) {
         ObjectProperty<SortingOrder> sortingOrderProperty = ioManager.getUserPreferences().getSortingOrderProperty();
 
@@ -80,8 +76,6 @@ public class DecrypterController extends AbstractViewController {
         langResources.bindTextProperty(decryptSoftwareLbl, "software");
         langResources.bindTextProperty(decryptUsernameLbl, "username");
         langResources.bindTextProperty(decryptPasswordLbl, "password");
-
-        decryptPassword.bindPasswordStrength(decryptPassStr);
 
         decryptSoftware.setOnAction(_ -> decryptUsername.requestFocus());
         decryptUsername.setOnAction(_ -> decryptPassword.requestFocus());
@@ -122,7 +116,7 @@ public class DecrypterController extends AbstractViewController {
     }
 
     public void reset() {
-        decryptPassStr.setProgress(0);
+        decryptPassword.resetProgress();
         resetKeepSelection();
         clearTextFields(decryptSoftware, decryptUsername, decryptPassword.getTextField());
         decryptCB.getSelectionModel().clearSelection();

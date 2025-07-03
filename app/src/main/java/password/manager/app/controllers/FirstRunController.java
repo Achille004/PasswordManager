@@ -27,10 +27,9 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
 import password.manager.app.utils.IOManager;
 import password.manager.app.utils.ObservableResourceFactory;
-import password.manager.lib.ReadablePasswordField;
+import password.manager.lib.ReadablePasswordFieldWithStr;
 
 public class FirstRunController extends AbstractController {
     private final BooleanProperty switchToMain;
@@ -44,16 +43,13 @@ public class FirstRunController extends AbstractController {
     private Label firstRunTitle, firstRunDescTop, firstRunDescBtm, firstRunTermsCred, firstRunDisclaimer;
 
     @FXML
-    private ReadablePasswordField firstRunPassword;
+    private ReadablePasswordFieldWithStr firstRunPassword;
 
     @FXML
     private CheckBox firstRunCheckBox;
 
     @FXML
     private Button firstRunSubmitBtn;
-
-    @FXML
-    private ProgressBar firstRunPassStr;
 
     public void initialize(URL location, ResourceBundle resources) {
         langResources.bindTextProperty(firstRunTitle, "hi");
@@ -64,7 +60,6 @@ public class FirstRunController extends AbstractController {
         langResources.bindTextProperty(firstRunSubmitBtn, "lets_go");
         langResources.bindTextProperty(firstRunDisclaimer, "first_run.disclaimer");
 
-        firstRunPassword.bindPasswordStrength(firstRunPassStr);
         firstRunPassword.setOnAction(_ -> doFirstRun());
         firstRunPassword.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene != null) {

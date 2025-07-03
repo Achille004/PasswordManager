@@ -20,6 +20,8 @@ package password.manager.app.controllers.views;
 
 import static password.manager.app.utils.Utils.*;
 
+import java.awt.Desktop;
+import java.io.IOException;
 import java.net.URL;
 import java.text.Collator;
 import java.util.Comparator;
@@ -35,17 +37,19 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.transformation.SortedList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import password.manager.app.enums.SortingOrder;
 import password.manager.app.utils.IOManager;
+import password.manager.app.utils.Logger;
 import password.manager.app.utils.ObservableResourceFactory;
 import password.manager.app.utils.Utils;
-import password.manager.lib.ReadablePasswordField;
+import password.manager.lib.ReadablePasswordFieldWithStr;
 
 public class SettingsController extends AbstractViewController {
     public SettingsController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices) {
@@ -58,13 +62,13 @@ public class SettingsController extends AbstractViewController {
     private ComboBox<SortingOrder> settingsOrderCB;
 
     @FXML
-    private ReadablePasswordField settingsMasterPassword;
+    private ReadablePasswordFieldWithStr settingsMasterPassword;
 
     @FXML
     private Label settingsLangLbl, settingsSortingOrderLbl, settingsMasterPasswordLbl, settingsMasterPasswordDesc, settingsDriveConnLbl, wip;
 
     @FXML
-    private ProgressBar settingsLoginPassStr;
+    private Button folderButton;
 
     public void initialize(URL location, ResourceBundle resources) {
         ObjectProperty<Locale> localeProperty = ioManager.getUserPreferences().getLocaleProperty();
@@ -106,7 +110,10 @@ public class SettingsController extends AbstractViewController {
             }
         });
 
-        settingsMasterPassword.bindPasswordStrength(settingsLoginPassStr);
+        if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+            Logger.getInstance().addInfo("Unsupported action: Desktop.Action.OPEN");
+            folderButton.setVisible(false);
+        }
     }
 
     public void reset() {
@@ -114,6 +121,19 @@ public class SettingsController extends AbstractViewController {
         ioManager.displayMasterPassword(settingsMasterPassword);
         settingsMasterPassword.setReadable(false);
     }
+
+    @FXML
+    public void folderButtonAction(ActionEvent event) {
+        Thread.startVirtualThread(() -> {
+            try {
+                Desktop.getDesktop().open(IOManager.FILE_PATH.toFile());
+            } catch (IOException e) {
+                Logger.getInstance().addError(e);
+            }
+        });
+    }
+
+    ///// Utility methods /////
 
     @Contract(value = "_ -> new", pure = true)
     private @NotNull StringConverter<Locale> languageStringConverter(Locale locale) {
@@ -124,8 +144,6 @@ public class SettingsController extends AbstractViewController {
     private @NotNull StringConverter<SortingOrder> sortingOrderStringConverter(Locale locale) {
         return toStringConverter(item -> item != null ? langResources.getValue(item.getI18nKey()) : null);
     }
-
-    ///// Utility methods /////
 
     @Contract(value = "_ -> new", pure = true)
     private static <T> @NotNull StringConverter<T> toStringConverter(@NotNull Callback<? super T, String> converter) {

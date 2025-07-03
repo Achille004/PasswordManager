@@ -26,11 +26,10 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import password.manager.app.utils.IOManager;
 import password.manager.app.utils.ObservableResourceFactory;
-import password.manager.lib.ReadablePasswordField;
+import password.manager.lib.ReadablePasswordFieldWithStr;
 
 public class EncrypterController extends AbstractViewController {
     public EncrypterController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices) {
@@ -41,7 +40,7 @@ public class EncrypterController extends AbstractViewController {
     private TextField encryptSoftware, encryptUsername;
 
     @FXML
-    private ReadablePasswordField encryptPassword;
+    private ReadablePasswordFieldWithStr encryptPassword;
 
     @FXML
     private Button encryptSubmitBtn;
@@ -49,16 +48,11 @@ public class EncrypterController extends AbstractViewController {
     @FXML
     private Label encryptSoftwareLbl, encryptUsernameLbl, encryptPasswordLbl;
 
-    @FXML
-    private ProgressBar encryptPassStr;
-
     public void initialize(URL location, ResourceBundle resources) {
         langResources.bindTextProperty(encryptSubmitBtn, "submit");
         langResources.bindTextProperty(encryptSoftwareLbl, "software");
         langResources.bindTextProperty(encryptUsernameLbl, "username");
         langResources.bindTextProperty(encryptPasswordLbl, "password");
-
-        encryptPassword.bindPasswordStrength(encryptPassStr);
 
         encryptSoftware.setOnAction(_ -> encryptUsername.requestFocus());
         encryptUsername.setOnAction(_ -> encryptPassword.requestFocus());
@@ -72,7 +66,7 @@ public class EncrypterController extends AbstractViewController {
     }
 
     public void reset() {
-        encryptPassStr.setProgress(0);
+        encryptPassword.resetProgress();
         clearStyle(encryptSoftware, encryptUsername, encryptPassword.getTextField());
         clearTextFields(encryptSoftware, encryptUsername, encryptPassword.getTextField());
         encryptPassword.setReadable(false);

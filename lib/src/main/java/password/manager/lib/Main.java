@@ -9,8 +9,7 @@ public class Main extends Application {
     @Override
     public void start(Stage stage) {
         ReadablePasswordField custom1 = new ReadablePasswordField();
-        ReadablePasswordField custom2 = new ReadablePasswordField();
-        custom2.setPrefSize(300, 40);
+        ReadablePasswordFieldWithStr custom2 = new ReadablePasswordFieldWithStr();
 
         VBox root = new VBox();
         root.getChildren().addAll(custom1, custom2);

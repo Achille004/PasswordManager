@@ -37,7 +37,7 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane prefHeight="557.0" prefWidth="835.0" style="-fx-background-color: #202428;" stylesheets="@../style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane prefHeight="557.0" prefWidth="835.0" stylesheets="@../css/style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
     <ImageView fitHeight="457.0" fitWidth="457.0" layoutX="189.0" layoutY="20.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true">
         <Image url="@../../images/background.png" />
     </ImageView>

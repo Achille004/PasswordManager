@@ -1,51 +1,41 @@
 package password.manager.lib;
 
-import static password.manager.lib.Utils.*;
-
 import java.io.IOException;
 import java.net.URL;
 import java.util.Objects;
 import java.util.ResourceBundle;
 
 import lombok.Getter;
-import org.jetbrains.annotations.NotNull;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.control.PasswordField;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.util.Duration;
 
 public class ReadablePasswordField extends AnchorPane implements Initializable {
 
-    private final Image showingImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/readablePasswordField/open-eye.png")));
-    private final Image hiddenImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/readablePasswordField/closed-eye.png")));
+    private final Image showingImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/icons/open-eye.png")));
+    private final Image hiddenImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/icons/closed-eye.png")));
 
     private final BooleanProperty readable = new SimpleBooleanProperty(false);
 
     @FXML
-    private ImageView imageView;
+    protected ImageView imageView;
 
     @FXML
-    private @Getter TextField textField;
+    protected @Getter TextField textField;
 
     @FXML
-    private PasswordField passwordField;
+    protected PasswordField passwordField;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -165,55 +155,5 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
         } else {
             passwordField.requestFocus();
         }
-    }
-
-    public void bindPasswordStrength(@NotNull ProgressBar progressBar) {
-        Timeline[] timeline = new Timeline[1];
-        timeline[0] = null;
-
-        ChangeListener<String> listener = (_, _, newValue) -> {
-            double passwordStrength = passwordStrength(newValue);
-            passwordStrength = Math.max(20d, passwordStrength);
-            passwordStrength = Math.min(50d, passwordStrength);
-
-            double initialProgress = progressBar.getProgress();
-            double progress = (passwordStrength - 20) / 30;
-
-            if(progress == initialProgress) {
-                return;
-            }
-
-            Node bar = progressBar.lookup(".bar");
-            if(bar == null) {
-                return;
-            }
-
-            KeyFrame[] keyFrames = new KeyFrame[200];
-            for (int i = 0; i < 200; i++) {
-                double curProg = initialProgress + (progress - initialProgress) * i / 200;
-                keyFrames[i] = new KeyFrame(Duration.millis(i),
-                        new KeyValue(progressBar.progressProperty(), curProg),
-                        new KeyValue(bar.styleProperty(), "-fx-background-color:" + passwordStrengthGradient(curProg) + ";")
-                );
-            }
-
-            if (timeline[0] != null) {
-                timeline[0].stop();
-            }
-            
-            timeline[0] = new Timeline(keyFrames);
-            timeline[0].play();
-        };
-
-        // Listen for text changes
-        textField.textProperty().addListener(listener);
-
-        // Trigger initial update once the ProgressBar skin is ready
-        // This is a workaround for the fact that the skin may not be ready immediately
-        progressBar.skinProperty().addListener((_, _, newSkin) -> {
-            if (newSkin != null) {
-                listener.changed(textField.textProperty(), "", textField.getText());
-            }
-        });
     }
 }

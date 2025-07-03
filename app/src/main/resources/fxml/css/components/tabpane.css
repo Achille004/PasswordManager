@@ -1,0 +1,58 @@
+
+TabPane .tab-pane {
+  -fx-border-color: -fx-color-green;
+  -fx-border-width: 2px;
+}
+
+TabPane .tab {
+  -fx-background-insets: 0 1 0 1,0,0;
+  -fx-pref-height: 42.5px;
+  -fx-pref-width: 80px;
+  
+  -fx-background-color: -fx-color-background;
+  -fx-border-color: -fx-color-element-bg;
+  -fx-border-width: 2px 2px 0 2px;
+  -fx-border-radius: 4deg;
+}
+
+TabPane .add-tab {
+  -fx-pref-width: 42.5px;
+}
+
+TabPane .tab .tab-label {
+  -fx-alignment: CENTER;
+  -fx-font-size: 14px;
+  -fx-text-fill: -fx-color-text;
+  -fx-pref-width: 70px;
+  -fx-max-width: 70px;
+}
+
+TabPane .add-tab .tab-label {
+  -fx-pref-width: 30px;
+}
+
+TabPane .tab:selected {
+  -fx-text-fill: -fx-color-background;
+  -fx-background-color: -fx-color-green;
+	-fx-background-radius: 0;
+  -fx-background-insets: 0;
+  -fx-border-width: 0;
+}
+
+TabPane .tab:selected .tab-label {
+  -fx-text-fill: -fx-color-background;
+  -fx-border-width: 0;
+}
+
+TabPane:top *.tab-header-area {
+  -fx-background-insets: 0, 0 0 1 0;
+  -fx-padding: .75em .75em 0 .75em;
+  /* Add spacing between tabs */
+  -fx-spacing: 8px;
+}
+
+TabPane .tab-header-background {
+  -fx-background-color: -fx;
+  -fx-border-color: -fx-color-element-bg;
+  -fx-border-width: 0 0 2px 0;
+}

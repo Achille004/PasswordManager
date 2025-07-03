@@ -54,7 +54,9 @@ import password.manager.app.utils.Logger;
 import password.manager.app.utils.ObservableResourceFactory;
 
 public class MainController extends AbstractController {
-    public static final PseudoClass PSEUDOCLASS_NOTCH = PseudoClass.getPseudoClass("notch");
+    // TODO
+    // newSidebarButton.pseudoClassStateChanged(PSEUDOCLASS_NOTCH, true);
+    // public static final PseudoClass PSEUDOCLASS_NOTCH = PseudoClass.getPseudoClass("notch");
     private static final String[] titleStages;
 
     static {
@@ -92,8 +94,6 @@ public class MainController extends AbstractController {
         super(ioManager, langResources, hostServices);
     }
 
-    private Button lastSidebarButton = null;
-    private String lastMainTitleKey = "";
     private Timeline titleAnimation;
 
     @FXML
@@ -103,7 +103,7 @@ public class MainController extends AbstractController {
     private Label psmgTitle, mainTitle;
 
     @FXML
-    private Button homeButton, folderButton;
+    private Button homeButton;
 
     // Keep views cached once they are loaded
     private AnchorPane homePane;
@@ -115,11 +115,6 @@ public class MainController extends AbstractController {
         for (int i = 0; i < titleStages.length; i++) {
             final String str = titleStages[i];
             titleAnimation.getKeyFrames().add(new KeyFrame(Duration.millis(8 * i), _ -> psmgTitle.setText(str)));
-        }
-
-        if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
-            Logger.getInstance().addInfo("Unsupported action: Desktop.Action.OPEN");
-            folderButton.setVisible(false);
         }
         homeButton(null);
     }
@@ -135,8 +130,7 @@ public class MainController extends AbstractController {
             Logger.getInstance().addInfo("Loading home pane...");
             homeController = new HomeController(ioManager, langResources, hostServices);
             homePane = (AnchorPane) loadFxml("/fxml/views/home.fxml", homeController);
-            triggerUiErrorIfNull(homePane, ioManager, langResources);
-            Logger.getInstance().addInfo("Success [home]");
+            checkValidUi(homePane, "home", ioManager, langResources);
         }
         sidebarButtonAction(null, homeController, homePane, "");
     }
@@ -147,8 +141,7 @@ public class MainController extends AbstractController {
             Logger.getInstance().addInfo("Loading encrypter pane...");
             encrypterController = new EncrypterController(ioManager, langResources, hostServices);
             encrypterPane = (GridPane) loadFxml("/fxml/views/encrypter.fxml", encrypterController);
-            triggerUiErrorIfNull(encrypterPane, ioManager, langResources);
-            Logger.getInstance().addInfo("Success [encrypter]");
+            checkValidUi(encrypterPane, "encrypter", ioManager, langResources);
         }
         sidebarButtonAction(event, encrypterController, encrypterPane, "encryption");
     }
@@ -159,8 +152,7 @@ public class MainController extends AbstractController {
             Logger.getInstance().addInfo("Loading decrypter pane...");
             decrypterController = new DecrypterController(ioManager, langResources, hostServices);
             decrypterPane = (GridPane) loadFxml("/fxml/views/decrypter.fxml", decrypterController);
-            triggerUiErrorIfNull(decrypterPane, ioManager, langResources);
-            Logger.getInstance().addInfo("Success [decrypter]");
+            checkValidUi(decrypterPane, "decrypter", ioManager, langResources);
         }
         sidebarButtonAction(event, decrypterController, decrypterPane, "decryption");
     }
@@ -171,21 +163,9 @@ public class MainController extends AbstractController {
             Logger.getInstance().addInfo("Loading settings pane...");
             settingsController = new SettingsController(ioManager, langResources, hostServices);
             settingsPane = (GridPane) loadFxml("/fxml/views/settings.fxml", settingsController);
-            triggerUiErrorIfNull(settingsPane, ioManager, langResources);
-            Logger.getInstance().addInfo("Success [settings]");
+            checkValidUi(settingsPane, "settings", ioManager, langResources);
         }
         sidebarButtonAction(event, settingsController, settingsPane, "settings");
-    }
-
-    @FXML
-    public void folderSidebarButton(ActionEvent event) {
-        Thread.startVirtualThread(() -> {
-            try {
-                Desktop.getDesktop().open(IOManager.FILE_PATH.toFile());
-            } catch (IOException e) {
-                Logger.getInstance().addError(e);
-            }
-        });
     }
 
     private void sidebarButtonAction(ActionEvent event, @NotNull AbstractViewController destinationController, Pane destinationPane, @NotNull String mainTitleKey) {

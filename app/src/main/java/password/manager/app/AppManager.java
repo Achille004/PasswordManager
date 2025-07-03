@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.ResourceBundle;
+import java.util.function.Predicate;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -110,9 +111,8 @@ public class AppManager {
                 paneName = "login";
             }
 
-            triggerUiErrorIfNull(pane, ioManager, langResources);
-            Logger.getInstance().addInfo("Success [" + paneName + "]");
-
+            checkValidUi(pane, paneName, ioManager, langResources);
+            
             scenePane.getChildren().clear();
             scenePane.getChildren().add(pane);
         }
@@ -122,8 +122,7 @@ public class AppManager {
         Logger.getInstance().addInfo("Loading main pane...");
         final MainController mainController = new MainController(ioManager, langResources, hostServices);
         final BorderPane mainPane = (BorderPane) loadFxml("/fxml/main.fxml", mainController);
-        triggerUiErrorIfNull(mainPane, ioManager, langResources);
-        Logger.getInstance().addInfo("Success [main]");
+        checkValidUi(mainPane, "main", ioManager, langResources);
         
         scenePane.getChildren().clear();
         scenePane.getChildren().add(mainPane);

@@ -1,0 +1,43 @@
+/* COMPONENTS */
+
+TextArea {
+  -fx-control-inner-background: -fx-color-textarea-bg;
+  -fx-border-color: -fx-color-grey;
+  -fx-border-radius: 4deg;
+}
+
+/* Styling the ScrollBar in TextArea */
+TextArea .scroll-bar {
+  -fx-background-color: -fx-color-textarea-bg;
+}
+
+/* The thumb (the moving part of the scrollbar) */
+TextArea .scroll-bar .thumb {
+  -fx-background-color: -fx-color-grey;
+  -fx-background-radius: 5deg;
+}
+
+/* The increment and decrement buttons */
+TextArea .scroll-bar .increment-button,
+TextArea .scroll-bar .decrement-button {
+  -fx-background-color: -fx-color-element-bg;
+  -fx-padding: 2px;
+}
+
+/* The increment and decrement arrows */
+TextArea .scroll-bar .increment-arrow,
+TextArea .scroll-bar .decrement-arrow {
+  -fx-background-color: -fx-color-grey;
+}
+
+/* The track of the scroll bar */
+TextArea .scroll-bar .track {
+  -fx-background-color: -fx-color-element-bg;
+}
+
+/* CLASSES */
+
+.eula-button {
+  -fx-background-color: transparent;
+  -fx-background-radius: 50%;
+}

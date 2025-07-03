@@ -131,23 +131,26 @@ public final class Utils {
         }
     }
 
-    public static void triggerUiErrorIfNull(Object pane, @NotNull IOManager ioManager, @NotNull ObservableResourceFactory langResources) {
-        if(pane == null) {
-            // Since it's a one-time error, just create it during the error process
-            Alert alert = new Alert(AlertType.ERROR, langResources.getValue("ui_error"), ButtonType.YES, ButtonType.NO);
-            setDefaultButton(alert, ButtonType.NO);
-
-            alert.showAndWait();
-            if (alert.getResult() == ButtonType.YES) {
-                Thread.startVirtualThread(() -> {
-                    try {
-                        Desktop.getDesktop().open(Logger.getInstance().getLoggingPath().toFile());
-                    } catch (IOException e) {
-                        Logger.getInstance().addError(e);
-                    }
-                });
-            }
-            Platform.exit();
+    public static void checkValidUi(Object pane, String paneName, @NotNull IOManager ioManager, @NotNull ObservableResourceFactory langResources) {
+        if(pane != null) {
+            Logger.getInstance().addInfo("Success [" + paneName + "]");
+            return;
         }
+        
+        // Since it's a one-time error, just create it during the error process
+        Alert alert = new Alert(AlertType.ERROR, langResources.getValue("ui_error"), ButtonType.YES, ButtonType.NO);
+        setDefaultButton(alert, ButtonType.NO);
+
+        alert.showAndWait();
+        if (alert.getResult() == ButtonType.YES) {
+            Thread.startVirtualThread(() -> {
+                try {
+                    Desktop.getDesktop().open(Logger.getInstance().getLoggingPath().toFile());
+                } catch (IOException e) {
+                    Logger.getInstance().addError(e);
+                }
+            });
+        }
+        Platform.exit();
     }
 }

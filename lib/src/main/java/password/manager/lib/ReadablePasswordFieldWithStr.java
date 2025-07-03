@@ -1,0 +1,126 @@
+package password.manager.lib;
+
+import static password.manager.lib.Utils.*;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
+
+import org.jetbrains.annotations.NotNull;
+
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
+import javafx.beans.value.ChangeListener;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.control.ProgressBar;
+import javafx.util.Duration;
+
+public class ReadablePasswordFieldWithStr extends ReadablePasswordField {
+
+    @FXML
+    private ProgressBar passwordStrengthBar;
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        super.initialize(location, resources);
+    }
+
+    public ReadablePasswordFieldWithStr() {
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/readablePasswordFieldWithStr/index.fxml"));
+        fxmlLoader.setRoot(this);
+        fxmlLoader.setController(this);
+
+        try {
+            fxmlLoader.load();
+            bindPasswordStrength(passwordStrengthBar);
+        } catch (IOException exception) {
+            throw new RuntimeException(exception);
+        }
+    }
+    
+    // Adjust height to account for the ProgressBar
+    // TODO also scale the ProgressBar
+
+    @Override
+    public void setPrefSize(double width, double height) {
+        if(height > 10) {
+            super.setPrefSize(width, height - 10);
+            passwordStrengthBar.setPrefSize(width, 10);
+        }
+    }
+
+    @Override
+    public void setMinSize(double width, double height) {
+        if(height > 10) {
+            super.setMinSize(width, height - 10);
+            passwordStrengthBar.setMinSize(width, 10);
+        }
+    }
+
+    @Override
+    public void setMaxSize(double width, double height) {
+        if(height > 10) {
+            super.setMaxSize(width, height - 10);
+            passwordStrengthBar.setMaxSize(width, 10);
+        }
+    }
+
+    public void resetProgress() {
+        passwordStrengthBar.setProgress(0);
+    }
+
+    ///// HELPER METHODS /////
+
+    private void bindPasswordStrength(@NotNull ProgressBar progressBar) {
+        Timeline[] timeline = new Timeline[1];
+        timeline[0] = null;
+
+        ChangeListener<String> listener = (_, _, newValue) -> {
+            double passwordStrength = passwordStrength(newValue);
+            passwordStrength = Math.max(20d, passwordStrength);
+            passwordStrength = Math.min(50d, passwordStrength);
+
+            double initialProgress = progressBar.getProgress();
+            double progress = (passwordStrength - 20) / 30;
+
+            if(progress == initialProgress) {
+                return;
+            }
+
+            Node bar = progressBar.lookup(".bar");
+            if(bar == null) {
+                return;
+            }
+
+            KeyFrame[] keyFrames = new KeyFrame[200];
+            for (int i = 0; i < 200; i++) {
+                double curProg = initialProgress + (progress - initialProgress) * i / 200;
+                keyFrames[i] = new KeyFrame(Duration.millis(i),
+                        new KeyValue(progressBar.progressProperty(), curProg),
+                        new KeyValue(bar.styleProperty(), "-fx-background-color:" + passwordStrengthGradient(curProg) + ";")
+                );
+            }
+
+            if (timeline[0] != null) {
+                timeline[0].stop();
+            }
+            
+            timeline[0] = new Timeline(keyFrames);
+            timeline[0].play();
+        };
+
+        // Listen for text changes
+        textField.textProperty().addListener(listener);
+
+        // Trigger initial update once the ProgressBar skin is ready
+        // This is a workaround for the fact that the skin may not be ready immediately
+        progressBar.skinProperty().addListener((_, _, newSkin) -> {
+            if (newSkin != null) {
+                listener.changed(textField.textProperty(), "", textField.getText());
+            }
+        });
+    }
+}
