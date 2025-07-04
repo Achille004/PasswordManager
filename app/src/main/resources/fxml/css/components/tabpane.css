@@ -15,7 +15,7 @@ TabPane .tab {
   -fx-border-radius: 4deg;
 }
 
-TabPane .add-tab {
+TabPane #addTab {
   -fx-pref-width: 42.5px;
 }
 
@@ -23,19 +23,23 @@ TabPane .tab .tab-label {
   -fx-alignment: CENTER;
   -fx-font-size: 14px;
   -fx-text-fill: -fx-color-text;
+  -fx-padding: 0 1em 0 0; /* right padding for the close button */
   -fx-pref-width: 70px;
   -fx-max-width: 70px;
 }
 
-TabPane .add-tab .tab-label {
+TabPane #homeTab .tab-label,
+TabPane #addTab .tab-label {
+  -fx-padding: 0; /* No padding for home and add tabs */
+}
+
+TabPane #addTab .tab-label {
   -fx-pref-width: 30px;
 }
 
 TabPane .tab:selected {
   -fx-text-fill: -fx-color-background;
   -fx-background-color: -fx-color-green;
-	-fx-background-radius: 0;
-  -fx-background-insets: 0;
   -fx-border-width: 0;
 }
 
@@ -47,7 +51,6 @@ TabPane .tab:selected .tab-label {
 TabPane:top *.tab-header-area {
   -fx-background-insets: 0, 0 0 1 0;
   -fx-padding: .75em .75em 0 .75em;
-  /* Add spacing between tabs */
   -fx-spacing: 8px;
 }
 

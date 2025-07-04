@@ -115,10 +115,6 @@ Separator .line {
   -fx-border-color: null;
 }
 
-ListView {
-  -fx-background-color: -fx-color-background;
-}
-
 ReadablePasswordField > *,
 ReadablePasswordFieldWithStr > *:not(.progress-bar) {
   -fx-background-color: -fx-color-element-bg;
@@ -147,7 +143,7 @@ ReadablePasswordFieldWithStr > *:not(.progress-bar) {
   -fx-border-radius: 8deg;
 }
 
-.decrypt-button {
+.editor-button {
   -fx-background-color: -fx-color-grey;
   -fx-background-radius: 8deg;
 }

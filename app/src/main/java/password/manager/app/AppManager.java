@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.ResourceBundle;
-import java.util.function.Predicate;
 
 import org.jetbrains.annotations.Nullable;
 

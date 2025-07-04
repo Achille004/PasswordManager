@@ -39,8 +39,8 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.DialogPane;
+import javafx.scene.control.ListView;
 
 public final class Utils {
     public static final Locale[] SUPPORTED_LOCALE;
@@ -64,24 +64,24 @@ public final class Utils {
     }
 
     /**
-     * Returns the selected index in a Combo Box with a first blank option. If
+     * Returns the selected index in a ListView with a first blank option. If
      * the value is -1, the selected index is the blank one.
      *
-     * @param comboBox The combo box to extract the index from.
+     * @param listView The {@code ListView} to extract the index from.
      * @return The index of the current selected item.
      */
-    public static <T> int selectedComboBoxIndex(@NotNull ComboBox<T> comboBox) {
-        return comboBox.getSelectionModel().getSelectedIndex();
+    public static <T> int selectedListViewIndex(@NotNull ListView<T> listView) {
+        return listView.getSelectionModel().getSelectedIndex();
     }
 
     /**
-     * Returns the selected item in a Combo Box.
+     * Returns the selected item in a ListView.
      *
-     * @param comboBox The combo box to extract the index from.
+     * @param listView The ListView to extract the index from.
      * @return The index of the current selected item.
      */
-    public static <T> T selectedComboBoxItem(@NotNull ComboBox<T> comboBox) {
-        return comboBox.getSelectionModel().getSelectedItem();
+    public static <T> T selectedListViewItem(@NotNull ListView<T> listView) {
+        return listView.getSelectionModel().getSelectedItem();
     }
 
     /**

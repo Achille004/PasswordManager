@@ -137,6 +137,6 @@
    </AnchorPane>
    <stylesheets>
       <URL value="@../css/style.css" />
-      <URL value="@../css/components/combo-box.css" />
+      <URL value="@../css/components/ComboBox.css" />
    </stylesheets>
 </GridPane>

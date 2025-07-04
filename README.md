@@ -31,8 +31,3 @@ All contributions to the project are welcome: if you have suggestions, bug repor
 ## Contact
 
 For any inquiries or support, contact me at 2004marras@gmail.com.
-
-## Attributions
-
-<a href="https://www.flaticon.com/authors/peter-lakenbrink" title="Flaticon creator">Peter Lakenbrink</a>, creator of encryption icon
-<a href="https://www.flaticon.com/authors/orvipixel" title="Flaticon creator">Orvipixel</a>, creator of decryption icon, which I edited a little.

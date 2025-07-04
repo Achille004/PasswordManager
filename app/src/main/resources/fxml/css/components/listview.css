@@ -1,0 +1,13 @@
+ListView {
+  -fx-background-color: -fx-color-background;
+}
+
+ListView .list-cell {
+  -fx-background-color: -fx-color-background;
+  -fx-text-fill: -fx-color-text;
+  -fx-padding: 0.5em;
+}
+
+ListView .list-cell:hover {
+  -fx-background-color: -fx-color-element-bg;
+}

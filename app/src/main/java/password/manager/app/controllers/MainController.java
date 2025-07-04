@@ -20,11 +20,8 @@ package password.manager.app.controllers;
 
 import static password.manager.app.utils.Utils.*;
 
-import java.awt.Desktop;
-import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedList;
-import java.util.Objects;
 import java.util.ResourceBundle;
 
 import org.jetbrains.annotations.NotNull;
@@ -32,22 +29,15 @@ import org.jetbrains.annotations.NotNull;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.HostServices;
-import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.util.Duration;
 import password.manager.app.controllers.views.AbstractViewController;
-import password.manager.app.controllers.views.DecrypterController;
-import password.manager.app.controllers.views.EncrypterController;
-import password.manager.app.controllers.views.HomeController;
+import password.manager.app.controllers.views.ManagerController;
 import password.manager.app.controllers.views.SettingsController;
 import password.manager.app.utils.IOManager;
 import password.manager.app.utils.Logger;
@@ -106,9 +96,8 @@ public class MainController extends AbstractController {
     private Button homeButton;
 
     // Keep views cached once they are loaded
-    private AnchorPane homePane;
-    private GridPane encrypterPane, decrypterPane, settingsPane;
-    private AbstractViewController homeController, encrypterController, decrypterController, settingsController;
+    private Pane managerPane, settingsPane;
+    private AbstractViewController managerController, settingsController;
 
     public void initialize(URL location, ResourceBundle resources) {
         titleAnimation = new Timeline();
@@ -116,7 +105,7 @@ public class MainController extends AbstractController {
             final String str = titleStages[i];
             titleAnimation.getKeyFrames().add(new KeyFrame(Duration.millis(8 * i), _ -> psmgTitle.setText(str)));
         }
-        homeButton(null);
+        managerButton(null);
     }
 
     public void mainTitleAnimation() {
@@ -124,82 +113,32 @@ public class MainController extends AbstractController {
         titleAnimation.play();
     }
 
+    
     @FXML
-    public void homeButton(ActionEvent event) {
-        if(homePane == null || homeController == null) {
-            Logger.getInstance().addInfo("Loading home pane...");
-            homeController = new HomeController(ioManager, langResources, hostServices);
-            homePane = (AnchorPane) loadFxml("/fxml/views/home.fxml", homeController);
-            checkValidUi(homePane, "home", ioManager, langResources);
+    public void managerButton(ActionEvent event) {
+        if(managerPane == null || managerController == null) {
+            Logger.getInstance().addInfo("Loading manager pane...");
+            managerController = new ManagerController(ioManager, langResources, hostServices);
+            managerPane = (Pane) loadFxml("/fxml/views/manager.fxml", managerController);
+            checkValidUi(managerPane, "manager", ioManager, langResources);
         }
-        sidebarButtonAction(null, homeController, homePane, "");
+        sidebarButtonAction(event, managerController, managerPane);
     }
 
     @FXML
-    public void encryptSidebarButton(ActionEvent event) {
-        if(encrypterPane == null || encrypterController == null) {
-            Logger.getInstance().addInfo("Loading encrypter pane...");
-            encrypterController = new EncrypterController(ioManager, langResources, hostServices);
-            encrypterPane = (GridPane) loadFxml("/fxml/views/encrypter.fxml", encrypterController);
-            checkValidUi(encrypterPane, "encrypter", ioManager, langResources);
-        }
-        sidebarButtonAction(event, encrypterController, encrypterPane, "encryption");
-    }
-
-    @FXML
-    public void decryptSidebarButton(ActionEvent event) {
-        if(decrypterPane == null || decrypterController == null) {
-            Logger.getInstance().addInfo("Loading decrypter pane...");
-            decrypterController = new DecrypterController(ioManager, langResources, hostServices);
-            decrypterPane = (GridPane) loadFxml("/fxml/views/decrypter.fxml", decrypterController);
-            checkValidUi(decrypterPane, "decrypter", ioManager, langResources);
-        }
-        sidebarButtonAction(event, decrypterController, decrypterPane, "decryption");
-    }
-
-    @FXML
-    public void settingsSidebarButton(ActionEvent event) {
+    public void settingsButton(ActionEvent event) {
         if(settingsPane == null || settingsController == null) {
             Logger.getInstance().addInfo("Loading settings pane...");
             settingsController = new SettingsController(ioManager, langResources, hostServices);
-            settingsPane = (GridPane) loadFxml("/fxml/views/settings.fxml", settingsController);
+            settingsPane = (Pane) loadFxml("/fxml/views/settings.fxml", settingsController);
             checkValidUi(settingsPane, "settings", ioManager, langResources);
         }
-        sidebarButtonAction(event, settingsController, settingsPane, "settings");
+        sidebarButtonAction(event, settingsController, settingsPane);
     }
 
-    private void sidebarButtonAction(ActionEvent event, @NotNull AbstractViewController destinationController, Pane destinationPane, @NotNull String mainTitleKey) {
+    private void sidebarButtonAction(ActionEvent event, @NotNull AbstractViewController destinationController, Pane destinationPane) {
         // Show selected pane
         destinationController.reset();
         mainPane.centerProperty().set(destinationPane);
-
-        // Set main title
-        boolean isNotHome = !mainTitleKey.isBlank();
-        homeButton.setVisible(isNotHome);
-        mainTitle.setVisible(isNotHome);
-        langResources.bindTextProperty(mainTitle, mainTitleKey);
-
-        // Lowlight the previous button, if there is one
-        if (lastSidebarButton != null && lastSidebarButton.getStyleClass().contains("navBtn")) {
-            lastSidebarButton.pseudoClassStateChanged(PSEUDOCLASS_NOTCH, false);
-            lastSidebarButton.getChildrenUnmodifiable().filtered(node -> node instanceof ImageView).forEach(node -> {
-                ImageView imageView = (ImageView) node;
-                imageView.setImage(new Image(Objects.requireNonNull(getClass().getResource("/images/icons/sidebar/" + lastMainTitleKey + "-outlined.png")).toExternalForm()));
-            });
-        }
-
-        // Get and highlight the new button, if it's a navigation button
-        Button newSidebarButton = (event != null && event.getSource() instanceof Button btn) ? btn : null;
-        // Checking isNotHome is optional, but it can help avoid unnecessary processing.
-        if(isNotHome && newSidebarButton != null && newSidebarButton.getStyleClass().contains("navBtn")) {
-            newSidebarButton.pseudoClassStateChanged(PSEUDOCLASS_NOTCH, true);
-            newSidebarButton.getChildrenUnmodifiable().filtered(node -> node instanceof ImageView).forEach(node -> {
-                ImageView imageView = (ImageView) node;
-                imageView.setImage(new Image(Objects.requireNonNull(getClass().getResource("/images/icons/sidebar/" + mainTitleKey + "-solid.png")).toExternalForm()));
-            });
-        }
-        
-        lastMainTitleKey = mainTitleKey;
-        lastSidebarButton = newSidebarButton;
     }
 }

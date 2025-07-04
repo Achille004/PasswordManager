@@ -13,26 +13,23 @@
    <left>
       <AnchorPane prefHeight="565.0" prefWidth="300.0" styleClass="sidebar" BorderPane.alignment="CENTER">
          <children>
-            <TextField layoutX="11.0" layoutY="12.0" prefHeight="27.0" prefWidth="278.0" />
-            <Separator layoutY="50.0" prefHeight="1.0" prefWidth="300.0" style="-fx-background-color: #2e3136;" />
-            <ListView layoutY="52.0" prefHeight="513.0" prefWidth="300.0" />
+            <TextField editable="false" layoutX="11.0" layoutY="12.0" prefHeight="27.0" prefWidth="278.0" text="Search... (in future)" />
+            <Separator layoutY="50.0" prefHeight="1.0" prefWidth="300.0" />
+            <ListView fx:id="accountListView" fixedCellSize="0.0" layoutY="52.0" prefHeight="513.0" prefWidth="300.0" />
          </children>
       </AnchorPane>
    </left>
    <center>
-      <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+      <TabPane fx:id="accountTabPane" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
         <tabs>
-          <Tab styleClass="sz14" text="Example" />
-          <Tab styleClass="add-tab" text="+">
-            <content>
-              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
-            </content>
-          </Tab>
+          <Tab fx:id="homeTab" closable="false" styleClass="sz14" text="Home" />
+          <Tab fx:id="addTab" closable="false" styleClass="add-tab" text="+" />
         </tabs>
       </TabPane>
    </center>
    <stylesheets>
       <URL value="@../css/style.css" />
-      <URL value="@../css/components/tabpane.css" />
+      <URL value="@../css/components/ListView.css" />
+      <URL value="@../css/components/TabPane.css" />
    </stylesheets>
 </BorderPane>
