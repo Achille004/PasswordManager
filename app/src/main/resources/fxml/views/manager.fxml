@@ -11,11 +11,11 @@
 
 <BorderPane prefHeight="565.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
    <left>
-      <AnchorPane prefHeight="565.0" prefWidth="300.0" styleClass="sidebar" BorderPane.alignment="CENTER">
+      <AnchorPane prefHeight="565.0" prefWidth="250.0" styleClass="sidebar" BorderPane.alignment="CENTER">
          <children>
-            <TextField editable="false" layoutX="11.0" layoutY="12.0" prefHeight="27.0" prefWidth="278.0" text="Search... (in future)" />
-            <Separator layoutY="50.0" prefHeight="1.0" prefWidth="300.0" />
-            <ListView fx:id="accountListView" fixedCellSize="0.0" layoutY="52.0" prefHeight="513.0" prefWidth="300.0" />
+            <TextField editable="false" layoutX="10.0" layoutY="11.0" prefHeight="28.0" prefWidth="230.0" text="Search... (in future)" />
+            <Separator layoutY="50.0" prefHeight="1.0" prefWidth="250.0" />
+            <ListView fx:id="accountListView" fixedCellSize="46.0" layoutY="52.0" prefHeight="513.0" prefWidth="250.0" />
          </children>
       </AnchorPane>
    </left>

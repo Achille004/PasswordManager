@@ -20,8 +20,11 @@ package password.manager.app.controllers;
 
 import static password.manager.app.utils.Utils.*;
 
+import java.awt.Desktop;
+import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedList;
+import java.util.Objects;
 import java.util.ResourceBundle;
 
 import org.jetbrains.annotations.NotNull;
@@ -33,6 +36,8 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.util.Duration;
@@ -44,9 +49,6 @@ import password.manager.app.utils.Logger;
 import password.manager.app.utils.ObservableResourceFactory;
 
 public class MainController extends AbstractController {
-    // TODO
-    // newSidebarButton.pseudoClassStateChanged(PSEUDOCLASS_NOTCH, true);
-    // public static final PseudoClass PSEUDOCLASS_NOTCH = PseudoClass.getPseudoClass("notch");
     private static final String[] titleStages;
 
     static {
@@ -80,32 +82,50 @@ public class MainController extends AbstractController {
         titleStages = stages.toArray(new String[0]);
     }
 
+    private final Image settingsImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/icons/sidebar/settings.png")));
+    private final Image backImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/icons/sidebar/back.png")));
+
+    private boolean isSettingsOpen = false;
+    private Timeline titleAnimation;
+
     public MainController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices) {
         super(ioManager, langResources, hostServices);
     }
-
-    private Timeline titleAnimation;
 
     @FXML
     private BorderPane mainPane;
 
     @FXML
-    private Label psmgTitle, mainTitle;
+    private Label psmgTitle;
+    
+    @FXML
+    private ImageView settingsButtonImageView;
 
     @FXML
-    private Button homeButton;
+    private Button folderButton;
 
     // Keep views cached once they are loaded
     private Pane managerPane, settingsPane;
     private AbstractViewController managerController, settingsController;
 
     public void initialize(URL location, ResourceBundle resources) {
+        if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+            Logger.getInstance().addInfo("Unsupported action: Desktop.Action.OPEN");
+            folderButton.setVisible(false);
+        }
+
         titleAnimation = new Timeline();
         for (int i = 0; i < titleStages.length; i++) {
             final String str = titleStages[i];
             titleAnimation.getKeyFrames().add(new KeyFrame(Duration.millis(8 * i), _ -> psmgTitle.setText(str)));
         }
-        managerButton(null);
+        
+        Logger.getInstance().addInfo("Loading manager pane...");
+        managerController = new ManagerController(ioManager, langResources, hostServices);
+        managerPane = (Pane) loadFxml("/fxml/views/manager.fxml", managerController);
+        checkValidUi(managerPane, "manager", ioManager, langResources);
+
+        swapOnMainPane(managerController, managerPane);
     }
 
     public void mainTitleAnimation() {
@@ -113,30 +133,37 @@ public class MainController extends AbstractController {
         titleAnimation.play();
     }
 
-    
     @FXML
-    public void managerButton(ActionEvent event) {
-        if(managerPane == null || managerController == null) {
-            Logger.getInstance().addInfo("Loading manager pane...");
-            managerController = new ManagerController(ioManager, langResources, hostServices);
-            managerPane = (Pane) loadFxml("/fxml/views/manager.fxml", managerController);
-            checkValidUi(managerPane, "manager", ioManager, langResources);
-        }
-        sidebarButtonAction(event, managerController, managerPane);
+    private void folderNavBarButton(ActionEvent event) {
+        Thread.startVirtualThread(() -> {
+            try {
+                Desktop.getDesktop().open(IOManager.FILE_PATH.toFile());
+            } catch (IOException e) {
+                Logger.getInstance().addError(e);
+            }
+        });
     }
 
     @FXML
-    public void settingsButton(ActionEvent event) {
+    public void settingsNavBarButton(ActionEvent event) {
         if(settingsPane == null || settingsController == null) {
             Logger.getInstance().addInfo("Loading settings pane...");
             settingsController = new SettingsController(ioManager, langResources, hostServices);
             settingsPane = (Pane) loadFxml("/fxml/views/settings.fxml", settingsController);
             checkValidUi(settingsPane, "settings", ioManager, langResources);
         }
-        sidebarButtonAction(event, settingsController, settingsPane);
+
+        isSettingsOpen = !isSettingsOpen;
+        if (isSettingsOpen) {
+            swapOnMainPane(settingsController, settingsPane);
+            settingsButtonImageView.setImage(backImage);
+        } else {
+            swapOnMainPane(managerController, managerPane);
+            settingsButtonImageView.setImage(settingsImage);
+        }
     }
 
-    private void sidebarButtonAction(ActionEvent event, @NotNull AbstractViewController destinationController, Pane destinationPane) {
+    private void swapOnMainPane(@NotNull AbstractViewController destinationController, @NotNull Pane destinationPane) {
         // Show selected pane
         destinationController.reset();
         mainPane.centerProperty().set(destinationPane);

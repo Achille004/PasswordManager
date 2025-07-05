@@ -29,13 +29,13 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
     private final BooleanProperty readable = new SimpleBooleanProperty(false);
 
     @FXML
-    protected ImageView imageView;
+    private ImageView imageView;
 
     @FXML
-    protected @Getter TextField textField;
+    private @Getter TextField textField;
 
     @FXML
-    protected PasswordField passwordField;
+    private PasswordField passwordField;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {

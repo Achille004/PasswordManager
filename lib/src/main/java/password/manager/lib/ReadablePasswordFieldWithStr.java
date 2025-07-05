@@ -12,20 +12,29 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.value.ChangeListener;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.AnchorPane;
 import javafx.util.Duration;
 
-public class ReadablePasswordFieldWithStr extends ReadablePasswordField {
+public class ReadablePasswordFieldWithStr extends AnchorPane implements Initializable {
+
+    @FXML
+    private ReadablePasswordField passwordField;
 
     @FXML
     private ProgressBar passwordStrengthBar;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        super.initialize(location, resources);
+        assert (passwordField != null) : "fx:id=\"passwordField\" was not injected.";
+        assert (passwordStrengthBar != null) : "fx:id=\"passwordStrengthBar\" was not injected.";
     }
 
     public ReadablePasswordFieldWithStr() {
@@ -44,28 +53,65 @@ public class ReadablePasswordFieldWithStr extends ReadablePasswordField {
     // Adjust height to account for the ProgressBar
     // TODO also scale the ProgressBar
 
+    public void setReadable(boolean readable) {
+        passwordField.setReadable(readable);
+    }
+
+    public void toggleReadable() {
+        passwordField.toggleReadable();
+    }
+
+    public boolean isReadable() {
+        return passwordField.isReadable();
+    }
+
+    public void setText(String text) {
+        passwordField.setText(text);
+    }
+
+    public String getText() {
+        return passwordField.getText();
+    }
+
+    public TextField getTextField() {
+        return passwordField.getTextField();
+    }
+
     @Override
     public void setPrefSize(double width, double height) {
+        super.setPrefSize(width, height);
         if(height > 10) {
-            super.setPrefSize(width, height - 10);
+            passwordField.setPrefSize(width, height - 10);
+            passwordStrengthBar.layoutYProperty().set(height - 10);
             passwordStrengthBar.setPrefSize(width, 10);
         }
     }
 
     @Override
     public void setMinSize(double width, double height) {
+        super.setMinSize(width, height);
         if(height > 10) {
-            super.setMinSize(width, height - 10);
+            passwordField.setMinSize(width, height - 10);
             passwordStrengthBar.setMinSize(width, 10);
         }
     }
 
     @Override
     public void setMaxSize(double width, double height) {
+        super.setMaxSize(width, height);
         if(height > 10) {
-            super.setMaxSize(width, height - 10);
+            passwordField.setMaxSize(width, height - 10);
             passwordStrengthBar.setMaxSize(width, 10);
         }
+    }
+
+    public void setOnAction(EventHandler<ActionEvent> value) {
+        passwordField.setOnAction(value);
+    }
+
+    @Override
+    public void requestFocus() {
+        passwordField.requestFocus();
     }
 
     public void resetProgress() {
@@ -113,6 +159,7 @@ public class ReadablePasswordFieldWithStr extends ReadablePasswordField {
         };
 
         // Listen for text changes
+        TextField textField = passwordField.getTextField();
         textField.textProperty().addListener(listener);
 
         // Trigger initial update once the ProgressBar skin is ready

@@ -38,7 +38,7 @@
 <?import password.manager.lib.ReadablePasswordField?>
 
 <AnchorPane prefHeight="600.0" prefWidth="900.0" stylesheets="@css/style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
-   <Label fx:id="loginTitle" layoutX="172.0" layoutY="235.0" prefHeight="58.0" prefWidth="400.0" styleClass="title, green-text" text="Welcome back!" />
+   <Label fx:id="loginTitle" layoutX="170.0" layoutY="235.0" prefHeight="58.0" prefWidth="400.0" styleClass="title, green-text" text="Welcome back!" />
    <Button fx:id="loginSubmitBtn" alignment="CENTER" contentDisplay="CENTER" layoutX="627.0" layoutY="260.0" mnemonicParsing="false" nodeOrientation="LEFT_TO_RIGHT" onAction="#doLogin" styleClass="green-button, bold" text="Let's go!" textAlignment="CENTER" AnchorPane.rightAnchor="171.39999999999998" />
    <ReadablePasswordField fx:id="loginPassword" layoutX="170.0" layoutY="315.0" />
 </AnchorPane>

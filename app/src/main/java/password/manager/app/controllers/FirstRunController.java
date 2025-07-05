@@ -66,6 +66,9 @@ public class FirstRunController extends AbstractController {
                 firstRunPassword.requestFocus();
             }
         });
+
+        // Force the correct size to prevent unwanted stretching
+        firstRunPassword.setPrefSize(560.0, 40.0);
     }
 
     @FXML

@@ -55,7 +55,7 @@ import lombok.Getter;
 import password.manager.app.enums.Exporter;
 import password.manager.app.security.Account;
 import password.manager.app.security.UserPreferences;
-import password.manager.lib.ReadablePasswordField;
+import password.manager.lib.ReadablePasswordFieldWithStr;
 
 public final class IOManager {
     private static final String DATA_FILE_NAME = "data.json";
@@ -322,7 +322,7 @@ public final class IOManager {
         return true;
     }
 
-    public void displayMasterPassword(ReadablePasswordField element) {
+    public void displayMasterPassword(ReadablePasswordFieldWithStr element) {
         element.setText(masterPassword);
     }
 

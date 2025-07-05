@@ -63,6 +63,7 @@ public class ManagerController extends AbstractViewController {
             return sortingOrder != null ? sortingOrder.getComparator() : null;
         }, sortingOrderProperty));
 
+        // TODO: Uncomment to enable selection listener
         /* accountListView.getSelectionModel().selectedItemProperty().addListener(
                 (_, _, newItem) -> {
                     resetKeepSelection();
@@ -76,6 +77,7 @@ public class ManagerController extends AbstractViewController {
                 });*/
 
         loadHomeTab();
+        loadAddTab();
     }
 
     public void reset() {
@@ -89,6 +91,20 @@ public class ManagerController extends AbstractViewController {
 
         checkValidUi(homePane, "home", ioManager, langResources);
         homeTab.setContent(homePane);
+    }
+
+    public void loadAddTab() {
+        Logger.getInstance().addInfo("Loading editor pane...");
+        AbstractViewController addController = new EditorController(ioManager, langResources, hostServices);
+        Pane addPane = (Pane) loadFxml("/fxml/views/manager/editor.fxml", addController);
+
+        checkValidUi(addPane, "editor", ioManager, langResources);
+        addTab.setContent(addPane);
+        addTab.setOnSelectionChanged(_ -> {
+            if (addTab.isSelected()) {
+                addController.reset();
+            }
+        });
     }
 
     @Contract(value = "_ -> new", pure = true)
@@ -129,7 +145,7 @@ public class ManagerController extends AbstractViewController {
     }
 
     class EditorController extends AbstractViewController {
-        private @Setter @Getter Account account;
+        private @Getter Account account;
         
         public EditorController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices) {
             super(ioManager, langResources, hostServices);
@@ -171,6 +187,9 @@ public class ManagerController extends AbstractViewController {
             editorSaveTimeline = new Timeline(
                     new KeyFrame(Duration.ZERO, _ -> editorSaveBtn.setStyle("-fx-background-color: #0e0")),
                     new KeyFrame(Duration.seconds(1), _ -> clearStyle(editorSaveBtn)));
+
+            // Force the correct size to prevent unwanted stretching
+            editorPassword.setPrefSize(548.0, 40.0);
         }
 
         public void reset() {
@@ -216,12 +235,23 @@ public class ManagerController extends AbstractViewController {
             // elimination
             if (editorDeleteCounter) {
                 reset();
-
                 // removes the selected account from the list
                 ioManager.removeAccount(account);
             } else {
                 editorDeleteBtn.setStyle("-fx-background-color: #ff5f5f");
                 editorDeleteCounter = true;
+            }
+        }
+
+        public void setAccount(Account account) {
+            this.account = account;
+            if (account != null) {
+                editorSoftware.setText(account.getSoftware());
+                editorUsername.setText(account.getUsername());
+                editorPassword.setText(ioManager.getAccountPassword(account));
+                editorDeleteBtn.setVisible(true);
+            } else {
+                resetKeepSelection();
             }
         }
     }

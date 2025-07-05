@@ -67,9 +67,6 @@ public class SettingsController extends AbstractViewController {
     @FXML
     private Label settingsLangLbl, settingsSortingOrderLbl, settingsMasterPasswordLbl, settingsMasterPasswordDesc, settingsDriveConnLbl, wip;
 
-    @FXML
-    private Button folderButton;
-
     public void initialize(URL location, ResourceBundle resources) {
         ObjectProperty<Locale> localeProperty = ioManager.getUserPreferences().getLocaleProperty();
         ObjectProperty<SortingOrder> sortingOrderProperty = ioManager.getUserPreferences().getSortingOrderProperty();
@@ -109,28 +106,15 @@ public class SettingsController extends AbstractViewController {
                 ioManager.changeMasterPassword(settingsMasterPassword.getText());
             }
         });
-
-        if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
-            Logger.getInstance().addInfo("Unsupported action: Desktop.Action.OPEN");
-            folderButton.setVisible(false);
-        }
+        
+        // Force the correct size to prevent unwanted stretching
+        settingsMasterPassword.setPrefSize(465.0, 40.0);
     }
 
     public void reset() {
         clearStyle(settingsMasterPassword.getTextField());
         ioManager.displayMasterPassword(settingsMasterPassword);
         settingsMasterPassword.setReadable(false);
-    }
-
-    @FXML
-    public void folderButtonAction(ActionEvent event) {
-        Thread.startVirtualThread(() -> {
-            try {
-                Desktop.getDesktop().open(IOManager.FILE_PATH.toFile());
-            } catch (IOException e) {
-                Logger.getInstance().addError(e);
-            }
-        });
     }
 
     ///// Utility methods /////

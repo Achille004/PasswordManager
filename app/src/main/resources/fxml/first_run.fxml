@@ -53,5 +53,5 @@
          <CheckBox fx:id="firstRunCheckBox" mnemonicParsing="false" text="I've read the" />
       </graphic>
    </Label>
-   <ReadablePasswordFieldWithStr fx:id="firstRunPassword" layoutX="171.0" layoutY="340.0" prefWidth="560.0" />
+   <ReadablePasswordFieldWithStr fx:id="firstRunPassword" layoutX="170.0" layoutY="340.0" prefWidth="560.0" />
 </AnchorPane>

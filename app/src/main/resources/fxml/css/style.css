@@ -91,7 +91,6 @@ PasswordField {
   -fx-border-radius: 3deg;
 }
 
-
 Button {
   -fx-background-color: transparent;
   -fx-background-radius: 8deg;
@@ -113,15 +112,6 @@ Separator .line {
   -fx-background-color: -fx-color-element-bg;
   -fx-pref-height: 2px;
   -fx-border-color: null;
-}
-
-ReadablePasswordField > *,
-ReadablePasswordFieldWithStr > *:not(.progress-bar) {
-  -fx-background-color: -fx-color-element-bg;
-  -fx-border-color: -fx-color-grey;
-  -fx-border-radius: 3deg;
-  -fx-text-inner-color: -fx-color-text;
-  -fx-font-size: 14px;
 }
 
 /* CLASSES */
