@@ -15,14 +15,14 @@
          <children>
             <TextField editable="false" layoutX="10.0" layoutY="11.0" prefHeight="28.0" prefWidth="230.0" text="Search... (in future)" />
             <Separator layoutY="50.0" prefHeight="1.0" prefWidth="250.0" />
-            <ListView fx:id="accountListView" fixedCellSize="46.0" layoutY="52.0" prefHeight="513.0" prefWidth="250.0" />
+            <ListView fx:id="accountListView" fixedCellSize="72.0" layoutY="52.0" prefHeight="513.0" prefWidth="250.0" />
          </children>
       </AnchorPane>
    </left>
    <center>
-      <TabPane fx:id="accountTabPane" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+      <TabPane fx:id="accountTabPane" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="ALL_TABS" BorderPane.alignment="CENTER">
         <tabs>
-          <Tab fx:id="homeTab" closable="false" styleClass="sz14" text="Home" />
+          <Tab fx:id="homeTab" closable="false" text="Home" />
           <Tab fx:id="addTab" closable="false" styleClass="add-tab" text="+" />
         </tabs>
       </TabPane>

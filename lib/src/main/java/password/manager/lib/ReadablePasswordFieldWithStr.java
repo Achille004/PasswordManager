@@ -114,10 +114,6 @@ public class ReadablePasswordFieldWithStr extends AnchorPane implements Initiali
         passwordField.requestFocus();
     }
 
-    public void resetProgress() {
-        passwordStrengthBar.setProgress(0);
-    }
-
     ///// HELPER METHODS /////
 
     private void bindPasswordStrength(@NotNull ProgressBar progressBar) {

@@ -24,24 +24,27 @@ import java.security.SecureRandom;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import lombok.AccessLevel;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.ToString;
 
 @Data
 public final class Account {
     private String software, username;
     private byte[] encryptedPassword;
+    @ToString.Exclude @EqualsAndHashCode.Exclude
     private final byte[] salt, iv;
 
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    @Getter(AccessLevel.NONE)
-    private final boolean isOlderVersion;
+    @ToString.Exclude @EqualsAndHashCode.Exclude @JsonIgnore
+    private final Boolean isOlderVersion;
+
+    @ToString.Exclude @EqualsAndHashCode.Exclude @JsonIgnore
+    private final StringProperty softwareProperty = new SimpleStringProperty(), usernameProperty = new SimpleStringProperty();
 
     public Account(
             @JsonProperty("software") String software,
@@ -49,10 +52,9 @@ public final class Account {
             @JsonProperty("encryptedPassword") byte[] encryptedPassword,
             @JsonProperty("salt") byte[] salt,
             @JsonProperty("iv") byte[] iv) {
-        this.software = software;
-        this.username = username;
-        this.encryptedPassword = encryptedPassword;
+        propertiesSetup(software, username);
 
+        this.encryptedPassword = encryptedPassword;
         this.iv = iv;
 
         isOlderVersion = salt == null;
@@ -63,14 +65,35 @@ public final class Account {
     }
 
     public Account(@NotNull String software, @NotNull String username, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
-        this.software = software;
-        this.username = username;
+        propertiesSetup(software, username);
 
         salt = new byte[16];
         iv = new byte[16];
         setPassword(password, masterPassword);
 
         isOlderVersion = false;
+    }
+
+    public @NotNull String getSoftware() {
+        return software;
+    }
+
+    public void setSoftware(@NotNull String software) {
+        if (software != null && !software.isEmpty()) {
+            this.software = software;
+            softwareProperty.set(software);
+        }
+    }
+
+    public @NotNull String getUsername() {
+        return username;
+    }
+
+    public void setUsername(@NotNull String username) {
+        if (username != null && !username.isEmpty()) {
+            this.username = username;
+            usernameProperty.set(username);
+        }
     }
 
     private void setPassword(@NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
@@ -107,8 +130,10 @@ public final class Account {
             throw e;
         }
 
-        this.software = software;
-        this.username = username;
+        // Update software and username later to avoid having to rollback in case of error
+        setSoftware(software);
+        setUsername(username);
+        
         return true;
     }
 
@@ -130,5 +155,22 @@ public final class Account {
         return new Account(software, username, password, masterPassword);
     }
 
-    
+    private void propertiesSetup(String software, String username) {
+        this.software = software;
+        this.username = username;
+
+        softwareProperty.set(software);
+        softwareProperty.addListener((_, _, newValue) -> {
+            if (newValue != null && !newValue.isEmpty()) {
+                this.software = newValue;
+            }
+        });
+
+        usernameProperty.set(username);
+        usernameProperty.addListener((_, _, newValue) -> {
+            if (newValue != null && !newValue.isEmpty()) {
+                this.username = newValue;
+            }
+        });
+    }
 }

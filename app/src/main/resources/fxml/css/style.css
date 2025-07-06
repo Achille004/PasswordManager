@@ -141,18 +141,3 @@ Separator .line {
 .eula-text:hover {
   -fx-underline: true;
 }
-
-/*
-.titlebar > Button,
-.sidebar > Button {
-  -fx-background-color: -fx-color-background;
-  -fx-background-radius: 8deg;
-  transition: -fx-background-color 0.5s ease;  
-}
-
-.sidebar > Button.navBtn:hover,
-.sidebar > Button.navBtn:focused,
-.sidebar > Button.navBtn:notch {
-  -fx-background-color: linear-gradient(to right, -fx-color-green 0%, -fx-color-green 4%, -fx-color-background 5%, -fx-color-background 100%);
-}
-*/

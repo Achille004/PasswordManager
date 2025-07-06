@@ -28,14 +28,14 @@ testModuleInfo {
 
 // Apply a specific Java toolchain to ease working on different environments.
 java {
-    sourceCompatibility = JavaVersion.VERSION_23 // TODO TEMPORARY for scene builder compatibility
+    sourceCompatibility = JavaVersion.VERSION_24
     toolchain {
         languageVersion = JavaLanguageVersion.of(24)
     }
 }
 
 javafx {
-    version = '23.0.2' // TODO TEMPORARY for scene builder compatibility
+    version = '24.0.1'
     modules = [ 'javafx.base', 'javafx.controls', 'javafx.fxml', 'javafx.graphics', 'javafx.web' ]
 }
 

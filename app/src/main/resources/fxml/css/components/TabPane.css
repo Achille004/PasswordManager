@@ -1,7 +1,5 @@
-
-TabPane .tab-pane {
-  -fx-border-color: -fx-color-green;
-  -fx-border-width: 2px;
+TabPane:focused {
+  -fx-focus-color: transparent; 
 }
 
 TabPane .tab {
@@ -45,7 +43,6 @@ TabPane .tab:selected {
 
 TabPane .tab:selected .tab-label {
   -fx-text-fill: -fx-color-background;
-  -fx-border-width: 0;
 }
 
 TabPane:top *.tab-header-area {
@@ -55,7 +52,7 @@ TabPane:top *.tab-header-area {
 }
 
 TabPane .tab-header-background {
-  -fx-background-color: -fx;
+  -fx-background-color: -fx-color-background;
   -fx-border-color: -fx-color-element-bg;
   -fx-border-width: 0 0 2px 0;
 }
