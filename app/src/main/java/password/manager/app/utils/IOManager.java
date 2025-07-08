@@ -55,6 +55,7 @@ import lombok.Getter;
 import password.manager.app.enums.Exporter;
 import password.manager.app.security.Account;
 import password.manager.app.security.UserPreferences;
+import password.manager.lib.PasswordInputControl;
 import password.manager.lib.ReadablePasswordFieldWithStr;
 
 public final class IOManager {
@@ -182,108 +183,142 @@ public final class IOManager {
     }
 
     // #region Account methods
-    public @NotNull Boolean addAccount(@Nullable String software, @Nullable String username, @Nullable String password) {
+    public @NotNull CompletableFuture<Boolean> addAccount(@Nullable String software, @Nullable String username, @Nullable String password) {
         if (software == null || username == null || password == null) {
-            return false;
+            Logger.getInstance().addError(new IllegalArgumentException("Software, username, and password cannot be null [addAccount]"));
+            return CompletableFuture.completedFuture(false);
         }
         
         if (!isAuthenticated()) {
-            return false; 
+            Logger.getInstance().addError(new IllegalStateException("User is not authenticated [addAccount]"));
+            return CompletableFuture.completedFuture(false); 
         }
 
-        boolean[] ok = {true};
-        CompletableFuture
+        return CompletableFuture
                 .supplyAsync(() -> {
                     try {
                         return Account.of(software, username, password, masterPassword);
                     } catch (GeneralSecurityException e) {
                         Logger.getInstance().addError(e);
-                        ok[0] = false;
                         return null;
                     }
                 }, ACCOUNT_EXECUTOR)
-                .thenAccept(account -> Platform.runLater(() -> {
-                    ACCOUNT_LIST.add(account);
-                    HAS_CHANGED.set(true);
-                    Logger.getInstance().addInfo("Account added");
-                }))
+                .thenCompose(account -> {
+                    if (account == null) {
+                        return CompletableFuture.completedFuture(false);
+                    }
+                    
+                    CompletableFuture<Boolean> uiUpdate = new CompletableFuture<>();
+                    Platform.runLater(() -> {
+                        try {
+                            ACCOUNT_LIST.add(account);
+                            HAS_CHANGED.set(true);
+                            Logger.getInstance().addInfo("Account added");
+                            uiUpdate.complete(true);
+                        } catch (Exception e) {
+                            Logger.getInstance().addError(e);
+                            uiUpdate.complete(false);
+                        }
+                    });
+                    return uiUpdate;
+                })
                 .exceptionally(t -> { 
                     Logger.getInstance().addError(t); 
-                    ok[0] = false;
-                    return null;
+                    return false;
                 });
-
-        return ok[0];
     }
 
-    public @NotNull Boolean editAccount(@NotNull Account account, @Nullable String software, @Nullable String username, @Nullable String password) {
+    public @NotNull CompletableFuture<Boolean> editAccount(@NotNull Account account, @Nullable String software, @Nullable String username, @Nullable String password) {
+        if(!ACCOUNT_LIST.contains(account)) {
+            Logger.getInstance().addError(new IllegalArgumentException("Account not found in list [editAccount]"));
+            return CompletableFuture.completedFuture(false);
+        }
+        
         if (software == null || username == null || password == null) {
-            return false;
+            Logger.getInstance().addError(new IllegalArgumentException("Software, username, and password cannot be null [editAccount]"));
+            return CompletableFuture.completedFuture(false);
         }
 
-        int idx = ACCOUNT_LIST.indexOf(account);
-        if (!isAuthenticated() || idx < 0) {
-            return false;
+        if (!isAuthenticated()) {
+            Logger.getInstance().addError(new IllegalStateException("User is not authenticated [editAccount]"));
+            return CompletableFuture.completedFuture(false);
         }
 
-        boolean[] ok = {true};
-        CompletableFuture
-                .runAsync(() -> { 
+        return CompletableFuture
+                .supplyAsync(() -> { 
                     try {
                         account.setData(software, username, password, masterPassword);
+                        return true;
                     } catch (GeneralSecurityException e) {
                         Logger.getInstance().addError(e);
-                        ok[0] = false;
+                        return false;
                     }
                 }, ACCOUNT_EXECUTOR)
-                .thenRun(() -> Platform.runLater(() -> {
-                    // trigger SortedList refresh
-                    ACCOUNT_LIST.set(idx, account);   
-                    HAS_CHANGED.set(true);
-                    Logger.getInstance().addInfo("Account edited");
-                }))
+                .thenCompose(success -> {
+                    if (!success) {
+                        return CompletableFuture.completedFuture(false);
+                    }
+                    
+                    CompletableFuture<Boolean> uiUpdate = new CompletableFuture<>();
+                    Platform.runLater(() -> {
+                        // trigger the list change listeners
+                        ACCOUNT_LIST.set(ACCOUNT_LIST.indexOf(account), account); 
+                        HAS_CHANGED.set(true);
+                        Logger.getInstance().addInfo("Account edited");
+                        uiUpdate.complete(true);
+                    });
+                    return uiUpdate;
+                })
                 .exceptionally(t -> {
                     Logger.getInstance().addError(t); 
-                    ok[0] = false;
-                    return null;
+                    return false;
                 });
-
-        return ok[0];
     }
 
-    public @NotNull Boolean removeAccount(Account account) {
+    public void removeAccount(@NotNull Account account) {
         if (!isAuthenticated()) {
-            return false;
+            Logger.getInstance().addError(new IllegalStateException("User is not authenticated [removeAccount]"));
+            return;
         }
 
-        boolean[] ok = {true};
+        Platform.runLater(() -> {
+            if (ACCOUNT_LIST.remove(account)) {
+                HAS_CHANGED.set(true);
+                Logger.getInstance().addInfo("Account deleted");
+            } else {
+                Logger.getInstance().addError(new IllegalArgumentException("Account not found in list [removeAccount]"));
+            }
+        });
+    }
+
+    public <T extends PasswordInputControl> void getAccountPassword(@NotNull T passwInputControl, @NotNull Account account) {
+        if (!isAuthenticated()) {
+            Logger.getInstance().addError(new IllegalStateException("User is not authenticated [getAccountPassword]"));
+            return;
+        }
+        
         CompletableFuture
-                .runAsync(() -> { /* nothing to do off-thread */ }, ACCOUNT_EXECUTOR)
-                .thenRun(() -> Platform.runLater(() -> {
-                    if (ACCOUNT_LIST.remove(account)) {
-                        HAS_CHANGED.set(true);
-                        Logger.getInstance().addInfo("Account deleted");
+                .supplyAsync(() -> {
+                    try {
+                        return account.getPassword(masterPassword);
+                    } catch (GeneralSecurityException e) {
+                        Logger.getInstance().addError(e);
+                        return null;
+                    }
+                }, ACCOUNT_EXECUTOR)
+                .thenAccept(password -> Platform.runLater(() -> {
+                    if (password != null) {
+                        passwInputControl.setText(password);
+                    } else {
+                        passwInputControl.setText("");
+                        Logger.getInstance().addError(new RuntimeException("Failed to retrieve password for account: " + account.getSoftware()));
                     }
                 }))
-                .exceptionally(t -> { 
-                    Logger.getInstance().addError(t); 
-                    ok[0] = false;
+                .exceptionally(throwable -> {
+                    Platform.runLater(() -> passwInputControl.setText(""));
+                    Logger.getInstance().addError(throwable);
                     return null;
                 });
-
-        return ok[0];
-    }
-
-    public @Nullable String getAccountPassword(@NotNull Account account) {
-        try {
-            if (isAuthenticated()) {
-                return account.getPassword(masterPassword);
-            }
-        } catch (GeneralSecurityException e) {
-            Logger.getInstance().addError(e);
-        }
-
-        return null;
     }
     // #endregion
 

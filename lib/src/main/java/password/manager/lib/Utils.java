@@ -1,6 +1,7 @@
 package password.manager.lib;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javafx.scene.paint.Color;
 import me.gosimple.nbvcxz.Nbvcxz;
@@ -9,8 +10,8 @@ public class Utils {
     private static final Nbvcxz NBVCXZ = new Nbvcxz();
 
     // Ideal gap is from 20 to 50, represented with linear progress bar with gaps of 1
-    public static double passwordStrength(@NotNull String password) {
-        return NBVCXZ.estimate(password).getEntropy();
+    public static double passwordStrength(@Nullable String password) {
+        return password != null ? NBVCXZ.estimate(password).getEntropy() : 0d;
     }
 
     public static String passwordStrengthGradient(@NotNull Double progress) throws IllegalArgumentException {

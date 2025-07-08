@@ -6,6 +6,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.concurrent.CompletableFuture;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -45,6 +46,9 @@ import password.manager.lib.ReadablePasswordFieldWithStr;
 public class ManagerController extends AbstractViewController {
     // Cache for tabs associated with accounts
     private final Map<Account, Tab> tabsCache = new HashMap<>();
+
+    // Tracks edit operations
+    private volatile boolean editOperationInProgress = false;
     
     public ManagerController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices) {
         super(ioManager, langResources, hostServices);
@@ -61,22 +65,42 @@ public class ManagerController extends AbstractViewController {
 
     public void initialize(URL location, ResourceBundle resources) {
         ObjectProperty<SortingOrder> sortingOrderProperty = ioManager.getUserPreferences().getSortingOrderProperty();
-        SortedList<Account> accountList = ioManager.getSortedAccountList();
+        SortedList<Account> sortedAccountList = ioManager.getSortedAccountList();
         ObservableList<Tab> accTabs = accountTabPane.getTabs();
 
-        accountListView.setItems(accountList);
+        accountListView.setItems(sortedAccountList);
         // Set cell factory to control how Account objects are displayed
         accountListView.cellFactoryProperty().bind(sortingOrderProperty.map(this::accountCellFactory));
         accountListView.getSelectionModel().selectedItemProperty().addListener(this.listViewHandler());
         
-        accountList.comparatorProperty().bind(Bindings.createObjectBinding(() -> {
+        sortedAccountList.comparatorProperty().bind(Bindings.createObjectBinding(() -> {
             SortingOrder sortingOrder = sortingOrderProperty.getValue();
             return sortingOrder != null ? sortingOrder.getComparator() : null;
         }, sortingOrderProperty));
 
-        accountList.addListener((ListChangeListener<Account>) change -> {
+        sortedAccountList.addListener((ListChangeListener<Account>) change -> {
+            // Skip processing if an edit operation is in progress.
+            // This is a shitty behavior of the sorted list which, in order
+            // to sort, makes an adding change and then a removal change
+            // separately (makes no sense, but whatever).
+            if (editOperationInProgress) {
+                return;
+            }
+
             while(change.next()) {
-                if (change.wasRemoved()) {
+                if (change.wasRemoved() && !change.wasAdded()) {
+                    // Detect the manual trigger of the list, done by replacing the edited element with itself (same reference)
+                    boolean isManualTrigger = change.wasReplaced() 
+                            && change.getAddedSize() == 1 
+                            && change.getRemovedSize() == 1
+                            && change.getAddedSubList().get(0).equals(change.getRemoved().get(0));
+
+                    // Skip processing if this is a manual trigger
+                    if(isManualTrigger) {
+                        continue; 
+                    }
+                    
+                    // This is a true removal
                     for (Account removedAccount : change.getRemoved()) {
                         Tab tab = tabsCache.remove(removedAccount);
                         if (tab != null) {
@@ -91,10 +115,14 @@ public class ManagerController extends AbstractViewController {
             while(change.next()) {
                 if (change.wasAdded() && !change.getAddedSubList().contains(homeTab)) {
                     Platform.runLater(() -> accTabs.remove(homeTab));
-                } else if (change.wasRemoved() && accTabs.size() == 1) {
+                } else if (change.wasRemoved()) {
                     Platform.runLater(() -> { 
-                        accTabs.add(0, homeTab);
-                        accountTabPane.getSelectionModel().select(homeTab);
+                        if(accTabs.size() <= 1) {
+                            accTabs.add(0, homeTab);
+                            accountTabPane.getSelectionModel().select(homeTab);
+                        } else if(!change.getRemoved().contains(homeTab)) {
+                            accountTabPane.getSelectionModel().select(addTab);
+                        }
                     });
                 }
             }
@@ -246,7 +274,7 @@ public class ManagerController extends AbstractViewController {
             });
 
             editorSaveTimeline = new Timeline(
-                    new KeyFrame(Duration.ZERO, _ -> editorSaveBtn.setStyle("-fx-background-color: #0e0")),
+                    new KeyFrame(Duration.ZERO, _ -> editorSaveBtn.setStyle("-fx-background-color: -fx-color-green")),
                     new KeyFrame(Duration.seconds(1), _ -> clearStyle(editorSaveBtn)));
 
             // Force the correct size to prevent unwanted stretching
@@ -257,7 +285,7 @@ public class ManagerController extends AbstractViewController {
             if(account != null) {
                 editorSoftware.setText(account.getSoftware());
                 editorUsername.setText(account.getUsername());
-                editorPassword.setText(ioManager.getAccountPassword(account));
+                ioManager.getAccountPassword(editorPassword, account);
             } else {
                 clearTextFields(editorSoftware, editorUsername, editorPassword.getTextField());
             }
@@ -270,8 +298,6 @@ public class ManagerController extends AbstractViewController {
 
         @FXML
         public void editorSave(ActionEvent event) {
-            // when the deleteCounter is true it means that the user has confirmed the
-            // elimination
             if (checkTextFields(editorSoftware, editorUsername, editorPassword.getTextField())) {
                 editorSaveTimeline.playFromStart();
 
@@ -281,26 +307,47 @@ public class ManagerController extends AbstractViewController {
                 String password = editorPassword.getText();
                 
                 // save the new attributes of the account
+                /*  
+                  I know that the different reset handling is weird, but lemme explain:
+                    if the account is null, it means that the user is creating a new account,
+                    so we just reset the editor, but if the account is not null, it means that
+                    the user is editing an existing account, so we need to edit the account
+                    and then reset the editor only if the edit was successful
+                  This ensures maximum responsiveness when adding, while avoiding really weird behavior
+                  when editing, like the editor creating duplicated tabs for the same account.
+                */
                 if(account == null) {
                     ioManager.addAccount(software, username, password);
+                    reset();
                 } else {
-                    ioManager.editAccount(account, software, username, password);
+                    editOperationInProgress = true;
+                    ioManager.editAccount(account, software, username, password)
+                            .thenAccept(result -> Platform.runLater(() -> {
+                                editOperationInProgress = false;
+                                if (result) {
+                                    reset();
+                                } else {
+                                    Logger.getInstance().addError(new RuntimeException("Failed to edit account."));
+                                }
+                            }))
+                            .exceptionally(ex -> {
+                                Platform.runLater(() -> editOperationInProgress = false);
+                                Logger.getInstance().addError(ex);
+                                return null;
+                            });
                 }
-
-                reset();
             }
         }
 
         @FXML
         public void editorDelete(ActionEvent event) {
-            // when the deleteCounter is true it means that the user has confirmed the
-            // elimination
+            // when the deleteCounter is true it means that the user has confirmed the elimination
             if (editorDeleteCounter) {
                 reset();
                 // removes the selected account from the list
                 ioManager.removeAccount(account);
             } else {
-                editorDeleteBtn.setStyle("-fx-background-color: #ff5f5f");
+                editorDeleteBtn.setStyle("-fx-background-color: -fx-color-red");
                 editorDeleteCounter = true;
             }
         }

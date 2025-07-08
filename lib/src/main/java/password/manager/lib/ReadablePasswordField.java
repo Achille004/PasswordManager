@@ -21,7 +21,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 
-public class ReadablePasswordField extends AnchorPane implements Initializable {
+public class ReadablePasswordField extends AnchorPane implements Initializable, PasswordInputControl {
 
     private final Image showingImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/icons/open-eye.png")));
     private final Image hiddenImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/icons/closed-eye.png")));

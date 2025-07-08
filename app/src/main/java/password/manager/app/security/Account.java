@@ -27,6 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Data;
@@ -81,7 +82,7 @@ public final class Account {
     public void setSoftware(@NotNull String software) {
         if (software != null && !software.isEmpty()) {
             this.software = software;
-            softwareProperty.set(software);
+            Platform.runLater(() -> softwareProperty.set(software));
         }
     }
 
@@ -92,7 +93,7 @@ public final class Account {
     public void setUsername(@NotNull String username) {
         if (username != null && !username.isEmpty()) {
             this.username = username;
-            usernameProperty.set(username);
+            Platform.runLater(() -> usernameProperty.set(username));
         }
     }
 

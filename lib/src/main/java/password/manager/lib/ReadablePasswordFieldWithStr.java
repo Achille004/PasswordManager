@@ -23,7 +23,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.util.Duration;
 
-public class ReadablePasswordFieldWithStr extends AnchorPane implements Initializable {
+public class ReadablePasswordFieldWithStr extends AnchorPane implements Initializable, PasswordInputControl {
 
     @FXML
     private ReadablePasswordField passwordField;

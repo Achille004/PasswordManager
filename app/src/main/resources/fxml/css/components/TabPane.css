@@ -45,6 +45,19 @@ TabPane .tab:selected .tab-label {
   -fx-text-fill: -fx-color-background;
 }
 
+TabPane .tab .tab-close-button {
+  -fx-background-color: -fx-color-text;
+}
+
+TabPane .tab:selected .tab-close-button {
+  -fx-background-color: -fx-color-background;
+}
+
+TabPane .tab .tab-close-button:hover,
+TabPane .tab:selected .tab-close-button:hover {
+  -fx-background-color: -fx-color-red;
+}
+
 TabPane:top *.tab-header-area {
   -fx-background-insets: 0, 0 0 1 0;
   -fx-padding: .75em .75em 0 .75em;

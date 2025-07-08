@@ -92,9 +92,9 @@ public abstract class AbstractController implements Initializable {
         for (@NotNull TextInputControl field : fields) {
             if (field.getText().isBlank()) {
                 nonEmpty = false;
-                field.setStyle("-fx-border-color: #ff5f5f");
+                field.setStyle("-fx-border-color: -fx-color-red");
             } else {
-                field.setStyle("-fx-border-color: #a7acb1");
+                field.setStyle("-fx-border-color: -fx-color-grey");
             }
         }
 

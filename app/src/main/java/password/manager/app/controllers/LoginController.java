@@ -57,7 +57,7 @@ public class LoginController extends AbstractController {
         wrongPasswordTimeline = new Timeline(
                 new KeyFrame(Duration.ZERO, _ -> {
                     loginSubmitBtn.setDisable(true);
-                    loginSubmitBtn.setStyle("-fx-border-color: #ff5f5f");
+                    loginSubmitBtn.setStyle("-fx-border-color: -fx-color-red");
                 }),
                 new KeyFrame(Duration.seconds(1), _ -> {
                     loginSubmitBtn.setDisable(false);
