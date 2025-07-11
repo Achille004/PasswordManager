@@ -18,7 +18,7 @@
 
 package password.manager.app.utils;
 
-import static password.manager.app.utils.Utils.*;
+import static password.manager.app.Utils.*;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -55,6 +55,7 @@ import lombok.Getter;
 import password.manager.app.enums.Exporter;
 import password.manager.app.security.Account;
 import password.manager.app.security.UserPreferences;
+import password.manager.app.singletons.Logger;
 import password.manager.lib.PasswordInputControl;
 import password.manager.lib.ReadablePasswordFieldWithStr;
 
@@ -267,6 +268,7 @@ public final class IOManager {
                         Logger.getInstance().addInfo("Account edited");
                         uiUpdate.complete(true);
                     });
+
                     return uiUpdate;
                 })
                 .exceptionally(t -> {

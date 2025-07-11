@@ -2,11 +2,44 @@ ListView {
   -fx-background-color: transparent;
 }
 
+ListView .scroll-bar {
+  -fx-background-color: -fx-color-element-bg;
+  -fx-background-radius: 5deg;
+  -fx-border: 2px;
+  -fx-border-color: transparent;
+}
+
+ListView .scroll-bar:horizontal {
+  -fx-opacity: 0;
+  -fx-max-height: 0;
+  -fx-pref-height: 0;
+  -fx-min-height: 0;
+}
+
+ListView .scroll-bar .thumb {
+  -fx-background-color: -fx-color-grey;
+  -fx-background-radius: 5deg;
+}
+
+ListView .scroll-bar .increment-button,
+ListView .scroll-bar .decrement-button {
+  -fx-background-color: -fx-color-element-bg;
+}
+
+ListView .scroll-bar .increment-arrow,
+ListView .scroll-bar .decrement-arrow {
+  -fx-background-color: -fx-color-grey;
+}
+
+ListView .scroll-bar .track {
+  -fx-background-color: -fx-color-element-bg;
+}
+
 ListView .list-cell {
   -fx-font-size: 18px;
   -fx-background-color: -fx-color-background;
   -fx-text-fill: -fx-color-text;
-  -fx-padding: 0.5em;
+  -fx-padding: 0.5em 1em;
 }
 
 ListView .list-cell:hover {

@@ -18,7 +18,7 @@
 
 package password.manager.app.controllers;
 
-import static password.manager.app.utils.Utils.*;
+import static password.manager.app.Utils.*;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -38,8 +38,8 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import password.manager.app.controllers.extra.EulaController;
+import password.manager.app.singletons.Logger;
 import password.manager.app.utils.IOManager;
-import password.manager.app.utils.Logger;
 import password.manager.app.utils.ObservableResourceFactory;
 
 public abstract class AbstractController implements Initializable {

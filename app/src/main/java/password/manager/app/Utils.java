@@ -16,7 +16,7 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package password.manager.app.utils;
+package password.manager.app;
 
 import java.awt.Desktop;
 import java.io.File;
@@ -37,6 +37,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import password.manager.app.singletons.Logger;
+import password.manager.app.utils.IOManager;
+import password.manager.app.utils.ObservableResourceFactory;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.DialogPane;

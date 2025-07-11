@@ -5,7 +5,7 @@ TabPane:focused {
 TabPane .tab {
   -fx-background-insets: 0 1 0 1,0,0;
   -fx-pref-height: 42.5px;
-  -fx-pref-width: 80px;
+  -fx-pref-width: 90px;
   
   -fx-background-color: -fx-color-background;
   -fx-border-color: -fx-color-element-bg;
@@ -18,12 +18,11 @@ TabPane #addTab {
 }
 
 TabPane .tab .tab-label {
-  -fx-alignment: CENTER;
   -fx-font-size: 14px;
   -fx-text-fill: -fx-color-text;
-  -fx-padding: 0 1em 0 0; /* right padding for the close button */
-  -fx-pref-width: 70px;
-  -fx-max-width: 70px;
+  -fx-padding: 0 1.5em 0 0; /* right padding for the close button */
+  -fx-pref-width: 80px;
+  -fx-max-width: 80px;
 }
 
 TabPane #homeTab .tab-label,
@@ -38,7 +37,7 @@ TabPane #addTab .tab-label {
 TabPane .tab:selected {
   -fx-text-fill: -fx-color-background;
   -fx-background-color: -fx-color-green;
-  -fx-border-width: 0;
+  -fx-border-color: -fx-color-green;
 }
 
 TabPane .tab:selected .tab-label {
@@ -62,6 +61,66 @@ TabPane:top *.tab-header-area {
   -fx-background-insets: 0, 0 0 1 0;
   -fx-padding: .75em .75em 0 .75em;
   -fx-spacing: 8px;
+}
+
+TabPane .tab-header-area .tab-down-button {
+  -fx-background-color: -fx-color-background;
+  -fx-border-color: -fx-color-element-bg;
+  -fx-border-width: 2px;
+  -fx-border-radius: 4deg;
+  -fx-padding: 0.5em;
+}
+
+TabPane .tab-header-area .arrow {
+  -fx-background-color: -fx-color-text;
+}
+
+/* Access the tabs menu itself */
+TabPane .tab-header-area .tab-down-button .context-menu {
+  -fx-background-color: -fx-color-background;
+  -fx-border-color: -fx-color-element-bg;
+  -fx-border-width: 2px;
+  -fx-border-radius: 4deg;
+  -fx-padding: 0.5em;
+  -fx-max-height: 350px;
+}
+
+/* Access menu item */
+TabPane .tab-header-area .tab-down-button .context-menu .radio-menu-item {
+  -fx-background-color: -fx-color-background;
+  -fx-background-radius: 4deg;
+  -fx-padding: 0.5em;
+  -fx-font-size: 14px;
+}
+
+/* Highlight selected menu item */
+TabPane .tab-header-area .tab-down-button .context-menu .radio-menu-item:hover,
+TabPane .tab-header-area .tab-down-button .context-menu .radio-menu-item:checked {
+  -fx-background-color: -fx-color-element-bg;
+}
+
+/* Access menu item's text */
+TabPane .tab-header-area .tab-down-button .context-menu .radio-menu-item .label {
+  -fx-text-fill: -fx-color-text;
+  -fx-font-size: 14px;
+  -fx-padding: 0.25em; /* Vertical padding for better spacing */
+}
+
+/* Hide the radio button shapes completely */
+TabPane .tab-header-area .tab-down-button .context-menu .radio-menu-item .left-container .radio {
+  -fx-background-color: transparent;
+  -fx-border-color: transparent;
+  -fx-padding: 0;
+  -fx-max-width: 0;
+  -fx-max-height: 0;
+}
+
+/* Also hide the entire left container */
+TabPane .tab-header-area .tab-down-button .context-menu .radio-menu-item .left-container {
+  -fx-padding: 0;
+  -fx-pref-width: 0;
+  -fx-min-width: 0;
+  -fx-max-width: 0;
 }
 
 TabPane .tab-header-background {

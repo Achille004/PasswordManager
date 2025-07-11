@@ -18,7 +18,7 @@
 
 package password.manager.app.controllers;
 
-import static password.manager.app.utils.Utils.*;
+import static password.manager.app.Utils.*;
 
 import java.awt.Desktop;
 import java.io.IOException;
@@ -44,8 +44,8 @@ import javafx.util.Duration;
 import password.manager.app.controllers.views.AbstractViewController;
 import password.manager.app.controllers.views.ManagerController;
 import password.manager.app.controllers.views.SettingsController;
+import password.manager.app.singletons.Logger;
 import password.manager.app.utils.IOManager;
-import password.manager.app.utils.Logger;
 import password.manager.app.utils.ObservableResourceFactory;
 
 public class MainController extends AbstractController {

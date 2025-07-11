@@ -37,9 +37,9 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
+import password.manager.app.Utils;
 import password.manager.app.enums.SortingOrder;
 import password.manager.app.security.UserPreferences.UserPreferencesDeserializer;
-import password.manager.app.utils.Utils;
 
 @Getter
 @JsonDeserialize(using = UserPreferencesDeserializer.class)

@@ -18,7 +18,7 @@
 
 package password.manager.app;
 
-import static password.manager.app.utils.Utils.*;
+import static password.manager.app.Utils.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -43,8 +43,8 @@ import lombok.Getter;
 import password.manager.app.controllers.FirstRunController;
 import password.manager.app.controllers.LoginController;
 import password.manager.app.controllers.MainController;
+import password.manager.app.singletons.Logger;
 import password.manager.app.utils.IOManager;
-import password.manager.app.utils.Logger;
 import password.manager.app.utils.ObservableResourceFactory;
 
 public class AppManager {

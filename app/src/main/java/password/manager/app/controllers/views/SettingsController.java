@@ -18,7 +18,7 @@
 
 package password.manager.app.controllers.views;
 
-import static password.manager.app.utils.Utils.*;
+import static password.manager.app.Utils.*;
 
 import java.awt.Desktop;
 import java.io.IOException;
@@ -44,11 +44,11 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import password.manager.app.Utils;
 import password.manager.app.enums.SortingOrder;
+import password.manager.app.singletons.Logger;
 import password.manager.app.utils.IOManager;
-import password.manager.app.utils.Logger;
 import password.manager.app.utils.ObservableResourceFactory;
-import password.manager.app.utils.Utils;
 import password.manager.lib.ReadablePasswordFieldWithStr;
 
 public class SettingsController extends AbstractViewController {

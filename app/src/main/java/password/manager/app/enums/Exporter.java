@@ -18,7 +18,7 @@
 
 package password.manager.app.enums;
 
-import static password.manager.app.utils.Utils.*;
+import static password.manager.app.Utils.*;
 
 import java.util.List;
 

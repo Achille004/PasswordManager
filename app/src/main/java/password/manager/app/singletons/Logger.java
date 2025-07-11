@@ -16,9 +16,9 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package password.manager.app.utils;
+package password.manager.app.singletons;
 
-import static password.manager.app.utils.Utils.*;
+import static password.manager.app.Utils.*;
 
 import java.io.File;
 import java.io.FileWriter;

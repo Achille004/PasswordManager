@@ -36,7 +36,7 @@ import org.bouncycastle.crypto.params.Argon2Parameters;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jetbrains.annotations.NotNull;
 
-import password.manager.app.utils.Logger;
+import password.manager.app.singletons.Logger;
 
 public final class Encrypter {
     private static SecretKeyFactory keyFactory;
