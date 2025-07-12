@@ -31,7 +31,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.application.HostServices;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -44,9 +43,8 @@ import javafx.util.Duration;
 import password.manager.app.controllers.views.AbstractViewController;
 import password.manager.app.controllers.views.ManagerController;
 import password.manager.app.controllers.views.SettingsController;
+import password.manager.app.singletons.IOManager;
 import password.manager.app.singletons.Logger;
-import password.manager.app.utils.IOManager;
-import password.manager.app.utils.ObservableResourceFactory;
 
 public class MainController extends AbstractController {
     private static final String[] titleStages;
@@ -88,10 +86,6 @@ public class MainController extends AbstractController {
     private boolean isSettingsOpen = false;
     private Timeline titleAnimation;
 
-    public MainController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices) {
-        super(ioManager, langResources, hostServices);
-    }
-
     @FXML
     private BorderPane mainPane;
 
@@ -121,9 +115,9 @@ public class MainController extends AbstractController {
         }
         
         Logger.getInstance().addInfo("Loading manager pane...");
-        managerController = new ManagerController(ioManager, langResources, hostServices);
+        managerController = new ManagerController();
         managerPane = (Pane) loadFxml("/fxml/views/manager.fxml", managerController);
-        checkValidUi(managerPane, "manager", ioManager, langResources);
+        checkValidUi(managerPane, "manager");
 
         swapOnMainPane(managerController, managerPane);
     }
@@ -148,9 +142,9 @@ public class MainController extends AbstractController {
     public void settingsNavBarButton(ActionEvent event) {
         if(settingsPane == null || settingsController == null) {
             Logger.getInstance().addInfo("Loading settings pane...");
-            settingsController = new SettingsController(ioManager, langResources, hostServices);
+            settingsController = new SettingsController();
             settingsPane = (Pane) loadFxml("/fxml/views/settings.fxml", settingsController);
-            checkValidUi(settingsPane, "settings", ioManager, langResources);
+            checkValidUi(settingsPane, "settings");
         }
 
         isSettingsOpen = !isSettingsOpen;

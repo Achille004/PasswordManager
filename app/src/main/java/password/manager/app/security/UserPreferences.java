@@ -39,10 +39,9 @@ import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 import password.manager.app.Utils;
 import password.manager.app.enums.SortingOrder;
-import password.manager.app.security.UserPreferences.UserPreferencesDeserializer;
 
 @Getter
-@JsonDeserialize(using = UserPreferencesDeserializer.class)
+@JsonDeserialize(using = UserPreferences.UserPreferencesDeserializer.class)
 public final class UserPreferences {
     private final @JsonIgnore ObjectProperty<Locale> localeProperty;
     private final @JsonIgnore ObjectProperty<SortingOrder> sortingOrderProperty;
@@ -151,7 +150,7 @@ public final class UserPreferences {
     }
 
     protected static class UserPreferencesDeserializer extends StdDeserializer<UserPreferences> {
-        protected UserPreferencesDeserializer() {
+        public UserPreferencesDeserializer() {
             super(UserPreferences.class);
         }
 
@@ -172,7 +171,7 @@ public final class UserPreferences {
         }
     }
 
-    protected enum SecurityVersion {
+    private enum SecurityVersion {
         PBKDF2, ARGON2;
 
         public static SecurityVersion fromString(String version) {

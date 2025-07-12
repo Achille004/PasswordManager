@@ -34,8 +34,6 @@ import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
 
-import lombok.Getter;
-
 public final class Logger {
     private static final String FOLDER_PREFIX, LOG_FILE_NAME, STACKTRACE_FILE_NAME;
     private static final int MAX_LOG_FILES;
@@ -56,7 +54,7 @@ public final class Logger {
     private final Path currPath;
     private final FileWriter logWriter, stacktraceWriter;
 
-    private static @Getter Logger instance = null;
+    private static Logger instance = null;
 
     /**
      * Creates the singleton Logger.
@@ -68,7 +66,14 @@ public final class Logger {
         instance = new Logger(baseLogPath);
     }
 
-    public Logger(Path filePath) {
+    public static Logger getInstance() {
+        if (instance == null) {
+            throw new IllegalStateException("Logger instance not created yet");
+        }
+        return instance;
+    }
+
+    private Logger(Path filePath) {
         rotateLogs(filePath);
 
         this.currPath = filePath.resolve(FOLDER_PREFIX + FILE_DTF.format(LocalDateTime.now()));

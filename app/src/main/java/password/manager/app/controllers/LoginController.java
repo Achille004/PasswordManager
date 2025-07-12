@@ -23,22 +23,19 @@ import java.util.ResourceBundle;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.application.HostServices;
 import javafx.beans.property.BooleanProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.util.Duration;
-import password.manager.app.utils.IOManager;
-import password.manager.app.utils.ObservableResourceFactory;
+import password.manager.app.singletons.IOManager;
+import password.manager.app.singletons.ObservableResourceFactory;
 import password.manager.lib.ReadablePasswordField;
 
 public class LoginController extends AbstractController {
     private final BooleanProperty switchToMain;
 
-    public LoginController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices,
-            BooleanProperty switchToMain) {
-        super(ioManager, langResources, hostServices);
+    public LoginController(BooleanProperty switchToMain) {
         this.switchToMain = switchToMain;
     }
 
@@ -64,6 +61,7 @@ public class LoginController extends AbstractController {
                     clearStyle(loginSubmitBtn);
                 }));
 
+        ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
         langResources.bindTextProperty(loginTitle, "welcome_back");
         langResources.bindTextProperty(loginSubmitBtn, "lets_go");
 
@@ -79,9 +77,9 @@ public class LoginController extends AbstractController {
     public void doLogin() {
         if (checkTextFields(loginPassword.getTextField())) {
             wrongPasswordTimeline.stop();
-            ioManager.authenticate(loginPassword.getText());
+            IOManager.getInstance().authenticate(loginPassword.getText());
 
-            if (ioManager.isAuthenticated()) {
+            if (IOManager.getInstance().isAuthenticated()) {
                 switchToMain.set(true);
             } else {
                 wrongPasswordTimeline.playFromStart();

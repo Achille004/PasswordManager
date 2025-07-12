@@ -25,7 +25,6 @@ import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
 
-import javafx.application.HostServices;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -39,34 +38,22 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import password.manager.app.controllers.extra.EulaController;
 import password.manager.app.singletons.Logger;
-import password.manager.app.utils.IOManager;
-import password.manager.app.utils.ObservableResourceFactory;
+import password.manager.app.singletons.ObservableResourceFactory;
 
 public abstract class AbstractController implements Initializable {
-    protected final IOManager ioManager;
-    protected final ObservableResourceFactory langResources;
-    protected final HostServices hostServices;
-    protected Stage eulaStage;
-
-    protected AbstractController(@NotNull IOManager ioManager, @NotNull ObservableResourceFactory langResources, @NotNull HostServices hostServices) {
-        this.ioManager = ioManager;
-        this.langResources = langResources;
-        this.hostServices = hostServices;
-
-        eulaStage = null;
-    }
+    private Stage eulaStage = null;
     
     @FXML
     public void showEula(MouseEvent event) {
         if (eulaStage == null) {
             eulaStage = new Stage();
-            eulaStage.setTitle(langResources.getValue("terms_credits"));
+            eulaStage.setTitle(ObservableResourceFactory.getInstance().getValue("terms_credits"));
             eulaStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/icon.png"))));
             eulaStage.setResizable(false);
             
             Logger.getInstance().addInfo("Loading eula pane...");
-            AnchorPane eulaParent = (AnchorPane) loadFxml("/fxml/extra/eula.fxml", new EulaController(ioManager, hostServices));
-            checkValidUi(eulaParent, "eula", ioManager, langResources);
+            AnchorPane eulaParent = (AnchorPane) loadFxml("/fxml/extra/eula.fxml", new EulaController());
+            checkValidUi(eulaParent, "eula");
             eulaStage.setScene(new Scene(eulaParent, 900, 600));
         }
 

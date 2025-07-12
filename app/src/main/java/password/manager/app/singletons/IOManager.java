@@ -16,7 +16,7 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package password.manager.app.utils;
+package password.manager.app.singletons;
 
 import static password.manager.app.Utils.*;
 
@@ -55,7 +55,6 @@ import lombok.Getter;
 import password.manager.app.enums.Exporter;
 import password.manager.app.security.Account;
 import password.manager.app.security.UserPreferences;
-import password.manager.app.singletons.Logger;
 import password.manager.lib.PasswordInputControl;
 import password.manager.lib.ReadablePasswordFieldWithStr;
 
@@ -65,6 +64,8 @@ public final class IOManager {
 
     private static final String OS, USER_HOME;
     public static final Path FILE_PATH, DESKTOP_PATH;
+
+    public static final String LANG_BUNDLE_RESOURCE = "/bundles/Lang";
 
     static {
         // gets system properties
@@ -78,6 +79,8 @@ public final class IOManager {
         DESKTOP_PATH = Path.of(USER_HOME, "Desktop");
 
         Logger.createInstance(FILE_PATH);
+        Logger.getInstance().addInfo("os.name: '" + OS + "'");
+        Logger.getInstance().addInfo("user.home: '" + USER_HOME + "'");
     }
 
     private final ObservableList<Account> ACCOUNT_LIST;
@@ -93,7 +96,27 @@ public final class IOManager {
     private final ObjectWriter OBJECT_WRITER;
     private final ExecutorService ACCOUNT_EXECUTOR;
 
-    public IOManager() {
+    private static IOManager instance = null;
+
+    /**
+     * Creates the singleton IOManager.
+     */
+    public static synchronized void createInstance() throws IllegalStateException {
+        if (instance != null) {
+            throw new IllegalStateException("IOManager instance already created");
+        }
+        ObservableResourceFactory.createInstance(LANG_BUNDLE_RESOURCE);
+        instance = new IOManager();
+    }
+
+    public static IOManager getInstance() {
+        if (instance == null) {
+            throw new IllegalStateException("IOManager instance not created yet");
+        }
+        return instance;
+    }
+
+    private IOManager() {
         ACCOUNT_LIST = FXCollections.observableList(Collections.synchronizedList(new ArrayList<>()));
         userPreferences = UserPreferences.empty();
         setupPreferencesListeners();
@@ -111,6 +134,8 @@ public final class IOManager {
         FLUSH_SCHEDULER = Executors.newSingleThreadScheduledExecutor();
         FLUSH_SCHEDULER.scheduleAtFixedRate(() -> saveDataFile(false),
                 AUTOSAVE_TIMER_MINUTES, AUTOSAVE_TIMER_MINUTES, TimeUnit.MINUTES);
+
+        loadData();
     }
 
     private void setupPreferencesListeners() {
@@ -124,14 +149,11 @@ public final class IOManager {
         userPreferences.getSortingOrderProperty().addListener(listener);
     }
 
-    public void loadData(final ObservableResourceFactory langResources) {
+    private void loadData() {
         if (!userPreferences.isEmpty()) {
             Logger.getInstance().addError(new UnsupportedOperationException("Cannot read data file: it would overwrite non-empty user preferences"));
             return;
         }
-
-        Logger.getInstance().addInfo("os.name: '" + OS + "'");
-        Logger.getInstance().addInfo("user.home: '" + USER_HOME + "'");
 
         if (FILE_PATH.toFile().mkdirs()) {
             Logger.getInstance().addInfo("Directory '" + FILE_PATH + "' did not exist and was therefore created, skipping data loading");
@@ -162,7 +184,7 @@ public final class IOManager {
             Logger.getInstance().addError(e);
             Logger.getInstance().addInfo("Data not OK, overwrite?");
 
-            Alert alert = new Alert(AlertType.ERROR, langResources.getValue("data_error"), ButtonType.YES, ButtonType.NO);
+            Alert alert = new Alert(AlertType.ERROR, ObservableResourceFactory.getInstance().getValue("data_error"), ButtonType.YES, ButtonType.NO);
             setDefaultButton(alert, ButtonType.NO);
             alert.showAndWait();
 
@@ -293,7 +315,7 @@ public final class IOManager {
         });
     }
 
-    public <T extends PasswordInputControl> void getAccountPassword(@NotNull T passwInputControl, @NotNull Account account) {
+    public <T extends PasswordInputControl> void getAccountPassword(@NotNull T element, @NotNull Account account) {
         if (!isAuthenticated()) {
             Logger.getInstance().addError(new IllegalStateException("User is not authenticated [getAccountPassword]"));
             return;
@@ -310,14 +332,14 @@ public final class IOManager {
                 }, ACCOUNT_EXECUTOR)
                 .thenAccept(password -> Platform.runLater(() -> {
                     if (password != null) {
-                        passwInputControl.setText(password);
+                        element.setText(password);
                     } else {
-                        passwInputControl.setText("");
+                        element.setText("");
                         Logger.getInstance().addError(new RuntimeException("Failed to retrieve password for account: " + account.getSoftware()));
                     }
                 }))
                 .exceptionally(throwable -> {
-                    Platform.runLater(() -> passwInputControl.setText(""));
+                    Platform.runLater(() -> element.setText(""));
                     Logger.getInstance().addError(throwable);
                     return null;
                 });
@@ -359,7 +381,7 @@ public final class IOManager {
         return true;
     }
 
-    public void displayMasterPassword(ReadablePasswordFieldWithStr element) {
+    public <T extends PasswordInputControl> void displayMasterPassword(T element) {
         element.setText(masterPassword);
     }
 
@@ -420,7 +442,7 @@ public final class IOManager {
                 .thenAcceptAsync(snapshot -> {
                     File exportFile = DESKTOP_PATH.resolve("passwords." + exporter.name().toLowerCase()).toFile();
                     try (FileWriter file = new FileWriter(exportFile)) {
-                        String out = exporter.getExporter().apply(snapshot, langResources, masterPassword);
+                        String out = exporter.getExporter().apply(snapshot, masterPassword);
                         file.write(out);
                         Logger.getInstance().addInfo("Export succeeded: " + exportFile.getName());
                     } catch (Exception e) {

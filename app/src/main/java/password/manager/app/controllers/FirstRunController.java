@@ -21,21 +21,19 @@ package password.manager.app.controllers;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import javafx.application.HostServices;
 import javafx.beans.property.BooleanProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import password.manager.app.utils.IOManager;
-import password.manager.app.utils.ObservableResourceFactory;
+import password.manager.app.singletons.IOManager;
+import password.manager.app.singletons.ObservableResourceFactory;
 import password.manager.lib.ReadablePasswordFieldWithStr;
 
 public class FirstRunController extends AbstractController {
     private final BooleanProperty switchToMain;
 
-    public FirstRunController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices, BooleanProperty switchToMain) {
-        super(ioManager, langResources, hostServices);
+    public FirstRunController(BooleanProperty switchToMain) {
         this.switchToMain = switchToMain;
     }
 
@@ -52,6 +50,7 @@ public class FirstRunController extends AbstractController {
     private Button firstRunSubmitBtn;
 
     public void initialize(URL location, ResourceBundle resources) {
+        ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
         langResources.bindTextProperty(firstRunTitle, "hi");
         langResources.bindTextProperty(firstRunDescTop, "first_run.desc.top");
         langResources.bindTextProperty(firstRunDescBtm, "first_run.desc.btm");
@@ -74,7 +73,7 @@ public class FirstRunController extends AbstractController {
     @FXML
     public void doFirstRun() {
         if (checkTextFields(firstRunPassword.getTextField()) && firstRunCheckBox.isSelected()) {
-            ioManager.changeMasterPassword(firstRunPassword.getText());
+            IOManager.getInstance().changeMasterPassword(firstRunPassword.getText());
             switchToMain.set(true);
         }
     }

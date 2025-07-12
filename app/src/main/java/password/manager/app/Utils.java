@@ -38,8 +38,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import password.manager.app.singletons.Logger;
-import password.manager.app.utils.IOManager;
-import password.manager.app.utils.ObservableResourceFactory;
+import password.manager.app.singletons.ObservableResourceFactory;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.DialogPane;
@@ -134,14 +133,14 @@ public final class Utils {
         }
     }
 
-    public static void checkValidUi(Object pane, String paneName, @NotNull IOManager ioManager, @NotNull ObservableResourceFactory langResources) {
+    public static void checkValidUi(Object pane, String paneName) {
         if(pane != null) {
             Logger.getInstance().addInfo("Success [" + paneName + "]");
             return;
         }
         
         // Since it's a one-time error, just create it during the error process
-        Alert alert = new Alert(AlertType.ERROR, langResources.getValue("ui_error"), ButtonType.YES, ButtonType.NO);
+        Alert alert = new Alert(AlertType.ERROR, ObservableResourceFactory.getInstance().getValue("ui_error"), ButtonType.YES, ButtonType.NO);
         setDefaultButton(alert, ButtonType.NO);
 
         alert.showAndWait();

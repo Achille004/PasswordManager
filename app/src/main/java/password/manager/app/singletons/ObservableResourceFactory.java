@@ -16,7 +16,7 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package password.manager.app.utils;
+package password.manager.app.singletons;
 
 import java.util.ResourceBundle;
 
@@ -28,7 +28,31 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.control.Labeled;
 
 public final class ObservableResourceFactory {
-    private final ObjectProperty<ResourceBundle> resources = new SimpleObjectProperty<>();
+    private final ObjectProperty<ResourceBundle> resources;
+
+    private static ObservableResourceFactory instance = null;
+
+    /**
+     * Creates the singleton ObservableResourceFactory.
+     */
+    public static synchronized void createInstance(String bundleName) throws IllegalStateException {
+        if (instance != null) {
+            throw new IllegalStateException("ObservableResourceFactory instance already created");
+        }
+        instance = new ObservableResourceFactory(bundleName);
+    }
+
+    public static ObservableResourceFactory getInstance() {
+        if (instance == null) {
+            throw new IllegalStateException("ObservableResourceFactory instance not created yet");
+        }
+        return instance;
+    }
+
+    private ObservableResourceFactory(String bundleName) {
+        // Initialize with default resources, can be set later
+        resources = new SimpleObjectProperty<>(ResourceBundle.getBundle(bundleName));
+    }
 
     public ObjectProperty<ResourceBundle> resourcesProperty() {
         return resources;

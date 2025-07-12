@@ -28,15 +28,21 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import lombok.Getter;
+import password.manager.app.singletons.IOManager;
+
 import org.jetbrains.annotations.NotNull;
 
 public class App extends Application {
-    private AppManager appManager;
-    private HostServices hostServices;
+    private static @Getter HostServices appHostServices;
+    private static @Getter AnchorPane appScenePane;
+    private static @Getter Parameters appParameters;
 
     @Override
     public void start(@NotNull Stage primaryStage) {
-        hostServices = getHostServices();
+        appHostServices = getHostServices();
+        appScenePane = new AnchorPane();
+        appParameters = getParameters();
 
         Font.loadFont(getClass().getResourceAsStream("/font/Roboto-Bold.ttf"), 14);
         Font.loadFont(getClass().getResourceAsStream("/font/Roboto-BoldItalic.ttf"), 14);
@@ -44,20 +50,19 @@ public class App extends Application {
         Font.loadFont(getClass().getResourceAsStream("/font/Roboto-Regular.ttf"), 14);
         Font.loadFont(getClass().getResourceAsStream("/font/Charm-Bold.ttf"), 14);
         
-        AnchorPane scenePane = new AnchorPane();
-        appManager = new AppManager(scenePane, hostServices, getParameters());
-
         primaryStage.setTitle("Password Manager");
         primaryStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/icon.png"))));
         primaryStage.setOnCloseRequest(_ -> Platform.exit());
         primaryStage.setResizable(false);
-        primaryStage.setScene(new Scene(scenePane, 900, 600));
+        primaryStage.setScene(new Scene(appScenePane, 900, 600));
+
+        AppManager.startApp();
         primaryStage.show();
     }
 
     @Override
     public void stop() {
-        appManager.getIoManager().saveAll();
+        IOManager.getInstance().saveAll();
     }
 
     public static void main(String[] args) {

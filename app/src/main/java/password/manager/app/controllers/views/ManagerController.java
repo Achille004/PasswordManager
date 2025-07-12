@@ -11,7 +11,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
@@ -35,9 +34,9 @@ import javafx.util.Duration;
 import lombok.Getter;
 import password.manager.app.enums.SortingOrder;
 import password.manager.app.security.Account;
+import password.manager.app.singletons.IOManager;
 import password.manager.app.singletons.Logger;
-import password.manager.app.utils.IOManager;
-import password.manager.app.utils.ObservableResourceFactory;
+import password.manager.app.singletons.ObservableResourceFactory;
 import password.manager.lib.ReadablePasswordFieldWithStr;
 
 public class ManagerController extends AbstractViewController {
@@ -46,10 +45,6 @@ public class ManagerController extends AbstractViewController {
 
     // Tracks edit operations
     private volatile boolean editOperationInProgress = false;
-    
-    public ManagerController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices) {
-        super(ioManager, langResources, hostServices);
-    }
 
     @FXML
     private ListView<Account> accountListView;
@@ -73,9 +68,9 @@ public class ManagerController extends AbstractViewController {
                 }
 
                 // Create a new tab for the selected account
-                EditorController controller = new EditorController(ioManager, langResources, hostServices);
+                EditorController controller = new EditorController();
                 Pane pane = (Pane) loadFxml("/fxml/views/manager/editor.fxml", controller);
-                checkValidUi(pane, "editor", ioManager, langResources);
+                checkValidUi(pane, "editor");
                 
                 controller.setAccount(newItem);
 
@@ -118,16 +113,13 @@ public class ManagerController extends AbstractViewController {
             while(change.next()) {
                 if (change.wasAdded() && !change.getAddedSubList().contains(homeTab)) {
                     Platform.runLater(() -> ACC_TABS.remove(homeTab));
-                } else if (change.wasRemoved()) {
-                    if(ACC_TABS.size() <= 1) {
-                        selectTab(ACC_TABS, homeTab, true);
-                    } else if(!change.getRemoved().contains(homeTab)) {
-                        selectTab(ACC_TABS, addTab, false);
-                    }
+                } else if (change.wasRemoved() && ACC_TABS.size() <= 1) {
+                    selectTab(ACC_TABS, homeTab, true);
                 }
             }
         };
 
+        IOManager ioManager = IOManager.getInstance();
         final ObjectProperty<SortingOrder> SORTING_ORDER_PROPERTY = ioManager.getUserPreferences().getSortingOrderProperty();
         final SortedList<Account> SORTED_ACCOUNT_LIST = ioManager.getSortedAccountList();
 
@@ -152,18 +144,18 @@ public class ManagerController extends AbstractViewController {
 
     private void loadHomeTab() {
         Logger.getInstance().addInfo("Loading home pane...");
-        HomeController homeController = new HomeController(ioManager, langResources, hostServices);
+        HomeController homeController = new HomeController();
         Pane homePane = (Pane) loadFxml("/fxml/views/manager/home.fxml", homeController);
 
-        checkValidUi(homePane, "home", ioManager, langResources);
+        checkValidUi(homePane, "home");
         homeTab.setContent(homePane);
     }
 
     private void loadAddTab() {
         Logger.getInstance().addInfo("Loading editor pane...");
-        EditorController addController = new EditorController(ioManager, langResources, hostServices);
+        EditorController addController = new EditorController();
         Pane addPane = (Pane) loadFxml("/fxml/views/manager/editor.fxml", addController);
-        checkValidUi(addPane, "editor", ioManager, langResources);
+        checkValidUi(addPane, "editor");
 
         addTab.setContent(addPane);
         addTab.setOnSelectionChanged(_ -> {
@@ -202,15 +194,12 @@ public class ManagerController extends AbstractViewController {
         };
     }
 
-    class HomeController extends AbstractViewController {
-        public HomeController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices) {
-            super(ioManager, langResources, hostServices);
-        }
-
+    private class HomeController extends AbstractViewController {
         @FXML
         private Label homeDescTop, homeDescBtm;
 
         public void initialize(URL location, ResourceBundle resources) {
+            ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
             langResources.bindTextProperty(homeDescTop, "home_desc.top");
             langResources.bindTextProperty(homeDescBtm, "home_desc.btm");
         }
@@ -224,12 +213,8 @@ public class ManagerController extends AbstractViewController {
         }
     }
 
-    class EditorController extends AbstractViewController {
+    private class EditorController extends AbstractViewController {
         private @Getter Account account;
-        
-        public EditorController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices) {
-            super(ioManager, langResources, hostServices);
-        }
 
         @FXML
         private TextField editorSoftware, editorUsername;
@@ -248,8 +233,9 @@ public class ManagerController extends AbstractViewController {
         private Label editorAccSelLbl, editorSoftwareLbl, editorUsernameLbl, editorPasswordLbl;
 
         public void initialize(URL location, ResourceBundle resources) {
-            ObjectProperty<SortingOrder> sortingOrderProperty = ioManager.getUserPreferences().getSortingOrderProperty();
+            ObjectProperty<SortingOrder> sortingOrderProperty = IOManager.getInstance().getUserPreferences().getSortingOrderProperty();
 
+            ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
             langResources.bindTextProperty(editorSoftwareLbl, "software");
             langResources.bindTextProperty(editorUsernameLbl, "username");
             langResources.bindTextProperty(editorPasswordLbl, "password");
@@ -276,7 +262,7 @@ public class ManagerController extends AbstractViewController {
             if(account != null) {
                 editorSoftware.setText(account.getSoftware());
                 editorUsername.setText(account.getUsername());
-                ioManager.getAccountPassword(editorPassword, account);
+                IOManager.getInstance().getAccountPassword(editorPassword, account);
             } else {
                 clearTextFields(editorSoftware, editorUsername, editorPassword.getTextField());
             }
@@ -308,11 +294,11 @@ public class ManagerController extends AbstractViewController {
                   when editing, like the editor creating duplicated tabs for the same account.
                 */
                 if(account == null) {
-                    ioManager.addAccount(software, username, password);
+                    IOManager.getInstance().addAccount(software, username, password);
                     reset();
                 } else {
                     editOperationInProgress = true;
-                    ioManager.editAccount(account, software, username, password)
+                    IOManager.getInstance().editAccount(account, software, username, password)
                             .thenAccept(result -> Platform.runLater(() -> {
                                 if (result) {
                                     MultipleSelectionModel<Account> accountSelectionModel = accountListView.getSelectionModel();
@@ -339,7 +325,7 @@ public class ManagerController extends AbstractViewController {
                 // clear the selection in order to avoid the default behavior of the list view (opening another account)
                 accountListView.getSelectionModel().clearSelection();
                 // removes the selected account from the list
-                ioManager.removeAccount(account);
+                IOManager.getInstance().removeAccount(account);
             } else {
                 editorDeleteBtn.setStyle("-fx-background-color: -fx-color-red");
                 editorDeleteCounter = true;

@@ -32,7 +32,6 @@ import java.util.function.Function;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import javafx.application.HostServices;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.value.ObservableValue;
@@ -46,15 +45,12 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 import password.manager.app.Utils;
 import password.manager.app.enums.SortingOrder;
+import password.manager.app.singletons.IOManager;
 import password.manager.app.singletons.Logger;
-import password.manager.app.utils.IOManager;
-import password.manager.app.utils.ObservableResourceFactory;
+import password.manager.app.singletons.ObservableResourceFactory;
 import password.manager.lib.ReadablePasswordFieldWithStr;
 
 public class SettingsController extends AbstractViewController {
-    public SettingsController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices) {
-        super(ioManager, langResources, hostServices);
-    }
 
     @FXML
     private ComboBox<Locale> settingsLangCB;
@@ -68,9 +64,11 @@ public class SettingsController extends AbstractViewController {
     private Label settingsLangLbl, settingsSortingOrderLbl, settingsMasterPasswordLbl, settingsMasterPasswordDesc, settingsDriveConnLbl, wip;
 
     public void initialize(URL location, ResourceBundle resources) {
+        IOManager ioManager = IOManager.getInstance();
         ObjectProperty<Locale> localeProperty = ioManager.getUserPreferences().getLocaleProperty();
         ObjectProperty<SortingOrder> sortingOrderProperty = ioManager.getUserPreferences().getSortingOrderProperty();
 
+        ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
         langResources.bindTextProperty(settingsLangLbl, "language");
         langResources.bindTextProperty(settingsSortingOrderLbl, "sorting_ord");
         langResources.bindTextProperty(settingsMasterPasswordLbl, "master_pas");
@@ -113,7 +111,7 @@ public class SettingsController extends AbstractViewController {
 
     public void reset() {
         clearStyle(settingsMasterPassword.getTextField());
-        ioManager.displayMasterPassword(settingsMasterPassword);
+        IOManager.getInstance().displayMasterPassword(settingsMasterPassword);
         settingsMasterPassword.setReadable(false);
     }
 
@@ -126,7 +124,7 @@ public class SettingsController extends AbstractViewController {
 
     @Contract(value = "_ -> new", pure = true)
     private @NotNull StringConverter<SortingOrder> sortingOrderStringConverter(Locale locale) {
-        return toStringConverter(item -> item != null ? langResources.getValue(item.getI18nKey()) : null);
+        return toStringConverter(item -> item != null ? ObservableResourceFactory.getInstance().getValue(item.getI18nKey()) : null);
     }
 
     @Contract(value = "_ -> new", pure = true)

@@ -28,8 +28,6 @@ import java.util.ResourceBundle;
 
 import org.jetbrains.annotations.Nullable;
 
-import javafx.application.Application.Parameters;
-import javafx.application.HostServices;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -39,39 +37,28 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
-import lombok.Getter;
 import password.manager.app.controllers.FirstRunController;
 import password.manager.app.controllers.LoginController;
 import password.manager.app.controllers.MainController;
+import password.manager.app.singletons.IOManager;
 import password.manager.app.singletons.Logger;
-import password.manager.app.utils.IOManager;
-import password.manager.app.utils.ObservableResourceFactory;
+import password.manager.app.singletons.ObservableResourceFactory;
 
 public class AppManager {
-    private final @Getter IOManager ioManager;
-    private final @Getter ObservableResourceFactory langResources;
-    private final @Getter HostServices hostServices;
+    private static final IOManager IO_MANAGER;
 
-    private final Parameters parameters;
-    private final AnchorPane scenePane;
-
-    public AppManager(AnchorPane scenePane, HostServices hostServices, Parameters parameters) {
-        this.ioManager = new IOManager();
-        this.langResources = new ObservableResourceFactory();
-
-        this.scenePane = scenePane;
-        this.hostServices = hostServices;
-
-        this.parameters = parameters;
-        initialize();
+    static {
+        IOManager.createInstance();
+        IO_MANAGER = IOManager.getInstance();
     }
 
-    private void initialize() {
-        langResources.setResources(ResourceBundle.getBundle("/bundles/Lang"));
-        ioManager.loadData(langResources);
+    public static synchronized AppManager startApp() {
+        return new AppManager();
+    }
 
-        ObjectProperty<Locale> locale = ioManager.getUserPreferences().getLocaleProperty();
-        langResources.resourcesProperty().bind(Bindings.createObjectBinding(
+    private AppManager() {
+        ObjectProperty<Locale> locale = IOManager.getInstance().getUserPreferences().getLocaleProperty();
+        ObservableResourceFactory.getInstance().resourcesProperty().bind(Bindings.createObjectBinding(
                 () -> {
                     Locale localeValue = locale.getValue();
                     return ResourceBundle.getBundle("/bundles/Lang", localeValue);
@@ -85,11 +72,11 @@ public class AppManager {
             }
         });
 
-        List<String> list = this.parameters.getRaw();
+        List<String> list = App.getAppParameters().getRaw();
         Logger.getInstance().addInfo("Found " + list.size() + " parameters");
-        if (!ioManager.isFirstRun() && list.size() > 1 && ("-p".equals(list.get(0)) || "--password".equals(list.get(0)))) {
+        if (!IO_MANAGER.isFirstRun() && list.size() > 1 && ("-p".equals(list.get(0)) || "--password".equals(list.get(0)))) {
             Logger.getInstance().addInfo("Trying to authenticate via arguments");
-            if (ioManager.authenticate(list.get(1))) {
+            if (IO_MANAGER.authenticate(list.get(1))) {
                 Logger.getInstance().addInfo("Correct password, skipping login");
                 switchToMain.set(true);
             } else {
@@ -100,18 +87,19 @@ public class AppManager {
         if (!switchToMain.get()) {
             AnchorPane pane;
             String paneName;
-            if (ioManager.isFirstRun()) {
+            if (IO_MANAGER.isFirstRun()) {
                 Logger.getInstance().addInfo("Loading first run pane...");
-                pane = (AnchorPane) loadFxml("/fxml/first_run.fxml", new FirstRunController(ioManager, langResources, hostServices, switchToMain));
+                pane = (AnchorPane) loadFxml("/fxml/first_run.fxml", new FirstRunController(switchToMain));
                 paneName = "first_run";
             } else {
                 Logger.getInstance().addInfo("Loading login pane...");
-                pane = (AnchorPane) loadFxml("/fxml/login.fxml", new LoginController(ioManager, langResources, hostServices, switchToMain));
+                pane = (AnchorPane) loadFxml("/fxml/login.fxml", new LoginController(switchToMain));
                 paneName = "login";
             }
 
-            checkValidUi(pane, paneName, ioManager, langResources);
+            checkValidUi(pane, paneName);
             
+            AnchorPane scenePane = App.getAppScenePane();
             scenePane.getChildren().clear();
             scenePane.getChildren().add(pane);
         }
@@ -119,10 +107,11 @@ public class AppManager {
 
     private void loadMainPane() {
         Logger.getInstance().addInfo("Loading main pane...");
-        final MainController mainController = new MainController(ioManager, langResources, hostServices);
+        final MainController mainController = new MainController();
         final BorderPane mainPane = (BorderPane) loadFxml("/fxml/main.fxml", mainController);
-        checkValidUi(mainPane, "main", ioManager, langResources);
+        checkValidUi(mainPane, "main");
         
+        AnchorPane scenePane = App.getAppScenePane();
         scenePane.getChildren().clear();
         scenePane.getChildren().add(mainPane);
         mainController.mainTitleAnimation();
