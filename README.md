@@ -1,4 +1,4 @@
-# Password Manager <img src="https://wakatime.com/badge/github/Achille004/PasswordManager.svg?style=flat" alt="wakatime"> <img src="https://img.shields.io/badge/version-3.0.4-green" alt="version"> <img alt="license" src="https://img.shields.io/github/license/Achille004/PasswordManager">
+# Password Manager <img src="https://wakatime.com/badge/github/Achille004/PasswordManager.svg?style=flat" alt="wakatime"> <img src="https://img.shields.io/badge/version-3.1.0-green" alt="version"> <img alt="license" src="https://img.shields.io/github/license/Achille004/PasswordManager">
 
 Password Manager is a secure and efficient application designed to manage your locally stored accounts. Each account entry includes software details, username, and a password encrypted using [AES](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard) ([GCM](https://en.wikipedia.org/wiki/Galois/Counter_Mode) mode). The application itself is protected by a master password that the user must remember.
 
@@ -22,7 +22,7 @@ On the other hand, portable versions require a Java Runtime Environment (JRE).
 
 ## Exporting Data
 
-The software previously supported exporting to `passwords.html` and `passwords.csv` files, which were saved on the desktop. However, this feature is currently being rewritten and is not available in version 3.0.4. Please note that these files are not encrypted and are thus extremely vulnerable.
+The software previously supported exporting to `passwords.html` and `passwords.csv` files, which were saved on the desktop. However, this feature is currently being rewritten and is not available in version 3.1.0. Please note that these files are not encrypted and are thus extremely vulnerable.
 
 ## Contribution
 
