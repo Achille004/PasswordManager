@@ -41,7 +41,7 @@ public class HomeController extends AbstractViewController {
     }
 
     public void reset() {
-        homeDescTop.sceneProperty().addListener((_, _, newScene) -> {
+        homeDescTop.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene != null) {
                 homeDescTop.requestFocus();
             }
