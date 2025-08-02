@@ -28,6 +28,7 @@ import javafx.animation.Timeline;
 import javafx.application.HostServices;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -55,6 +56,9 @@ public class DecrypterController extends AbstractViewController {
     private ComboBox<Account> decryptCB;
 
     @FXML
+    private TextField searchField;
+
+    @FXML
     private TextField decryptSoftware, decryptUsername;
     @FXML
     private ReadablePasswordField decryptPassword;
@@ -68,7 +72,7 @@ public class DecrypterController extends AbstractViewController {
     private boolean decryptDeleteCounter = false;
     
     @FXML
-    private Label decryptAccSelLbl, decryptSoftwareLbl, decryptUsernameLbl, decryptPasswordLbl;
+    private Label decryptAccSelLbl, searchLbl, decryptSoftwareLbl, decryptUsernameLbl, decryptPasswordLbl;
 
     @FXML
     private ProgressBar decryptPassStr;
@@ -77,9 +81,13 @@ public class DecrypterController extends AbstractViewController {
         ObjectProperty<SortingOrder> sortingOrderProperty = ioManager.getUserPreferences().getSortingOrderProperty();
 
         langResources.bindTextProperty(decryptAccSelLbl, "select_acc");
+        langResources.bindTextProperty(searchLbl, "search");
         langResources.bindTextProperty(decryptSoftwareLbl, "software");
         langResources.bindTextProperty(decryptUsernameLbl, "username");
         langResources.bindTextProperty(decryptPasswordLbl, "password");
+        
+        // Set search field placeholder text
+        searchField.promptTextProperty().bind(langResources.getStringBinding("search.placeholder"));
 
         decryptPassword.bindPasswordStrength(decryptPassStr);
 
@@ -93,8 +101,23 @@ public class DecrypterController extends AbstractViewController {
             }
         });
 
-        SortedList<Account> accountList = ioManager.getSortedAccountList();
+        // Create filtered list for search functionality
+        FilteredList<Account> filteredAccountList = new FilteredList<>(ioManager.getSortedAccountList().getSource());
+        SortedList<Account> accountList = new SortedList<>(filteredAccountList);
         decryptCB.setItems(accountList);
+
+        // Implement search functionality
+        searchField.textProperty().addListener((obs, oldValue, newValue) -> {
+            filteredAccountList.setPredicate(account -> {
+                if (newValue == null || newValue.trim().isEmpty()) {
+                    return true; // Show all accounts when search is empty
+                }
+                
+                String searchText = newValue.toLowerCase().trim();
+                return account.getSoftware().toLowerCase().contains(searchText) ||
+                       account.getUsername().toLowerCase().contains(searchText);
+            });
+        });
 
         decryptCB.converterProperty().bind(sortingOrderProperty.map(this::accountStringConverter));
         accountList.comparatorProperty().bind(Bindings.createObjectBinding(() -> {
@@ -124,7 +147,7 @@ public class DecrypterController extends AbstractViewController {
     public void reset() {
         decryptPassStr.setProgress(0);
         resetKeepSelection();
-        clearTextFields(decryptSoftware, decryptUsername, decryptPassword.getTextField());
+        clearTextFields(searchField, decryptSoftware, decryptUsername, decryptPassword.getTextField());
         decryptCB.getSelectionModel().clearSelection();
         decryptPassword.setReadable(false);
     }
