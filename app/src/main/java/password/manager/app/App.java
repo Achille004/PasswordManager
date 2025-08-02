@@ -49,7 +49,7 @@ public class App extends Application {
 
         primaryStage.setTitle("Password Manager");
         primaryStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/icon.png"))));
-        primaryStage.setOnCloseRequest(_ -> Platform.exit());
+        primaryStage.setOnCloseRequest(event -> Platform.exit());
         primaryStage.setResizable(false);
         primaryStage.setScene(new Scene(scenePane, 900, 600));
         primaryStage.show();

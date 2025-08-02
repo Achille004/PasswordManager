@@ -83,8 +83,8 @@ public class DecrypterController extends AbstractViewController {
 
         decryptPassword.bindPasswordStrength(decryptPassStr);
 
-        decryptSoftware.setOnAction(_ -> decryptUsername.requestFocus());
-        decryptUsername.setOnAction(_ -> decryptPassword.requestFocus());
+        decryptSoftware.setOnAction(event -> decryptUsername.requestFocus());
+        decryptUsername.setOnAction(event -> decryptPassword.requestFocus());
         decryptPassword.setOnAction(this::decryptSave);
 
         decryptSoftware.sceneProperty().addListener((obs, oldScene, newScene) -> {
@@ -103,7 +103,7 @@ public class DecrypterController extends AbstractViewController {
         }, sortingOrderProperty));
 
         decryptCB.getSelectionModel().selectedItemProperty().addListener(
-                (_, _, newItem) -> {
+                (obs, oldItem, newItem) -> {
                     resetKeepSelection();
                     if (newItem != null) {
                         // shows the software, username and account of the selected account
@@ -117,8 +117,8 @@ public class DecrypterController extends AbstractViewController {
         ObjectProperty<Account> selectedAccount = decryptCB.valueProperty();
 
         decryptSaveTimeline = new Timeline(
-                new KeyFrame(Duration.ZERO, _ -> decryptSaveBtn.setStyle("-fx-background-color: #0e0")),
-                new KeyFrame(Duration.seconds(1), _ -> clearStyle(decryptSaveBtn)));
+                new KeyFrame(Duration.ZERO, event -> decryptSaveBtn.setStyle("-fx-background-color: #0e0")),
+                new KeyFrame(Duration.seconds(1), event -> clearStyle(decryptSaveBtn)));
     }
 
     public void reset() {

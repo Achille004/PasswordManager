@@ -56,21 +56,21 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
         textField.textProperty().bindBidirectional(passwordField.textProperty());
         textField.styleProperty().bindBidirectional(passwordField.styleProperty());
 
-        this.prefWidthProperty().addListener((_, _, newValue) -> {
+        this.prefWidthProperty().addListener((obs, oldValue, newValue) -> {
             double width = newValue.doubleValue(), height = this.getPrefHeight();
             setPrefSize(width, height);
             setMinSize(width, height);
             setMaxSize(width, height);
         });
 
-        this.prefHeightProperty().addListener((_, _, newValue) -> {
+        this.prefHeightProperty().addListener((obs, oldValue, newValue) -> {
             double width = this.getPrefWidth(), height = newValue.doubleValue();
             setPrefSize(width, height);
             setMinSize(width, height);
             setMaxSize(width, height);
         });
 
-        readable.addListener((_, _, newValue) -> {
+        readable.addListener((obs, oldValue, newValue) -> {
             if (newValue) {
                 imageView.setImage(showingImage);
                 textField.setVisible(true);
@@ -82,7 +82,7 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
             }
         });
 
-        imageView.addEventFilter(MouseEvent.MOUSE_PRESSED, _ -> toggleReadable());
+        imageView.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> toggleReadable());
         // imageView.addEventFilter(MouseEvent.MOUSE_PRESSED, _ -> setReadable(true));
         // imageView.addEventFilter(MouseEvent.MOUSE_RELEASED, _ -> setReadable(false));
 
@@ -171,7 +171,7 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
         Timeline[] timeline = new Timeline[1];
         timeline[0] = null;
 
-        ChangeListener<String> listener = (_, _, newValue) -> {
+        ChangeListener<String> listener = (obs, oldValue, newValue) -> {
             double passwordStrength = passwordStrength(newValue);
             passwordStrength = Math.max(20d, passwordStrength);
             passwordStrength = Math.min(50d, passwordStrength);
@@ -210,7 +210,7 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
 
         // Trigger initial update once the ProgressBar skin is ready
         // This is a workaround for the fact that the skin may not be ready immediately
-        progressBar.skinProperty().addListener((_, _, newSkin) -> {
+        progressBar.skinProperty().addListener((obs, oldSkin, newSkin) -> {
             if (newSkin != null) {
                 listener.changed(textField.textProperty(), "", textField.getText());
             }
