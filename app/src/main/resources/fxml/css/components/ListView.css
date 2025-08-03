@@ -40,8 +40,10 @@ ListView .list-cell {
   -fx-background-color: -fx-color-background;
   -fx-text-fill: -fx-color-text;
   -fx-padding: 0.5em 1em;
+  transition: -fx-background-color 0.5s ease;
 }
 
 ListView .list-cell:hover {
-  -fx-background-color: -fx-color-element-bg;
+  /* Just a little notch on the left */
+  -fx-background-color: linear-gradient(to right, -fx-color-green 0%, -fx-color-green 2%,-fx-color-background 2.01%);
 }

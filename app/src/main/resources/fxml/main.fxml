@@ -45,10 +45,10 @@
     <top>
         <AnchorPane minHeight="-Infinity" prefHeight="35.0" prefWidth="900.0" styleClass="titlebar" BorderPane.alignment="CENTER">
             <Label fx:id="psmgTitle" layoutX="6.0" minWidth="60.0" prefHeight="35.0" prefWidth="208.0" styleClass="bold-italic, sz24" text="Password Manager" />
-            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="795.0" mnemonicParsing="false" onAction="#settingsNavBarButton" prefHeight="35.0" prefWidth="35.0" styleClass="navBtn" text="S">
+            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="795.0" mnemonicParsing="false" onAction="#settingsNavBarAction" prefHeight="35.0" prefWidth="35.0" styleClass="navBtn" text="S">
                 <graphic>
                     <ImageView fx:id="settingsButtonImageView" fitHeight="33.0" fitWidth="33.0" pickOnBounds="true" preserveRatio="true">
-                        <Image url="@../images/icons/sidebar/settings.png" />
+                        <Image url="@../images/icons/navbar/settings.png" />
                     </ImageView>
                 </graphic>
                 <padding>
@@ -62,7 +62,7 @@
                 <graphic>
                   <ImageView fitHeight="33.0" fitWidth="33.0" pickOnBounds="true" preserveRatio="true">
                       <image>
-                        <Image url="@../images/icons/sidebar/info.png" />
+                        <Image url="@../images/icons/navbar/info.png" />
                       </image>
                   </ImageView>
                 </graphic>
@@ -73,11 +73,11 @@
                   <Cursor fx:constant="HAND" />
                 </cursor>
             </Button>
-            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="865.0" mnemonicParsing="false" onAction="#folderNavBarButton" prefHeight="35.0" prefWidth="35.0" styleClass="navBtn" text="F">
+            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="865.0" mnemonicParsing="false" onAction="#folderNavBarAction" prefHeight="35.0" prefWidth="35.0" styleClass="navBtn" text="F">
                 <graphic>
                   <ImageView fitHeight="33.0" fitWidth="33.0" pickOnBounds="true" preserveRatio="true">
                       <image>
-                        <Image url="@../images/icons/sidebar/folder.png" />
+                        <Image url="@../images/icons/navbar/folder.png" />
                       </image>
                   </ImageView>
                 </graphic>

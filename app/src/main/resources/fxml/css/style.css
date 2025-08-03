@@ -94,8 +94,11 @@ PasswordField {
 
 Button {
   -fx-background-color: transparent;
-  -fx-background-radius: 8deg;
-  /*transition: -fx-background-color 0.5s ease;*/  
+  -fx-background-radius: 8deg; 
+}
+
+Button:focused {
+  -fx-focus-color: transparent; 
 }
 
 CheckBox .box {
@@ -121,7 +124,7 @@ Separator .line {
   -fx-background-color: -fx-color-green;
 }
 
-.sidebar {
+.navbar {
   -fx-border-color: -fx-color-element-bg;
   -fx-border-width: 0 2px 0 0;
 }

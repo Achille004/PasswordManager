@@ -80,8 +80,8 @@ public class MainController extends AbstractController {
         titleStages = stages.toArray(new String[0]);
     }
 
-    private final Image settingsImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/icons/sidebar/settings.png")));
-    private final Image backImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/icons/sidebar/back.png")));
+    private final Image settingsImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/icons/navbar/settings.png")));
+    private final Image backImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/icons/navbar/back.png")));
 
     private boolean isSettingsOpen = false;
     private Timeline titleAnimation;
@@ -128,7 +128,7 @@ public class MainController extends AbstractController {
     }
 
     @FXML
-    private void folderNavBarButton(ActionEvent event) {
+    private void folderNavBarAction(ActionEvent event) {
         Thread.startVirtualThread(() -> {
             try {
                 Desktop.getDesktop().open(IOManager.FILE_PATH.toFile());
@@ -139,7 +139,7 @@ public class MainController extends AbstractController {
     }
 
     @FXML
-    public void settingsNavBarButton(ActionEvent event) {
+    public void settingsNavBarAction(ActionEvent event) {
         if(settingsPane == null || settingsController == null) {
             Logger.getInstance().addInfo("Loading settings pane...");
             settingsController = new SettingsController();

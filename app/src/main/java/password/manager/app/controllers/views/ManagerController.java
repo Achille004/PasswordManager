@@ -21,8 +21,10 @@ package password.manager.app.controllers.views;
 import static password.manager.app.Utils.*;
 
 import java.net.URL;
+import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.ResourceBundle;
+import java.util.function.Predicate;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -35,6 +37,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -58,6 +61,8 @@ import password.manager.app.singletons.ObservableResourceFactory;
 import password.manager.lib.ReadablePasswordFieldWithStr;
 
 public class ManagerController extends AbstractViewController {
+    private static final Duration SEARCH_DELAY = Duration.millis(300);
+
     // Cache for tabs associated with accounts
     private final IdentityHashMap<Account, Tab> TABS_CACHE = new IdentityHashMap<>();
 
@@ -72,6 +77,15 @@ public class ManagerController extends AbstractViewController {
     
     @FXML
     private Tab addTab, homeTab;
+
+    @FXML
+    private TextField searchField;
+
+    @FXML
+    private Button matchCaseButton, matchWholeWordButton;
+
+    private Timeline searchTimeline;
+    private boolean isMatchCase = false, isMatchWholeWord = false; 
 
     public void initialize(URL location, ResourceBundle resources) {
         final ObservableList<Tab> ACC_TABS = accountTabPane.getTabs();
@@ -136,12 +150,12 @@ public class ManagerController extends AbstractViewController {
                 }
             }
         };
-
         IOManager ioManager = IOManager.getInstance();
         final ObjectProperty<SortingOrder> SORTING_ORDER_PROPERTY = ioManager.getUserPreferences().getSortingOrderProperty();
         final SortedList<Account> SORTED_ACCOUNT_LIST = ioManager.getSortedAccountList();
+        final FilteredList<Account> FILTERED_ACCOUNT_LIST = new FilteredList<>(SORTED_ACCOUNT_LIST);
 
-        accountListView.setItems(SORTED_ACCOUNT_LIST);
+        accountListView.setItems(FILTERED_ACCOUNT_LIST);
         // Set cell factory to control how Account objects are displayed
         accountListView.cellFactoryProperty().bind(SORTING_ORDER_PROPERTY.map(this::accountCellFactory));
         accountListView.getSelectionModel().selectedItemProperty().addListener(LIST_VIEW_HANDLER);
@@ -154,11 +168,64 @@ public class ManagerController extends AbstractViewController {
         SORTED_ACCOUNT_LIST.addListener(ACCOUNT_LIST_CHANGE_HANDLER);
         ACC_TABS.addListener(ACC_TABS_CHANGE_HANDLER);
 
+        searchTimeline = new Timeline(new KeyFrame(SEARCH_DELAY, _ -> {
+            String searchText = searchField.getText().trim();
+            if (searchText == null || searchText.isEmpty()) {
+                FILTERED_ACCOUNT_LIST.setPredicate(null); // Show all accounts
+                return;
+            }
+
+            final String finalSearchText = isMatchCase ? searchText : searchText.toLowerCase();
+            FILTERED_ACCOUNT_LIST.setPredicate(account -> {
+                String software = isMatchCase ? account.getSoftware() : account.getSoftware().toLowerCase();
+                String username = isMatchCase ? account.getUsername() : account.getUsername().toLowerCase();
+                
+                if (isMatchWholeWord) {
+                    return Arrays.stream(software.split("[\\s\\p{P}]+")).anyMatch(finalSearchText::equals) || Arrays.stream(username.split("[\\s\\p{Punct}]+")).anyMatch(finalSearchText::equals);
+                } else {
+                    return software.contains(finalSearchText) || username.contains(finalSearchText);
+                }
+            });
+        }));
+        searchTimeline.setCycleCount(1);
+
+        searchField.textProperty().addListener((_, _, _) -> {
+            searchTimeline.stop();
+            searchTimeline.playFromStart();
+        });
+
+        searchField.setOnAction(_ -> {
+            searchTimeline.stop();
+            searchTimeline.playFrom(SEARCH_DELAY);
+        });
+
         loadHomeTab();
         loadAddTab();
     }
 
     public void reset() {}
+
+    @FXML
+    public void matchCaseAction(ActionEvent event) {
+        isMatchCase = !isMatchCase;
+        if (isMatchCase) {
+            matchCaseButton.setStyle("-fx-background-color: -fx-color-green; -fx-background-radius: 2deg;");
+        } else {
+            clearStyle(matchCaseButton);
+        }
+        searchTimeline.playFrom(SEARCH_DELAY);
+    }
+
+    @FXML
+    public void matchWholeWordAction(ActionEvent event) {
+        isMatchWholeWord = !isMatchWholeWord;
+        if (isMatchWholeWord) {
+            matchWholeWordButton.setStyle("-fx-background-color: -fx-color-green; -fx-background-radius: 2deg;");
+        } else {
+            clearStyle(matchWholeWordButton);
+        }
+        searchTimeline.playFrom(SEARCH_DELAY);
+    }
 
     private void loadHomeTab() {
         Logger.getInstance().addInfo("Loading home pane...");
