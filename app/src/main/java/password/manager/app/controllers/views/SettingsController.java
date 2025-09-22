@@ -64,11 +64,11 @@ public class SettingsController extends AbstractViewController {
     private Label settingsLangLbl, settingsSortingOrderLbl, settingsMasterPasswordLbl, settingsMasterPasswordDesc, settingsDriveConnLbl, wip;
 
     public void initialize(URL location, ResourceBundle resources) {
-        IOManager ioManager = IOManager.getInstance();
-        ObjectProperty<Locale> localeProperty = ioManager.getUserPreferences().getLocaleProperty();
-        ObjectProperty<SortingOrder> sortingOrderProperty = ioManager.getUserPreferences().getSortingOrderProperty();
+        final IOManager ioManager = IOManager.getInstance();
+        final ObjectProperty<Locale> localeProperty = ioManager.getUserPreferences().getLocaleProperty();
+        final ObjectProperty<SortingOrder> sortingOrderProperty = ioManager.getUserPreferences().getSortingOrderProperty();
 
-        ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
+        final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
         langResources.bindTextProperty(settingsLangLbl, "language");
         langResources.bindTextProperty(settingsSortingOrderLbl, "sorting_ord");
         langResources.bindTextProperty(settingsMasterPasswordLbl, "master_pas");
@@ -78,7 +78,7 @@ public class SettingsController extends AbstractViewController {
 
         // Language box
 
-        SortedList<Locale> languages = getFXSortedList(Utils.SUPPORTED_LOCALE);
+        final SortedList<Locale> languages = getFXSortedList(Utils.SUPPORTED_LOCALE);
 
         settingsLangCB.setItems(languages);
         settingsLangCB.getSelectionModel().select(ioManager.getUserPreferences().getLocale());
@@ -89,7 +89,7 @@ public class SettingsController extends AbstractViewController {
 
         // Sorting order box
 
-        SortedList<SortingOrder> sortingOrders = getFXSortedList(SortingOrder.class.getEnumConstants());
+        final SortedList<SortingOrder> sortingOrders = getFXSortedList(SortingOrder.class.getEnumConstants());
 
         settingsOrderCB.setItems(sortingOrders);
         settingsOrderCB.getSelectionModel().select(ioManager.getUserPreferences().getSortingOrder());

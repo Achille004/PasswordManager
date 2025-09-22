@@ -72,17 +72,17 @@ public final class Encrypter {
      * @return The hashed password.
      */
     public static byte[] hash(String password, byte[] salt) {
-        Argon2Parameters params = new Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
+        final Argon2Parameters params = new Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
                 .withSalt(salt)
                 .withParallelism(ARGON2_PARALLELISM)
                 .withMemoryAsKB(ARGON2_MEMORY)
                 .withIterations(ARGON2_ITERATIONS)
                 .build();
 
-        Argon2BytesGenerator generator = new Argon2BytesGenerator();
+        final Argon2BytesGenerator generator = new Argon2BytesGenerator();
         generator.init(params);
 
-        byte[] result = new byte[ARGON2_HASH_LENGTH];
+        final byte[] result = new byte[ARGON2_HASH_LENGTH];
         generator.generateBytes(password.toCharArray(), result);
         return result;
     }
@@ -95,19 +95,19 @@ public final class Encrypter {
      * @return The derived AES key.
      */
     public static byte[] getKey(@NotNull String masterPassword, byte[] salt) {
-        Argon2Parameters params = new Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
+        final Argon2Parameters params = new Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
                 .withSalt(salt)
                 .withParallelism(ARGON2_PARALLELISM)
                 .withMemoryAsKB(ARGON2_MEMORY)
                 .withIterations(ARGON2_ITERATIONS)
                 .build();
 
-        Argon2BytesGenerator generator = new Argon2BytesGenerator();
+        final Argon2BytesGenerator generator = new Argon2BytesGenerator();
         generator.init(params);
 
-        byte[] keyBytes = new byte[ARGON2_AES_KEY_LENGTH];
+        final byte[] keyBytes = new byte[ARGON2_AES_KEY_LENGTH];
         generator.generateBytes(masterPassword.toCharArray(), keyBytes);
-        SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
+        final SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
         return secretKeySpec.getEncoded();
     }
 
@@ -122,7 +122,7 @@ public final class Encrypter {
      */
     public static byte[] encryptAES(@NotNull String password, byte[] key, byte[] iv) throws GeneralSecurityException {
         // Create Cipher object to encrypt
-        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
+        final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
         cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(128, iv));
 
         // Encrypt the password
@@ -140,11 +140,11 @@ public final class Encrypter {
      */
     public static @NotNull String decryptAES(byte[] encryptedPassword, byte[] key, byte[] iv) throws GeneralSecurityException {
         // Create Cipher object to decrypt
-        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
+        final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
         cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(128, iv));
 
         // Decrypt the password
-        byte[] password = cipher.doFinal(encryptedPassword);
+        final byte[] password = cipher.doFinal(encryptedPassword);
 
         // Convert it to String
         return new String(password);
@@ -162,7 +162,7 @@ public final class Encrypter {
      */
     @Deprecated
     public static byte[] hashOld(String password, byte[] salt) throws InvalidKeySpecException {
-        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITERATIONS, HASH_KEY_LENGTH);
+        final KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITERATIONS, HASH_KEY_LENGTH);
         return keyFactory.generateSecret(spec).getEncoded();
     }
 
@@ -178,9 +178,9 @@ public final class Encrypter {
      */
     @Deprecated
     public static byte[] getKeyOld(@NotNull String masterPassword, byte[] salt) throws InvalidKeySpecException {
-        KeySpec spec = new PBEKeySpec(masterPassword.toCharArray(), salt, ITERATIONS, AES_KEY_LENGTH);
-        SecretKey secretKey = keyFactory.generateSecret(spec);
-        SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getEncoded(), "AES");
+        final KeySpec spec = new PBEKeySpec(masterPassword.toCharArray(), salt, ITERATIONS, AES_KEY_LENGTH);
+        final SecretKey secretKey = keyFactory.generateSecret(spec);
+        final SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getEncoded(), "AES");
         return secretKeySpec.getEncoded();
     }
 }

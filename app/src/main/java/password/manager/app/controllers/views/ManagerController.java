@@ -66,9 +66,6 @@ public class ManagerController extends AbstractViewController {
     // Cache for tabs associated with accounts
     private final IdentityHashMap<Account, Tab> TABS_CACHE = new IdentityHashMap<>();
 
-    // Tracks edit operations
-    private volatile boolean editOperationInProgress = false;
-
     @FXML
     private ListView<Account> accountListView;
 
@@ -85,7 +82,10 @@ public class ManagerController extends AbstractViewController {
     private Button matchCaseButton, matchWholeWordButton;
 
     private Timeline searchTimeline;
-    private boolean isMatchCase = false, isMatchWholeWord = false; 
+
+    // App state variables
+    private volatile boolean editOperationInProgress = false;
+    private volatile boolean isMatchCase = false, isMatchWholeWord = false; 
 
     public void initialize(URL location, ResourceBundle resources) {
         final ObservableList<Tab> ACC_TABS = accountTabPane.getTabs();
@@ -93,21 +93,21 @@ public class ManagerController extends AbstractViewController {
         final ChangeListener<Account> LIST_VIEW_HANDLER = (_, _, newItem) -> {
             if (newItem != null && !editOperationInProgress) {
                 // If the tab is cached, reuse it
-                Tab cachedTab = TABS_CACHE.get(newItem);
+                final Tab cachedTab = TABS_CACHE.get(newItem);
                 if (cachedTab != null) {
                     selectTab(ACC_TABS, cachedTab, true);
                     return;
                 }
 
                 // Create a new tab for the selected account
-                EditorController controller = new EditorController();
-                Pane pane = (Pane) loadFxml("/fxml/views/manager/editor.fxml", controller);
+                final EditorController controller = new EditorController();
+                final Pane pane = (Pane) loadFxml("/fxml/views/manager/editor.fxml", controller);
                 
                 controller.setAccount(newItem);
 
-                Tab tab = new Tab();
+                final Tab tab = new Tab();
                 tab.textProperty().bind(Bindings.createStringBinding(() -> {
-                    String software = newItem.getSoftware();
+                    final String software = newItem.getSoftware();
                     return software != null ? software : "";
                 }, newItem.getSoftwareProperty()));
                 tab.setContent(pane);
@@ -131,7 +131,7 @@ public class ManagerController extends AbstractViewController {
                 if (change.wasRemoved() && !change.wasAdded()) {
                     // This is a true removal
                     for (Account removedAccount : change.getRemoved()) {
-                        Tab tab = TABS_CACHE.remove(removedAccount);
+                        final Tab tab = TABS_CACHE.remove(removedAccount);
                         if (tab != null) {
                             Platform.runLater(() -> ACC_TABS.remove(tab));
                         }
@@ -149,7 +149,8 @@ public class ManagerController extends AbstractViewController {
                 }
             }
         };
-        IOManager ioManager = IOManager.getInstance();
+
+        final IOManager ioManager = IOManager.getInstance();
         final ObjectProperty<SortingOrder> SORTING_ORDER_PROPERTY = ioManager.getUserPreferences().getSortingOrderProperty();
         final SortedList<Account> SORTED_ACCOUNT_LIST = ioManager.getSortedAccountList();
         final FilteredList<Account> FILTERED_ACCOUNT_LIST = new FilteredList<>(SORTED_ACCOUNT_LIST);
@@ -160,7 +161,7 @@ public class ManagerController extends AbstractViewController {
         accountListView.getSelectionModel().selectedItemProperty().addListener(LIST_VIEW_HANDLER);
         
         SORTED_ACCOUNT_LIST.comparatorProperty().bind(Bindings.createObjectBinding(() -> {
-            SortingOrder sortingOrder = SORTING_ORDER_PROPERTY.getValue();
+            final SortingOrder sortingOrder = SORTING_ORDER_PROPERTY.getValue();
             return sortingOrder != null ? sortingOrder.getComparator() : null;
         }, SORTING_ORDER_PROPERTY));
 
@@ -168,7 +169,7 @@ public class ManagerController extends AbstractViewController {
         ACC_TABS.addListener(ACC_TABS_CHANGE_HANDLER);
 
         searchTimeline = new Timeline(new KeyFrame(SEARCH_DELAY, _ -> {
-            String searchText = searchField.getText().trim();
+            final String searchText = searchField.getText().trim();
             if (searchText == null || searchText.isEmpty()) {
                 FILTERED_ACCOUNT_LIST.setPredicate(null); // Show all accounts
                 return;
@@ -176,8 +177,8 @@ public class ManagerController extends AbstractViewController {
 
             final String finalSearchText = isMatchCase ? searchText : searchText.toLowerCase();
             FILTERED_ACCOUNT_LIST.setPredicate(account -> {
-                String software = isMatchCase ? account.getSoftware() : account.getSoftware().toLowerCase();
-                String username = isMatchCase ? account.getUsername() : account.getUsername().toLowerCase();
+                final String software = isMatchCase ? account.getSoftware() : account.getSoftware().toLowerCase();
+                final String username = isMatchCase ? account.getUsername() : account.getUsername().toLowerCase();
                 
                 if (isMatchWholeWord) {
                     return Arrays.stream(software.split("[\\s\\p{P}]+")).anyMatch(finalSearchText::equals) || Arrays.stream(username.split("[\\s\\p{Punct}]+")).anyMatch(finalSearchText::equals);
@@ -198,7 +199,7 @@ public class ManagerController extends AbstractViewController {
             searchTimeline.playFrom(SEARCH_DELAY);
         });
         
-        
+        // HERE
 
         loadHomeTab();
         loadAddTab();
@@ -229,14 +230,14 @@ public class ManagerController extends AbstractViewController {
     }
 
     private void loadHomeTab() {
-        HomeController homeController = new HomeController();
-        Pane homePane = (Pane) loadFxml("/fxml/views/manager/home.fxml", homeController);
+        final HomeController homeController = new HomeController();
+        final Pane homePane = (Pane) loadFxml("/fxml/views/manager/home.fxml", homeController);
         homeTab.setContent(homePane);
     }
 
     private void loadAddTab() {
-        EditorController addController = new EditorController();
-        Pane addPane = (Pane) loadFxml("/fxml/views/manager/editor.fxml", addController);
+        final EditorController addController = new EditorController();
+        final Pane addPane = (Pane) loadFxml("/fxml/views/manager/editor.fxml", addController);
 
         addTab.setContent(addPane);
         addTab.setOnSelectionChanged(_ -> {
@@ -280,7 +281,7 @@ public class ManagerController extends AbstractViewController {
         private Label homeDescTop, homeDescBtm;
 
         public void initialize(URL location, ResourceBundle resources) {
-            ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
+            final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
             langResources.bindTextProperty(homeDescTop, "home_desc.top");
             langResources.bindTextProperty(homeDescBtm, "home_desc.btm");
         }
@@ -314,9 +315,9 @@ public class ManagerController extends AbstractViewController {
         private Label editorAccSelLbl, editorSoftwareLbl, editorUsernameLbl, editorPasswordLbl;
 
         public void initialize(URL location, ResourceBundle resources) {
-            ObjectProperty<SortingOrder> sortingOrderProperty = IOManager.getInstance().getUserPreferences().getSortingOrderProperty();
+            final ObjectProperty<SortingOrder> sortingOrderProperty = IOManager.getInstance().getUserPreferences().getSortingOrderProperty();
 
-            ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
+            final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
             langResources.bindTextProperty(editorSoftwareLbl, "software");
             langResources.bindTextProperty(editorUsernameLbl, "username");
             langResources.bindTextProperty(editorPasswordLbl, "password");
@@ -360,9 +361,9 @@ public class ManagerController extends AbstractViewController {
                 editorSaveTimeline.playFromStart();
 
                 // get the new software, username and password
-                String software = editorSoftware.getText();
-                String username = editorUsername.getText();
-                String password = editorPassword.getText();
+                final String software = editorSoftware.getText();
+                final String username = editorUsername.getText();
+                final String password = editorPassword.getText();
                 
                 // save the new attributes of the account
                 /*  
@@ -374,7 +375,8 @@ public class ManagerController extends AbstractViewController {
                   This ensures maximum responsiveness when adding, while avoiding really weird behavior
                   when editing, like the editor creating duplicated tabs for the same account.
                 */
-                if(account == null) {
+                final boolean isNewAccount = account == null; // <- dummy variable to make the code more readable 
+                if(isNewAccount) {
                     IOManager.getInstance().addAccount(software, username, password);
                     reset();
                 } else {
@@ -382,7 +384,7 @@ public class ManagerController extends AbstractViewController {
                     IOManager.getInstance().editAccount(account, software, username, password)
                             .thenAccept(result -> Platform.runLater(() -> {
                                 if (result) {
-                                    MultipleSelectionModel<Account> accountSelectionModel = accountListView.getSelectionModel();
+                                    final MultipleSelectionModel<Account> accountSelectionModel = accountListView.getSelectionModel();
                                     accountSelectionModel.clearSelection();
                                     accountSelectionModel.select(account);
                                 } else {

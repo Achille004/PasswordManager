@@ -36,8 +36,8 @@ import password.manager.app.singletons.Logger;
 @RequiredArgsConstructor
 public enum Exporter {
     HTML((accountList, masterPassword) -> {
-        ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
-        StringBuilder stb = new StringBuilder();
+        final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
+        final StringBuilder stb = new StringBuilder();
 
         stb.append("<!DOCTYPE html>\n<html>\n<style>\n");
 
@@ -71,7 +71,6 @@ public enum Exporter {
         int counter = 0;
         for (Account currentAccount : accountList) {
             counter++;
-
             stb.append("<tr>\n<td>")
                     .append(addZerosToIndex(listSize, counter)).append("</td>\n<td>")
                     .append(currentAccount.getSoftware()).append("</td>\n<td>")
@@ -84,13 +83,12 @@ public enum Exporter {
         return stb.toString();
     }),
     CSV((accountList, masterPassword) -> {
-        StringBuilder stb = new StringBuilder();
+        final StringBuilder stb = new StringBuilder();
 
         final int listSize = accountList.size();
         int counter = 0;
         for (Account currentAccount : accountList) {
             counter++;
-
             stb.append(addZerosToIndex(listSize, counter)).append(",")
                     .append(currentAccount.getSoftware()).append(",")
                     .append(currentAccount.getUsername()).append(",")

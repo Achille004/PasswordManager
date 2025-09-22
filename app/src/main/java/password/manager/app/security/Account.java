@@ -75,19 +75,11 @@ public final class Account {
         isOlderVersion = false;
     }
 
-    public @NotNull String getSoftware() {
-        return software;
-    }
-
     public void setSoftware(@NotNull String software) {
         if (software != null && !software.isEmpty()) {
             this.software = software;
             Platform.runLater(() -> softwareProperty.set(software));
         }
-    }
-
-    public @NotNull String getUsername() {
-        return username;
     }
 
     public void setUsername(@NotNull String username) {
@@ -99,11 +91,11 @@ public final class Account {
 
     private void setPassword(@NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
         // Generate salt and IV
-        SecureRandom random = new SecureRandom();
+        final SecureRandom random = new SecureRandom();
         random.nextBytes(salt);
         random.nextBytes(iv);
 
-        byte[] key = Encrypter.getKey(masterPassword, salt);
+        final byte[] key = Encrypter.getKey(masterPassword, salt);
         this.encryptedPassword = Encrypter.encryptAES(password, key, iv);
     }
 
@@ -118,9 +110,9 @@ public final class Account {
         }
 
         // Save current password in case of rollback
-        byte[] oldEncryptedPassword = this.encryptedPassword;
-        byte[] oldSalt = this.salt.clone();
-        byte[] oldIv = this.iv.clone();
+        final byte[] oldEncryptedPassword = this.encryptedPassword;
+        final byte[] oldSalt = this.salt.clone();
+        final byte[] oldIv = this.iv.clone();
 
         try {
             setPassword(password, masterPassword);
@@ -144,8 +136,8 @@ public final class Account {
 
     public void updateToLatestVersion(@NotNull String masterPassword) throws GeneralSecurityException {
         if (isOlderVersion) {
-            byte[] key = Encrypter.getKeyOld(masterPassword, (software + username).getBytes());
-            String oldPassword = Encrypter.decryptAES(encryptedPassword, key, iv);
+            final byte[] key = Encrypter.getKeyOld(masterPassword, (software + username).getBytes());
+            final String oldPassword = Encrypter.decryptAES(encryptedPassword, key, iv);
             setPassword(oldPassword, masterPassword);
         }
     }

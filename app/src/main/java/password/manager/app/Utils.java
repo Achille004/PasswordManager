@@ -56,7 +56,7 @@ public final class Utils {
     static {
         SUPPORTED_LOCALE = new Locale[] { Locale.ENGLISH, Locale.ITALIAN };
 
-        Locale systemLang = Locale.forLanguageTag(Locale.getDefault().getLanguage());
+        final Locale systemLang = Locale.forLanguageTag(Locale.getDefault().getLanguage());
         DEFAULT_LOCALE = Arrays.asList(SUPPORTED_LOCALE).contains(systemLang)
                 ? systemLang
                 : Locale.ENGLISH;
@@ -100,17 +100,15 @@ public final class Utils {
      * @return The index.
      */
     public static @NotNull String addZerosToIndex(@NotNull Integer listSize, @NotNull Integer index) {
-        int listDigits = (int) Math.log10(listSize) + 1;
+        final int listDigits = (int) Math.log10(listSize) + 1;
         return String.format("%0" + listDigits + "d", index);
     }
 
     public static String byteToBase64(byte[] src) {
-        // Base64-encode the encrypted password for a readable representation
         return BASE64ENC.encodeToString(src);
     }
 
     public static byte[] base64ToByte(@NotNull String src) {
-        // Base64-encode the encrypted password for a readable representation
         return BASE64DEC.decode(src);
     }
 
@@ -139,7 +137,7 @@ public final class Utils {
     }
 
     public static @NotNull Parent loadFxml(String path, Initializable controller, boolean... printLogsArg) {
-        boolean printLogs = printLogsArg.length > 0 ? printLogsArg[0] : true;
+        final boolean printLogs = printLogsArg.length > 0 ? printLogsArg[0] : true;
 
         String loggedPath = "none";
         if(printLogs) {
@@ -149,7 +147,7 @@ public final class Utils {
 
         Parent parent = null;
         try {
-            FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(Utils.class.getResource(path)));
+            final FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(Utils.class.getResource(path)));
             loader.setController(controller);
             parent = loader.load();
         } catch (IOException e) {
@@ -164,7 +162,7 @@ public final class Utils {
         }
         
         // Since it's a one-time error, just create it during the error process
-        Alert alert = new Alert(AlertType.ERROR, ObservableResourceFactory.getInstance().getValue("ui_error"), ButtonType.YES, ButtonType.NO);
+        final Alert alert = new Alert(AlertType.ERROR, ObservableResourceFactory.getInstance().getValue("ui_error"), ButtonType.YES, ButtonType.NO);
         setDefaultButton(alert, ButtonType.NO);
 
         alert.showAndWait();

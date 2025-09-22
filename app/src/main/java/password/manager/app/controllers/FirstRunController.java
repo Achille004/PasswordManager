@@ -50,7 +50,7 @@ public class FirstRunController extends AbstractController {
     private Button firstRunSubmitBtn;
 
     public void initialize(URL location, ResourceBundle resources) {
-        ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
+        final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
         langResources.bindTextProperty(firstRunTitle, "hi");
         langResources.bindTextProperty(firstRunDescTop, "first_run.desc.top");
         langResources.bindTextProperty(firstRunDescBtm, "first_run.desc.btm");

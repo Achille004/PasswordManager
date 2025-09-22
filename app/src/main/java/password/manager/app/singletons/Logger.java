@@ -55,6 +55,7 @@ public final class Logger {
     private final FileWriter logWriter, stacktraceWriter;
 
     private static Logger instance = null;
+    private static final String CLASS_NAME = Logger.class.getName();
 
     /**
      * Creates the singleton Logger instance.
@@ -67,7 +68,7 @@ public final class Logger {
      */
     public static synchronized void createInstance(Path baseLogPath) throws IllegalStateException {
         if (instance != null) {
-            throw new IllegalStateException("Logger instance already created");
+            throw new IllegalStateException(CLASS_NAME + " instance already created");
         }
         instance = new Logger(baseLogPath);
     }
@@ -82,7 +83,7 @@ public final class Logger {
      */
     public static Logger getInstance() {
         if (instance == null) {
-            throw new IllegalStateException("Logger instance not created yet");
+            throw new IllegalStateException(CLASS_NAME + " instance not created yet");
         }
         return instance;
     }

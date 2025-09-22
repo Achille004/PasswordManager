@@ -99,7 +99,7 @@ public final class UserPreferences {
     }
 
     public @NotNull Boolean verifyPassword(String passwordToVerify) throws InvalidKeySpecException {
-        if (hashedPassword == null) {
+        if (this.hashedPassword == null) {
             return true;
         }
 
@@ -108,15 +108,15 @@ public final class UserPreferences {
         }
 
         // Bacwards compatibility
-        boolean isLatestSecurityVersion = isLatestVersion();
-        byte[] hashedPasswordToVerify;
+        final boolean isLatestSecurityVersion = isLatestVersion();
+        final byte[] hashedPasswordToVerify;
         if (isLatestSecurityVersion) {
             hashedPasswordToVerify = Encrypter.hash(passwordToVerify, salt);
         } else {
             hashedPasswordToVerify = Encrypter.hashOld(passwordToVerify, salt);
         }
 
-        boolean res = Arrays.equals(hashedPassword, hashedPasswordToVerify);
+        final boolean res = Arrays.equals(hashedPassword, hashedPasswordToVerify);
         if (res && !isLatestSecurityVersion) {
             setPassword(passwordToVerify);
         }
@@ -124,7 +124,7 @@ public final class UserPreferences {
     }
 
     public @NotNull Boolean setPasswordVerified(String oldPassword, @NotNull String newPassword) throws InvalidKeySpecException {
-        boolean res = verifyPassword(oldPassword);
+        final boolean res = verifyPassword(oldPassword);
         if (res) {
             setPassword(newPassword);
         }
@@ -132,11 +132,11 @@ public final class UserPreferences {
     }
 
     private void setPassword(@NotNull String password) {
-        SecureRandom random = new SecureRandom();
+        final SecureRandom random = new SecureRandom();
         random.nextBytes(salt);
 
         this.securityVersion = SecurityVersion.ARGON2;
-        hashedPassword = Encrypter.hash(password, salt);
+        this.hashedPassword = Encrypter.hash(password, salt);
     }
 
     @Contract("_ -> new")
@@ -156,14 +156,14 @@ public final class UserPreferences {
 
         @Override
         public UserPreferences deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
-            JsonNode node = jp.getCodec().readTree(jp);
+            final JsonNode node = jp.getCodec().readTree(jp);
 
-            Locale locale = Locale.forLanguageTag(node.get("locale").asText());
-            SortingOrder sortingOrder = SortingOrder.valueOf(node.get("sortingOrder").asText());
-            byte[] hashedPassword = Utils.base64ToByte(node.get("hashedPassword").asText());
-            byte[] salt = Utils.base64ToByte(node.get("salt").asText());
+            final Locale locale = Locale.forLanguageTag(node.get("locale").asText());
+            final SortingOrder sortingOrder = SortingOrder.valueOf(node.get("sortingOrder").asText());
+            final byte[] hashedPassword = Utils.base64ToByte(node.get("hashedPassword").asText());
+            final byte[] salt = Utils.base64ToByte(node.get("salt").asText());
 
-            SecurityVersion securityVersion = node.has("securityVersion")
+            final SecurityVersion securityVersion = node.has("securityVersion")
                     ? SecurityVersion.fromString(node.get("securityVersion").asText())
                     : SecurityVersion.PBKDF2;
 

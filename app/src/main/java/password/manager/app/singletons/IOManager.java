@@ -86,8 +86,8 @@ public final class IOManager {
     private final ObservableList<Account> ACCOUNT_LIST;
     private @Getter UserPreferences userPreferences;
 
-    private String masterPassword;
-    private @Getter boolean isFirstRun, isAuthenticated;
+    private volatile String masterPassword;
+    private volatile @Getter boolean isFirstRun, isAuthenticated;
     
     private final File DATA_FILE;
     private final AtomicBoolean HAS_CHANGED;
@@ -97,13 +97,14 @@ public final class IOManager {
     private final ExecutorService ACCOUNT_EXECUTOR;
 
     private static IOManager instance = null;
+    private static final String CLASS_NAME = IOManager.class.getName();
 
     /**
      * Creates the singleton IOManager.
      */
     public static synchronized void createInstance() throws IllegalStateException {
         if (instance != null) {
-            throw new IllegalStateException("IOManager instance already created");
+            throw new IllegalStateException(CLASS_NAME + " instance already created");
         }
         ObservableResourceFactory.createInstance(LANG_BUNDLE_RESOURCE);
         instance = new IOManager();
@@ -111,7 +112,7 @@ public final class IOManager {
 
     public static IOManager getInstance() {
         if (instance == null) {
-            throw new IllegalStateException("IOManager instance not created yet");
+            throw new IllegalStateException(CLASS_NAME + " instance not created yet");
         }
         return instance;
     }
@@ -346,7 +347,7 @@ public final class IOManager {
     }
     // #endregion
 
-    // #region LoginAccount methods
+    // #region UserPreferences methods
     public @NotNull Boolean changeMasterPassword(String newMasterPassword) {
         String oldMasterPassword = this.masterPassword;
         if (oldMasterPassword != null && !isAuthenticated()) {
@@ -416,20 +417,6 @@ public final class IOManager {
 
         return isAuthenticated;
     }
-
-    private void accountListTaskExec(Consumer<? super Account> action) {
-        // MUST wrap iteration in synchronized(...) when using Collections.synchronizedList
-        synchronized(ACCOUNT_LIST) {
-            ACCOUNT_LIST.forEach(account -> ACCOUNT_EXECUTOR.submit(() -> {
-                try {
-                    action.accept(account);
-                } catch (Exception e) {
-                    Logger.getInstance().addError(e);
-                }
-            }));
-        }
-        HAS_CHANGED.set(true);
-    }
     // #endregion
 
     public void export(@NotNull Exporter exporter, ObservableResourceFactory langResources) {
@@ -453,6 +440,20 @@ public final class IOManager {
                     Logger.getInstance().addError(t); 
                     return null;
                 });
+    }
+
+    private void accountListTaskExec(Consumer<? super Account> action) {
+        // MUST wrap iteration in synchronized(...) when using Collections.synchronizedList
+        synchronized(ACCOUNT_LIST) {
+            ACCOUNT_LIST.forEach(account -> ACCOUNT_EXECUTOR.submit(() -> {
+                try {
+                    action.accept(account);
+                } catch (Exception e) {
+                    Logger.getInstance().addError(e);
+                }
+            }));
+        }
+        HAS_CHANGED.set(true);
     }
 
     private void saveDataFile(boolean shutdown) {

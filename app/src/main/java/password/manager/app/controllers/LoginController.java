@@ -61,7 +61,7 @@ public class LoginController extends AbstractController {
                     clearStyle(loginSubmitBtn);
                 }));
 
-        ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
+        final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
         langResources.bindTextProperty(loginTitle, "welcome_back");
         langResources.bindTextProperty(loginSubmitBtn, "lets_go");
 

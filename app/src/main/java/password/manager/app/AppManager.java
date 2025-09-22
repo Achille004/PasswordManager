@@ -50,7 +50,7 @@ public class AppManager {
     }
 
     private AppManager() {
-        ObjectProperty<Locale> locale = IOManager.getInstance().getUserPreferences().getLocaleProperty();
+        final ObjectProperty<Locale> locale = IOManager.getInstance().getUserPreferences().getLocaleProperty();
         ObservableResourceFactory.getInstance().resourcesProperty().bind(Bindings.createObjectBinding(
                 () -> {
                     Locale localeValue = locale.getValue();
@@ -65,7 +65,7 @@ public class AppManager {
             }
         });
 
-        List<String> list = App.getAppParameters().getRaw();
+        final List<String> list = App.getAppParameters().getRaw();
         Logger.getInstance().addInfo("Found " + list.size() + " parameters");
         if (!IO_MANAGER.isFirstRun() && list.size() > 1 && ("-p".equals(list.get(0)) || "--password".equals(list.get(0)))) {
             Logger.getInstance().addInfo("Trying to authenticate via arguments");
@@ -78,14 +78,11 @@ public class AppManager {
         }
 
         if (!switchToMain.get()) {
-            AnchorPane pane;
-            if (IO_MANAGER.isFirstRun()) {
-                pane = (AnchorPane) loadFxml("/fxml/first_run.fxml", new FirstRunController(switchToMain));
-            } else {
-                pane = (AnchorPane) loadFxml("/fxml/login.fxml", new LoginController(switchToMain));
-            }
+            final AnchorPane pane = IO_MANAGER.isFirstRun()
+                ? (AnchorPane) loadFxml("/fxml/first_run.fxml", new FirstRunController(switchToMain))
+                : (AnchorPane) loadFxml("/fxml/login.fxml", new LoginController(switchToMain));
             
-            AnchorPane scenePane = App.getAppScenePane();
+            final AnchorPane scenePane = App.getAppScenePane();
             scenePane.getChildren().clear();
             scenePane.getChildren().add(pane);
         }
@@ -95,7 +92,7 @@ public class AppManager {
         final MainController mainController = new MainController();
         final BorderPane mainPane = (BorderPane) loadFxml("/fxml/main.fxml", mainController);
         
-        AnchorPane scenePane = App.getAppScenePane();
+        final AnchorPane scenePane = App.getAppScenePane();
         scenePane.getChildren().clear();
         scenePane.getChildren().add(mainPane);
         mainController.mainTitleAnimation();

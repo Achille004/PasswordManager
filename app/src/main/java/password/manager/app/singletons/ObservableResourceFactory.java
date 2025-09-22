@@ -31,27 +31,32 @@ public final class ObservableResourceFactory {
     private final ObjectProperty<ResourceBundle> resources;
 
     private static ObservableResourceFactory instance = null;
+    private static final String CLASS_NAME = ObservableResourceFactory.class.getName();
 
     /**
      * Creates the singleton ObservableResourceFactory.
      */
     public static synchronized void createInstance(String bundleName) throws IllegalStateException {
         if (instance != null) {
-            throw new IllegalStateException("ObservableResourceFactory instance already created");
+            throw new IllegalStateException(CLASS_NAME + " instance already created");
         }
         instance = new ObservableResourceFactory(bundleName);
     }
 
     public static ObservableResourceFactory getInstance() {
         if (instance == null) {
-            throw new IllegalStateException("ObservableResourceFactory instance not created yet");
+            throw new IllegalStateException(CLASS_NAME + " instance not created yet");
         }
         return instance;
     }
 
-    private ObservableResourceFactory(String bundleName) {
+    private ObservableResourceFactory(ResourceBundle resources) {
         // Initialize with default resources, can be set later
-        resources = new SimpleObjectProperty<>(ResourceBundle.getBundle(bundleName));
+        this.resources = new SimpleObjectProperty<>(resources);
+    }
+
+    private ObservableResourceFactory(String bundleName) {
+        this(ResourceBundle.getBundle(bundleName));
     }
 
     public ObjectProperty<ResourceBundle> resourcesProperty() {
@@ -59,11 +64,15 @@ public final class ObservableResourceFactory {
     }
 
     public ResourceBundle getResources() {
-        return resourcesProperty().get();
+        return resources.get();
     }
 
     public void setResources(ResourceBundle resources) {
         resourcesProperty().set(resources);
+    }
+
+    public void setResources(String bundleName) {
+        this.setResources(ResourceBundle.getBundle(bundleName));
     }
 
     public StringBinding getStringBinding(String key) {
