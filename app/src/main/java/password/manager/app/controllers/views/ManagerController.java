@@ -102,7 +102,6 @@ public class ManagerController extends AbstractViewController {
                 // Create a new tab for the selected account
                 EditorController controller = new EditorController();
                 Pane pane = (Pane) loadFxml("/fxml/views/manager/editor.fxml", controller);
-                checkValidUi(pane, "editor");
                 
                 controller.setAccount(newItem);
 
@@ -198,6 +197,8 @@ public class ManagerController extends AbstractViewController {
             searchTimeline.stop();
             searchTimeline.playFrom(SEARCH_DELAY);
         });
+        
+        
 
         loadHomeTab();
         loadAddTab();
@@ -228,19 +229,14 @@ public class ManagerController extends AbstractViewController {
     }
 
     private void loadHomeTab() {
-        Logger.getInstance().addInfo("Loading home pane...");
         HomeController homeController = new HomeController();
         Pane homePane = (Pane) loadFxml("/fxml/views/manager/home.fxml", homeController);
-
-        checkValidUi(homePane, "home");
         homeTab.setContent(homePane);
     }
 
     private void loadAddTab() {
-        Logger.getInstance().addInfo("Loading editor pane...");
         EditorController addController = new EditorController();
         Pane addPane = (Pane) loadFxml("/fxml/views/manager/editor.fxml", addController);
-        checkValidUi(addPane, "editor");
 
         addTab.setContent(addPane);
         addTab.setOnSelectionChanged(_ -> {

@@ -114,10 +114,8 @@ public class MainController extends AbstractController {
             titleAnimation.getKeyFrames().add(new KeyFrame(Duration.millis(8 * i), _ -> psmgTitle.setText(str)));
         }
         
-        Logger.getInstance().addInfo("Loading manager pane...");
         managerController = new ManagerController();
         managerPane = (Pane) loadFxml("/fxml/views/manager.fxml", managerController);
-        checkValidUi(managerPane, "manager");
 
         swapOnMainPane(managerController, managerPane);
     }
@@ -140,11 +138,10 @@ public class MainController extends AbstractController {
 
     @FXML
     public void settingsNavBarAction(ActionEvent event) {
+        // Load lazily
         if(settingsPane == null || settingsController == null) {
-            Logger.getInstance().addInfo("Loading settings pane...");
             settingsController = new SettingsController();
             settingsPane = (Pane) loadFxml("/fxml/views/settings.fxml", settingsController);
-            checkValidUi(settingsPane, "settings");
         }
 
         isSettingsOpen = !isSettingsOpen;

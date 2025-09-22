@@ -21,6 +21,7 @@ package password.manager.app.controllers.extra;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -44,6 +45,6 @@ public class EulaController implements Initializable {
     }
 
     private void browse(String uri) {
-        Thread.startVirtualThread(() -> App.getAppHostServices().showDocument(uri));
+        Platform.runLater(() -> App.getAppHostServices().showDocument(uri));
     }
 }

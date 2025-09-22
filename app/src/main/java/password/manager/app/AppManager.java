@@ -20,21 +20,14 @@ package password.manager.app;
 
 import static password.manager.app.Utils.*;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.ResourceBundle;
-
-import org.jetbrains.annotations.Nullable;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
-import javafx.scene.Parent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import password.manager.app.controllers.FirstRunController;
@@ -86,18 +79,11 @@ public class AppManager {
 
         if (!switchToMain.get()) {
             AnchorPane pane;
-            String paneName;
             if (IO_MANAGER.isFirstRun()) {
-                Logger.getInstance().addInfo("Loading first run pane...");
                 pane = (AnchorPane) loadFxml("/fxml/first_run.fxml", new FirstRunController(switchToMain));
-                paneName = "first_run";
             } else {
-                Logger.getInstance().addInfo("Loading login pane...");
                 pane = (AnchorPane) loadFxml("/fxml/login.fxml", new LoginController(switchToMain));
-                paneName = "login";
             }
-
-            checkValidUi(pane, paneName);
             
             AnchorPane scenePane = App.getAppScenePane();
             scenePane.getChildren().clear();
@@ -106,25 +92,12 @@ public class AppManager {
     }
 
     private void loadMainPane() {
-        Logger.getInstance().addInfo("Loading main pane...");
         final MainController mainController = new MainController();
         final BorderPane mainPane = (BorderPane) loadFxml("/fxml/main.fxml", mainController);
-        checkValidUi(mainPane, "main");
         
         AnchorPane scenePane = App.getAppScenePane();
         scenePane.getChildren().clear();
         scenePane.getChildren().add(mainPane);
         mainController.mainTitleAnimation();
-    }
-
-    private @Nullable Parent loadFxml(String path, Initializable controller) {
-        try {
-            FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource(path)));
-            loader.setController(controller);
-            return loader.load();
-        } catch (IOException e) {
-            Logger.getInstance().addError(e);
-            return null;
-        }
     }
 }

@@ -77,7 +77,11 @@ jar {
     }
 }
 
-def gpgSignable = project.hasProperty('signing.keyId') && project.hasProperty('signing.password') && project.hasProperty('signing.secretKeyRingFile')
+def gpgExists = new File('gpg.exe').exists()
+def gpgSignable = (gpgExists
+        && project.hasProperty('signing.keyId') 
+        && project.hasProperty('signing.password') 
+        && project.hasProperty('signing.secretKeyRingFile'))
 
 signing {
     if(gpgSignable) {
@@ -91,8 +95,13 @@ signing {
 
 def resourceDir = layout.projectDirectory.dir('src/main/resources')
 def compileDir = rootProject.layout.projectDirectory.dir('compiled')
+resourceDir.asFile.mkdirs()
+compileDir.asFile.mkdirs()
+
 def distDir = compileDir.dir('distributions')
 def installerDir = compileDir.dir('installers')
+distDir.asFile.mkdirs()
+installerDir.asFile.mkdirs()
 
 tasks.register('assemblePortables', Delete) {
     delete distDir
@@ -180,6 +189,8 @@ tasks.register('assembleInstallers', FullJPackageTask) {
         linuxRpmLicenseType = 'GPLv3'
         linuxShortcut = true
     }
+
+    finalizedBy tasks.generateChecksums
 }
 
 tasks.register('dryAssembleInstallers') {
@@ -189,6 +200,9 @@ tasks.register('dryAssembleInstallers') {
 
 tasks.register('generateChecksums') {
     def out = compileDir.file("checksums.txt").asFile
+    out.parentFile.mkdirs()
+    out.createNewFile()
+
     def digest = java.security.MessageDigest.getInstance('SHA-256')
     out.withWriter { w -> fileTree(compileDir).each { f ->
         if(!f.name.endsWith('.asc') && !f.name.endsWith('.txt')) {

@@ -57,7 +57,13 @@ public final class Logger {
     private static Logger instance = null;
 
     /**
-     * Creates the singleton Logger.
+     * Creates the singleton Logger instance.
+     * <p>
+     * This method must be called exactly once before calling {@link #getInstance()}.
+     * If called more than once, it will throw an {@link IllegalStateException}.
+     *
+     * @param baseLogPath the base directory where log files will be stored
+     * @throws IllegalStateException if the Logger instance has already been created
      */
     public static synchronized void createInstance(Path baseLogPath) throws IllegalStateException {
         if (instance != null) {
@@ -66,6 +72,14 @@ public final class Logger {
         instance = new Logger(baseLogPath);
     }
 
+    /**
+     * Returns the singleton Logger instance.
+     * <p>
+     * This method should only be called after {@link #createInstance(Path)} has been invoked.
+     * If {@link #createInstance(Path)} has not been called, this method will return {@code null}.
+     *
+     * @return the singleton Logger instance, or {@code null} if not yet created
+     */
     public static Logger getInstance() {
         if (instance == null) {
             throw new IllegalStateException("Logger instance not created yet");

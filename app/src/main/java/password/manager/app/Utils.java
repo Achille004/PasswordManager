@@ -28,13 +28,18 @@ import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
 import java.util.Locale;
+import java.util.Objects;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.SortedList;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import password.manager.app.singletons.Logger;
@@ -121,11 +126,11 @@ public final class Utils {
         return alert;
     }
 
-    public static FileWriter getFileWriter(@NotNull Path path, @NotNull Boolean append) {
+    public static @Nullable FileWriter getFileWriter(@NotNull Path path, @NotNull Boolean append) {
         return getFileWriter(path.toFile(), append);
     }
 
-    public static FileWriter getFileWriter(@NotNull File file, @NotNull Boolean append) {
+    public static @Nullable FileWriter getFileWriter(@NotNull File file, @NotNull Boolean append) {
         try {
             return new FileWriter(file, append);
         } catch (IOException e) {
@@ -133,10 +138,29 @@ public final class Utils {
         }
     }
 
-    public static void checkValidUi(Object pane, String paneName) {
-        if(pane != null) {
-            Logger.getInstance().addInfo("Success [" + paneName + "]");
-            return;
+    public static @NotNull Parent loadFxml(String path, Initializable controller, boolean... printLogsArg) {
+        boolean printLogs = printLogsArg.length > 0 ? printLogsArg[0] : true;
+
+        String loggedPath = "none";
+        if(printLogs) {
+            loggedPath = path.replace("/fxml/", "").replace(".fxml", "");
+            Logger.getInstance().addInfo("Loading [" + loggedPath + "] pane...");
+        }
+
+        Parent parent = null;
+        try {
+            FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(Utils.class.getResource(path)));
+            loader.setController(controller);
+            parent = loader.load();
+        } catch (IOException e) {
+            Logger.getInstance().addError(e);
+        }
+
+        if(parent != null) {
+            if (printLogs) {
+                Logger.getInstance().addInfo("Success [" + loggedPath + "]");
+            }
+            return parent;
         }
         
         // Since it's a one-time error, just create it during the error process
@@ -154,5 +178,6 @@ public final class Utils {
             });
         }
         Platform.exit();
+        return null;
     }
 }
