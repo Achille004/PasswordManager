@@ -25,6 +25,8 @@ module password.manager.app {
     requires transitive javafx.graphics;
     // requires javafx.web;
 
+    requires org.controlsfx.controls;
+
     requires com.fasterxml.jackson.databind;
     // requires org.json;
     

@@ -1,0 +1,75 @@
+.auto-complete-popup {
+  -fx-background-color: transparent;
+  -fx-background-radius: 5deg;
+  -fx-background-insets: 0;
+  -fx-padding: 0;
+  -fx-border-color: transparent;
+  -fx-border-width: 0;
+  -fx-border-radius: 5deg;
+}
+
+.auto-complete-popup .list-view,
+.auto-complete-popup .clipped-container {
+  -fx-background-color: -fx-color-background;
+  -fx-background-radius: 5deg;
+  -fx-background-insets: 0;
+  -fx-padding: 0;
+}
+
+.auto-complete-popup .list-view {
+  -fx-border-color: -fx-color-grey;
+  -fx-border-width: 2px;
+  -fx-border-radius: 5deg;
+}
+
+/* #region scroll-bar */
+.auto-complete-popup .scroll-bar {
+  -fx-background-color: -fx-color-element-bg;
+  -fx-background-radius: 5deg;
+  -fx-background-insets: 0;
+  -fx-border-width: 0;
+}
+
+.auto-complete-popup .scroll-bar:horizontal {
+  -fx-opacity: 0;
+  -fx-max-height: 0;
+  -fx-pref-height: 0;
+  -fx-min-height: 0;
+}
+
+.auto-complete-popup .scroll-bar .thumb {
+  -fx-background-color: -fx-color-grey;
+  -fx-background-insets: 0;
+}
+
+.auto-complete-popup .scroll-bar .increment-button,
+.auto-complete-popup .scroll-bar .decrement-button {
+  -fx-background-color: -fx-color-element-bg;
+  -fx-border-width: 0;
+}
+
+.auto-complete-popup .scroll-bar .increment-arrow,
+.auto-complete-popup .scroll-bar .decrement-arrow {
+  -fx-background-color: -fx-color-grey;
+}
+
+.auto-complete-popup .scroll-bar .track {
+  -fx-background-color: -fx-color-element-bg;
+}
+/* #endregion */
+
+.auto-complete-popup .list-cell {
+  -fx-font-family: "Roboto Bold";
+  -fx-font-size: 14px;
+  -fx-background: none;
+  -fx-background-color: -fx-color-background;
+  -fx-background-insets: 0;
+  -fx-text-fill: -fx-color-text;
+  -fx-border-width: 0;
+  -fx-padding: 0.5em 1em;
+}
+
+.auto-complete-popup .list-cell:selected,
+.auto-complete-popup .list-cell:hover {
+  -fx-background-color: -fx-color-element-bg !important;
+}

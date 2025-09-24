@@ -9,6 +9,7 @@ javafx-media = "24.0.1"
 javafx-web = "24.0.1"
 lombok = "1.18.38" # https://mvnrepository.com/artifact/org.projectlombok/lombok
 me-gosimple-nbvcxz = "1.5.1" # https://github.com/GoSimpleLLC/nbvcxz
+org-controlsfx-controls = "11.2.2" # https://mvnrepository.com/artifact/org.controlsfx/controlsfx
 org-bouncycastle-provider = "1.80"
 org-jetbrains-annotations = "26.0.2"
 org.json = '20240303' # https://mvnrepository.com/artifact/org.json/json

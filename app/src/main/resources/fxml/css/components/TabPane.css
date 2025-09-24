@@ -103,7 +103,7 @@ TabPane .tab-header-area .tab-down-button .context-menu .radio-menu-item:checked
 TabPane .tab-header-area .tab-down-button .context-menu .radio-menu-item .label {
   -fx-text-fill: -fx-color-text;
   -fx-font-size: 14px;
-  -fx-padding: 0.25em; /* Vertical padding for better spacing */
+  -fx-padding: 0.25em;
 }
 
 /* Hide the radio button shapes completely */

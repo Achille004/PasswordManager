@@ -33,6 +33,7 @@ import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import password.manager.app.App;
 import password.manager.app.controllers.extra.EulaController;
 import password.manager.app.singletons.ObservableResourceFactory;
 
@@ -55,6 +56,8 @@ public abstract class AbstractController implements Initializable {
             eulaStage.setResizable(false);
             
             AnchorPane eulaParent = (AnchorPane) loadFxml("/fxml/extra/eula.fxml", new EulaController());
+            eulaParent.getStylesheets().addAll(App.ROOT_STYLESHEET);
+
             eulaStage.setScene(new Scene(eulaParent, 900, 600));
         }
     }

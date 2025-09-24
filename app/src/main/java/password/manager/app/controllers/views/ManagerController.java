@@ -23,9 +23,12 @@ import static password.manager.app.Utils.*;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.ResourceBundle;
-import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
+import org.controlsfx.control.textfield.TextFields;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -40,6 +43,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -49,6 +53,8 @@ import javafx.scene.control.MultipleSelectionModel;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.util.Callback;
 import javafx.util.Duration;
@@ -61,7 +67,7 @@ import password.manager.app.singletons.ObservableResourceFactory;
 import password.manager.lib.ReadablePasswordFieldWithStr;
 
 public class ManagerController extends AbstractViewController {
-    private static final Duration SEARCH_DELAY = Duration.millis(300);
+    public static final Duration SEARCH_DELAY = Duration.millis(300);
 
     // Cache for tabs associated with accounts
     private final IdentityHashMap<Account, Tab> TABS_CACHE = new IdentityHashMap<>();
@@ -85,7 +91,8 @@ public class ManagerController extends AbstractViewController {
 
     // App state variables
     private volatile boolean editOperationInProgress = false;
-    private volatile boolean isMatchCase = false, isMatchWholeWord = false; 
+    private volatile boolean isMatchCase = false, isMatchWholeWord = false;
+    private List<String> possibleSoftwares, possibleUsernames;
 
     public void initialize(URL location, ResourceBundle resources) {
         final ObservableList<Tab> ACC_TABS = accountTabPane.getTabs();
@@ -99,7 +106,7 @@ public class ManagerController extends AbstractViewController {
                     return;
                 }
 
-                // Create a new tab for the selected account
+                // Create a new tab for the selected account -> TODO store as singleton and deep clone
                 final EditorController controller = new EditorController();
                 final Pane pane = (Pane) loadFxml("/fxml/views/manager/editor.fxml", controller);
                 
@@ -150,9 +157,47 @@ public class ManagerController extends AbstractViewController {
             }
         };
 
-        final IOManager ioManager = IOManager.getInstance();
-        final ObjectProperty<SortingOrder> SORTING_ORDER_PROPERTY = ioManager.getUserPreferences().getSortingOrderProperty();
-        final SortedList<Account> SORTED_ACCOUNT_LIST = ioManager.getSortedAccountList();
+        final EventHandler<KeyEvent> SHORTCUTS_HANDLER = keyEvent -> {
+            final Tab selectedTab = accountTabPane.getSelectionModel().getSelectedItem();
+            if (!keyEvent.isControlDown() || selectedTab == null) {
+                return;
+            }
+
+            switch(keyEvent.getCode()) {
+                case W -> { 
+                    keyEvent.consume();
+                    if(selectedTab == homeTab) break;
+                    if(selectedTab == addTab) {
+                        selectTab(ACC_TABS, homeTab, false);
+                    } else {
+                        ACC_TABS.remove(selectedTab);
+                    }
+                }
+
+                case T -> {
+                    keyEvent.consume();
+                    if (selectedTab == addTab) break;
+                    selectTab(ACC_TABS, addTab, false);
+                }
+
+                case Q, E -> {
+                    keyEvent.consume();
+                    final int currentIndex = accountTabPane.getSelectionModel().getSelectedIndex();
+                    if (currentIndex == -1) break;
+
+                    final int newIndex = (keyEvent.getCode() == KeyCode.Q) ? currentIndex - 1 : currentIndex + 1;
+                    if (newIndex >= 0 && newIndex < ACC_TABS.size()) {
+                        accountTabPane.getSelectionModel().select(newIndex);
+                    }
+                }
+
+                default -> {}
+            }
+        };
+
+        final IOManager IO_MANAGER = IOManager.getInstance();
+        final ObjectProperty<SortingOrder> SORTING_ORDER_PROPERTY = IO_MANAGER.getUserPreferences().getSortingOrderProperty();
+        final SortedList<Account> SORTED_ACCOUNT_LIST = IO_MANAGER.getSortedAccountList();
         final FilteredList<Account> FILTERED_ACCOUNT_LIST = new FilteredList<>(SORTED_ACCOUNT_LIST);
 
         accountListView.setItems(FILTERED_ACCOUNT_LIST);
@@ -168,6 +213,9 @@ public class ManagerController extends AbstractViewController {
         SORTED_ACCOUNT_LIST.addListener(ACCOUNT_LIST_CHANGE_HANDLER);
         ACC_TABS.addListener(ACC_TABS_CHANGE_HANDLER);
 
+        accountTabPane.setOnKeyPressed(SHORTCUTS_HANDLER);
+
+        // Handle seach bar events
         searchTimeline = new Timeline(new KeyFrame(SEARCH_DELAY, _ -> {
             final String searchText = searchField.getText().trim();
             if (searchText == null || searchText.isEmpty()) {
@@ -198,8 +246,22 @@ public class ManagerController extends AbstractViewController {
             searchTimeline.stop();
             searchTimeline.playFrom(SEARCH_DELAY);
         });
-        
-        // HERE
+
+        possibleSoftwares = FILTERED_ACCOUNT_LIST.stream()
+                .map(Account::getSoftware)
+                .collect(Collectors.groupingBy(s -> s, Collectors.counting()))
+                .entrySet().stream()
+                .sorted(Entry.<String, Long>comparingByValue().reversed())
+                .map(Entry::getKey)
+                .toList();
+
+        possibleUsernames = FILTERED_ACCOUNT_LIST.stream()
+                .map(Account::getUsername)
+                .collect(Collectors.groupingBy(s -> s, Collectors.counting()))
+                .entrySet().stream()
+                .sorted(Entry.<String, Long>comparingByValue().reversed())
+                .map(Entry::getKey)
+                .toList();
 
         loadHomeTab();
         loadAddTab();
@@ -338,6 +400,9 @@ public class ManagerController extends AbstractViewController {
 
             // Force the correct size to prevent unwanted stretching
             editorPassword.setPrefSize(548.0, 40.0);
+
+            TextFields.bindAutoCompletion(editorSoftware, possibleSoftwares);    
+            TextFields.bindAutoCompletion(editorUsername, possibleUsernames);
         }
 
         public void reset() {

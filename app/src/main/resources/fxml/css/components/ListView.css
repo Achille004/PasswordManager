@@ -2,6 +2,7 @@ ListView {
   -fx-background-color: transparent;
 }
 
+/* #region scroll-bar */
 ListView .scroll-bar {
   -fx-background-color: -fx-color-element-bg;
   -fx-background-radius: 5deg;
@@ -34,6 +35,7 @@ ListView .scroll-bar .decrement-arrow {
 ListView .scroll-bar .track {
   -fx-background-color: -fx-color-element-bg;
 }
+/* #endregion */
 
 ListView .list-cell {
   -fx-font-size: 18px;

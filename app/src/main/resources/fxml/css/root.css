@@ -1,0 +1,18 @@
+/* ROOT VARIABLES */
+* {
+  /* Colors */
+  -fx-color-background: #202428;
+  -fx-color-element-bg: #2e3136;
+  -fx-color-textarea-bg: #303434;
+  -fx-color-text: white;
+  -fx-color-green: #0aba4d;
+  -fx-color-grey: #a7acb1;
+  -fx-color-red: #ff5f5f;
+
+  /* Font Sizes, not used */
+  -fx-font-size-small: 14px;
+  -fx-font-size-regular: 18px;
+  -fx-font-size-medium: 24px;
+  -fx-font-size-large: 36px;
+  -fx-font-size-title: 48px;
+}

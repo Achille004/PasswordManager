@@ -18,8 +18,6 @@
 
 package password.manager.app;
 
-import java.util.Objects;
-
 import javafx.application.Application;
 import javafx.application.HostServices;
 import javafx.application.Platform;
@@ -34,6 +32,13 @@ import password.manager.app.singletons.IOManager;
 import org.jetbrains.annotations.NotNull;
 
 public class App extends Application {
+    public static final String APP_NAME = "Password Manager";
+    public static final String APP_VERSION = "3.1.0";
+
+    public static final String ROOT_STYLESHEET = App.class.getResource("/fxml/css/root.css").toExternalForm();
+    public static final String AUTOCOMPLETION_STYLESHEET = App.class.getResource("/fxml/css/autocompletion.css").toExternalForm();
+    public static final String MAIN_ICON = App.class.getResource("/images/icon.png").toExternalForm();
+
     private static @Getter HostServices appHostServices;
     private static @Getter AnchorPane appScenePane;
     private static @Getter Parameters appParameters;
@@ -44,14 +49,16 @@ public class App extends Application {
         appScenePane = new AnchorPane();
         appParameters = getParameters();
 
+        appScenePane.getStylesheets().addAll(ROOT_STYLESHEET, AUTOCOMPLETION_STYLESHEET);
+
         Font.loadFont(getClass().getResourceAsStream("/font/Roboto-Bold.ttf"), 14);
         Font.loadFont(getClass().getResourceAsStream("/font/Roboto-BoldItalic.ttf"), 14);
         Font.loadFont(getClass().getResourceAsStream("/font/Roboto-Italic.ttf"), 14);
         Font.loadFont(getClass().getResourceAsStream("/font/Roboto-Regular.ttf"), 14);
         Font.loadFont(getClass().getResourceAsStream("/font/Charm-Bold.ttf"), 14);
         
-        primaryStage.setTitle("Password Manager");
-        primaryStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/icon.png"))));
+        primaryStage.setTitle(APP_NAME);
+        primaryStage.getIcons().add(new Image(MAIN_ICON));
         primaryStage.setOnCloseRequest(_ -> Platform.exit());
         primaryStage.setResizable(false);
         primaryStage.setScene(new Scene(appScenePane, 900, 600));
