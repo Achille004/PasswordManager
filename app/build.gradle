@@ -24,7 +24,6 @@ plugins {
 
     id 'org.openjfx.javafxplugin' version '0.1.0'
     id 'io.franzbecker.gradle-lombok' version '5.0.0'
-    id 'org.javamodularity.moduleplugin' version '1.8.13'
 
     // https://github.com/gradlex-org/java-module-dependencies
     id 'org.gradlex.java-module-dependencies' version '1.6.4'
@@ -47,15 +46,13 @@ mainModuleInfo {
 
 testModuleInfo {
     annotationProcessor 'lombok'
-    requiresStatic 'org.junit.jupiter.api'
-    requires 'org.junit.jupiter.engine'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
 java {
-    sourceCompatibility = JavaVersion.VERSION_24
+    sourceCompatibility = JavaVersion.VERSION_25
     toolchain {
-        languageVersion = JavaLanguageVersion.of(24)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -70,8 +67,16 @@ application {
     ]
 }
 
+testing {
+    suites {
+        test {
+            useJUnitJupiter '5.13.4'
+        }
+    }
+}
+
 javafx {
-    version = '24.0.1'
+    version = '25'
     modules = [ 'javafx.base', 'javafx.controls', 'javafx.fxml', 'javafx.graphics', 'javafx.web' ]
 }
 
