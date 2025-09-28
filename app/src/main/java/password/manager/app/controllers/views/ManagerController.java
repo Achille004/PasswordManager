@@ -272,11 +272,11 @@ public class ManagerController extends AbstractViewController {
     @FXML
     public void matchCaseAction(ActionEvent event) {
         if (isMatchCase) {
-            isMatchWholeWord = false;
-            matchCaseButton.setStyle("-fx-background-color: -fx-color-green; -fx-background-radius: 2deg;");
-        } else {
-            isMatchWholeWord = true;
+            isMatchCase = false;
             clearStyle(matchCaseButton);
+        } else {
+            isMatchCase = true;
+            matchCaseButton.setStyle("-fx-background-color: -fx-color-green; -fx-background-radius: 2deg;");
         }
         searchTimeline.playFrom(SEARCH_DELAY);
     }
@@ -285,10 +285,10 @@ public class ManagerController extends AbstractViewController {
     public void matchWholeWordAction(ActionEvent event) {
         if (isMatchWholeWord) {
             isMatchWholeWord = false;
-            matchWholeWordButton.setStyle("-fx-background-color: -fx-color-green; -fx-background-radius: 2deg;");
+            clearStyle(matchWholeWordButton);
         } else {
             isMatchWholeWord = true;
-            clearStyle(matchWholeWordButton);
+            matchWholeWordButton.setStyle("-fx-background-color: -fx-color-green; -fx-background-radius: 2deg;");
         }
         searchTimeline.playFrom(SEARCH_DELAY);
     }

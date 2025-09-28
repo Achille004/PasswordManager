@@ -38,6 +38,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 import password.manager.app.Utils;
+import password.manager.app.enums.SecurityVersion;
 import password.manager.app.enums.SortingOrder;
 
 @Getter
@@ -53,7 +54,7 @@ public final class UserPreferences {
         this.localeProperty = new SimpleObjectProperty<>(Utils.DEFAULT_LOCALE);
         this.sortingOrderProperty = new SimpleObjectProperty<>(SortingOrder.SOFTWARE);
 
-        this.securityVersion = SecurityVersion.ARGON2;
+        this.securityVersion = SecurityVersion.LATEST;
 
         this.salt = new byte[16];
         this.hashedPassword = null;
@@ -95,7 +96,7 @@ public final class UserPreferences {
     }
 
     public @NotNull @JsonIgnore Boolean isLatestVersion() {
-        return this.securityVersion == SecurityVersion.ARGON2;
+        return this.securityVersion == SecurityVersion.LATEST;
     }
 
     public @NotNull Boolean verifyPassword(String passwordToVerify) throws InvalidKeySpecException {
@@ -135,7 +136,7 @@ public final class UserPreferences {
         final SecureRandom random = new SecureRandom();
         random.nextBytes(salt);
 
-        this.securityVersion = SecurityVersion.ARGON2;
+        this.securityVersion = SecurityVersion.LATEST;
         this.hashedPassword = Encrypter.hash(password, salt);
     }
 
@@ -163,19 +164,12 @@ public final class UserPreferences {
             final byte[] hashedPassword = Utils.base64ToByte(node.get("hashedPassword").asText());
             final byte[] salt = Utils.base64ToByte(node.get("salt").asText());
 
+            // This field has been added since Argon2 was implemented, so if it isn't present we'll assume it's older than that
             final SecurityVersion securityVersion = node.has("securityVersion")
                     ? SecurityVersion.fromString(node.get("securityVersion").asText())
                     : SecurityVersion.PBKDF2;
 
             return new UserPreferences(locale, sortingOrder, securityVersion, hashedPassword, salt);
-        }
-    }
-
-    private enum SecurityVersion {
-        PBKDF2, ARGON2;
-
-        public static SecurityVersion fromString(String version) {
-            return SecurityVersion.valueOf(version);
         }
     }
 }

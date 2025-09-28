@@ -63,8 +63,9 @@ application {
     mainModule = 'password.manager.app'
     mainClass = 'password.manager.app.App'
 
-    // Add JVM arguments to export internal JavaFX packages for ControlsFX
+    // JVM arguments
     applicationDefaultJvmArgs = [
+        '--enable-native-access=javafx.graphics',
         '--add-exports', 'javafx.base/com.sun.javafx.event=org.controlsfx.controls'
     ]
 }

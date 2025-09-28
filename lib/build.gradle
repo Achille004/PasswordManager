@@ -53,6 +53,11 @@ application {
     // Define the main class for the application.
     mainModule = 'password.manager.lib'
     mainClass = 'password.manager.lib.Main'
+
+    // JVM arguments
+    applicationDefaultJvmArgs = [
+        '--enable-native-access=javafx.graphics'
+    ]
 }
 
 testing {
