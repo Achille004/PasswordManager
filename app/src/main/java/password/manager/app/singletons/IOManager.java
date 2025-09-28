@@ -56,7 +56,6 @@ import password.manager.app.enums.Exporter;
 import password.manager.app.security.Account;
 import password.manager.app.security.UserPreferences;
 import password.manager.lib.PasswordInputControl;
-import password.manager.lib.ReadablePasswordFieldWithStr;
 
 public final class IOManager {
     private static final String DATA_FILE_NAME = "data.json";

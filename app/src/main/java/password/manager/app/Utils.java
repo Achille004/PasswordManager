@@ -136,8 +136,8 @@ public final class Utils {
         }
     }
 
-    public static @NotNull Parent loadFxml(String path, Initializable controller, boolean... printLogsArg) {
-        final boolean printLogs = printLogsArg.length > 0 ? printLogsArg[0] : true;
+    public static @Nullable Parent loadFxml(String path, Initializable controller, boolean @NotNull ... printLogsArg) {
+        final boolean printLogs = printLogsArg.length == 0 || printLogsArg[0];
 
         String loggedPath = "none";
         if(printLogs) {

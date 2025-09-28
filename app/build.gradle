@@ -1,3 +1,5 @@
+import java.security.MessageDigest
+
 /*
     Password Manager: Manages accounts given by user with encrypted password.
     Copyright (C) 2022-2025  Francesco Marras (2004marras@gmail.com)
@@ -164,7 +166,6 @@ tasks.register('assembleInstallers', FullJPackageTask) {
     licenseFile	= resourceDir.file('license.txt')
     module = 'password.manager.app/password.manager.app.App'
     modulePaths = ['build/jars']
-    resourceDir = resourceDir
     runtimeImage = System.getProperty('java.home')
     vendor = 'Francesco Marras'
     
@@ -213,7 +214,7 @@ tasks.register('generateChecksums') {
     out.parentFile.mkdirs()
     out.createNewFile()
 
-    def digest = java.security.MessageDigest.getInstance('SHA-256')
+    def digest = MessageDigest.getInstance('SHA-256')
     out.withWriter { w -> fileTree(compileDir).each { f ->
         if(!f.name.endsWith('.asc') && !f.name.endsWith('.txt')) {
             println "Generating checksum for ${f.name}"

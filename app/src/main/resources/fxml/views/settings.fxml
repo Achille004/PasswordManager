@@ -59,38 +59,26 @@
       <Insets bottom="50.0" left="50.0" right="50.0" top="50.0" />
    </padding>
    <AnchorPane>
-      <children>
-
-         <Label fx:id="settingsLangLbl" alignment="CENTER_RIGHT" contentDisplay="CENTER" layoutY="17.0" prefHeight="35.0" prefWidth="260.0" styleClass="bold-italic, sz24" text="Language:" />
-      </children>
+      <Label fx:id="settingsLangLbl" alignment="CENTER_RIGHT" contentDisplay="CENTER" layoutY="17.0" prefHeight="35.0" prefWidth="260.0" styleClass="bold-italic, sz24" text="Language:" />
    </AnchorPane>
    <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
       <ComboBox fx:id="settingsLangCB" layoutY="20.0" prefHeight="30.0" prefWidth="465.0" />
    </AnchorPane>
    <AnchorPane GridPane.rowIndex="1">
-      <children>
-      
-         <Label fx:id="settingsSortingOrderLbl" alignment="CENTER_RIGHT" layoutY="17.0" prefHeight="35.0" prefWidth="260.0" styleClass="bold-italic, sz24" text="Order by:" />
-      </children>
+      <Label fx:id="settingsSortingOrderLbl" alignment="CENTER_RIGHT" layoutY="17.0" prefHeight="35.0" prefWidth="260.0" styleClass="bold-italic, sz24" text="Order by:" />
    </AnchorPane>
    <AnchorPane prefHeight="123.0" prefWidth="738.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
       <ComboBox fx:id="settingsOrderCB" layoutY="23.0" prefHeight="30.0" prefWidth="465.0" />
    </AnchorPane>
    <AnchorPane GridPane.rowIndex="2">
-      <children>
-         
-         <Label fx:id="settingsMasterPasswordLbl" alignment="CENTER_RIGHT" layoutY="17.0" prefHeight="35.0" prefWidth="260.0" styleClass="bold-italic, sz24" text="Master Password:" />
-      </children>
+      <Label fx:id="settingsMasterPasswordLbl" alignment="CENTER_RIGHT" layoutY="17.0" prefHeight="35.0" prefWidth="260.0" styleClass="bold-italic, sz24" text="Master Password:" />
    </AnchorPane>
    <AnchorPane prefHeight="0.0" prefWidth="502.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
       <Label fx:id="settingsMasterPasswordDesc" alignment="CENTER_RIGHT" prefHeight="20.0" prefWidth="465.0" styleClass="italic, sz14" text="Press ENTER to confirm." />
       <ReadablePasswordFieldWithStr fx:id="settingsMasterPassword" layoutY="20.0" prefHeight="40.0" prefWidth="465.0" />
    </AnchorPane>
    <AnchorPane GridPane.rowIndex="3">
-      <children>
-      
-         <Label fx:id="settingsDriveConnLbl" alignment="CENTER_RIGHT" layoutY="17.0" prefHeight="35.0" prefWidth="260.0" styleClass="bold-italic, sz24" text="Drive Connection:" />
-      </children>
+      <Label fx:id="settingsDriveConnLbl" alignment="CENTER_RIGHT" layoutY="17.0" prefHeight="35.0" prefWidth="260.0" styleClass="bold-italic, sz24" text="Drive Connection:" />
    </AnchorPane>
    <AnchorPane prefHeight="0.0" prefWidth="730.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
       <Label fx:id="wip" layoutY="17.0" prefHeight="35.0" prefWidth="465.0" styleClass="italic, sz24" text="Work in progress..." />

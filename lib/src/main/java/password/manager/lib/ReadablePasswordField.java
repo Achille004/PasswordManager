@@ -91,9 +91,6 @@ public class ReadablePasswordField extends AnchorPane implements Initializable, 
         });
 
         imageView.addEventFilter(MouseEvent.MOUSE_PRESSED, _ -> toggleReadable());
-        // imageView.addEventFilter(MouseEvent.MOUSE_PRESSED, _ -> setReadable(true));
-        // imageView.addEventFilter(MouseEvent.MOUSE_RELEASED, _ -> setReadable(false));
-
         imageView.setImage(hiddenImage);
     }
 

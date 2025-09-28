@@ -107,7 +107,7 @@ public final class UserPreferences {
             return false;
         }
 
-        // Bacwards compatibility
+        // Backwards compatibility
         final boolean isLatestSecurityVersion = isLatestVersion();
         final byte[] hashedPasswordToVerify;
         if (isLatestSecurityVersion) {

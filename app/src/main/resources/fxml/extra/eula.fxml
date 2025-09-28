@@ -10,7 +10,7 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" styleClass="body" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
    <Label layoutX="142.0" layoutY="86.0" styleClass="bold, sz36, green-text" text="Password Manager " />
    <Label layoutX="466.0" layoutY="91.0" prefHeight="42.0" prefWidth="331.0" styleClass="sz24, light-grey-text" text="is a project created by:" />
    <Label layoutX="142.0" layoutY="133.0" styleClass="bold, sz24" text="Francesco Marras " />

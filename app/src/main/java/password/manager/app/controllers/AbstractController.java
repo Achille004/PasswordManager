@@ -62,7 +62,6 @@ public abstract class AbstractController implements Initializable {
         }
     }
 
-    @SafeVarargs
     protected static boolean checkTextFields(TextInputControl @NotNull... fields) {
         boolean nonEmpty = true;
 
@@ -78,14 +77,12 @@ public abstract class AbstractController implements Initializable {
         return nonEmpty;
     }
 
-    @SafeVarargs
     protected static void clearStyle(Node @NotNull... nodes) {
         for (@NotNull Node node : nodes) {
             node.setStyle("");
         }
     }
 
-    @SafeVarargs
     protected static void clearTextFields(TextInputControl @NotNull... fields) {
         for (@NotNull TextInputControl field : fields) {
             field.clear();

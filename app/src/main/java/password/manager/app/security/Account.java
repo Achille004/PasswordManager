@@ -76,14 +76,14 @@ public final class Account {
     }
 
     public void setSoftware(@NotNull String software) {
-        if (software != null && !software.isEmpty()) {
+        if (!software.isEmpty()) {
             this.software = software;
             Platform.runLater(() -> softwareProperty.set(software));
         }
     }
 
     public void setUsername(@NotNull String username) {
-        if (username != null && !username.isEmpty()) {
+        if (!username.isEmpty()) {
             this.username = username;
             Platform.runLater(() -> usernameProperty.set(username));
         }

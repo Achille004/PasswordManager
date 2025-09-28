@@ -215,10 +215,10 @@ public class ManagerController extends AbstractViewController {
 
         accountTabPane.setOnKeyPressed(SHORTCUTS_HANDLER);
 
-        // Handle seach bar events
+        // Handle search bar events
         searchTimeline = new Timeline(new KeyFrame(SEARCH_DELAY, _ -> {
             final String searchText = searchField.getText().trim();
-            if (searchText == null || searchText.isEmpty()) {
+            if (searchText.isEmpty()) {
                 FILTERED_ACCOUNT_LIST.setPredicate(null); // Show all accounts
                 return;
             }
@@ -229,7 +229,7 @@ public class ManagerController extends AbstractViewController {
                 final String username = isMatchCase ? account.getUsername() : account.getUsername().toLowerCase();
                 
                 if (isMatchWholeWord) {
-                    return Arrays.stream(software.split("[\\s\\p{P}]+")).anyMatch(finalSearchText::equals) || Arrays.stream(username.split("[\\s\\p{Punct}]+")).anyMatch(finalSearchText::equals);
+                    return Arrays.asList(software.split("[\\s\\p{P}]+")).contains(finalSearchText) || Arrays.asList(username.split("[\\s\\p{Punct}]+")).contains(finalSearchText);
                 } else {
                     return software.contains(finalSearchText) || username.contains(finalSearchText);
                 }
@@ -271,10 +271,11 @@ public class ManagerController extends AbstractViewController {
 
     @FXML
     public void matchCaseAction(ActionEvent event) {
-        isMatchCase = !isMatchCase;
         if (isMatchCase) {
+            isMatchWholeWord = false;
             matchCaseButton.setStyle("-fx-background-color: -fx-color-green; -fx-background-radius: 2deg;");
         } else {
+            isMatchWholeWord = true;
             clearStyle(matchCaseButton);
         }
         searchTimeline.playFrom(SEARCH_DELAY);
@@ -282,10 +283,11 @@ public class ManagerController extends AbstractViewController {
 
     @FXML
     public void matchWholeWordAction(ActionEvent event) {
-        isMatchWholeWord = !isMatchWholeWord;
         if (isMatchWholeWord) {
+            isMatchWholeWord = false;
             matchWholeWordButton.setStyle("-fx-background-color: -fx-color-green; -fx-background-radius: 2deg;");
         } else {
+            isMatchWholeWord = true;
             clearStyle(matchWholeWordButton);
         }
         searchTimeline.playFrom(SEARCH_DELAY);
@@ -338,7 +340,7 @@ public class ManagerController extends AbstractViewController {
         };
     }
 
-    private class HomeController extends AbstractViewController {
+    static class HomeController extends AbstractViewController {
         @FXML
         private Label homeDescTop, homeDescBtm;
 
@@ -432,7 +434,7 @@ public class ManagerController extends AbstractViewController {
                 
                 // save the new attributes of the account
                 /*  
-                  I know that the different reset handling is weird, but lemme explain:
+                  I know that the different reset handling is weird, but let me explain:
                     if the account is null, it means that the user is creating a new account,
                     so we just reset the editor, but if the account is not null, it means that
                     the user is editing an existing account, so we need to edit the account

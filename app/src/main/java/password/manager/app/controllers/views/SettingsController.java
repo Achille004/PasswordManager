@@ -20,8 +20,6 @@ package password.manager.app.controllers.views;
 
 import static password.manager.app.Utils.*;
 
-import java.awt.Desktop;
-import java.io.IOException;
 import java.net.URL;
 import java.text.Collator;
 import java.util.Comparator;
@@ -36,9 +34,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.transformation.SortedList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.util.Callback;
@@ -46,7 +42,6 @@ import javafx.util.StringConverter;
 import password.manager.app.Utils;
 import password.manager.app.enums.SortingOrder;
 import password.manager.app.singletons.IOManager;
-import password.manager.app.singletons.Logger;
 import password.manager.app.singletons.ObservableResourceFactory;
 import password.manager.lib.ReadablePasswordFieldWithStr;
 

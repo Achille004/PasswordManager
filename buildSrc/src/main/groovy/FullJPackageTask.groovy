@@ -17,72 +17,40 @@
  */
 
 import org.apache.tools.ant.taskdefs.condition.Os
-import org.gradle.api.tasks.Copy
-import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.Internal
 import org.panteleyev.jpackage.ImageType
 import org.panteleyev.jpackage.JPackageTask
 
 class FullJPackageTask extends JPackageTask {
-    @Internal
-    def isWindows = Os.isFamily(Os.FAMILY_WINDOWS)
-    @Internal
-    def isMac = Os.isFamily(Os.FAMILY_MAC)
-    @Internal
-    def isLinux = Os.isFamily(Os.FAMILY_UNIX) && !isMac
+    static def isWindows = Os.isFamily(Os.FAMILY_WINDOWS)
+    static def isMac = Os.isFamily(Os.FAMILY_MAC)
+    static def isUnix = Os.isFamily(Os.FAMILY_UNIX) && !isMac
+
+    static List<ImageType> addImgType(String command, String toolsetName, List<ImageType> types) {
+        def success = command.execute().waitFor() == 0
+        if (!success) return []
+
+        println " - ${toolsetName} found"
+        return types
+    }
 
     @TaskAction
     @Override
     void action() {
-        List<ImageType> types = []
-        def devNull = OutputStream.nullOutputStream()
-
         println "Packaging ${appName} ${appVersion}"
+        List<ImageType> types = []
 
         if (isWindows) {
             println "Targeting Windows"
-            
-            def hasWix = project.exec {
-                ignoreExitValue = true
-                standardOutput = devNull
-                errorOutput    = devNull
-                executable 'cmd'
-                args '/C', 'wix --version'
-            }
-            if (hasWix.getExitValue() == 0) {
-                println " - WiX toolset found"
-                types += [ImageType.EXE, ImageType.MSI]
-            }
+            types += addImgType('cmd /C wix --version', "WiX toolset", [ImageType.EXE, ImageType.MSI])
         } else if (isMac) {
             println "Targeting Mac"
             types += [ImageType.DMG, ImageType.PKG]
-        } else if (isLinux) {
+        } else if (isUnix) {
             println "Targeting Linux/Unix"
-
-            def hasDeb = project.exec {
-                ignoreExitValue = true
-                standardOutput = devNull
-                errorOutput    = devNull
-                executable 'bash'
-                args '-c', 'which dpkg-deb'
-            }
-            if (hasDeb.getExitValue() == 0) {
-                println " - Debian package manager found"
-                types += ImageType.DEB
-            }
-
-            def hasRpm = project.exec {
-                ignoreExitValue = true
-                standardOutput = devNull
-                errorOutput    = devNull
-                executable 'bash'
-                args '-c', 'which rpmbuild'
-            }
-            if (hasRpm.getExitValue() == 0) {
-                println " - RPM package manager found"
-                types += ImageType.RPM
-            }
+            types += addImgType('bash -c which dpkg-deb', "DEB package manager", [ImageType.DEB])
+            types += addImgType('bash -c which rpmbuild', "RPM package manager", [ImageType.RPM])
         }
 
         if (types.isEmpty()) {

@@ -45,26 +45,24 @@
     <top>
         <AnchorPane minHeight="-Infinity" prefHeight="35.0" prefWidth="900.0" styleClass="titlebar" BorderPane.alignment="CENTER">
             <Label fx:id="psmgTitle" layoutX="6.0" minWidth="60.0" prefHeight="35.0" prefWidth="208.0" styleClass="bold-italic, sz24" text="Password Manager" />
-            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="795.0" mnemonicParsing="false" onAction="#settingsNavBarAction" prefHeight="35.0" prefWidth="35.0" styleClass="navBtn" text="S">
+            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="795.0" mnemonicParsing="false" onAction="#settingsNavBarAction" prefHeight="35.0" prefWidth="35.0" text="S">
                 <graphic>
                     <ImageView fx:id="settingsButtonImageView" fitHeight="33.0" fitWidth="33.0" pickOnBounds="true" preserveRatio="true">
                         <Image url="@../images/icons/navbar/settings.png" />
                     </ImageView>
                 </graphic>
                 <padding>
-                  <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
+                   <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
                 </padding>
                 <cursor>
                     <Cursor fx:constant="HAND" />
                 </cursor>
             </Button>
-            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="830.0" mnemonicParsing="false" onMouseClicked="#showEula" prefHeight="35.0" prefWidth="35.0" styleClass="navBtn" text="E">
+            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="830.0" mnemonicParsing="false" onMouseClicked="#showEula" prefHeight="35.0" prefWidth="35.0" text="E">
                 <graphic>
-                  <ImageView fitHeight="33.0" fitWidth="33.0" pickOnBounds="true" preserveRatio="true">
-                      <image>
-                        <Image url="@../images/icons/navbar/info.png" />
-                      </image>
-                  </ImageView>
+                   <ImageView fitHeight="33.0" fitWidth="33.0" pickOnBounds="true" preserveRatio="true">
+                      <Image url="@../images/icons/navbar/info.png" />
+                   </ImageView>
                 </graphic>
                 <padding>
                   <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
@@ -73,12 +71,10 @@
                   <Cursor fx:constant="HAND" />
                 </cursor>
             </Button>
-            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="865.0" mnemonicParsing="false" onAction="#folderNavBarAction" prefHeight="35.0" prefWidth="35.0" styleClass="navBtn" text="F">
+            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="865.0" mnemonicParsing="false" onAction="#folderNavBarAction" prefHeight="35.0" prefWidth="35.0" text="F">
                 <graphic>
                   <ImageView fitHeight="33.0" fitWidth="33.0" pickOnBounds="true" preserveRatio="true">
-                      <image>
-                        <Image url="@../images/icons/navbar/folder.png" />
-                      </image>
+                    <Image url="@../images/icons/navbar/folder.png" />
                   </ImageView>
                 </graphic>
                 <padding>
