@@ -35,8 +35,8 @@ import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 
 public final class Logger {
-    private static final String FOLDER_PREFIX, LOG_FILE_NAME, STACKTRACE_FILE_NAME;
-    private static final int MAX_LOG_FILES;
+    public static final String FOLDER_PREFIX, LOG_FILE_NAME, STACKTRACE_FILE_NAME;
+    public static final int MAX_LOG_FILES;
 
     private static final DateTimeFormatter FILE_DTF;
     private static final DateTimeFormatter DTF;
@@ -53,40 +53,6 @@ public final class Logger {
 
     private final Path currPath;
     private final FileWriter logWriter, stacktraceWriter;
-
-    private static Logger instance = null;
-    private static final String CLASS_NAME = Logger.class.getName();
-
-    /**
-     * Creates the singleton Logger instance.
-     * <p>
-     * This method must be called exactly once before calling {@link #getInstance()}.
-     * If called more than once, it will throw an {@link IllegalStateException}.
-     *
-     * @param baseLogPath the base directory where log files will be stored
-     * @throws IllegalStateException if the Logger instance has already been created
-     */
-    public static synchronized void createInstance(Path baseLogPath) throws IllegalStateException {
-        if (instance != null) {
-            throw new IllegalStateException(CLASS_NAME + " instance already created");
-        }
-        instance = new Logger(baseLogPath);
-    }
-
-    /**
-     * Returns the singleton Logger instance.
-     * <p>
-     * This method should only be called after {@link #createInstance(Path)} has been invoked.
-     * If {@link #createInstance(Path)} has not been called, this method will return {@code null}.
-     *
-     * @return the singleton Logger instance, or {@code null} if not yet created
-     */
-    public static Logger getInstance() {
-        if (instance == null) {
-            throw new IllegalStateException(CLASS_NAME + " instance not created yet");
-        }
-        return instance;
-    }
 
     private Logger(Path filePath) {
         rotateLogs(filePath);
@@ -200,4 +166,14 @@ public final class Logger {
                  .forEach(File::delete);
         }
     }
+
+    // #region Singleton methods
+    public static synchronized void createInstance(Path baseLogPath) throws IllegalStateException {
+        Singletons.register(Logger.class, new Logger(baseLogPath));
+    }
+
+    public static Logger getInstance() {
+        return Singletons.get(Logger.class);
+    }
+    // #endregion
 }

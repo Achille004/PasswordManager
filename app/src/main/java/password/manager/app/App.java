@@ -37,7 +37,7 @@ public class App extends Application {
 
     public static final String ROOT_STYLESHEET = App.class.getResource("/fxml/css/root.css").toExternalForm();
     public static final String AUTOCOMPLETION_STYLESHEET = App.class.getResource("/fxml/css/autocompletion.css").toExternalForm();
-    public static final String MAIN_ICON = App.class.getResource("/images/icon.png").toExternalForm();
+    public static final Image MAIN_ICON = new Image(App.class.getResource("/images/icon.png").toExternalForm());
 
     private static @Getter HostServices appHostServices;
     private static @Getter AnchorPane appScenePane;
@@ -58,7 +58,7 @@ public class App extends Application {
         Font.loadFont(getClass().getResourceAsStream("/font/Charm-Bold.ttf"), 14);
         
         primaryStage.setTitle(APP_NAME);
-        primaryStage.getIcons().add(new Image(MAIN_ICON));
+        primaryStage.getIcons().add(MAIN_ICON);
         primaryStage.setOnCloseRequest(_ -> Platform.exit());
         primaryStage.setResizable(false);
         primaryStage.setScene(new Scene(appScenePane, 900, 600));

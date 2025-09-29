@@ -30,28 +30,7 @@ import javafx.scene.control.Labeled;
 public final class ObservableResourceFactory {
     private final ObjectProperty<ResourceBundle> resources;
 
-    private static ObservableResourceFactory instance = null;
-    private static final String CLASS_NAME = ObservableResourceFactory.class.getName();
-
-    /**
-     * Creates the singleton ObservableResourceFactory.
-     */
-    public static synchronized void createInstance(String bundleName) throws IllegalStateException {
-        if (instance != null) {
-            throw new IllegalStateException(CLASS_NAME + " instance already created");
-        }
-        instance = new ObservableResourceFactory(bundleName);
-    }
-
-    public static ObservableResourceFactory getInstance() {
-        if (instance == null) {
-            throw new IllegalStateException(CLASS_NAME + " instance not created yet");
-        }
-        return instance;
-    }
-
     private ObservableResourceFactory(ResourceBundle resources) {
-        // Initialize with default resources, can be set later
         this.resources = new SimpleObjectProperty<>(resources);
     }
 
@@ -99,4 +78,14 @@ public final class ObservableResourceFactory {
             field.textProperty().bind(getStringBinding(key));
         }
     }
+
+    // #region Singleton methods
+    public static synchronized void createInstance(String bundleName) throws IllegalStateException {
+        Singletons.register(ObservableResourceFactory.class, new ObservableResourceFactory(bundleName));
+    }
+    
+    public static ObservableResourceFactory getInstance() {
+        return Singletons.get(ObservableResourceFactory.class);
+    }
+    // #endregion
 }

@@ -58,10 +58,10 @@ import password.manager.app.security.UserPreferences;
 import password.manager.lib.PasswordInputControl;
 
 public final class IOManager {
-    private static final String DATA_FILE_NAME = "data.json";
-    private static final int AUTOSAVE_TIMER_MINUTES = 2; 
+    public static final String DATA_FILE_NAME = "data.json";
+    public static final int AUTOSAVE_TIMER_MINUTES = 2; 
 
-    private static final String OS, USER_HOME;
+    public static final String OS, USER_HOME;
     public static final Path FILE_PATH, DESKTOP_PATH;
 
     public static final String LANG_BUNDLE_RESOURCE = "/bundles/Lang";
@@ -94,27 +94,6 @@ public final class IOManager {
     private final ScheduledExecutorService FLUSH_SCHEDULER;
     private final ObjectWriter OBJECT_WRITER;
     private final ExecutorService ACCOUNT_EXECUTOR;
-
-    private static IOManager instance = null;
-    private static final String CLASS_NAME = IOManager.class.getName();
-
-    /**
-     * Creates the singleton IOManager.
-     */
-    public static synchronized void createInstance() throws IllegalStateException {
-        if (instance != null) {
-            throw new IllegalStateException(CLASS_NAME + " instance already created");
-        }
-        ObservableResourceFactory.createInstance(LANG_BUNDLE_RESOURCE);
-        instance = new IOManager();
-    }
-
-    public static IOManager getInstance() {
-        if (instance == null) {
-            throw new IllegalStateException(CLASS_NAME + " instance not created yet");
-        }
-        return instance;
-    }
 
     private IOManager() {
         ACCOUNT_LIST = FXCollections.observableList(Collections.synchronizedList(new ArrayList<>()));
@@ -504,4 +483,15 @@ public final class IOManager {
         saveDataFile(true);
         Logger.getInstance().closeStreams();
     }
+
+    // #region Singleton methods
+    public static synchronized void createInstance() throws IllegalStateException {
+        ObservableResourceFactory.createInstance(LANG_BUNDLE_RESOURCE);
+        Singletons.register(IOManager.class, new IOManager());
+    }
+
+    public static IOManager getInstance() throws IllegalStateException {
+        return Singletons.get(IOManager.class);
+    }
+    // #endregion
 }
