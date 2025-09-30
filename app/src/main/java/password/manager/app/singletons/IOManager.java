@@ -149,7 +149,7 @@ public final class IOManager {
 
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            AppData data = objectMapper.readValue(DATA_FILE, AppData.class);
+            final AppData data = objectMapper.readValue(DATA_FILE, AppData.class);
 
             this.userPreferences = data.userPreferences();
             setupPreferencesListeners();
@@ -163,7 +163,8 @@ public final class IOManager {
             Logger.getInstance().addError(e);
             Logger.getInstance().addInfo("Data not OK, overwrite?");
 
-            Alert alert = new Alert(AlertType.ERROR, ObservableResourceFactory.getInstance().getValue("data_error"), ButtonType.YES, ButtonType.NO);
+            final String errMsg = ObservableResourceFactory.getInstance().getValue("data_error");
+            final Alert alert = new Alert(AlertType.ERROR, errMsg, ButtonType.YES, ButtonType.NO);
             setDefaultButton(alert, ButtonType.NO);
             alert.showAndWait();
 
@@ -294,6 +295,7 @@ public final class IOManager {
         });
     }
 
+    // Asynchronously retrieves and injects the password into the given PasswordInputControl
     public <T extends PasswordInputControl> void getAccountPassword(@NotNull T element, @NotNull Account account) {
         if (!isAuthenticated()) {
             Logger.getInstance().addError(new IllegalStateException("User is not authenticated [getAccountPassword]"));

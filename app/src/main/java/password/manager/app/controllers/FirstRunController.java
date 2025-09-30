@@ -27,6 +27,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import password.manager.app.singletons.IOManager;
+import password.manager.app.singletons.Logger;
 import password.manager.app.singletons.ObservableResourceFactory;
 import password.manager.lib.ReadablePasswordFieldWithStr;
 
@@ -50,6 +51,8 @@ public class FirstRunController extends AbstractController {
     private Button firstRunSubmitBtn;
 
     public void initialize(URL location, ResourceBundle resources) {
+        Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
+
         final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
         langResources.bindTextProperty(firstRunTitle, "hi");
         langResources.bindTextProperty(firstRunDescTop, "first_run.desc.top");
@@ -60,7 +63,7 @@ public class FirstRunController extends AbstractController {
         langResources.bindTextProperty(firstRunDisclaimer, "first_run.disclaimer");
 
         firstRunPassword.setOnAction(_ -> doFirstRun());
-        firstRunPassword.sceneProperty().addListener((obs, oldScene, newScene) -> {
+        firstRunPassword.sceneProperty().addListener((_, _, newScene) -> {
             if (newScene != null) {
                 firstRunPassword.requestFocus();
             }

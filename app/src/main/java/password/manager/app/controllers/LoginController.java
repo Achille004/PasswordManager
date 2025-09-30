@@ -29,6 +29,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.util.Duration;
 import password.manager.app.singletons.IOManager;
+import password.manager.app.singletons.Logger;
 import password.manager.app.singletons.ObservableResourceFactory;
 import password.manager.lib.ReadablePasswordField;
 
@@ -48,25 +49,25 @@ public class LoginController extends AbstractController {
     @FXML
     private Button loginSubmitBtn;
 
-    private Timeline wrongPasswordTimeline;
+    final private Timeline wrongPasswordTimeline =  new Timeline(
+            new KeyFrame(Duration.ZERO, _ -> {
+                loginSubmitBtn.setDisable(true);
+                loginSubmitBtn.setStyle("-fx-border-color: -fx-color-red");
+            }),
+            new KeyFrame(Duration.seconds(1), _ -> {
+                loginSubmitBtn.setDisable(false);
+                clearStyle(loginSubmitBtn);
+            }));
 
     public void initialize(URL location, ResourceBundle resources) {
-        wrongPasswordTimeline = new Timeline(
-                new KeyFrame(Duration.ZERO, _ -> {
-                    loginSubmitBtn.setDisable(true);
-                    loginSubmitBtn.setStyle("-fx-border-color: -fx-color-red");
-                }),
-                new KeyFrame(Duration.seconds(1), _ -> {
-                    loginSubmitBtn.setDisable(false);
-                    clearStyle(loginSubmitBtn);
-                }));
+        Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
 
         final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
         langResources.bindTextProperty(loginTitle, "welcome_back");
         langResources.bindTextProperty(loginSubmitBtn, "lets_go");
 
         loginPassword.setOnAction(_ -> doLogin());
-        loginPassword.sceneProperty().addListener((obs, oldScene, newScene) -> {
+        loginPassword.sceneProperty().addListener((_, _, newScene) -> {
             if (newScene != null) {
                 loginPassword.requestFocus();
             }

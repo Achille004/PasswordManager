@@ -23,6 +23,8 @@ import static password.manager.app.Utils.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -40,6 +42,17 @@ public final class Logger {
 
     private static final DateTimeFormatter FILE_DTF;
     private static final DateTimeFormatter DTF;
+
+    private static final String INITIAL_MESSAGE = """
+    ============== Password Manager by Francesco Marras ==============
+
+                            %s
+    
+              --- Debug          >>> Info          !!! Error
+
+    ==================================================================
+
+    """;
 
     static {
         FOLDER_PREFIX = "log_";
@@ -65,10 +78,24 @@ public final class Logger {
 
         stacktraceWriter = getFileWriter(currPath.resolve(STACKTRACE_FILE_NAME), false);
         Objects.requireNonNull(stacktraceWriter, "stacktraceWriter must not be null");
+
+        final String MSG = String.format(INITIAL_MESSAGE, DTF.format(LocalDateTime.now()));
+        write(logWriter, new StringBuilder(MSG));
     }
 
     public Path getLoggingPath() {
         return currPath;
+    }
+
+    public @NotNull Boolean addDebug(String str) {
+        StringBuilder logStrBuilder = new StringBuilder();
+        logStrBuilder
+                .append(DTF.format(LocalDateTime.now()))
+                .append(" --- ")
+                .append(str)
+                .append("\n");
+
+        return write(logWriter, logStrBuilder);
     }
 
     public @NotNull Boolean addInfo(String str) {
@@ -97,12 +124,16 @@ public final class Logger {
                 .append(" => Exception thrown while executing '")
                 .append(getCurrentMethodName(1))
                 .append("', follows error and full stack trace:\n");
-        stacktraceStrBuilder.append(e.getClass().getName())
-                .append(": ")
-                .append(e.getMessage())
-                .append("\n");
-        for (StackTraceElement element : e.getStackTrace()) {
-            stacktraceStrBuilder.append("        ").append(element).append('\n');
+                
+        try {
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            stacktraceStrBuilder.append(sw.toString()).append("\n");
+            pw.close();
+            sw.close();
+        } catch (IOException e1) {
+            e1.printStackTrace();
         }
 
         return write(logWriter, logStrBuilder) && write(stacktraceWriter, stacktraceStrBuilder);
@@ -120,7 +151,7 @@ public final class Logger {
 
     public void closeStreams() {
         try {
-            addInfo("Closing logger streams...");
+            addInfo("Closing logger streams");
             logWriter.close();
             stacktraceWriter.close();
         } catch (IOException e) {

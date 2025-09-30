@@ -26,12 +26,14 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import password.manager.app.App;
+import password.manager.app.singletons.Logger;
 
 public class EulaController implements Initializable {
     public static final String FM_LINK = "https://github.com/Achille004", SS_LINK = "https://github.com/samustocco";
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
     }
 
     @FXML

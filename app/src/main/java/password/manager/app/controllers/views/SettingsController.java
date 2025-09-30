@@ -42,6 +42,7 @@ import javafx.util.StringConverter;
 import password.manager.app.Utils;
 import password.manager.app.enums.SortingOrder;
 import password.manager.app.singletons.IOManager;
+import password.manager.app.singletons.Logger;
 import password.manager.app.singletons.ObservableResourceFactory;
 import password.manager.lib.ReadablePasswordFieldWithStr;
 
@@ -59,6 +60,8 @@ public class SettingsController extends AbstractViewController {
     private Label settingsLangLbl, settingsSortingOrderLbl, settingsMasterPasswordLbl, settingsMasterPasswordDesc, settingsDriveConnLbl, wip;
 
     public void initialize(URL location, ResourceBundle resources) {
+        Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
+
         final IOManager ioManager = IOManager.getInstance();
         final ObjectProperty<Locale> localeProperty = ioManager.getUserPreferences().getLocaleProperty();
         final ObjectProperty<SortingOrder> sortingOrderProperty = ioManager.getUserPreferences().getSortingOrderProperty();

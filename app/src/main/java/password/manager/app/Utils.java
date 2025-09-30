@@ -136,14 +136,9 @@ public final class Utils {
         }
     }
 
-    public static @Nullable Parent loadFxml(String path, Initializable controller, boolean @NotNull ... printLogsArg) {
-        final boolean printLogs = printLogsArg.length == 0 || printLogsArg[0];
-
-        String loggedPath = "none";
-        if(printLogs) {
-            loggedPath = path.replace("/fxml/", "").replace(".fxml", "");
-            Logger.getInstance().addInfo("Loading [" + loggedPath + "] pane...");
-        }
+    public static @Nullable Parent loadFxml(String path, Initializable controller) {
+        final String uiElementPath = path.replace("/fxml/", "").replace(".fxml", "");
+        Logger.getInstance().addDebug("Loading [" + uiElementPath + "] pane...");
 
         Parent parent = null;
         try {
@@ -154,15 +149,14 @@ public final class Utils {
             Logger.getInstance().addError(e);
         }
 
-        if(parent != null) {
-            if (printLogs) {
-                Logger.getInstance().addInfo("Success [" + loggedPath + "]");
-            }
-            return parent;
-        }
+        final String outcome = (parent != null) ? "Success" : "Error";
+        Logger.getInstance().addDebug(outcome + " [" + uiElementPath + "]");
+
+        if(parent != null) return parent;
         
         // Since it's a one-time error, just create it during the error process
-        final Alert alert = new Alert(AlertType.ERROR, ObservableResourceFactory.getInstance().getValue("ui_error"), ButtonType.YES, ButtonType.NO);
+        final String errMsg = ObservableResourceFactory.getInstance().getValue("ui_error");
+        final Alert alert = new Alert(AlertType.ERROR, errMsg, ButtonType.YES, ButtonType.NO);
         setDefaultButton(alert, ButtonType.NO);
 
         alert.showAndWait();
@@ -175,7 +169,7 @@ public final class Utils {
                 }
             });
         }
-        Platform.exit();
+        Platform.exit(); // Exit gracefully (saves data, etc.)
         return null;
     }
 }

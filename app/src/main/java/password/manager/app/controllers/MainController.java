@@ -103,6 +103,8 @@ public class MainController extends AbstractController {
     private AbstractViewController managerController, settingsController;
 
     public void initialize(URL location, ResourceBundle resources) {
+        Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
+
         if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
             Logger.getInstance().addInfo("Unsupported action: Desktop.Action.OPEN");
             folderButton.setVisible(false);

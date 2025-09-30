@@ -26,16 +26,15 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.ResourceBundle;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.controlsfx.control.textfield.TextFields;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
@@ -69,9 +68,6 @@ import password.manager.lib.ReadablePasswordFieldWithStr;
 public class ManagerController extends AbstractViewController {
     public static final Duration SEARCH_DELAY = Duration.millis(300);
 
-    // Cache for tabs associated with accounts
-    private final IdentityHashMap<Account, Tab> TABS_CACHE = new IdentityHashMap<>();
-
     @FXML
     private ListView<Account> accountListView;
 
@@ -95,176 +91,21 @@ public class ManagerController extends AbstractViewController {
     private List<String> possibleSoftwares, possibleUsernames;
 
     public void initialize(URL location, ResourceBundle resources) {
-        final ObservableList<Tab> ACC_TABS = accountTabPane.getTabs();
-
-        final ChangeListener<Account> LIST_VIEW_HANDLER = (_, _, newItem) -> {
-            if (newItem != null && !editOperationInProgress) {
-                // If the tab is cached, reuse it
-                final Tab cachedTab = TABS_CACHE.get(newItem);
-                if (cachedTab != null) {
-                    selectTab(ACC_TABS, cachedTab, true);
-                    return;
-                }
-
-                // Create a new tab for the selected account -> TODO store as singleton and deep clone
-                final EditorController controller = new EditorController();
-                final Pane pane = (Pane) loadFxml("/fxml/views/manager/editor.fxml", controller);
-                
-                controller.setAccount(newItem);
-
-                final Tab tab = new Tab();
-                tab.textProperty().bind(Bindings.createStringBinding(() -> {
-                    final String software = newItem.getSoftware();
-                    return software != null ? software : "";
-                }, newItem.getSoftwareProperty()));
-                tab.setContent(pane);
-                tab.setOnSelectionChanged(_ -> {
-                    if (tab.isSelected()) {
-                        controller.reset();
-                    }
-                });
-
-                selectTab(ACC_TABS, tab, true);
-                TABS_CACHE.put(newItem, tab);
-            }
-        };
-
-        final ListChangeListener<Account> ACCOUNT_LIST_CHANGE_HANDLER = change -> {
-            if (editOperationInProgress) {
-                return;
-            }
-
-            while(change.next()) {
-                if (change.wasRemoved() && !change.wasAdded()) {
-                    // This is a true removal
-                    for (Account removedAccount : change.getRemoved()) {
-                        final Tab tab = TABS_CACHE.remove(removedAccount);
-                        if (tab != null) {
-                            Platform.runLater(() -> ACC_TABS.remove(tab));
-                        }
-                    }
-                }
-            }
-        };
-
-        final ListChangeListener<Tab> ACC_TABS_CHANGE_HANDLER = change -> {
-            while(change.next()) {
-                if (change.wasAdded() && !change.getAddedSubList().contains(homeTab)) {
-                    Platform.runLater(() -> ACC_TABS.remove(homeTab));
-                } else if (change.wasRemoved() && ACC_TABS.size() <= 1) {
-                    selectTab(ACC_TABS, homeTab, true);
-                }
-            }
-        };
-
-        final EventHandler<KeyEvent> SHORTCUTS_HANDLER = keyEvent -> {
-            final Tab selectedTab = accountTabPane.getSelectionModel().getSelectedItem();
-            if (!keyEvent.isControlDown() || selectedTab == null) {
-                return;
-            }
-
-            switch(keyEvent.getCode()) {
-                case W -> { 
-                    keyEvent.consume();
-                    if(selectedTab == homeTab) break;
-                    if(selectedTab == addTab) {
-                        selectTab(ACC_TABS, homeTab, false);
-                    } else {
-                        ACC_TABS.remove(selectedTab);
-                    }
-                }
-
-                case T -> {
-                    keyEvent.consume();
-                    if (selectedTab == addTab) break;
-                    selectTab(ACC_TABS, addTab, false);
-                }
-
-                case Q, E -> {
-                    keyEvent.consume();
-                    final int currentIndex = accountTabPane.getSelectionModel().getSelectedIndex();
-                    if (currentIndex == -1) break;
-
-                    final int newIndex = (keyEvent.getCode() == KeyCode.Q) ? currentIndex - 1 : currentIndex + 1;
-                    if (newIndex >= 0 && newIndex < ACC_TABS.size()) {
-                        accountTabPane.getSelectionModel().select(newIndex);
-                    }
-                }
-
-                default -> {}
-            }
-        };
+        Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
 
         final IOManager IO_MANAGER = IOManager.getInstance();
-        final ObjectProperty<SortingOrder> SORTING_ORDER_PROPERTY = IO_MANAGER.getUserPreferences().getSortingOrderProperty();
+
         final SortedList<Account> SORTED_ACCOUNT_LIST = IO_MANAGER.getSortedAccountList();
         final FilteredList<Account> FILTERED_ACCOUNT_LIST = new FilteredList<>(SORTED_ACCOUNT_LIST);
-
-        accountListView.setItems(FILTERED_ACCOUNT_LIST);
-        // Set cell factory to control how Account objects are displayed
-        accountListView.cellFactoryProperty().bind(SORTING_ORDER_PROPERTY.map(this::accountCellFactory));
-        accountListView.getSelectionModel().selectedItemProperty().addListener(LIST_VIEW_HANDLER);
         
-        SORTED_ACCOUNT_LIST.comparatorProperty().bind(Bindings.createObjectBinding(() -> {
-            final SortingOrder sortingOrder = SORTING_ORDER_PROPERTY.getValue();
-            return sortingOrder != null ? sortingOrder.getComparator() : null;
-        }, SORTING_ORDER_PROPERTY));
-
-        SORTED_ACCOUNT_LIST.addListener(ACCOUNT_LIST_CHANGE_HANDLER);
-        ACC_TABS.addListener(ACC_TABS_CHANGE_HANDLER);
-
-        accountTabPane.setOnKeyPressed(SHORTCUTS_HANDLER);
-
-        // Handle search bar events
-        searchTimeline = new Timeline(new KeyFrame(SEARCH_DELAY, _ -> {
-            final String searchText = searchField.getText().trim();
-            if (searchText.isEmpty()) {
-                FILTERED_ACCOUNT_LIST.setPredicate(null); // Show all accounts
-                return;
-            }
-
-            final String finalSearchText = isMatchCase ? searchText : searchText.toLowerCase();
-            FILTERED_ACCOUNT_LIST.setPredicate(account -> {
-                final String software = isMatchCase ? account.getSoftware() : account.getSoftware().toLowerCase();
-                final String username = isMatchCase ? account.getUsername() : account.getUsername().toLowerCase();
-                
-                if (isMatchWholeWord) {
-                    return Arrays.asList(software.split("[\\s\\p{P}]+")).contains(finalSearchText) || Arrays.asList(username.split("[\\s\\p{Punct}]+")).contains(finalSearchText);
-                } else {
-                    return software.contains(finalSearchText) || username.contains(finalSearchText);
-                }
-            });
-        }));
-        searchTimeline.setCycleCount(1);
-
-        searchField.textProperty().addListener((_, _, _) -> {
-            searchTimeline.stop();
-            searchTimeline.playFromStart();
-        });
-
-        searchField.setOnAction(_ -> {
-            searchTimeline.stop();
-            searchTimeline.playFrom(SEARCH_DELAY);
-        });
-
-        possibleSoftwares = FILTERED_ACCOUNT_LIST.stream()
-                .map(Account::getSoftware)
-                .collect(Collectors.groupingBy(s -> s, Collectors.counting()))
-                .entrySet().stream()
-                .sorted(Entry.<String, Long>comparingByValue().reversed())
-                .map(Entry::getKey)
-                .toList();
-
-        possibleUsernames = FILTERED_ACCOUNT_LIST.stream()
-                .map(Account::getUsername)
-                .collect(Collectors.groupingBy(s -> s, Collectors.counting()))
-                .entrySet().stream()
-                .sorted(Entry.<String, Long>comparingByValue().reversed())
-                .map(Entry::getKey)
-                .toList();
-
-        loadHomeTab();
-        loadAddTab();
+        final ObjectProperty<SortingOrder> SORTING_ORDER_PROPERTY = IO_MANAGER.getUserPreferences().getSortingOrderProperty();
+        final TabManager TAB_MANAGER = new TabManager(accountTabPane, homeTab);
+        
+        setupAutoCompletion(FILTERED_ACCOUNT_LIST);
+        setupSearchFunctionality(FILTERED_ACCOUNT_LIST);
+        setupAccountListView(SORTING_ORDER_PROPERTY, SORTED_ACCOUNT_LIST, FILTERED_ACCOUNT_LIST, TAB_MANAGER);
+        setupKeyboardShortcuts(FILTERED_ACCOUNT_LIST, TAB_MANAGER);
+        setupSpecialTabs(TAB_MANAGER);
     }
 
     public void reset() {}
@@ -293,51 +134,142 @@ public class ManagerController extends AbstractViewController {
         searchTimeline.playFrom(SEARCH_DELAY);
     }
 
-    private void loadHomeTab() {
-        final HomeController homeController = new HomeController();
-        final Pane homePane = (Pane) loadFxml("/fxml/views/manager/home.fxml", homeController);
-        homeTab.setContent(homePane);
+    private void setupAutoCompletion(FilteredList<Account> filteredAccountList) {
+        possibleSoftwares = filteredAccountList.stream()
+                .map(Account::getSoftware)
+                .collect(Collectors.groupingBy(s -> s, Collectors.counting()))
+                .entrySet().stream()
+                .sorted(Entry.<String, Long>comparingByValue().reversed())
+                .map(Entry::getKey)
+                .toList();
+
+        possibleUsernames = filteredAccountList.stream()
+                .map(Account::getUsername)
+                .collect(Collectors.groupingBy(s -> s, Collectors.counting()))
+                .entrySet().stream()
+                .sorted(Entry.<String, Long>comparingByValue().reversed())
+                .map(Entry::getKey)
+                .toList();
     }
 
-    private void loadAddTab() {
-        final EditorController addController = new EditorController();
-        final Pane addPane = (Pane) loadFxml("/fxml/views/manager/editor.fxml", addController);
-
-        addTab.setContent(addPane);
-        addTab.setOnSelectionChanged(_ -> {
-            if (addTab.isSelected()) {
-                accountListView.getSelectionModel().clearSelection();
-                addController.reset();
+    private void setupSearchFunctionality(FilteredList<Account> filteredAccountList) {
+        searchTimeline = new Timeline(new KeyFrame(SEARCH_DELAY, _ -> {
+            final String searchText = searchField.getText().trim();
+            if (searchText.isEmpty()) {
+                filteredAccountList.setPredicate(null); // Show all accounts
+                return;
             }
-        });
-    }
 
-    private void selectTab(ObservableList<Tab> ACC_TABS, Tab tab, boolean add) {
-        if (tab == null) {
-            return;
-        }
-
-        Platform.runLater(() -> {
-            if(add && !accountTabPane.getTabs().contains(tab)) {
-                accountTabPane.getTabs().add(accountTabPane.getTabs().size() - 1, tab);
-            }
-            accountTabPane.getSelectionModel().select(tab);
-        });
-    }
-
-    @Contract(value = "_ -> new", pure = true)
-    private @NotNull Callback<ListView<Account>, ListCell<Account>> accountCellFactory(SortingOrder order) {
-        return _ -> new ListCell<>() {
-            @Override
-            protected void updateItem(Account account, boolean empty) {
-                super.updateItem(account, empty);
-                if (empty || account == null) {
-                    setText(null);
+            final String finalSearchText = isMatchCase ? searchText : searchText.toLowerCase();
+            filteredAccountList.setPredicate(account -> {
+                final String software = isMatchCase ? account.getSoftware() : account.getSoftware().toLowerCase();
+                final String username = isMatchCase ? account.getUsername() : account.getUsername().toLowerCase();
+                
+                if (isMatchWholeWord) {
+                    return Arrays.asList(software.split("[\\s\\p{P}]+")).contains(finalSearchText) || Arrays.asList(username.split("[\\s\\p{Punct}]+")).contains(finalSearchText);
                 } else {
-                    setText(order.convert(account));
+                    return software.contains(finalSearchText) || username.contains(finalSearchText);
+                }
+            });
+        }));
+        searchTimeline.setCycleCount(1);
+
+        searchField.textProperty().addListener((_, _, _) -> {
+            searchTimeline.stop();
+            searchTimeline.playFromStart();
+        });
+        searchField.setOnAction(_ -> {
+            searchTimeline.stop();
+            searchTimeline.playFrom(SEARCH_DELAY);
+        });
+    }
+
+    private void setupAccountListView(ObjectProperty<SortingOrder> sortingOrderProperty, SortedList<Account> sortedAccountList, 
+                                      FilteredList<Account> filteredAccountList, TabManager tabManager) {
+        // #region Sorted account list setup
+        final ListChangeListener<Account> ACCOUNT_LIST_CHANGE_HANDLER = change -> {
+            if (editOperationInProgress) {
+                return;
+            }
+
+            while(change.next()) {
+                if (change.wasRemoved() && !change.wasAdded()) {
+                    // This is a true removal
+                    change.getRemoved().forEach(tabManager::closeAccountTab);
                 }
             }
         };
+            
+        sortedAccountList.comparatorProperty().bind(sortingOrderProperty.map(order -> order != null ? order.getComparator() : null));
+        sortedAccountList.addListener(ACCOUNT_LIST_CHANGE_HANDLER);
+        // #endregion
+
+        // #region account listview setup
+        final Function<SortingOrder, Callback<ListView<Account>, ListCell<Account>>> ACCOUNT_CELL_FACTORY = order -> { 
+            return _ -> new ListCell<>() {
+                @Override
+                protected void updateItem(Account account, boolean empty) {
+                    super.updateItem(account, empty);
+                    if (empty || account == null) {
+                        setText(null);
+                    } else {
+                        setText(order.convert(account));
+                    }
+                }
+            };
+        };
+        
+        final ChangeListener<Account> LIST_VIEW_HANDLER = (_, _, newItem) -> {
+            if (newItem != null && !editOperationInProgress) {
+                tabManager.openAccountTab(newItem);
+            }
+        };
+        
+        accountListView.setItems(filteredAccountList);
+        accountListView.cellFactoryProperty().bind(sortingOrderProperty.map(ACCOUNT_CELL_FACTORY));
+        accountListView.getSelectionModel().selectedItemProperty().addListener(LIST_VIEW_HANDLER);
+        // #endregion
+    }
+
+    private void setupKeyboardShortcuts(FilteredList<Account> filteredAccountList, TabManager tabManager) {
+        final EventHandler<KeyEvent> SHORTCUTS_HANDLER = keyEvent -> {
+            final Tab selectedTab = accountTabPane.getSelectionModel().getSelectedItem();
+            if (!keyEvent.isControlDown() || selectedTab == null) return;
+
+            switch(keyEvent.getCode()) {
+                case W -> { 
+                    keyEvent.consume();
+                    if (selectedTab == homeTab) break; 
+                    // It's better to just handle this manually
+                    if (selectedTab == addTab) {
+                        tabManager.selectTab(homeTab);
+                    } else {
+                        tabManager.closeTab(selectedTab);
+                    }
+                }
+
+                case T -> {
+                    keyEvent.consume();
+                    if (selectedTab == addTab) break;
+                    tabManager.selectTab(addTab);
+                }
+
+                case Q, E -> {
+                    keyEvent.consume();
+                    tabManager.selectAdjacentTab(keyEvent.getCode() == KeyCode.Q ? -1 : 1);
+                }
+
+                default -> {}
+            }
+        };
+
+        accountTabPane.setOnKeyPressed(SHORTCUTS_HANDLER);
+    }
+
+    private void setupSpecialTabs(TabManager tabManager) {
+        TabManager.loadTab(homeTab, "/fxml/views/manager/home.fxml", new HomeController());
+        TabManager.loadTab(addTab, "/fxml/views/manager/editor.fxml", new EditorController(null));
+        addTab.setOnSelectionChanged(_ -> { if (addTab.isSelected()) TabManager.getController(addTab).reset(); });
     }
 
     static class HomeController extends AbstractViewController {
@@ -345,6 +277,8 @@ public class ManagerController extends AbstractViewController {
         private Label homeDescTop, homeDescBtm;
 
         public void initialize(URL location, ResourceBundle resources) {
+            Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
+
             final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
             langResources.bindTextProperty(homeDescTop, "home_desc.top");
             langResources.bindTextProperty(homeDescBtm, "home_desc.btm");
@@ -360,8 +294,6 @@ public class ManagerController extends AbstractViewController {
     }
 
     private class EditorController extends AbstractViewController {
-        private @Getter Account account;
-
         @FXML
         private TextField editorSoftware, editorUsername;
         @FXML
@@ -370,16 +302,24 @@ public class ManagerController extends AbstractViewController {
         @FXML
         private Button editorSaveBtn;
         private Timeline editorSaveTimeline;
-
+        
         @FXML
         private Button editorDeleteBtn;
         private boolean editorDeleteCounter = false;
         
         @FXML
         private Label editorAccSelLbl, editorSoftwareLbl, editorUsernameLbl, editorPasswordLbl;
+        
+        private final @Getter Account account;
+        private final @Getter boolean isAddEditor;
+
+        public EditorController(Account account) {
+            this.account = account;
+            this.isAddEditor = account == null;
+        }
 
         public void initialize(URL location, ResourceBundle resources) {
-            final ObjectProperty<SortingOrder> sortingOrderProperty = IOManager.getInstance().getUserPreferences().getSortingOrderProperty();
+            Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
 
             final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
             langResources.bindTextProperty(editorSoftwareLbl, "software");
@@ -390,7 +330,7 @@ public class ManagerController extends AbstractViewController {
             editorUsername.setOnAction(_ -> editorPassword.requestFocus());
             editorPassword.setOnAction(this::editorSave);
 
-            editorSoftware.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            editorSoftware.sceneProperty().addListener((_, _, newScene) -> {
                 if (newScene != null) {
                     editorSoftware.requestFocus();
                 }
@@ -405,15 +345,17 @@ public class ManagerController extends AbstractViewController {
 
             TextFields.bindAutoCompletion(editorSoftware, possibleSoftwares);    
             TextFields.bindAutoCompletion(editorUsername, possibleUsernames);
+
+            editorDeleteBtn.setVisible(!isAddEditor);
         }
 
         public void reset() {
-            if(account != null) {
+            if(isAddEditor) {
+                clearTextFields(editorSoftware, editorUsername, editorPassword.getTextField());
+            } else {
                 editorSoftware.setText(account.getSoftware());
                 editorUsername.setText(account.getUsername());
                 IOManager.getInstance().getAccountPassword(editorPassword, account);
-            } else {
-                clearTextFields(editorSoftware, editorUsername, editorPassword.getTextField());
             }
 
             editorDeleteCounter = false;
@@ -442,8 +384,7 @@ public class ManagerController extends AbstractViewController {
                   This ensures maximum responsiveness when adding, while avoiding really weird behavior
                   when editing, like the editor creating duplicated tabs for the same account.
                 */
-                final boolean isNewAccount = account == null; // <- dummy variable to make the code more readable 
-                if(isNewAccount) {
+                if(isAddEditor) {
                     IOManager.getInstance().addAccount(software, username, password);
                     reset();
                 } else {
@@ -481,13 +422,90 @@ public class ManagerController extends AbstractViewController {
                 editorDeleteCounter = true;
             }
         }
+    }
 
-        public void setAccount(Account account) {
-            this.account = account;
-            if (account != null) {
-                editorDeleteBtn.setVisible(true);
-            } 
-            reset();
+    // Helper class for better encapsulation
+    private class TabManager {
+        // Map for tabs associated with accounts for two-way association and caching
+        private static final IdentityHashMap<Account, Tab> TABS_MAP = new IdentityHashMap<>();
+
+        private final TabPane TAB_PANE;
+        private final ObservableList<Tab> ACC_TABS;
+        
+        public TabManager(@NotNull TabPane tabPane, @NotNull Tab homeTab) {
+            this.TAB_PANE = tabPane;
+            this.ACC_TABS = tabPane.getTabs();
+
+            // It's better to just handle this manually
+            final ListChangeListener<Tab> HOME_TAB_HANDLER = change -> {
+                while(change.next()) {
+                    if (change.wasAdded() && !change.getAddedSubList().contains(homeTab)) {
+                        Platform.runLater(() -> ACC_TABS.remove(homeTab));
+                    } else if (change.wasRemoved() && ACC_TABS.size() <= 1) {
+                        ACC_TABS.add(0, homeTab);
+                        selectTab(homeTab);
+                    }
+                }
+            };
+            this.ACC_TABS.addListener(HOME_TAB_HANDLER);
+        }
+
+        public void openAccountTab(Account account) {
+            Tab tab = TABS_MAP.computeIfAbsent(account, this::createAccountTab);
+            selectTab(tab, true);
+        }
+
+        public Tab createAccountTab(Account account) {
+            EditorController controller = new EditorController(account);
+            Tab tab = new Tab();
+            
+            TabManager.loadTab(tab, "/fxml/views/manager/editor.fxml", controller);
+            tab.textProperty().bind(account.getSoftwareProperty());
+            tab.setOnSelectionChanged(_ -> {
+                if (tab.isSelected()) controller.reset();
+            });
+            
+            return tab;
+        }
+
+        public void selectTab(Tab tab, boolean addIfMissing) {
+            Platform.runLater(() -> {
+                if (addIfMissing && !TAB_PANE.getTabs().contains(tab)) {
+                    TAB_PANE.getTabs().add(TAB_PANE.getTabs().size() - 1, tab);
+                }
+                TAB_PANE.getSelectionModel().select(tab);
+            });
+        }
+        
+        public void selectTab(Tab tab) {
+            selectTab(tab, false);
+        }
+        
+        public void selectAdjacentTab(int direction) {
+            int currentIndex = TAB_PANE.getSelectionModel().getSelectedIndex();
+            int newIndex = Math.max(0, Math.min(TAB_PANE.getTabs().size() - 1, currentIndex + direction));
+            TAB_PANE.getSelectionModel().select(newIndex);
+        }
+        
+        public void closeTab(Tab tab) {
+            Platform.runLater(() -> TAB_PANE.getTabs().remove(tab));
+        }
+        
+        public void closeAccountTab(Account account) {
+            Tab tab = TABS_MAP.remove(account);
+            if (tab != null) closeTab(tab);
+        }
+
+        // Static utility methods for tab management
+
+        public static <T extends AbstractViewController> void loadTab(Tab tab, String fxmlPath, T controller) {
+            Pane pane = (Pane) loadFxml(fxmlPath, controller);
+            tab.setContent(pane);
+            tab.getProperties().put("controller", controller);
+        }
+
+        public static AbstractViewController getController(Tab tab) {
+            return (AbstractViewController) tab.getProperties().get("controller");
         }
     }
 }
