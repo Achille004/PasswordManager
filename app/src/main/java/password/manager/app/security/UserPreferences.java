@@ -47,8 +47,8 @@ public final class UserPreferences {
     private final @JsonIgnore ObjectProperty<Locale> localeProperty;
     private final @JsonIgnore ObjectProperty<SortingOrder> sortingOrderProperty;
     private SecurityVersion securityVersion;
-    private byte[] hashedPassword;
-    private final byte[] salt;
+    private final byte[] hashedPassword, salt;
+    private @JsonIgnore boolean isPasswordSet;
 
     public UserPreferences() {
         this.localeProperty = new SimpleObjectProperty<>(Utils.DEFAULT_LOCALE);
@@ -57,7 +57,7 @@ public final class UserPreferences {
         this.securityVersion = SecurityVersion.LATEST;
 
         this.salt = new byte[16];
-        this.hashedPassword = null;
+        this.hashedPassword = new byte[Encrypter.HASH_BITS / 8];
     }
 
     public UserPreferences(@NotNull String password) {
@@ -66,13 +66,24 @@ public final class UserPreferences {
     }
 
     private UserPreferences(Locale locale, SortingOrder sortingOrder, SecurityVersion securityVersion, byte[] hashedPassword, byte[] salt) {
-        this.localeProperty = new SimpleObjectProperty<>(locale);
-        this.sortingOrderProperty = new SimpleObjectProperty<>(sortingOrder);
+        this();
+        
+        this.localeProperty.set(locale);
+        this.sortingOrderProperty.set(sortingOrder);
 
         this.securityVersion = securityVersion;
 
-        this.hashedPassword = hashedPassword;
-        this.salt = salt;
+        System.arraycopy(hashedPassword, 0, this.hashedPassword, 0, this.hashedPassword.length);
+        System.arraycopy(salt, 0, this.salt, 0, this.salt.length);
+    }
+
+    public void set(UserPreferences userPreferences) {
+        setLocale(userPreferences.getLocale());
+        setSortingOrder(userPreferences.getSortingOrder());
+
+        this.securityVersion = userPreferences.securityVersion;
+        System.arraycopy(userPreferences.hashedPassword, 0, this.hashedPassword, 0, this.hashedPassword.length);
+        System.arraycopy(userPreferences.salt, 0, this.salt, 0, this.salt.length);
     }
 
     public Locale getLocale() {
@@ -91,44 +102,25 @@ public final class UserPreferences {
         sortingOrderProperty.set(sortingOrder);
     }
 
-    public @NotNull @JsonIgnore Boolean isEmpty() {
-        return this.hashedPassword == null;
-    }
-
     public @NotNull @JsonIgnore Boolean isLatestVersion() {
         return this.securityVersion == SecurityVersion.LATEST;
     }
 
     public @NotNull Boolean verifyPassword(String passwordToVerify) throws InvalidKeySpecException {
-        if (this.hashedPassword == null) {
-            return true;
-        }
+        if (!isPasswordSet()) throw new IllegalStateException("UserPreferences password not set");
+        if (passwordToVerify == null) return false;
 
-        if (passwordToVerify == null) {
-            return false;
-        }
-
-        // Backwards compatibility
-        final boolean isLatestSecurityVersion = isLatestVersion();
-        final byte[] hashedPasswordToVerify;
-        if (isLatestSecurityVersion) {
-            hashedPasswordToVerify = Encrypter.hash(passwordToVerify, salt);
-        } else {
-            hashedPasswordToVerify = Encrypter.hashOld(passwordToVerify, salt);
-        }
+        final boolean wasLatestSecurityVersion = isLatestVersion();
+        final byte[] hashedPasswordToVerify = this.securityVersion.hash(passwordToVerify, salt);
 
         final boolean res = Arrays.equals(hashedPassword, hashedPasswordToVerify);
-        if (res && !isLatestSecurityVersion) {
-            setPassword(passwordToVerify);
-        }
+        if (res && !wasLatestSecurityVersion) setPassword(passwordToVerify);
         return res;
     }
 
     public @NotNull Boolean setPasswordVerified(String oldPassword, @NotNull String newPassword) throws InvalidKeySpecException {
         final boolean res = verifyPassword(oldPassword);
-        if (res) {
-            setPassword(newPassword);
-        }
+        if (res) setPassword(newPassword);
         return res;
     }
 
@@ -137,7 +129,8 @@ public final class UserPreferences {
         random.nextBytes(salt);
 
         this.securityVersion = SecurityVersion.LATEST;
-        this.hashedPassword = Encrypter.hash(password, salt);
+        final byte[] hashedPassword = securityVersion.hash(password, salt);
+        System.arraycopy(hashedPassword, 0, this.hashedPassword, 0, this.hashedPassword.length);
     }
 
     @Contract("_ -> new")

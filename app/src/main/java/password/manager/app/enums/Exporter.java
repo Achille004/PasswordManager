@@ -22,12 +22,13 @@ import static password.manager.app.Utils.*;
 
 import java.security.GeneralSecurityException;
 import java.util.List;
-import java.util.function.BiFunction;
 
 import org.jetbrains.annotations.NotNull;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+
+import password.manager.app.interfaces.TriFunction;
 import password.manager.app.security.Account;
 import password.manager.app.singletons.ObservableResourceFactory;
 import password.manager.app.singletons.Logger;
@@ -35,7 +36,7 @@ import password.manager.app.singletons.Logger;
 @Getter
 @RequiredArgsConstructor
 public enum Exporter {
-    HTML((accountList, masterPassword) -> {
+    HTML((securityVersion, accountList, masterPassword) -> {
         final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
         final StringBuilder stb = new StringBuilder();
 
@@ -75,14 +76,14 @@ public enum Exporter {
                     .append(addZerosToIndex(listSize, counter)).append("</td>\n<td>")
                     .append(currentAccount.getSoftware()).append("</td>\n<td>")
                     .append(currentAccount.getUsername()).append("</td>\n<td>")
-                    .append(getAccountPassword(currentAccount, masterPassword)).append("</td>\n</tr>");
+                    .append(getAccountPassword(securityVersion, currentAccount, masterPassword)).append("</td>\n</tr>");
         }
 
         stb.append("</table>\n</body>\n</html>");
 
         return stb.toString();
     }),
-    CSV((accountList, masterPassword) -> {
+    CSV((securityVersion, accountList, masterPassword) -> {
         final StringBuilder stb = new StringBuilder();
 
         final int listSize = accountList.size();
@@ -92,17 +93,17 @@ public enum Exporter {
             stb.append(addZerosToIndex(listSize, counter)).append(",")
                     .append(currentAccount.getSoftware()).append(",")
                     .append(currentAccount.getUsername()).append(",")
-                    .append(getAccountPassword(currentAccount, masterPassword)).append("\n");
+                    .append(getAccountPassword(securityVersion,currentAccount, masterPassword)).append("\n");
         }
 
         return stb.toString();
     });
 
-    private final BiFunction<@NotNull List<Account>, String, String> exporter;
+    private final TriFunction<SecurityVersion, @NotNull List<Account>, String, String> exporter;
 
-    private static String getAccountPassword(Account account, String masterPassword) {
+    private static String getAccountPassword(SecurityVersion securityVersion, Account account, String masterPassword) {
         try {
-            return account.getPassword(masterPassword);
+            return account.getPassword(securityVersion, masterPassword);
         } catch (GeneralSecurityException e) {
             Logger.getInstance().addError(e);
             return "ERROR";

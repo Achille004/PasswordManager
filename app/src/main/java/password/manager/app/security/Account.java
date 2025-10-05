@@ -33,6 +33,7 @@ import javafx.beans.property.StringProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import password.manager.app.enums.SecurityVersion;
 
 @Data
 public final class Account {
@@ -42,7 +43,7 @@ public final class Account {
     private final byte[] salt, iv;
 
     @ToString.Exclude @EqualsAndHashCode.Exclude @JsonIgnore
-    private final Boolean isOlderVersion;
+    private final boolean isDerivedSaltVersion;
 
     @ToString.Exclude @EqualsAndHashCode.Exclude @JsonIgnore
     private final StringProperty softwareProperty = new SimpleStringProperty(), usernameProperty = new SimpleStringProperty();
@@ -58,21 +59,21 @@ public final class Account {
         this.encryptedPassword = encryptedPassword;
         this.iv = iv;
 
-        isOlderVersion = salt == null;
-        if(isOlderVersion) {
+        isDerivedSaltVersion = salt == null;
+        if(isDerivedSaltVersion) {
             salt = new byte[16];
         }
         this.salt = salt;
     }
 
-    public Account(@NotNull String software, @NotNull String username, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
+    public Account(SecurityVersion securityVersion, @NotNull String software, @NotNull String username, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
         propertiesSetup(software, username);
 
         salt = new byte[16];
         iv = new byte[16];
-        setPassword(password, masterPassword);
+        setPassword(securityVersion, password, masterPassword);
 
-        isOlderVersion = false;
+        isDerivedSaltVersion = false;
     }
 
     public void setSoftware(@NotNull String software) {
@@ -89,22 +90,22 @@ public final class Account {
         }
     }
 
-    private void setPassword(@NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
+    private void setPassword(SecurityVersion securityVersion, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
         // Generate salt and IV
         final SecureRandom random = new SecureRandom();
         random.nextBytes(salt);
         random.nextBytes(iv);
 
-        final byte[] key = Encrypter.getKey(masterPassword, salt);
+        final byte[] key = securityVersion.getKey(masterPassword, salt);
         this.encryptedPassword = Encrypter.encryptAES(password, key, iv);
     }
 
-    public String getPassword(@NotNull String masterPassword) throws GeneralSecurityException {
-        byte[] key = Encrypter.getKey(masterPassword, salt);
+    public String getPassword(SecurityVersion securityVersion, @NotNull String masterPassword) throws GeneralSecurityException {
+        byte[] key = securityVersion.getKey(masterPassword, salt);
         return Encrypter.decryptAES(encryptedPassword, key, iv);
     }
 
-    public @NotNull Boolean setData(@NotNull String software, @NotNull String username, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
+    public @NotNull Boolean setData(SecurityVersion securityVersion, @NotNull String software, @NotNull String username, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
         if (software.isEmpty() || password.isEmpty() || username.isEmpty()) {
             return false;
         }
@@ -115,7 +116,7 @@ public final class Account {
         final byte[] oldIv = this.iv.clone();
 
         try {
-            setPassword(password, masterPassword);
+            setPassword(securityVersion, password, masterPassword);
         } catch (GeneralSecurityException e) {
             this.encryptedPassword = oldEncryptedPassword;
             System.arraycopy(oldSalt, 0, salt, 0, oldSalt.length);
@@ -130,22 +131,23 @@ public final class Account {
         return true;
     }
 
-    public void changeMasterPassword(@NotNull String oldMasterPassword, @NotNull String newMasterPassword) throws GeneralSecurityException {
-        setPassword(getPassword(oldMasterPassword), newMasterPassword);
+    public void changeMasterPassword(SecurityVersion securityVersion, @NotNull String oldMasterPassword, @NotNull String newMasterPassword) throws GeneralSecurityException {
+        setPassword(securityVersion, getPassword(securityVersion, oldMasterPassword), newMasterPassword);
     }
 
-    public void updateToLatestVersion(@NotNull String masterPassword) throws GeneralSecurityException {
-        if (isOlderVersion) {
-            final byte[] key = Encrypter.getKeyOld(masterPassword, (software + username).getBytes());
+    public void updateToLatestVersion(SecurityVersion securityVersion, @NotNull String masterPassword) throws GeneralSecurityException {
+        if (isDerivedSaltVersion) {
+            final byte[] key = securityVersion.getKey(masterPassword, (software + username).getBytes());
             final String oldPassword = Encrypter.decryptAES(encryptedPassword, key, iv);
-            setPassword(oldPassword, masterPassword);
+            setPassword(securityVersion, oldPassword, masterPassword);
         }
     }
 
     @Contract("_, _, _, _ -> new")
-    public static @NotNull Account of(@NotNull String software, @NotNull String username, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
+    public static @NotNull Account of(@NotNull SecurityVersion securityVersion, @NotNull String software, @NotNull String username, 
+                                      @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
         // creates the account, adding its attributes by constructor
-        return new Account(software, username, password, masterPassword);
+        return new Account(securityVersion, software, username, password, masterPassword);
     }
 
     private void propertiesSetup(String software, String username) {

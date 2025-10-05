@@ -69,7 +69,7 @@ public class App extends Application {
 
     @Override
     public void stop() {
-        IOManager.getInstance().saveAll();
+        IOManager.getInstance().requestShutdown();
     }
 
     static void main(String[] args) {
