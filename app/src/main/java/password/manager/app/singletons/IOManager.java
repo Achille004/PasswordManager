@@ -45,6 +45,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.Alert;
@@ -88,7 +89,7 @@ public final class IOManager {
     private volatile @Getter boolean isFirstRun, isAuthenticated;
     
     private final File DATA_FILE;
-    private final AtomicBoolean HAS_CHANGED;
+    private final AtomicBoolean HAS_CHANGED, IS_LOADING;
     
     private final ObjectMapper OBJECT_MAPPER;
     private final ExecutorService ACCOUNT_EXECUTOR;
@@ -102,20 +103,15 @@ public final class IOManager {
         masterPassword = null;
         isFirstRun = true;
         isAuthenticated = false;
-        
+
         DATA_FILE = FILE_PATH.resolve(DATA_FILE_NAME).toFile();
         
         HAS_CHANGED = new AtomicBoolean(false);
-        final ChangeListener<? super Object> listener = (_, oldValue, newValue) -> {
-            if (oldValue != newValue) HAS_CHANGED.set(true);
-        };
-    
-        USER_PREFERENCES.getLocaleProperty().addListener(listener);
-        USER_PREFERENCES.getSortingOrderProperty().addListener(listener);
+        IS_LOADING = new AtomicBoolean(false);
+        setupListeners();
 
         OBJECT_MAPPER = new ObjectMapper();
         ACCOUNT_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
-
         AUTOSAVE_SCHEDULER = Executors.newSingleThreadScheduledExecutor();
         AUTOSAVE_SCHEDULER.scheduleAtFixedRate(this::saveData, AUTOSAVE_INTERVAL, AUTOSAVE_INTERVAL, TimeUnit.MINUTES);
 
@@ -131,6 +127,30 @@ public final class IOManager {
     }
 
     // #region Persistence and lifecycle management
+    private void setupListeners() {
+        final ChangeListener<? super Object> propListener = (_, oldValue, newValue) -> {
+            if (IS_LOADING.get()) return; // prevents triggering when loading data
+            System.out.println("DEBUG - UserPreferences property changed");
+            if (oldValue != newValue) HAS_CHANGED.set(true);
+        };
+    
+        USER_PREFERENCES.getLocaleProperty().addListener(propListener);
+        USER_PREFERENCES.getSortingOrderProperty().addListener(propListener);
+
+        final ListChangeListener<Account> listListener = change -> {
+            if (IS_LOADING.get()) return; // prevents triggering when loading data
+            while (change.next()) {
+                if (change.wasAdded() || change.wasRemoved() || change.wasUpdated()) {
+                    System.out.println("DEBUG - Scheduling save");
+                    HAS_CHANGED.set(true);
+                    return; // no need to check further changes
+                }
+            }
+        };
+
+        ACCOUNT_LIST.addListener(listListener);
+    }
+
     private void loadData() {
         if (FILE_PATH.toFile().mkdirs()) {
             Logger.getInstance().addInfo("Directory '" + FILE_PATH + "' did not exist and was therefore created, skipping data loading");
@@ -213,16 +233,8 @@ public final class IOManager {
     // #endregion
     
     // #region Account methods
-    public @NotNull CompletableFuture<Boolean> addAccount(@Nullable String software, @Nullable String username, @Nullable String password) {
-        if (software == null || username == null || password == null) {
-            Logger.getInstance().addError(new IllegalArgumentException("Software, username, and password cannot be null [addAccount]"));
-            return CompletableFuture.completedFuture(false);
-        }
-        
-        if (!isAuthenticated()) {
-            Logger.getInstance().addError(new IllegalStateException("User is not authenticated [addAccount]"));
-            return CompletableFuture.completedFuture(false); 
-        }
+    public @NotNull CompletableFuture<Void> addAccount(@NotNull String software, @NotNull String username, @NotNull String password) throws IllegalStateException {
+        if (!isAuthenticated()) throw new IllegalStateException("User is not authenticated [addAccount]");
 
         return CompletableFuture
                 .supplyAsync(() -> {
@@ -234,102 +246,70 @@ public final class IOManager {
                     }
                 }, ACCOUNT_EXECUTOR)
                 .thenCompose(account -> {
-                    if (account == null) {
-                        return CompletableFuture.completedFuture(false);
-                    }
-                    
-                    CompletableFuture<Boolean> uiUpdate = new CompletableFuture<>();
+                    if (account == null) throw new RuntimeException("Failed to create account");
+                    final CompletableFuture<Void> uiUpdate = new CompletableFuture<>();
                     Platform.runLater(() -> {
                         try {
                             ACCOUNT_LIST.add(account);
                             HAS_CHANGED.set(true);
                             Logger.getInstance().addInfo("Account added");
-                            uiUpdate.complete(true);
+                            uiUpdate.complete(null);
                         } catch (Exception e) {
                             Logger.getInstance().addError(e);
-                            uiUpdate.complete(false);
+                            uiUpdate.completeExceptionally(e);
                         }
                     });
                     return uiUpdate;
-                })
-                .exceptionally(t -> { 
-                    Logger.getInstance().addError(t); 
-                    return false;
                 });
     }
 
-    public @NotNull CompletableFuture<Boolean> editAccount(@NotNull Account account, @Nullable String software, @Nullable String username, @Nullable String password) {
-        if(!ACCOUNT_LIST.contains(account)) {
-            Logger.getInstance().addError(new IllegalArgumentException("Account not found in list [editAccount]"));
-            return CompletableFuture.completedFuture(false);
-        }
-        
-        if (software == null || username == null || password == null) {
-            Logger.getInstance().addError(new IllegalArgumentException("Software, username, and password cannot be null [editAccount]"));
-            return CompletableFuture.completedFuture(false);
-        }
-
-        if (!isAuthenticated()) {
-            Logger.getInstance().addError(new IllegalStateException("User is not authenticated [editAccount]"));
-            return CompletableFuture.completedFuture(false);
-        }
+    public @NotNull CompletableFuture<Void> editAccount(@NotNull Account account, @NotNull String software, @NotNull String username, @NotNull String password) 
+                                            throws IllegalArgumentException, IllegalStateException  {
+        if(!ACCOUNT_LIST.contains(account)) throw new IllegalArgumentException("Account not found in list [editAccount]");
+        if (!isAuthenticated()) throw new IllegalStateException("User is not authenticated [editAccount]");
 
         return CompletableFuture
-                .supplyAsync(() -> { 
+                .supplyAsync(() -> {
                     try {
                         account.setData(USER_PREFERENCES.getSecurityVersion(), software, username, password, masterPassword);
-                        return true;
+                        return account;
                     } catch (GeneralSecurityException e) {
                         Logger.getInstance().addError(e);
-                        return false;
+                        return null;
                     }
                 }, ACCOUNT_EXECUTOR)
-                .thenCompose(success -> {
-                    if (!success) {
-                        return CompletableFuture.completedFuture(false);
-                    }
-                    
-                    CompletableFuture<Boolean> uiUpdate = new CompletableFuture<>();
+                .thenCompose(editedAcc -> {
+                    if(editedAcc == null) throw new RuntimeException("Failed to edit account");
+                    final CompletableFuture<Void> uiUpdate = new CompletableFuture<>();
                     Platform.runLater(() -> {
                         // trigger the list change listeners
-                        ACCOUNT_LIST.set(ACCOUNT_LIST.indexOf(account), account); 
+                        ACCOUNT_LIST.set(ACCOUNT_LIST.indexOf(editedAcc), editedAcc); 
                         HAS_CHANGED.set(true);
                         Logger.getInstance().addInfo("Account edited");
-                        uiUpdate.complete(true);
+                        uiUpdate.complete(null);
                     });
-
                     return uiUpdate;
-                })
-                .exceptionally(t -> {
-                    Logger.getInstance().addError(t); 
-                    return false;
                 });
     }
 
-    public void removeAccount(@NotNull Account account) {
-        if (!isAuthenticated()) {
-            Logger.getInstance().addError(new IllegalStateException("User is not authenticated [removeAccount]"));
-            return;
-        }
+    public CompletableFuture<Void> removeAccount(@NotNull Account account) throws IllegalArgumentException, IllegalStateException {
+        if(!ACCOUNT_LIST.contains(account)) throw new IllegalArgumentException("Account not found in list [editAccount]");
+        if (!isAuthenticated()) throw new IllegalStateException("User is not authenticated [removeAccount]");
 
-        Platform.runLater(() -> {
+        return CompletableFuture.runAsync(() -> Platform.runLater(() -> {
             if (ACCOUNT_LIST.remove(account)) {
                 HAS_CHANGED.set(true);
                 Logger.getInstance().addInfo("Account deleted");
-            } else {
-                Logger.getInstance().addError(new IllegalArgumentException("Account not found in list [removeAccount]"));
             }
-        });
+        }), ACCOUNT_EXECUTOR);
     }
 
     // Asynchronously retrieves and injects the password into the given PasswordInputControl
-    public <T extends PasswordInputControl> void getAccountPassword(@NotNull T element, @NotNull Account account) {
-        if (!isAuthenticated()) {
-            Logger.getInstance().addError(new IllegalStateException("User is not authenticated [getAccountPassword]"));
-            return;
-        }
+    public <T extends PasswordInputControl> CompletableFuture<Void> getAccountPassword(@NotNull T element, @NotNull Account account) {
+        if (!isAuthenticated()) new IllegalStateException("User is not authenticated [getAccountPassword]");
         
-        CompletableFuture
+        final boolean wasReadable = element.isReadable();
+        return CompletableFuture
                 .supplyAsync(() -> {
                     try {
                         return account.getPassword(USER_PREFERENCES.getSecurityVersion(), masterPassword);
@@ -338,18 +318,9 @@ public final class IOManager {
                         return null;
                     }
                 }, ACCOUNT_EXECUTOR)
-                .thenAccept(password -> Platform.runLater(() -> {
-                    if (password != null) {
-                        element.setText(password);
-                    } else {
-                        element.setText("");
-                        Logger.getInstance().addError(new RuntimeException("Failed to retrieve password for account: " + account.getSoftware()));
-                    }
-                }))
-                .exceptionally(throwable -> {
-                    Platform.runLater(() -> element.setText(""));
-                    Logger.getInstance().addError(throwable);
-                    return null;
+                .thenAccept(password -> {
+                    if (password == null) throw new RuntimeException("Failed to retrieve password for account: " + account.getSoftware());
+                    Platform.runLater(() -> element.setText(password));
                 });
     }
     // #endregion
@@ -422,29 +393,6 @@ public final class IOManager {
     }
     // #endregion
 
-    public void export(@NotNull Exporter exporter, ObservableResourceFactory langResources) {
-        CompletableFuture
-                .supplyAsync(() -> {
-                    synchronized(ACCOUNT_LIST) {
-                        return new ArrayList<>(ACCOUNT_LIST);
-                    }
-                }, ACCOUNT_EXECUTOR)
-                .thenAcceptAsync(snapshot -> {
-                    File exportFile = DESKTOP_PATH.resolve("passwords." + exporter.name().toLowerCase()).toFile();
-                    try (FileWriter file = new FileWriter(exportFile)) {
-                        String out = exporter.getExporter().apply(USER_PREFERENCES.getSecurityVersion(), snapshot, masterPassword);
-                        file.write(out);
-                        Logger.getInstance().addInfo("Export succeeded: " + exportFile.getName());
-                    } catch (Exception e) {
-                        Logger.getInstance().addError(e);
-                    }
-                }, ACCOUNT_EXECUTOR)
-                .exceptionally(t -> { 
-                    Logger.getInstance().addError(t); 
-                    return null;
-                });
-    }
-
     private void accountListTaskExec(Consumer<? super Account> action) {
         // MUST wrap iteration in synchronized(...) when using Collections.synchronizedList
         synchronized(ACCOUNT_LIST) {
@@ -461,9 +409,19 @@ public final class IOManager {
     }
 
     private void loadDataFile(File file) throws IOException {
-        final AppData data = OBJECT_MAPPER.readValue(file, AppData.class);
-        USER_PREFERENCES.set(data.userPreferences());
-        ACCOUNT_LIST.setAll(data.accountList());
+        if(IS_LOADING.get()) throw new IllegalStateException("Data is already being loaded");
+        IS_LOADING.set(true);
+
+        AppData data;
+        try {
+            data = OBJECT_MAPPER.readValue(file, AppData.class);
+            USER_PREFERENCES.set(data.userPreferences());
+            ACCOUNT_LIST.setAll(data.accountList());
+        } catch (IOException e) {
+            throw e;
+        } finally {
+            IS_LOADING.set(false);
+        }
     }
 
     private void saveDataFile(File file) throws IOException {

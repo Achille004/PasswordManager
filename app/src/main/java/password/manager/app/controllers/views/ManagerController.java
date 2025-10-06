@@ -186,12 +186,10 @@ public class ManagerController extends AbstractViewController {
 
     private void setupAccountListView(ObjectProperty<SortingOrder> sortingOrderProperty, SortedList<Account> sortedAccountList, 
                                       FilteredList<Account> filteredAccountList, TabManager tabManager) {
-        // #region Sorted account list setup
+        // #region Sorted Account List setup
         final ListChangeListener<Account> ACCOUNT_LIST_CHANGE_HANDLER = change -> {
-            if (editOperationInProgress) {
-                return;
-            }
-
+            if (editOperationInProgress) return;
+            
             while(change.next()) {
                 if (change.wasRemoved() && !change.wasAdded()) {
                     // This is a true removal
@@ -204,24 +202,24 @@ public class ManagerController extends AbstractViewController {
         sortedAccountList.addListener(ACCOUNT_LIST_CHANGE_HANDLER);
         // #endregion
 
-        // #region account listview setup
-        final Function<SortingOrder, Callback<ListView<Account>, ListCell<Account>>> ACCOUNT_CELL_FACTORY = order -> { 
-            return _ -> new ListCell<>() {
-                @Override
-                protected void updateItem(Account account, boolean empty) {
-                    super.updateItem(account, empty);
-                    if (empty || account == null) {
-                        setText(null);
-                    } else {
-                        setText(order.convert(account));
+        // #region Account ListView setup
+        final Function<SortingOrder, Callback<ListView<Account>, ListCell<Account>>> ACCOUNT_CELL_FACTORY = order -> 
+                _ -> new ListCell<>() {
+                    @Override
+                    protected void updateItem(Account account, boolean empty) {
+                        super.updateItem(account, empty);
+                        if (empty || account == null) {
+                            setText(null);
+                        } else {
+                            setText(order.convert(account));
+                        }
                     }
-                }
-            };
-        };
+                };
         
         final ChangeListener<Account> LIST_VIEW_HANDLER = (_, _, newItem) -> {
             if (newItem != null && !editOperationInProgress) {
                 tabManager.openAccountTab(newItem);
+                Platform.runLater(accountListView.getSelectionModel()::clearSelection);
             }
         };
         
@@ -269,7 +267,9 @@ public class ManagerController extends AbstractViewController {
     private void setupSpecialTabs(TabManager tabManager) {
         TabManager.loadTab(homeTab, "/fxml/views/manager/home.fxml", new HomeController());
         TabManager.loadTab(addTab, "/fxml/views/manager/editor.fxml", new EditorController(null));
-        addTab.setOnSelectionChanged(_ -> { if (addTab.isSelected()) TabManager.getController(addTab).reset(); });
+        addTab.setOnSelectionChanged(_ -> { 
+            if (addTab.isSelected()) TabManager.getController(addTab).reset(); 
+        });
     }
 
     static class HomeController extends AbstractViewController {
@@ -286,14 +286,14 @@ public class ManagerController extends AbstractViewController {
 
         public void reset() {
             homeDescTop.sceneProperty().addListener((_, _, newScene) -> {
-                if (newScene != null) {
-                    homeDescTop.requestFocus();
-                }
+                if (newScene != null) homeDescTop.requestFocus();
             });
         }
     }
 
     private class EditorController extends AbstractViewController {
+        private static final Duration LOAD_ANIM_TIME_UNIT = Duration.millis(125);
+
         @FXML
         private TextField editorSoftware, editorUsername;
         @FXML
@@ -301,7 +301,6 @@ public class ManagerController extends AbstractViewController {
         
         @FXML
         private Button editorSaveBtn;
-        private Timeline editorSaveTimeline;
         
         @FXML
         private Button editorDeleteBtn;
@@ -312,6 +311,8 @@ public class ManagerController extends AbstractViewController {
         
         private final @Getter Account account;
         private final @Getter boolean isAddEditor;
+        
+        private Timeline editorSaveTimeline, passLoadTimeline;
 
         public EditorController(Account account) {
             this.account = account;
@@ -337,8 +338,19 @@ public class ManagerController extends AbstractViewController {
             });
 
             editorSaveTimeline = new Timeline(
-                    new KeyFrame(Duration.ZERO, _ -> editorSaveBtn.setStyle("-fx-background-color: -fx-color-green")),
-                    new KeyFrame(Duration.seconds(1), _ -> clearStyle(editorSaveBtn)));
+                new KeyFrame(Duration.ZERO, _ -> editorSaveBtn.setStyle("-fx-background-color: -fx-color-green")),
+                new KeyFrame(Duration.seconds(1), _ -> clearStyle(editorSaveBtn))
+            );
+            editorSaveTimeline.setCycleCount(1);
+
+            passLoadTimeline = new Timeline(
+                new KeyFrame(Duration.ZERO, _ -> editorPassword.setText("Loading")),
+                new KeyFrame(LOAD_ANIM_TIME_UNIT, _ -> editorPassword.setText("Loading.")),
+                new KeyFrame(LOAD_ANIM_TIME_UNIT.multiply(2), _ -> editorPassword.setText("Loading..")),
+                new KeyFrame(LOAD_ANIM_TIME_UNIT.multiply(3), _ -> editorPassword.setText("Loading...")),
+                new KeyFrame(LOAD_ANIM_TIME_UNIT.multiply(4), _ -> editorPassword.setText("Loading"))
+            );
+            passLoadTimeline.setCycleCount(Timeline.INDEFINITE);
 
             // Force the correct size to prevent unwanted stretching
             editorPassword.setPrefSize(548.0, 40.0);
@@ -352,16 +364,31 @@ public class ManagerController extends AbstractViewController {
         public void reset() {
             if(isAddEditor) {
                 clearTextFields(editorSoftware, editorUsername, editorPassword.getTextField());
+                editorPassword.setReadable(false);
             } else {
                 editorSoftware.setText(account.getSoftware());
                 editorUsername.setText(account.getUsername());
-                IOManager.getInstance().getAccountPassword(editorPassword, account);
+
+                final ReadablePasswordFieldWithStr editorPasswordClone = this.editorPassword;
+                editorPasswordClone.setDisable(true);
+                editorPasswordClone.setReadable(true);
+                passLoadTimeline.playFromStart();
+
+                IOManager.getInstance().getAccountPassword(editorPasswordClone, account)
+                        .thenRun(() -> {
+                            passLoadTimeline.stop();
+                            editorPasswordClone.setDisable(false);
+                            editorPasswordClone.setReadable(false);
+                        })
+                        .exceptionally(e -> {
+                            Logger.getInstance().addError(e);
+                            return null;
+                        });
             }
 
             editorDeleteCounter = false;
             clearStyle(editorSoftware, editorUsername, editorPassword.getTextField(), editorDeleteBtn);
             editorSoftware.requestFocus();
-            editorPassword.setReadable(false);
         }
 
         @FXML
@@ -381,8 +408,8 @@ public class ManagerController extends AbstractViewController {
                     so we just reset the editor, but if the account is not null, it means that
                     the user is editing an existing account, so we need to edit the account
                     and then reset the editor only if the edit was successful
-                  This ensures maximum responsiveness when adding, while avoiding really weird behavior
-                  when editing, like the editor creating duplicated tabs for the same account.
+                  This ensures maximum responsiveness when adding, while avoiding really weird
+                  behavior when editing.
                 */
                 if(isAddEditor) {
                     IOManager.getInstance().addAccount(software, username, password);
@@ -390,18 +417,9 @@ public class ManagerController extends AbstractViewController {
                 } else {
                     editOperationInProgress = true;
                     IOManager.getInstance().editAccount(account, software, username, password)
-                            .thenAccept(result -> Platform.runLater(() -> {
-                                if (result) {
-                                    final MultipleSelectionModel<Account> accountSelectionModel = accountListView.getSelectionModel();
-                                    accountSelectionModel.clearSelection();
-                                    accountSelectionModel.select(account);
-                                } else {
-                                    Logger.getInstance().addError(new RuntimeException("Failed to edit account."));
-                                }
-                                editOperationInProgress = false;
-                            }))
-                            .exceptionally(ex -> {
-                                Logger.getInstance().addError(ex);
+                            .thenAccept(_ -> editOperationInProgress = false)
+                            .exceptionally(e -> {
+                                Logger.getInstance().addError(e);
                                 Platform.runLater(() -> editOperationInProgress = false);
                                 return null;
                             });
@@ -413,10 +431,11 @@ public class ManagerController extends AbstractViewController {
         public void editorDelete(ActionEvent event) {
             // when the deleteCounter is true it means that the user has confirmed the elimination
             if (editorDeleteCounter) {
-                // clear the selection in order to avoid the default behavior of the list view (opening another account)
-                accountListView.getSelectionModel().clearSelection();
-                // removes the selected account from the list
-                IOManager.getInstance().removeAccount(account);
+                IOManager.getInstance().removeAccount(account)
+                        .exceptionally(e -> {
+                            Logger.getInstance().addError(e);
+                            return null;
+                        });
             } else {
                 editorDeleteBtn.setStyle("-fx-background-color: -fx-color-red");
                 editorDeleteCounter = true;
@@ -430,32 +449,32 @@ public class ManagerController extends AbstractViewController {
         private static final IdentityHashMap<Account, Tab> TABS_MAP = new IdentityHashMap<>();
 
         private final TabPane TAB_PANE;
-        private final ObservableList<Tab> ACC_TABS;
+        private final ObservableList<Tab> TAB_PANE_CONTENT; // Convenience reference for better readability
         
         public TabManager(@NotNull TabPane tabPane, @NotNull Tab homeTab) {
             this.TAB_PANE = tabPane;
-            this.ACC_TABS = tabPane.getTabs();
+            this.TAB_PANE_CONTENT = tabPane.getTabs();
 
             // It's better to just handle this manually
             final ListChangeListener<Tab> HOME_TAB_HANDLER = change -> {
                 while(change.next()) {
                     if (change.wasAdded() && !change.getAddedSubList().contains(homeTab)) {
-                        Platform.runLater(() -> ACC_TABS.remove(homeTab));
-                    } else if (change.wasRemoved() && ACC_TABS.size() <= 1) {
-                        ACC_TABS.add(0, homeTab);
+                        Platform.runLater(() -> TAB_PANE_CONTENT.remove(homeTab));
+                    } else if (change.wasRemoved() && TAB_PANE_CONTENT.size() <= 1) {
+                        TAB_PANE_CONTENT.add(0, homeTab);
                         selectTab(homeTab);
                     }
                 }
             };
-            this.ACC_TABS.addListener(HOME_TAB_HANDLER);
+            this.TAB_PANE_CONTENT.addListener(HOME_TAB_HANDLER);
         }
 
-        public void openAccountTab(Account account) {
+        public void openAccountTab(@NotNull Account account) {
             Tab tab = TABS_MAP.computeIfAbsent(account, this::createAccountTab);
             selectTab(tab, true);
         }
 
-        public Tab createAccountTab(Account account) {
+        public Tab createAccountTab(@NotNull Account account) {
             EditorController controller = new EditorController(account);
             Tab tab = new Tab();
             
@@ -468,16 +487,17 @@ public class ManagerController extends AbstractViewController {
             return tab;
         }
 
-        public void selectTab(Tab tab, boolean addIfMissing) {
+        public void selectTab(@NotNull Tab tab, boolean addIfMissing) {
             Platform.runLater(() -> {
                 if (addIfMissing && !TAB_PANE.getTabs().contains(tab)) {
                     TAB_PANE.getTabs().add(TAB_PANE.getTabs().size() - 1, tab);
                 }
                 TAB_PANE.getSelectionModel().select(tab);
+                tab.getContent().requestFocus();
             });
         }
         
-        public void selectTab(Tab tab) {
+        public void selectTab(@NotNull Tab tab) {
             selectTab(tab, false);
         }
         
@@ -487,24 +507,27 @@ public class ManagerController extends AbstractViewController {
             TAB_PANE.getSelectionModel().select(newIndex);
         }
         
-        public void closeTab(Tab tab) {
-            Platform.runLater(() -> TAB_PANE.getTabs().remove(tab));
+        public void closeTab(@NotNull Tab tab) {
+            Platform.runLater(() -> {
+                TAB_PANE.getTabs().remove(tab);
+                TAB_PANE.getSelectionModel().getSelectedItem().getContent().requestFocus();
+            });
         }
         
-        public void closeAccountTab(Account account) {
+        public void closeAccountTab(@NotNull Account account) {
             Tab tab = TABS_MAP.remove(account);
             if (tab != null) closeTab(tab);
         }
 
         // Static utility methods for tab management
 
-        public static <T extends AbstractViewController> void loadTab(Tab tab, String fxmlPath, T controller) {
+        public static <T extends AbstractViewController> void loadTab(@NotNull Tab tab, @NotNull  String fxmlPath, @NotNull T controller) {
             Pane pane = (Pane) loadFxml(fxmlPath, controller);
             tab.setContent(pane);
             tab.getProperties().put("controller", controller);
         }
 
-        public static AbstractViewController getController(Tab tab) {
+        public static AbstractViewController getController(@NotNull Tab tab) {
             return (AbstractViewController) tab.getProperties().get("controller");
         }
     }

@@ -28,6 +28,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -41,14 +42,14 @@ import password.manager.app.Utils;
 import password.manager.app.enums.SecurityVersion;
 import password.manager.app.enums.SortingOrder;
 
-@Getter
 @JsonDeserialize(using = UserPreferences.UserPreferencesDeserializer.class)
 public final class UserPreferences {
-    private final @JsonIgnore ObjectProperty<Locale> localeProperty;
-    private final @JsonIgnore ObjectProperty<SortingOrder> sortingOrderProperty;
-    private SecurityVersion securityVersion;
-    private final byte[] hashedPassword, salt;
-    private @JsonIgnore boolean isPasswordSet;
+    private final @JsonIgnore @Getter ObjectProperty<Locale> localeProperty;
+    private final @JsonIgnore @Getter ObjectProperty<SortingOrder> sortingOrderProperty;
+    private @Getter SecurityVersion securityVersion;
+    private final @JsonProperty byte[] hashedPassword, salt;
+    
+    private boolean isPasswordSet;
 
     public UserPreferences() {
         this.localeProperty = new SimpleObjectProperty<>(Utils.DEFAULT_LOCALE);
@@ -58,6 +59,7 @@ public final class UserPreferences {
 
         this.salt = new byte[16];
         this.hashedPassword = new byte[Encrypter.HASH_BITS / 8];
+        isPasswordSet = false;
     }
 
     public UserPreferences(@NotNull String password) {
@@ -65,7 +67,7 @@ public final class UserPreferences {
         setPassword(password);
     }
 
-    private UserPreferences(Locale locale, SortingOrder sortingOrder, SecurityVersion securityVersion, byte[] hashedPassword, byte[] salt) {
+    private UserPreferences(Locale locale, SortingOrder sortingOrder, @NotNull SecurityVersion securityVersion, byte[] hashedPassword, byte[] salt) {
         this();
         
         this.localeProperty.set(locale);
@@ -75,6 +77,7 @@ public final class UserPreferences {
 
         System.arraycopy(hashedPassword, 0, this.hashedPassword, 0, this.hashedPassword.length);
         System.arraycopy(salt, 0, this.salt, 0, this.salt.length);
+        isPasswordSet = true;
     }
 
     public void set(UserPreferences userPreferences) {
@@ -84,6 +87,8 @@ public final class UserPreferences {
         this.securityVersion = userPreferences.securityVersion;
         System.arraycopy(userPreferences.hashedPassword, 0, this.hashedPassword, 0, this.hashedPassword.length);
         System.arraycopy(userPreferences.salt, 0, this.salt, 0, this.salt.length);
+
+        this.isPasswordSet = userPreferences.isPasswordSet;
     }
 
     public Locale getLocale() {
@@ -107,7 +112,7 @@ public final class UserPreferences {
     }
 
     public @NotNull Boolean verifyPassword(String passwordToVerify) throws InvalidKeySpecException {
-        if (!isPasswordSet()) throw new IllegalStateException("UserPreferences password not set");
+        if (!isPasswordSet) throw new IllegalStateException("UserPreferences password not set");
         if (passwordToVerify == null) return false;
 
         final boolean wasLatestSecurityVersion = isLatestVersion();
@@ -131,6 +136,7 @@ public final class UserPreferences {
         this.securityVersion = SecurityVersion.LATEST;
         final byte[] hashedPassword = securityVersion.hash(password, salt);
         System.arraycopy(hashedPassword, 0, this.hashedPassword, 0, this.hashedPassword.length);
+        isPasswordSet = true;
     }
 
     @Contract("_ -> new")

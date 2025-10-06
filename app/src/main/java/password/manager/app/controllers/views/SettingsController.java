@@ -142,11 +142,8 @@ public class SettingsController extends AbstractViewController {
 
     private static <T> @NotNull ObservableValue<Comparator<T>> comparatorBinding(@NotNull ObjectProperty<Locale> locale, @NotNull ObjectProperty<? extends StringConverter<T>> converter) {
         return Bindings.createObjectBinding(
-                () -> Comparator.comparing(
-                        converter.getValue()::toString,
-                        Collator.getInstance(locale.getValue())),
-                locale,
-                converter);
+                () -> Comparator.comparing(converter.getValue()::toString, Collator.getInstance(locale.getValue())),
+                locale, converter);
     }
 
     private static <T> void bindValueConverter(@NotNull ComboBox<T> comboBox, @NotNull ObjectProperty<Locale> locale, @NotNull Function<Locale, StringConverter<T>> mapper) {

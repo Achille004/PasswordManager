@@ -45,18 +45,10 @@ public class AppManager {
         IO_MANAGER = IOManager.getInstance();
     }
 
-    public static synchronized AppManager startApp() {
-        return new AppManager();
-    }
-
     private AppManager() {
         final ObjectProperty<Locale> locale = IOManager.getInstance().getUserPreferences().getLocaleProperty();
         ObservableResourceFactory.getInstance().resourcesProperty().bind(Bindings.createObjectBinding(
-                () -> {
-                    Locale localeValue = locale.getValue();
-                    return ResourceBundle.getBundle("/bundles/Lang", localeValue);
-                },
-                locale));
+                () -> ResourceBundle.getBundle("/bundles/Lang", locale.getValue()), locale));
 
         final BooleanProperty switchToMain = new SimpleBooleanProperty(false);
         switchToMain.addListener((_, _, newValue) -> {
@@ -96,5 +88,9 @@ public class AppManager {
         scenePane.getChildren().clear();
         scenePane.getChildren().add(mainPane);
         mainController.mainTitleAnimation();
+    }
+    
+    public static synchronized AppManager startApp() {
+        return new AppManager();
     }
 }
