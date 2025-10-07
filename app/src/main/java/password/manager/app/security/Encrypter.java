@@ -55,7 +55,7 @@ public final class Encrypter {
 
     public static final int HASH_BITS = 512;
     public static final int AES_BITS = 256;
-    
+
     // PBKDF2 parameters
     @Deprecated
     public static final int PBKDF2_ITERATIONS = 65536;

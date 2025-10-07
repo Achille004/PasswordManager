@@ -78,7 +78,7 @@ public class LoginController extends AbstractController {
     public void doLogin() {
         if (checkTextFields(loginPassword.getTextField())) {
             wrongPasswordTimeline.stop();
-            IOManager.getInstance().authenticate(loginPassword.getText());
+            IOManager.getInstance().authenticate(loginPassword.getText().strip());
 
             if (IOManager.getInstance().isAuthenticated()) {
                 switchToMain.set(true);

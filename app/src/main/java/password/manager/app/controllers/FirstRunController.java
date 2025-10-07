@@ -76,7 +76,7 @@ public class FirstRunController extends AbstractController {
     @FXML
     public void doFirstRun() {
         if (checkTextFields(firstRunPassword.getTextField()) && firstRunCheckBox.isSelected()) {
-            IOManager.getInstance().changeMasterPassword(firstRunPassword.getText());
+            IOManager.getInstance().changeMasterPassword(firstRunPassword.getText().strip());
             switchToMain.set(true);
         }
     }

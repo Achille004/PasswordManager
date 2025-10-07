@@ -73,7 +73,7 @@ public class AppManager {
             final AnchorPane pane = IO_MANAGER.isFirstRun()
                 ? (AnchorPane) loadFxml("/fxml/first_run.fxml", new FirstRunController(switchToMain))
                 : (AnchorPane) loadFxml("/fxml/login.fxml", new LoginController(switchToMain));
-            
+
             final AnchorPane scenePane = App.getAppScenePane();
             scenePane.getChildren().clear();
             scenePane.getChildren().add(pane);
@@ -83,13 +83,13 @@ public class AppManager {
     private void loadMainPane() {
         final MainController mainController = new MainController();
         final BorderPane mainPane = (BorderPane) loadFxml("/fxml/main.fxml", mainController);
-        
+
         final AnchorPane scenePane = App.getAppScenePane();
         scenePane.getChildren().clear();
         scenePane.getChildren().add(mainPane);
         mainController.mainTitleAnimation();
     }
-    
+
     public static synchronized AppManager startApp() {
         return new AppManager();
     }

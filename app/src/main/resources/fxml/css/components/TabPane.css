@@ -6,7 +6,7 @@ TabPane .tab {
   -fx-background-insets: 0 1 0 1,0,0;
   -fx-pref-height: 42.5px;
   -fx-pref-width: 90px;
-  
+
   -fx-background-color: -fx-color-background;
   -fx-border-color: -fx-color-element-bg;
   -fx-border-width: 2px 2px 0 2px;

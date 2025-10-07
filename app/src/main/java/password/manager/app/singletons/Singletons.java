@@ -34,7 +34,6 @@ public final class Singletons {
         INSTANCES.put(cls, instance);
     }
 
-    
     /**
      * Returns the singleton {@code cls} instance.
      * <p>

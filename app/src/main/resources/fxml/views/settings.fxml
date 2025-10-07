@@ -83,7 +83,7 @@
    <AnchorPane prefHeight="0.0" prefWidth="730.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
       <Label fx:id="wip" layoutY="17.0" prefHeight="35.0" prefWidth="465.0" styleClass="italic, sz24" text="Work in progress..." />
    </AnchorPane>
-   
+
    <stylesheets>
       <URL value="@../css/style.css" />
       <URL value="@../css/components/ComboBox.css" />

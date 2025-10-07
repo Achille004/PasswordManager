@@ -17,7 +17,7 @@ import java.security.MessageDigest
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
- 
+
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     id 'java'
@@ -118,7 +118,7 @@ installerDir.asFile.mkdirs()
 
 tasks.register('assemblePortables', Delete) {
     delete distDir
-    
+
     dependsOn tasks.distTar, tasks.distZip
     if(gpgSignable) {
         dependsOn tasks.signDistTar, tasks.signDistZip
@@ -169,7 +169,7 @@ tasks.register('assembleInstallers', FullJPackageTask) {
     modulePaths = ['build/jars']
     runtimeImage = System.getProperty('java.home')
     vendor = 'Francesco Marras'
-    
+
     windows {
         icon =  resourceDir.file('icon.ico')
         destination = installerDir.dir('windows')

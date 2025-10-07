@@ -65,7 +65,7 @@ class FullJPackageTask extends JPackageTask {
 
             setType(type)
             super.action()
-            
+
             println " OK"
         }
 

@@ -18,7 +18,7 @@
 
 module password.manager.app {
     requires java.desktop;
-    
+
     requires javafx.base;
     requires transitive javafx.controls;
     requires javafx.fxml;
@@ -29,15 +29,15 @@ module password.manager.app {
 
     requires com.fasterxml.jackson.databind;
     // requires org.json;
-    
+
     requires static lombok;
 
     requires org.bouncycastle.provider;
-    
+
     requires org.jetbrains.annotations;
 
     requires password.manager.lib;
-    
+
     exports password.manager.app;
     exports password.manager.app.controllers;
     exports password.manager.app.controllers.extra;
@@ -45,12 +45,12 @@ module password.manager.app {
     exports password.manager.app.enums;
     exports password.manager.app.security;
     exports password.manager.app.singletons;
-    
+
     opens password.manager.app to javafx.fxml;
     opens password.manager.app.controllers to javafx.fxml;
     opens password.manager.app.controllers.extra to javafx.fxml;
     opens password.manager.app.controllers.views to javafx.fxml;
-    
+
     opens password.manager.app.security to com.fasterxml.jackson.databind;
     opens password.manager.app.singletons to com.fasterxml.jackson.databind;
 }

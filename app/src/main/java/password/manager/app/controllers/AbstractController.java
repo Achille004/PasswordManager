@@ -54,7 +54,7 @@ public abstract class AbstractController implements Initializable {
             eulaStage.setTitle(ObservableResourceFactory.getInstance().getValue("terms_credits"));
             eulaStage.getIcons().add(new Image(Objects.requireNonNull(AbstractController.class.getResourceAsStream("/images/icon.png"))));
             eulaStage.setResizable(false);
-            
+
             AnchorPane eulaParent = (AnchorPane) loadFxml("/fxml/extra/eula.fxml", new EulaController());
             eulaParent.getStylesheets().addAll(App.ROOT_STYLESHEET);
 

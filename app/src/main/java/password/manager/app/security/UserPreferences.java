@@ -48,7 +48,7 @@ public final class UserPreferences {
     private final @JsonIgnore @Getter ObjectProperty<SortingOrder> sortingOrderProperty;
     private @Getter SecurityVersion securityVersion;
     private final @JsonProperty byte[] hashedPassword, salt;
-    
+
     private boolean isPasswordSet;
 
     public UserPreferences() {
@@ -69,7 +69,7 @@ public final class UserPreferences {
 
     private UserPreferences(Locale locale, SortingOrder sortingOrder, @NotNull SecurityVersion securityVersion, byte[] hashedPassword, byte[] salt) {
         this();
-        
+
         this.localeProperty.set(locale);
         this.sortingOrderProperty.set(sortingOrder);
 

@@ -56,7 +56,7 @@ public class App extends Application {
         Font.loadFont(getClass().getResourceAsStream("/font/Roboto-Italic.ttf"), 14);
         Font.loadFont(getClass().getResourceAsStream("/font/Roboto-Regular.ttf"), 14);
         Font.loadFont(getClass().getResourceAsStream("/font/Charm-Bold.ttf"), 14);
-        
+
         primaryStage.setTitle(APP_NAME);
         primaryStage.getIcons().add(MAIN_ICON);
         primaryStage.setOnCloseRequest(_ -> Platform.exit());

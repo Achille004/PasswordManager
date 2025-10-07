@@ -52,7 +52,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import lombok.Getter;
-import password.manager.app.enums.Exporter;
 import password.manager.app.security.Account;
 import password.manager.app.security.UserPreferences;
 import password.manager.lib.PasswordInputControl;
@@ -87,10 +86,10 @@ public final class IOManager {
 
     private volatile String masterPassword;
     private volatile @Getter boolean isFirstRun, isAuthenticated;
-    
+
     private final File DATA_FILE;
     private final AtomicBoolean HAS_CHANGED, IS_LOADING;
-    
+
     private final ObjectMapper OBJECT_MAPPER;
     private final ExecutorService ACCOUNT_EXECUTOR;
 
@@ -99,13 +98,13 @@ public final class IOManager {
     private IOManager() {
         ACCOUNT_LIST = FXCollections.observableList(Collections.synchronizedList(new ArrayList<>()));
         USER_PREFERENCES = UserPreferences.empty();
-        
+
         masterPassword = null;
         isFirstRun = true;
         isAuthenticated = false;
 
         DATA_FILE = FILE_PATH.resolve(DATA_FILE_NAME).toFile();
-        
+
         HAS_CHANGED = new AtomicBoolean(false);
         IS_LOADING = new AtomicBoolean(false);
         setupListeners();
@@ -130,10 +129,9 @@ public final class IOManager {
     private void setupListeners() {
         final ChangeListener<? super Object> propListener = (_, oldValue, newValue) -> {
             if (IS_LOADING.get()) return; // prevents triggering when loading data
-            System.out.println("DEBUG - UserPreferences property changed");
             if (oldValue != newValue) HAS_CHANGED.set(true);
         };
-    
+
         USER_PREFERENCES.getLocaleProperty().addListener(propListener);
         USER_PREFERENCES.getSortingOrderProperty().addListener(propListener);
 
@@ -141,7 +139,6 @@ public final class IOManager {
             if (IS_LOADING.get()) return; // prevents triggering when loading data
             while (change.next()) {
                 if (change.wasAdded() || change.wasRemoved() || change.wasUpdated()) {
-                    System.out.println("DEBUG - Scheduling save");
                     HAS_CHANGED.set(true);
                     return; // no need to check further changes
                 }
@@ -149,6 +146,10 @@ public final class IOManager {
         };
 
         ACCOUNT_LIST.addListener(listListener);
+
+        // TODO Add logging
+        // userPreferences.getLocaleProperty().addListener((_, _, newValue) -> Logger.getInstance().addInfo("Changed locale to: " + newValue));
+        // userPreferences.getSortingOrderProperty().addListener((_, _, newValue) -> Logger.getInstance().addInfo("Changed sorting order to: " + newValue));
     }
 
     private void loadData() {
@@ -215,7 +216,7 @@ public final class IOManager {
     public void requestShutdown() {
         Logger.getInstance().addInfo("Shutdown requested");
         saveData(); // when the user shuts down the program on the first run, it won't save (not authenticated)
-        
+
         Logger.getInstance().addInfo("Shutting down executor services");
         AUTOSAVE_SCHEDULER.shutdown();
         ACCOUNT_EXECUTOR.shutdown();
@@ -231,7 +232,7 @@ public final class IOManager {
         Logger.getInstance().closeStreams();
     }
     // #endregion
-    
+
     // #region Account methods
     public @NotNull CompletableFuture<Void> addAccount(@NotNull String software, @NotNull String username, @NotNull String password) throws IllegalStateException {
         if (!isAuthenticated()) throw new IllegalStateException("User is not authenticated [addAccount]");
@@ -307,7 +308,7 @@ public final class IOManager {
     // Asynchronously retrieves and injects the password into the given PasswordInputControl
     public <T extends PasswordInputControl> CompletableFuture<Void> getAccountPassword(@NotNull T element, @NotNull Account account) {
         if (!isAuthenticated()) new IllegalStateException("User is not authenticated [getAccountPassword]");
-        
+
         final boolean wasReadable = element.isReadable();
         return CompletableFuture
                 .supplyAsync(() -> {
@@ -329,7 +330,7 @@ public final class IOManager {
     public @NotNull Boolean changeMasterPassword(String newMasterPassword) {
         final String oldMasterPassword = this.masterPassword;
         if (!(oldMasterPassword == null || isAuthenticated())) return false;
-        
+
         try {
             final boolean res = USER_PREFERENCES.setPasswordVerified(oldMasterPassword, newMasterPassword);
             if (res) HAS_CHANGED.set(true);
@@ -353,7 +354,7 @@ public final class IOManager {
             Logger.getInstance().addInfo("Master password set");
             isAuthenticated = true;
         }
-        
+
         return true;
     }
 
@@ -429,7 +430,7 @@ public final class IOManager {
         synchronized(ACCOUNT_LIST) {
             snapshot = new ArrayList<>(ACCOUNT_LIST);
         }
-        
+
         AppData data = new AppData(this.USER_PREFERENCES, snapshot);
         OBJECT_MAPPER.writeValue(DATA_FILE, data);
     }

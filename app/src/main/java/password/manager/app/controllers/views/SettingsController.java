@@ -99,10 +99,10 @@ public class SettingsController extends AbstractViewController {
         // Master password
         settingsMasterPassword.setOnAction(_ -> {
             if (checkTextFields(settingsMasterPassword.getTextField())) {
-                ioManager.changeMasterPassword(settingsMasterPassword.getText());
+                ioManager.changeMasterPassword(settingsMasterPassword.getText().strip());
             }
         });
-        
+
         // Force the correct size to prevent unwanted stretching
         settingsMasterPassword.setPrefSize(465.0, 40.0);
     }

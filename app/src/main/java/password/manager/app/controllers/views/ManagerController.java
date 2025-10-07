@@ -73,7 +73,7 @@ public class ManagerController extends AbstractViewController {
 
     @FXML
     private TabPane accountTabPane;
-    
+
     @FXML
     private Tab addTab, homeTab;
 
@@ -97,10 +97,10 @@ public class ManagerController extends AbstractViewController {
 
         final SortedList<Account> SORTED_ACCOUNT_LIST = IO_MANAGER.getSortedAccountList();
         final FilteredList<Account> FILTERED_ACCOUNT_LIST = new FilteredList<>(SORTED_ACCOUNT_LIST);
-        
+
         final ObjectProperty<SortingOrder> SORTING_ORDER_PROPERTY = IO_MANAGER.getUserPreferences().getSortingOrderProperty();
         final TabManager TAB_MANAGER = new TabManager(accountTabPane, homeTab);
-        
+
         setupAutoCompletion(FILTERED_ACCOUNT_LIST);
         setupSearchFunctionality(FILTERED_ACCOUNT_LIST);
         setupAccountListView(SORTING_ORDER_PROPERTY, SORTED_ACCOUNT_LIST, FILTERED_ACCOUNT_LIST, TAB_MANAGER);
@@ -154,7 +154,7 @@ public class ManagerController extends AbstractViewController {
 
     private void setupSearchFunctionality(FilteredList<Account> filteredAccountList) {
         searchTimeline = new Timeline(new KeyFrame(SEARCH_DELAY, _ -> {
-            final String searchText = searchField.getText().trim();
+            final String searchText = searchField.getText().strip();
             if (searchText.isEmpty()) {
                 filteredAccountList.setPredicate(null); // Show all accounts
                 return;
@@ -164,7 +164,7 @@ public class ManagerController extends AbstractViewController {
             filteredAccountList.setPredicate(account -> {
                 final String software = isMatchCase ? account.getSoftware() : account.getSoftware().toLowerCase();
                 final String username = isMatchCase ? account.getUsername() : account.getUsername().toLowerCase();
-                
+
                 if (isMatchWholeWord) {
                     return Arrays.asList(software.split("[\\s\\p{P}]+")).contains(finalSearchText) || Arrays.asList(username.split("[\\s\\p{Punct}]+")).contains(finalSearchText);
                 } else {
@@ -189,7 +189,7 @@ public class ManagerController extends AbstractViewController {
         // #region Sorted Account List setup
         final ListChangeListener<Account> ACCOUNT_LIST_CHANGE_HANDLER = change -> {
             if (editOperationInProgress) return;
-            
+
             while(change.next()) {
                 if (change.wasRemoved() && !change.wasAdded()) {
                     // This is a true removal
@@ -197,7 +197,7 @@ public class ManagerController extends AbstractViewController {
                 }
             }
         };
-            
+
         sortedAccountList.comparatorProperty().bind(sortingOrderProperty.map(order -> order != null ? order.getComparator() : null));
         sortedAccountList.addListener(ACCOUNT_LIST_CHANGE_HANDLER);
         // #endregion
@@ -215,14 +215,14 @@ public class ManagerController extends AbstractViewController {
                         }
                     }
                 };
-        
+
         final ChangeListener<Account> LIST_VIEW_HANDLER = (_, _, newItem) -> {
             if (newItem != null && !editOperationInProgress) {
                 tabManager.openAccountTab(newItem);
                 Platform.runLater(accountListView.getSelectionModel()::clearSelection);
             }
         };
-        
+
         accountListView.setItems(filteredAccountList);
         accountListView.cellFactoryProperty().bind(sortingOrderProperty.map(ACCOUNT_CELL_FACTORY));
         accountListView.getSelectionModel().selectedItemProperty().addListener(LIST_VIEW_HANDLER);
@@ -298,20 +298,20 @@ public class ManagerController extends AbstractViewController {
         private TextField editorSoftware, editorUsername;
         @FXML
         private ReadablePasswordFieldWithStr editorPassword;
-        
+
         @FXML
         private Button editorSaveBtn;
-        
+
         @FXML
         private Button editorDeleteBtn;
         private boolean editorDeleteCounter = false;
-        
+
         @FXML
         private Label editorAccSelLbl, editorSoftwareLbl, editorUsernameLbl, editorPasswordLbl;
-        
+
         private final @Getter Account account;
         private final @Getter boolean isAddEditor;
-        
+
         private Timeline editorSaveTimeline, passLoadTimeline;
 
         public EditorController(Account account) {
@@ -397,10 +397,10 @@ public class ManagerController extends AbstractViewController {
                 editorSaveTimeline.playFromStart();
 
                 // get the new software, username and password
-                final String software = editorSoftware.getText();
-                final String username = editorUsername.getText();
-                final String password = editorPassword.getText();
-                
+                final String software = editorSoftware.getText().strip();
+                final String username = editorUsername.getText().strip();
+                final String password = editorPassword.getText().strip();
+
                 // save the new attributes of the account
                 /*  
                   I know that the different reset handling is weird, but let me explain:
@@ -450,7 +450,7 @@ public class ManagerController extends AbstractViewController {
 
         private final TabPane TAB_PANE;
         private final ObservableList<Tab> TAB_PANE_CONTENT; // Convenience reference for better readability
-        
+
         public TabManager(@NotNull TabPane tabPane, @NotNull Tab homeTab) {
             this.TAB_PANE = tabPane;
             this.TAB_PANE_CONTENT = tabPane.getTabs();
@@ -477,13 +477,13 @@ public class ManagerController extends AbstractViewController {
         public Tab createAccountTab(@NotNull Account account) {
             EditorController controller = new EditorController(account);
             Tab tab = new Tab();
-            
+
             TabManager.loadTab(tab, "/fxml/views/manager/editor.fxml", controller);
             tab.textProperty().bind(account.getSoftwareProperty());
             tab.setOnSelectionChanged(_ -> {
                 if (tab.isSelected()) controller.reset();
             });
-            
+
             return tab;
         }
 
@@ -496,24 +496,24 @@ public class ManagerController extends AbstractViewController {
                 tab.getContent().requestFocus();
             });
         }
-        
+
         public void selectTab(@NotNull Tab tab) {
             selectTab(tab, false);
         }
-        
+
         public void selectAdjacentTab(int direction) {
             int currentIndex = TAB_PANE.getSelectionModel().getSelectedIndex();
             int newIndex = Math.max(0, Math.min(TAB_PANE.getTabs().size() - 1, currentIndex + direction));
             TAB_PANE.getSelectionModel().select(newIndex);
         }
-        
+
         public void closeTab(@NotNull Tab tab) {
             Platform.runLater(() -> {
                 TAB_PANE.getTabs().remove(tab);
                 TAB_PANE.getSelectionModel().getSelectedItem().getContent().requestFocus();
             });
         }
-        
+
         public void closeAccountTab(@NotNull Account account) {
             Tab tab = TABS_MAP.remove(account);
             if (tab != null) closeTab(tab);

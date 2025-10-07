@@ -83,7 +83,7 @@ public final class ObservableResourceFactory {
     public static synchronized void createInstance(String bundleName) throws IllegalStateException {
         Singletons.register(ObservableResourceFactory.class, new ObservableResourceFactory(bundleName));
     }
-    
+
     public static ObservableResourceFactory getInstance() {
         return Singletons.get(ObservableResourceFactory.class);
     }

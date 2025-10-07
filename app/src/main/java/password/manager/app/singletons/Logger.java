@@ -47,7 +47,7 @@ public final class Logger {
     ============== Password Manager by Francesco Marras ==============
 
                             %s
-    
+
               --- Debug          >>> Info          !!! Error
 
     ==================================================================
@@ -124,7 +124,7 @@ public final class Logger {
                 .append(" => Exception thrown while executing '")
                 .append(getCurrentMethodName(1))
                 .append("', follows error and full stack trace:\n");
-                
+
         try {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);

@@ -67,7 +67,7 @@ public class ReadablePasswordFieldWithStr extends AnchorPane implements Initiali
             throw new RuntimeException(exception);
         }
     }
-    
+
     // Adjust height to account for the ProgressBar
     // TODO also scale the ProgressBar
 
@@ -167,7 +167,7 @@ public class ReadablePasswordFieldWithStr extends AnchorPane implements Initiali
             if (timeline[0] != null) {
                 timeline[0].stop();
             }
-            
+
             timeline[0] = new Timeline(keyFrames);
             timeline[0].play();
         };

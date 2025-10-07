@@ -18,13 +18,13 @@
 
 module password.manager.lib {
     // requires java.desktop;
-    
+
     requires javafx.base;
     requires transitive javafx.controls;
     requires javafx.fxml;
     requires transitive javafx.graphics;
     // requires javafx.web;
-    
+
     // requires static lombok;
 
     requires me.gosimple.nbvcxz;
@@ -33,6 +33,6 @@ module password.manager.lib {
     requires static lombok;
 
     exports password.manager.lib;
-    
+
     opens password.manager.lib to javafx.fxml;
 }

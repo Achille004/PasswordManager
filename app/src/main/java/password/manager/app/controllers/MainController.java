@@ -91,7 +91,7 @@ public class MainController extends AbstractController {
 
     @FXML
     private Label psmgTitle;
-    
+
     @FXML
     private ImageView settingsButtonImageView;
 
@@ -115,7 +115,7 @@ public class MainController extends AbstractController {
             final String str = titleStages[i];
             titleAnimation.getKeyFrames().add(new KeyFrame(Duration.millis(8 * i), _ -> psmgTitle.setText(str)));
         }
-        
+
         managerController = new ManagerController();
         managerPane = (Pane) loadFxml("/fxml/views/manager.fxml", managerController);
 

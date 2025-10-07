@@ -37,7 +37,7 @@ class AppTest {
         // Generate salt and initialization vector
         byte[] iv = new byte[16];
         byte[] salt = new byte[16];
-        
+
         final SecureRandom random = new SecureRandom();
         random.nextBytes(salt);
         random.nextBytes(iv);

@@ -153,7 +153,7 @@ public final class Utils {
         Logger.getInstance().addDebug(outcome + " [" + uiElementPath + "]");
 
         if(parent != null) return parent;
-        
+
         // Since it's a one-time error, just create it during the error process
         final String errMsg = ObservableResourceFactory.getInstance().getValue("ui_error");
         final Alert alert = new Alert(AlertType.ERROR, errMsg, ButtonType.YES, ButtonType.NO);
