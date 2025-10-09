@@ -58,7 +58,7 @@ public class AppManager {
         });
 
         final List<String> list = App.getAppParameters().getRaw();
-        Logger.getInstance().addInfo("Found " + list.size() + " parameters");
+        Logger.getInstance().addDebug("Found " + list.size() + " parameters");
         if (!IO_MANAGER.isFirstRun() && list.size() > 1 && ("-p".equals(list.get(0)) || "--password".equals(list.get(0)))) {
             Logger.getInstance().addInfo("Trying to authenticate via arguments");
             if (IO_MANAGER.authenticate(list.get(1))) {

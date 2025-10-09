@@ -50,6 +50,8 @@ public final class Logger {
 
               --- Debug          >>> Info          !!! Error
 
+            WARNING: Debug entries may contain sensitive data!
+
     ==================================================================
 
     """;

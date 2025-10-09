@@ -24,6 +24,7 @@ import java.net.URL;
 import java.text.Collator;
 import java.util.Comparator;
 import java.util.Locale;
+import java.util.Observable;
 import java.util.ResourceBundle;
 import java.util.function.Function;
 
@@ -31,6 +32,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.transformation.SortedList;
@@ -80,10 +82,10 @@ public class SettingsController extends AbstractViewController {
 
         settingsLangCB.setItems(languages);
         settingsLangCB.getSelectionModel().select(ioManager.getUserPreferences().getLocale());
-        bindValueConverter(settingsLangCB, localeProperty, this::languageStringConverter);
+        bindValueConverter(settingsLangCB, localeProperty, SettingsController::localeStringConverter);
         bindValueComparator(languages, localeProperty, settingsLangCB);
-
-        localeProperty.bind(settingsLangCB.valueProperty());
+ 
+        localeProperty.bind(notNullBinding(settingsLangCB.valueProperty()));
 
         // Sorting order box
 
@@ -91,12 +93,13 @@ public class SettingsController extends AbstractViewController {
 
         settingsOrderCB.setItems(sortingOrders);
         settingsOrderCB.getSelectionModel().select(ioManager.getUserPreferences().getSortingOrder());
-        bindValueConverter(settingsOrderCB, localeProperty, this::sortingOrderStringConverter);
+        bindValueConverter(settingsOrderCB, localeProperty, SettingsController::sortingOrderStringConverter);
         bindValueComparator(sortingOrders, localeProperty, settingsOrderCB);
 
-        sortingOrderProperty.bind(settingsOrderCB.valueProperty());
+        sortingOrderProperty.bind(notNullBinding(settingsOrderCB.valueProperty()));
 
         // Master password
+
         settingsMasterPassword.setOnAction(_ -> {
             if (checkTextFields(settingsMasterPassword.getTextField())) {
                 ioManager.changeMasterPassword(settingsMasterPassword.getText().strip());
@@ -116,12 +119,12 @@ public class SettingsController extends AbstractViewController {
     ///// Utility methods /////
 
     @Contract(value = "_ -> new", pure = true)
-    private @NotNull StringConverter<Locale> languageStringConverter(Locale locale) {
+    private static @NotNull StringConverter<Locale> localeStringConverter(Locale locale) {
         return toStringConverter(item -> item != null ? capitalizeWord(item.getDisplayLanguage(item)) : null);
     }
 
     @Contract(value = "_ -> new", pure = true)
-    private @NotNull StringConverter<SortingOrder> sortingOrderStringConverter(Locale locale) {
+    private static @NotNull StringConverter<SortingOrder> sortingOrderStringConverter(Locale locale) {
         return toStringConverter(item -> item != null ? ObservableResourceFactory.getInstance().getValue(item.getI18nKey()) : null);
     }
 
@@ -136,6 +139,26 @@ public class SettingsController extends AbstractViewController {
             @Override
             public String toString(@NotNull T object) {
                 return converter.call(object);
+            }
+        };
+    }
+
+    @Contract(value = "_ -> new", pure = true)
+    private static <T> @NotNull ObjectBinding<T> notNullBinding(@NotNull ObjectProperty<T> property) {
+        return new ObjectBinding<>() {
+            private T cachedValue = property.getValue();
+            
+            {
+                bind(property);
+            }
+            
+            @Override
+            protected @NotNull T computeValue() {
+                T val = property.getValue();
+                if (val != null) {
+                    cachedValue = val;
+                }
+                return cachedValue;
             }
         };
     }

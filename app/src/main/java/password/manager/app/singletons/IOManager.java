@@ -77,8 +77,8 @@ public final class IOManager {
         DESKTOP_PATH = Path.of(USER_HOME, "Desktop");
 
         Logger.createInstance(FILE_PATH);
-        Logger.getInstance().addInfo("os.name: '" + OS + "'");
-        Logger.getInstance().addInfo("user.home: '" + USER_HOME + "'");
+        Logger.getInstance().addDebug("os.name: '" + OS + "'");
+        Logger.getInstance().addDebug("user.home: '" + USER_HOME + "'");
     }
 
     private final ObservableList<Account> ACCOUNT_LIST;
@@ -147,9 +147,12 @@ public final class IOManager {
 
         ACCOUNT_LIST.addListener(listListener);
 
-        // TODO Add logging
-        // userPreferences.getLocaleProperty().addListener((_, _, newValue) -> Logger.getInstance().addInfo("Changed locale to: " + newValue));
-        // userPreferences.getSortingOrderProperty().addListener((_, _, newValue) -> Logger.getInstance().addInfo("Changed sorting order to: " + newValue));
+        USER_PREFERENCES.getLocaleProperty().addListener((_, _, newValue) ->
+            Logger.getInstance().addInfo("Changed locale to: " + newValue)
+        );
+        USER_PREFERENCES.getSortingOrderProperty().addListener((_, _, newValue) ->
+            Logger.getInstance().addInfo("Changed sorting order to: " + newValue)
+        );
     }
 
     private void loadData() {
