@@ -1,6 +1,5 @@
 package password.manager.app.singletons;
 
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 

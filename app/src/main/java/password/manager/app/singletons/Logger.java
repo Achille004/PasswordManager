@@ -40,8 +40,7 @@ public final class Logger {
     public static final String FOLDER_PREFIX, LOG_FILE_NAME, STACKTRACE_FILE_NAME;
     public static final int MAX_LOG_FILES;
 
-    private static final DateTimeFormatter FILE_DTF;
-    private static final DateTimeFormatter DTF;
+    private static final DateTimeFormatter FILE_DTF, MSG_DTF;
 
     private static final String INITIAL_MESSAGE = """
     ============== Password Manager by Francesco Marras ==============
@@ -62,8 +61,8 @@ public final class Logger {
         STACKTRACE_FILE_NAME = "stacktrace.log";
         MAX_LOG_FILES = 5;
 
-        FILE_DTF = DateTimeFormatter.ofPattern("yyyy.MM.dd_HH.mm.ss");
-        DTF = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.MEDIUM);
+        FILE_DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
+        MSG_DTF = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.MEDIUM);
     }
 
     private final Path currPath;
@@ -81,7 +80,7 @@ public final class Logger {
         stacktraceWriter = getFileWriter(currPath.resolve(STACKTRACE_FILE_NAME), false);
         Objects.requireNonNull(stacktraceWriter, "stacktraceWriter must not be null");
 
-        final String MSG = String.format(INITIAL_MESSAGE, DTF.format(LocalDateTime.now()));
+        final String MSG = String.format(INITIAL_MESSAGE, MSG_DTF.format(LocalDateTime.now()));
         write(logWriter, new StringBuilder(MSG));
     }
 
@@ -92,7 +91,7 @@ public final class Logger {
     public @NotNull Boolean addDebug(String str) {
         StringBuilder logStrBuilder = new StringBuilder();
         logStrBuilder
-                .append(DTF.format(LocalDateTime.now()))
+                .append(MSG_DTF.format(LocalDateTime.now()))
                 .append(" --- ")
                 .append(str)
                 .append("\n");
@@ -103,7 +102,7 @@ public final class Logger {
     public @NotNull Boolean addInfo(String str) {
         StringBuilder logStrBuilder = new StringBuilder();
         logStrBuilder
-                .append(DTF.format(LocalDateTime.now()))
+                .append(MSG_DTF.format(LocalDateTime.now()))
                 .append(" >>> ")
                 .append(str)
                 .append("\n");
@@ -114,7 +113,7 @@ public final class Logger {
     public @NotNull Boolean addError(@NotNull Throwable e) {
         StringBuilder logStrBuilder = new StringBuilder();
         logStrBuilder
-                .append(DTF.format(LocalDateTime.now()))
+                .append(MSG_DTF.format(LocalDateTime.now()))
                 .append(" !!! An exception has been thrown. See '")
                 .append(STACKTRACE_FILE_NAME)
                 .append("' for details.\n");
@@ -122,7 +121,7 @@ public final class Logger {
         // Write the stack trace to the stacktrace log file
         StringBuilder stacktraceStrBuilder = new StringBuilder();
         stacktraceStrBuilder
-                .append(DTF.format(LocalDateTime.now()))
+                .append(MSG_DTF.format(LocalDateTime.now()))
                 .append(" => Exception thrown while executing '")
                 .append(getCurrentMethodName(1))
                 .append("', follows error and full stack trace:\n");

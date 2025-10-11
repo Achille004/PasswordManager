@@ -21,11 +21,15 @@ package password.manager.app.singletons;
 import static password.manager.app.Utils.*;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.security.GeneralSecurityException;
 import java.security.spec.InvalidKeySpecException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,7 +42,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -57,13 +60,16 @@ import password.manager.app.security.UserPreferences;
 import password.manager.lib.PasswordInputControl;
 
 public final class IOManager {
-    public static final String DATA_FILE_NAME = "data.json";
-    public static final int AUTOSAVE_INTERVAL = 2; 
-
     public static final String OS, USER_HOME;
-    public static final Path FILE_PATH, DESKTOP_PATH;
-
+    public static final Path FILE_PATH, PRESERVED_PATH;
+    
     public static final String LANG_BUNDLE_RESOURCE = "/bundles/Lang";
+
+    private static final String DATA_FILE_NAME = "data.json";
+    private static final String BACKUP_FILE_NAME = "data.json.bak";
+    private static final File DATA_FILE, BACKUP_FILE;
+
+    private static final int AUTOSAVE_INTERVAL = 2; 
 
     static {
         // gets system properties
@@ -74,20 +80,24 @@ public final class IOManager {
         String WINDOWS_PATH = Path.of("AppData", "Local", "Password Manager").toString();
         String OS_FALLBACK_PATH = ".password-manager";
         FILE_PATH = Path.of(USER_HOME, OS.toLowerCase().contains("windows") ? WINDOWS_PATH : OS_FALLBACK_PATH);
-        DESKTOP_PATH = Path.of(USER_HOME, "Desktop");
+        PRESERVED_PATH = FILE_PATH.resolve("preserved");
 
         Logger.createInstance(FILE_PATH);
         Logger.getInstance().addDebug("os.name: '" + OS + "'");
         Logger.getInstance().addDebug("user.home: '" + USER_HOME + "'");
+
+        DATA_FILE = FILE_PATH.resolve(DATA_FILE_NAME).toFile();
+        BACKUP_FILE = FILE_PATH.resolve(BACKUP_FILE_NAME).toFile();
+        Logger.getInstance().addDebug("DATA_FILE: '" + DATA_FILE + "'");
+        Logger.getInstance().addDebug("BACKUP_FILE: '" + BACKUP_FILE + "'");
     }
 
     private final ObservableList<Account> ACCOUNT_LIST;
     private final UserPreferences USER_PREFERENCES;
 
-    private volatile String masterPassword;
-    private volatile @Getter boolean isFirstRun, isAuthenticated;
+    private String masterPassword;
+    private @Getter boolean isFirstRun, isAuthenticated;
 
-    private final File DATA_FILE;
     private final AtomicBoolean HAS_CHANGED, IS_LOADING;
 
     private final ObjectMapper OBJECT_MAPPER;
@@ -102,8 +112,6 @@ public final class IOManager {
         masterPassword = null;
         isFirstRun = true;
         isAuthenticated = false;
-
-        DATA_FILE = FILE_PATH.resolve(DATA_FILE_NAME).toFile();
 
         HAS_CHANGED = new AtomicBoolean(false);
         IS_LOADING = new AtomicBoolean(false);
@@ -157,49 +165,65 @@ public final class IOManager {
 
     private void loadData() {
         if (FILE_PATH.toFile().mkdirs()) {
-            Logger.getInstance().addInfo("Directory '" + FILE_PATH + "' did not exist and was therefore created, skipping data loading");
+            Logger.getInstance().addInfo("The directory FILE_PATH did not exist and was therefore created, skipping data loading");
             return;
         }
-
-        Logger.getInstance().addInfo("Loading data from '" + DATA_FILE + "'...");
-
-        // if the data file exists, it will try to read its contents
-        if (!DATA_FILE.exists()) {
-            Logger.getInstance().addInfo("File not found");
-            return;
-        }
-
+        
+        // Try to load DATA_FILE
         try {
-            loadDataFile(DATA_FILE);
+            loadDataFile(DATA_FILE, "DATA_FILE");
 
-            Logger.getInstance().addInfo("Loaded user preferences and " + ACCOUNT_LIST.size() + " accounts");
-            isFirstRun = false;
+            Files.copy(DATA_FILE.toPath(), BACKUP_FILE.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            Logger.getInstance().addInfo("Copied valid DATA_FILE to BACKUP_FILE");
+
+            return;
         } catch (IOException e) {
             Logger.getInstance().addError(e);
-            Logger.getInstance().addInfo("Data not OK, overwrite?");
+        }
 
-            final String errMsg = ObservableResourceFactory.getInstance().getValue("data_error");
-            final Alert alert = new Alert(AlertType.ERROR, errMsg, ButtonType.YES, ButtonType.NO);
-            setDefaultButton(alert, ButtonType.NO);
-            alert.showAndWait();
+        // Try to load BACKUP_FILE
+        try {
+            loadDataFile(BACKUP_FILE, "BACKUP_FILE");
 
-            if (alert.getResult() == ButtonType.YES) {
-                Logger.getInstance().addInfo("Data overwriting accepted");
-            } else {
-                Logger.getInstance().addInfo("Data overwriting denied");
-                System.exit(0);
+            // Move corrupted DATA_FILE to preserved with timestamp, but only if it exists
+            if(DATA_FILE.exists()) {
+                final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
+                final String timestamp = DTF.format(LocalDateTime.now());
+
+                PRESERVED_PATH.toFile().mkdirs();
+                Files.move(DATA_FILE.toPath(), PRESERVED_PATH.resolve(timestamp + ".json"), StandardCopyOption.REPLACE_EXISTING);
+                Logger.getInstance().addInfo("Moved corrupted DATA_FILE to 'preserved/" + timestamp + ".json'");
             }
+
+            HAS_CHANGED.set(true); // Force save to recreate DATA_FILE from backup
+            return;
+        } catch (IOException e) {
+            Logger.getInstance().addError(e);
+        }
+
+        // If both main and backup failed, ask user to overwrite
+        Logger.getInstance().addInfo("Asking user to overwrite data");
+        final String errMsg = ObservableResourceFactory.getInstance().getValue("data_error");
+        final Alert alert = new Alert(AlertType.ERROR, errMsg, ButtonType.YES, ButtonType.NO);
+        setDefaultButton(alert, ButtonType.NO);
+        alert.showAndWait();
+
+        if (alert.getResult() == ButtonType.YES) {
+            Logger.getInstance().addInfo("Data overwriting accepted");
+        } else {
+            Logger.getInstance().addInfo("Data overwriting denied");
+            System.exit(0);
         }
     }
 
     private void saveData() {
         if (!isAuthenticated()) {
-            Logger.getInstance().addInfo("Not authenticated, skipping save");
+            Logger.getInstance().addInfo("Skipping save: Not authenticated");
             return;
         }
 
         if (!HAS_CHANGED.get()) {
-            Logger.getInstance().addInfo("Nothing to save");
+            Logger.getInstance().addInfo("Skipping save: No changes");
             return;
         }
 
@@ -412,8 +436,12 @@ public final class IOManager {
         }
     }
 
-    private void loadDataFile(File file) throws IOException {
-        if(IS_LOADING.get()) throw new IllegalStateException("Data is already being loaded");
+    private synchronized void loadDataFile(File file, String fileVarName) throws IOException {
+        Logger.getInstance().addInfo("Attempting to load " + fileVarName + "...");
+
+        if (!file.exists()) throw new FileNotFoundException("File not found: " + file.getAbsolutePath());
+        if (IS_LOADING.get()) throw new IllegalStateException("Data is already being loaded");
+
         IS_LOADING.set(true);
 
         AppData data;
@@ -421,7 +449,10 @@ public final class IOManager {
             data = OBJECT_MAPPER.readValue(file, AppData.class);
             USER_PREFERENCES.set(data.userPreferences());
             ACCOUNT_LIST.setAll(data.accountList());
+            isFirstRun = false;
+            Logger.getInstance().addInfo(" => OK");
         } catch (IOException e) {
+            Logger.getInstance().addInfo(" => Failed");
             throw e;
         } finally {
             IS_LOADING.set(false);
