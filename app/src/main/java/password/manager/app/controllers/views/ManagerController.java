@@ -48,7 +48,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.control.MultipleSelectionModel;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
@@ -461,7 +460,7 @@ public class ManagerController extends AbstractViewController {
                     if (change.wasAdded() && !change.getAddedSubList().contains(homeTab)) {
                         Platform.runLater(() -> TAB_PANE_CONTENT.remove(homeTab));
                     } else if (change.wasRemoved() && TAB_PANE_CONTENT.size() <= 1) {
-                        TAB_PANE_CONTENT.add(0, homeTab);
+                        TAB_PANE_CONTENT.addFirst(homeTab);
                         selectTab(homeTab);
                     }
                 }

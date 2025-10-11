@@ -34,7 +34,7 @@ import lombok.Getter;
 import password.manager.app.enums.SecurityVersion;
 
 public final class Account {
-    // JsonProperty is renduntant if there are getters
+    // JsonProperty is redundant if there are getters
     private final @JsonIgnore @Getter StringProperty softwareProperty = new SimpleStringProperty(), 
                                                      usernameProperty = new SimpleStringProperty();
     private @JsonProperty byte[] encryptedPassword;
@@ -136,7 +136,7 @@ public final class Account {
         }
     }
 
-    @Contract("_, _, _, _ -> new")
+    @Contract(value = "_, _, _, _, _ -> new", pure = true)
     public static @NotNull Account of(@NotNull SecurityVersion securityVersion, @NotNull String software, @NotNull String username, 
                                       @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
         // creates the account, adding its attributes by constructor

@@ -30,6 +30,7 @@ import java.util.Base64.Encoder;
 import java.util.Locale;
 import java.util.Objects;
 
+import javafx.scene.layout.Pane;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -136,7 +137,7 @@ public final class Utils {
         }
     }
 
-    public static @Nullable Parent loadFxml(String path, Initializable controller) {
+    public static @NotNull Parent loadFxml(@NotNull String path, @NotNull Initializable controller) {
         final String uiElementPath = path.replace("/fxml/", "").replace(".fxml", "");
         Logger.getInstance().addDebug("Loading [" + uiElementPath + "] pane...");
 
@@ -170,6 +171,6 @@ public final class Utils {
             });
         }
         Platform.exit(); // Exit gracefully (saves data, etc.)
-        return null;
+        return new Pane(); // return dummy pane
     }
 }

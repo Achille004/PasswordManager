@@ -27,7 +27,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.GeneralSecurityException;
-import java.security.spec.InvalidKeySpecException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -334,7 +333,7 @@ public final class IOManager {
 
     // Asynchronously retrieves and injects the password into the given PasswordInputControl
     public <T extends PasswordInputControl> CompletableFuture<Void> getAccountPassword(@NotNull T element, @NotNull Account account) {
-        if (!isAuthenticated()) new IllegalStateException("User is not authenticated [getAccountPassword]");
+        if (!isAuthenticated()) throw new IllegalStateException("User is not authenticated [getAccountPassword]");
 
         final boolean wasReadable = element.isReadable();
         return CompletableFuture
@@ -358,13 +357,10 @@ public final class IOManager {
         final String oldMasterPassword = this.masterPassword;
         if (!(oldMasterPassword == null || isAuthenticated())) return false;
 
-        try {
-            final boolean res = USER_PREFERENCES.setPasswordVerified(oldMasterPassword, newMasterPassword);
-            if (res) HAS_CHANGED.set(true);
-        } catch (InvalidKeySpecException e) {
-            Logger.getInstance().addError(e);
-            return false;
-        }
+        final boolean res = USER_PREFERENCES.setPasswordVerified(oldMasterPassword, newMasterPassword);
+        if (!res) return false;
+
+        HAS_CHANGED.set(true);
 
         this.masterPassword = newMasterPassword;
         if (oldMasterPassword != null) {
@@ -395,11 +391,7 @@ public final class IOManager {
         }
 
         final boolean wasLatestSecurity = USER_PREFERENCES.isLatestVersion();
-        try {
-            isAuthenticated = USER_PREFERENCES.verifyPassword(masterPassword);
-        } catch (InvalidKeySpecException e) {
-            Logger.getInstance().addError(e);
-        }
+        isAuthenticated = USER_PREFERENCES.verifyPassword(masterPassword);
 
         if (isAuthenticated) {
             this.masterPassword = masterPassword;

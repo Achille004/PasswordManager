@@ -18,16 +18,32 @@
 
 package password.manager.app;
 
+import static password.manager.app.Utils.*;
+
 import javafx.application.Application;
 import javafx.application.HostServices;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import lombok.Getter;
+import password.manager.app.controllers.FirstRunController;
+import password.manager.app.controllers.LoginController;
+import password.manager.app.controllers.MainController;
 import password.manager.app.singletons.IOManager;
+import password.manager.app.singletons.Logger;
+import password.manager.app.singletons.ObservableResourceFactory;
+
+import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -63,8 +79,52 @@ public class App extends Application {
         primaryStage.setResizable(false);
         primaryStage.setScene(new Scene(appScenePane, 900, 600));
 
-        AppManager.startApp();
+        IOManager.createInstance();
+        startApp();
         primaryStage.show();
+    }
+
+    private void startApp() {
+        final IOManager IO_MANAGER = IOManager.getInstance();
+
+        final ObjectProperty<Locale> locale = IOManager.getInstance().getUserPreferences().getLocaleProperty();
+        ObservableResourceFactory.getInstance().resourcesProperty().bind(Bindings.createObjectBinding(
+                () -> ResourceBundle.getBundle("/bundles/Lang", locale.getValue()), locale));
+
+        final BooleanProperty switchToMain = new SimpleBooleanProperty(false);
+        switchToMain.addListener((_, _, newValue) -> {
+            if (newValue) {
+                final MainController mainController = new MainController();
+                final BorderPane mainPane = (BorderPane) loadFxml("/fxml/main.fxml", mainController);
+
+                final AnchorPane scenePane = App.getAppScenePane();
+                scenePane.getChildren().clear();
+                scenePane.getChildren().add(mainPane);
+                mainController.mainTitleAnimation();
+            }
+        });
+
+        final List<String> list = App.getAppParameters().getRaw();
+        Logger.getInstance().addDebug("Found " + list.size() + " parameters");
+        if (!IO_MANAGER.isFirstRun() && list.size() > 1 && ("-p".equals(list.get(0)) || "--password".equals(list.get(0)))) {
+            Logger.getInstance().addInfo("Trying to authenticate via arguments");
+            if (IO_MANAGER.authenticate(list.get(1))) {
+                Logger.getInstance().addInfo("Correct password, skipping login");
+                switchToMain.set(true);
+            } else {
+                Logger.getInstance().addInfo("Incorrect password, redirecting to login");
+            }
+        }
+
+        if (!switchToMain.get()) {
+            final AnchorPane pane = IO_MANAGER.isFirstRun()
+                ? (AnchorPane) loadFxml("/fxml/first_run.fxml", new FirstRunController(switchToMain))
+                : (AnchorPane) loadFxml("/fxml/login.fxml", new LoginController(switchToMain));
+
+            final AnchorPane scenePane = App.getAppScenePane();
+            scenePane.getChildren().clear();
+            scenePane.getChildren().add(pane);
+        }
     }
 
     @Override

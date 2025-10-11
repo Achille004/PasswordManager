@@ -20,12 +20,12 @@ package password.manager.app.security;
 
 import java.io.IOException;
 import java.security.SecureRandom;
-import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 import java.util.Locale;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -80,7 +80,7 @@ public final class UserPreferences {
         isPasswordSet = true;
     }
 
-    public void set(UserPreferences userPreferences) {
+    public void set(@NotNull UserPreferences userPreferences) {
         setLocale(userPreferences.getLocale());
         setSortingOrder(userPreferences.getSortingOrder());
 
@@ -111,7 +111,7 @@ public final class UserPreferences {
         return this.securityVersion == SecurityVersion.LATEST;
     }
 
-    public @NotNull Boolean verifyPassword(String passwordToVerify) throws InvalidKeySpecException {
+    public @NotNull Boolean verifyPassword(@Nullable String passwordToVerify) {
         if (!isPasswordSet) throw new IllegalStateException("UserPreferences password not set");
         if (passwordToVerify == null) return false;
 
@@ -123,7 +123,7 @@ public final class UserPreferences {
         return res;
     }
 
-    public @NotNull Boolean setPasswordVerified(String oldPassword, @NotNull String newPassword) throws InvalidKeySpecException {
+    public @NotNull Boolean setPasswordVerified(@Nullable String oldPassword, @NotNull String newPassword) {
         final boolean res = verifyPassword(oldPassword);
         if (res) setPassword(newPassword);
         return res;
@@ -155,7 +155,7 @@ public final class UserPreferences {
         }
 
         @Override
-        public UserPreferences deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+        public UserPreferences deserialize(@NotNull JsonParser jp, DeserializationContext ctxt) throws IOException {
             final JsonNode node = jp.getCodec().readTree(jp);
 
             final Locale locale = Locale.forLanguageTag(node.get("locale").asText());

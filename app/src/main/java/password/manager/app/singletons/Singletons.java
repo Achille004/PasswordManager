@@ -54,7 +54,7 @@ public final class Singletons {
     }
 
     /**
-     * Returns the wether the {@code cls} has been registered.
+     * Returns whether the {@code cls} is already registered.
      *
      * @param <T> the type of the class
      * @param cls the class to check

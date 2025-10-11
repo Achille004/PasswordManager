@@ -48,7 +48,7 @@ public enum SecurityVersion {
     });
 
     // Latest security version
-    public static SecurityVersion LATEST = ARGON2;
+    public static final SecurityVersion LATEST = ARGON2;
 
     private final TriFunction<Integer, String, byte[], byte[]> keyDerivationFunction;
 
@@ -63,7 +63,7 @@ public enum SecurityVersion {
      * @param salt     The salt used for hashing.
      * @return The hashed password.
      */
-    public byte[] hash(@NotNull String password, @NotNull byte[] salt) {
+    public byte[] hash(@NotNull String password, byte[] salt) {
         return keyDerivationFunction.apply(HASH_BITS, password, salt);
     }
 

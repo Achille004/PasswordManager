@@ -24,7 +24,6 @@ import java.net.URL;
 import java.text.Collator;
 import java.util.Comparator;
 import java.util.Locale;
-import java.util.Observable;
 import java.util.ResourceBundle;
 import java.util.function.Function;
 

@@ -88,7 +88,7 @@ public final class Logger {
         return currPath;
     }
 
-    public @NotNull Boolean addDebug(String str) {
+    public void addDebug(String str) {
         StringBuilder logStrBuilder = new StringBuilder();
         logStrBuilder
                 .append(MSG_DTF.format(LocalDateTime.now()))
@@ -96,10 +96,10 @@ public final class Logger {
                 .append(str)
                 .append("\n");
 
-        return write(logWriter, logStrBuilder);
+        write(logWriter, logStrBuilder);
     }
 
-    public @NotNull Boolean addInfo(String str) {
+    public void addInfo(String str) {
         StringBuilder logStrBuilder = new StringBuilder();
         logStrBuilder
                 .append(MSG_DTF.format(LocalDateTime.now()))
@@ -107,10 +107,10 @@ public final class Logger {
                 .append(str)
                 .append("\n");
 
-        return write(logWriter, logStrBuilder);
+        write(logWriter, logStrBuilder);
     }
 
-    public @NotNull Boolean addError(@NotNull Throwable e) {
+    public void addError(@NotNull Throwable e) {
         StringBuilder logStrBuilder = new StringBuilder();
         logStrBuilder
                 .append(MSG_DTF.format(LocalDateTime.now()))
@@ -130,14 +130,15 @@ public final class Logger {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             e.printStackTrace(pw);
-            stacktraceStrBuilder.append(sw.toString()).append("\n");
+            stacktraceStrBuilder.append(sw).append("\n");
             pw.close();
             sw.close();
         } catch (IOException e1) {
             e1.printStackTrace();
         }
 
-        return write(logWriter, logStrBuilder) && write(stacktraceWriter, stacktraceStrBuilder);
+        write(logWriter, logStrBuilder);
+        write(stacktraceWriter, stacktraceStrBuilder);
     }
 
     private static @NotNull String getCurrentMethodName(@NotNull Integer walkDist) {
@@ -160,14 +161,12 @@ public final class Logger {
         }
     }
 
-    private @NotNull Boolean write(@NotNull FileWriter writer, @NotNull StringBuilder builder) {
+    private void write(@NotNull FileWriter writer, @NotNull StringBuilder builder) {
         try {
             writer.write(builder.toString());
             writer.flush();
-            return true;
         } catch (IOException e) {
             e.printStackTrace();
-            return false;
         }
     }
 
@@ -204,7 +203,7 @@ public final class Logger {
         Singletons.register(Logger.class, new Logger(baseLogPath));
     }
 
-    public static Logger getInstance() {
+    public static @NotNull Logger getInstance() {
         return Singletons.get(Logger.class);
     }
     // #endregion
