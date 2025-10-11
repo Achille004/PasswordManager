@@ -29,6 +29,7 @@ import java.util.ResourceBundle;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.controlsfx.control.textfield.AutoCompletionBinding;
 import org.controlsfx.control.textfield.TextFields;
 import org.jetbrains.annotations.NotNull;
 
@@ -36,6 +37,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -87,23 +89,28 @@ public class ManagerController extends AbstractViewController {
     // App state variables
     private volatile boolean editOperationInProgress = false;
     private volatile boolean isMatchCase = false, isMatchWholeWord = false;
+
+    // Auto-completion data sources
     private List<String> possibleSoftwares, possibleUsernames;
+    private final SimpleIntegerProperty suggestionsUpdateTrigger = new SimpleIntegerProperty(0);
 
     public void initialize(URL location, ResourceBundle resources) {
         Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
 
         final IOManager IO_MANAGER = IOManager.getInstance();
 
-        final SortedList<Account> SORTED_ACCOUNT_LIST = IO_MANAGER.getSortedAccountList();
+        // Wrapper scheme: ((( source_list ) sorted_wrapper ) filtered_wrapper )
+        final ObservableList<Account> ACCOUNT_LIST = IO_MANAGER.getAccountList();
+        final SortedList<Account> SORTED_ACCOUNT_LIST = new SortedList<>(ACCOUNT_LIST);
         final FilteredList<Account> FILTERED_ACCOUNT_LIST = new FilteredList<>(SORTED_ACCOUNT_LIST);
 
         final ObjectProperty<SortingOrder> SORTING_ORDER_PROPERTY = IO_MANAGER.getUserPreferences().getSortingOrderProperty();
         final TabManager TAB_MANAGER = new TabManager(accountTabPane, homeTab);
 
-        setupAutoCompletion(FILTERED_ACCOUNT_LIST);
+        setupAutoCompletion(ACCOUNT_LIST);
         setupSearchFunctionality(FILTERED_ACCOUNT_LIST);
         setupAccountListView(SORTING_ORDER_PROPERTY, SORTED_ACCOUNT_LIST, FILTERED_ACCOUNT_LIST, TAB_MANAGER);
-        setupKeyboardShortcuts(FILTERED_ACCOUNT_LIST, TAB_MANAGER);
+        setupKeyboardShortcuts(TAB_MANAGER);
         setupSpecialTabs(TAB_MANAGER);
     }
 
@@ -133,22 +140,32 @@ public class ManagerController extends AbstractViewController {
         searchTimeline.playFrom(SEARCH_DELAY);
     }
 
-    private void setupAutoCompletion(FilteredList<Account> filteredAccountList) {
-        possibleSoftwares = filteredAccountList.stream()
-                .map(Account::getSoftware)
-                .collect(Collectors.groupingBy(s -> s, Collectors.counting()))
-                .entrySet().stream()
-                .sorted(Entry.<String, Long>comparingByValue().reversed())
-                .map(Entry::getKey)
-                .toList();
+    private void setupAutoCompletion(ObservableList<Account> sortedAccountList) {
+        // Listen for changes in the account list and update suggestions
+        ListChangeListener<Account> ACCOUNT_LIST_CHANGE_HANDLER = _ -> {
+            possibleSoftwares = sortedAccountList.stream()
+                    .map(Account::getSoftware)
+                    .collect(Collectors.groupingBy(s -> s, Collectors.counting()))
+                    .entrySet().stream()
+                    .sorted(Entry.<String, Long>comparingByValue().reversed())
+                    .map(Entry::getKey)
+                    .toList();
 
-        possibleUsernames = filteredAccountList.stream()
-                .map(Account::getUsername)
-                .collect(Collectors.groupingBy(s -> s, Collectors.counting()))
-                .entrySet().stream()
-                .sorted(Entry.<String, Long>comparingByValue().reversed())
-                .map(Entry::getKey)
-                .toList();
+            possibleUsernames = sortedAccountList.stream()
+                    .map(Account::getUsername)
+                    .collect(Collectors.groupingBy(s -> s, Collectors.counting()))
+                    .entrySet().stream()
+                    .sorted(Entry.<String, Long>comparingByValue().reversed())
+                    .map(Entry::getKey)
+                    .toList();
+
+            // Trigger update of auto-completion suggestions by just incrementing the property
+            suggestionsUpdateTrigger.set(suggestionsUpdateTrigger.get() + 1);
+        };
+        sortedAccountList.addListener(ACCOUNT_LIST_CHANGE_HANDLER);
+
+        // Initial population
+        ACCOUNT_LIST_CHANGE_HANDLER.onChanged(null);
     }
 
     private void setupSearchFunctionality(FilteredList<Account> filteredAccountList) {
@@ -228,7 +245,7 @@ public class ManagerController extends AbstractViewController {
         // #endregion
     }
 
-    private void setupKeyboardShortcuts(FilteredList<Account> filteredAccountList, TabManager tabManager) {
+    private void setupKeyboardShortcuts(TabManager tabManager) {
         final EventHandler<KeyEvent> SHORTCUTS_HANDLER = keyEvent -> {
             final Tab selectedTab = accountTabPane.getSelectionModel().getSelectedItem();
             if (!keyEvent.isControlDown() || selectedTab == null) return;
@@ -266,9 +283,6 @@ public class ManagerController extends AbstractViewController {
     private void setupSpecialTabs(TabManager tabManager) {
         TabManager.loadTab(homeTab, "/fxml/views/manager/home.fxml", new HomeController());
         TabManager.loadTab(addTab, "/fxml/views/manager/editor.fxml", new EditorController(null));
-        addTab.setOnSelectionChanged(_ -> { 
-            if (addTab.isSelected()) TabManager.getController(addTab).reset(); 
-        });
     }
 
     static class HomeController extends AbstractViewController {
@@ -284,9 +298,8 @@ public class ManagerController extends AbstractViewController {
         }
 
         public void reset() {
-            homeDescTop.sceneProperty().addListener((_, _, newScene) -> {
-                if (newScene != null) homeDescTop.requestFocus();
-            });
+            // Just focus the top label to keep consistent behavior
+            Platform.runLater(() -> homeDescTop.requestFocus());
         }
     }
 
@@ -326,15 +339,9 @@ public class ManagerController extends AbstractViewController {
             langResources.bindTextProperty(editorUsernameLbl, "username");
             langResources.bindTextProperty(editorPasswordLbl, "password");
 
-            editorSoftware.setOnAction(_ -> editorUsername.requestFocus());
-            editorUsername.setOnAction(_ -> editorPassword.requestFocus());
+            editorSoftware.setOnAction(_ -> Platform.runLater(() -> editorUsername.requestFocus()));
+            editorUsername.setOnAction(_ -> Platform.runLater(() -> editorPassword.requestFocus()));
             editorPassword.setOnAction(this::editorSave);
-
-            editorSoftware.sceneProperty().addListener((_, _, newScene) -> {
-                if (newScene != null) {
-                    editorSoftware.requestFocus();
-                }
-            });
 
             editorSaveTimeline = new Timeline(
                 new KeyFrame(Duration.ZERO, _ -> editorSaveBtn.setStyle("-fx-background-color: -fx-color-green")),
@@ -354,9 +361,21 @@ public class ManagerController extends AbstractViewController {
             // Force the correct size to prevent unwanted stretching
             editorPassword.setPrefSize(548.0, 40.0);
 
-            TextFields.bindAutoCompletion(editorSoftware, possibleSoftwares);    
-            TextFields.bindAutoCompletion(editorUsername, possibleUsernames);
+            // Setup auto-completion for software and username fields
+            @SuppressWarnings("unchecked")
+            final AutoCompletionBinding<String>[] autoCompletionBindings = new AutoCompletionBinding[2];
+            autoCompletionBindings[0] = TextFields.bindAutoCompletion(editorSoftware, possibleSoftwares);
+            autoCompletionBindings[1] = TextFields.bindAutoCompletion(editorUsername, possibleUsernames);
 
+            suggestionsUpdateTrigger.addListener((_, _, _) -> {
+                autoCompletionBindings[0].dispose();
+                autoCompletionBindings[1].dispose();
+
+                autoCompletionBindings[0] = TextFields.bindAutoCompletion(editorSoftware, possibleSoftwares);
+                autoCompletionBindings[1] = TextFields.bindAutoCompletion(editorUsername, possibleUsernames);
+            });
+
+            // Disable the delete button if this is the add editor
             editorDeleteBtn.setVisible(!isAddEditor);
         }
 
@@ -368,6 +387,7 @@ public class ManagerController extends AbstractViewController {
                 editorSoftware.setText(account.getSoftware());
                 editorUsername.setText(account.getUsername());
 
+                // editorPassword never actually changes, but the thenRun() function needs a final reference
                 final ReadablePasswordFieldWithStr editorPasswordClone = this.editorPassword;
                 editorPasswordClone.setDisable(true);
                 editorPasswordClone.setReadable(true);
@@ -387,7 +407,7 @@ public class ManagerController extends AbstractViewController {
 
             editorDeleteCounter = false;
             clearStyle(editorSoftware, editorUsername, editorPassword.getTextField(), editorDeleteBtn);
-            editorSoftware.requestFocus();
+            Platform.runLater(() -> editorSoftware.requestFocus());
         }
 
         @FXML
@@ -454,6 +474,11 @@ public class ManagerController extends AbstractViewController {
             this.TAB_PANE = tabPane;
             this.TAB_PANE_CONTENT = tabPane.getTabs();
 
+            final ChangeListener<Tab> TAB_FOCUS_HANDLER = (_, _, newTab) -> {
+                if (newTab != null) TabManager.getController(newTab).reset();
+            };
+            TAB_PANE.getSelectionModel().selectedItemProperty().addListener(TAB_FOCUS_HANDLER);
+
             // It's better to just handle this manually
             final ListChangeListener<Tab> HOME_TAB_HANDLER = change -> {
                 while(change.next()) {
@@ -479,9 +504,6 @@ public class ManagerController extends AbstractViewController {
 
             TabManager.loadTab(tab, "/fxml/views/manager/editor.fxml", controller);
             tab.textProperty().bind(account.getSoftwareProperty());
-            tab.setOnSelectionChanged(_ -> {
-                if (tab.isSelected()) controller.reset();
-            });
 
             return tab;
         }
@@ -492,7 +514,6 @@ public class ManagerController extends AbstractViewController {
                     TAB_PANE.getTabs().add(TAB_PANE.getTabs().size() - 1, tab);
                 }
                 TAB_PANE.getSelectionModel().select(tab);
-                tab.getContent().requestFocus();
             });
         }
 
@@ -507,10 +528,7 @@ public class ManagerController extends AbstractViewController {
         }
 
         public void closeTab(@NotNull Tab tab) {
-            Platform.runLater(() -> {
-                TAB_PANE.getTabs().remove(tab);
-                TAB_PANE.getSelectionModel().getSelectedItem().getContent().requestFocus();
-            });
+            Platform.runLater(() -> TAB_PANE.getTabs().remove(tab));
         }
 
         public void closeAccountTab(@NotNull Account account) {

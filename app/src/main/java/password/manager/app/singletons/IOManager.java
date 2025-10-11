@@ -49,7 +49,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
@@ -124,8 +123,8 @@ public final class IOManager {
         loadData();
     }
 
-    public SortedList<Account> getSortedAccountList() {
-        return this.ACCOUNT_LIST.sorted(null);
+    public ObservableList<Account> getAccountList() {
+        return this.ACCOUNT_LIST;
     }
 
     public @NotNull UserPreferences getUserPreferences() {
@@ -319,7 +318,7 @@ public final class IOManager {
                 });
     }
 
-    public CompletableFuture<Void> removeAccount(@NotNull Account account) throws IllegalArgumentException, IllegalStateException {
+    public @NotNull CompletableFuture<Void> removeAccount(@NotNull Account account) throws IllegalArgumentException, IllegalStateException {
         if(!ACCOUNT_LIST.contains(account)) throw new IllegalArgumentException("Account not found in list [editAccount]");
         if (!isAuthenticated()) throw new IllegalStateException("User is not authenticated [removeAccount]");
 
@@ -332,10 +331,9 @@ public final class IOManager {
     }
 
     // Asynchronously retrieves and injects the password into the given PasswordInputControl
-    public <T extends PasswordInputControl> CompletableFuture<Void> getAccountPassword(@NotNull T element, @NotNull Account account) {
+    public @NotNull CompletableFuture<Void> getAccountPassword(@NotNull PasswordInputControl element, @NotNull Account account) {
         if (!isAuthenticated()) throw new IllegalStateException("User is not authenticated [getAccountPassword]");
 
-        final boolean wasReadable = element.isReadable();
         return CompletableFuture
                 .supplyAsync(() -> {
                     try {
