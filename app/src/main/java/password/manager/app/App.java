@@ -97,9 +97,8 @@ public class App extends Application {
                 final MainController mainController = new MainController();
                 final BorderPane mainPane = (BorderPane) loadFxml("/fxml/main.fxml", mainController);
 
-                final AnchorPane scenePane = App.getAppScenePane();
-                scenePane.getChildren().clear();
-                scenePane.getChildren().add(mainPane);
+                appScenePane.getChildren().clear();
+                appScenePane.getChildren().add(mainPane);
                 mainController.mainTitleAnimation();
             }
         });
@@ -121,9 +120,8 @@ public class App extends Application {
                 ? (AnchorPane) loadFxml("/fxml/first_run.fxml", new FirstRunController(switchToMain))
                 : (AnchorPane) loadFxml("/fxml/login.fxml", new LoginController(switchToMain));
 
-            final AnchorPane scenePane = App.getAppScenePane();
-            scenePane.getChildren().clear();
-            scenePane.getChildren().add(pane);
+            appScenePane.getChildren().clear();
+            appScenePane.getChildren().add(pane);
         }
     }
 

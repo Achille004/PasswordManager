@@ -53,6 +53,7 @@
    <Label layoutX="406.0" layoutY="224.0" styleClass="bold, sz24" text="EULA" />
    <Label alignment="CENTER_RIGHT" layoutX="824.0" layoutY="567.0" prefHeight="27.0" prefWidth="65.0" styleClass="italic, light-grey-text" text="v3.1.0" />
    <stylesheets>
+      <URL value="@../css/root.css" />
       <URL value="@../css/style.css" />
       <URL value="@../css/eula.css" />
    </stylesheets>

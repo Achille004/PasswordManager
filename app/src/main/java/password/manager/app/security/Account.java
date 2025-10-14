@@ -48,8 +48,9 @@ public final class Account {
             @JsonProperty("encryptedPassword") byte[] encryptedPassword,
             @JsonProperty("salt") byte[] salt,
             @JsonProperty("iv") byte[] iv) {
-        setSoftware(software);
-        setUsername(username);
+        // Don't use Platform.runLater, it causes synchronization issues
+        this.softwareProperty.set(software);
+        this.usernameProperty.set(username);
 
         this.isDerivedSaltVersion = salt == null;
 
@@ -59,8 +60,9 @@ public final class Account {
     }
 
     public Account(@NotNull SecurityVersion securityVersion, @NotNull String software, @NotNull String username, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
-        setSoftware(software);
-        setUsername(username);
+        // Don't use Platform.runLater, it causes synchronization issues
+        this.softwareProperty.set(software);
+        this.usernameProperty.set(username);
 
         this.isDerivedSaltVersion = false;
 

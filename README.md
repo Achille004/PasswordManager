@@ -22,7 +22,8 @@ On the other hand, portable versions require a Java Runtime Environment (JRE).
 
 ## Exporting Data
 
-The software previously supported exporting to `passwords.html` and `passwords.csv` files, which were saved on the desktop. However, this feature is currently being rewritten and is not available in version 3.1.0. Please note that these files are not encrypted and are thus extremely vulnerable.
+The software previously supported exporting data to plain files, but this feature has been removed due to security concerns.
+A Google Drive integration is planned to replace this functionality, enabling users to securely transfer and manage their data. All synchronization operations will be performed on encrypted data, ensuring that plain data remains exclusively whithin the application.
 
 ## Contribution
 

@@ -6,7 +6,7 @@ ListView {
 ListView .scroll-bar {
   -fx-background-color: -fx-color-element-bg;
   -fx-background-radius: 5deg;
-  -fx-border: 2px;
+  -fx-border-width: 2px;
   -fx-border-color: transparent;
 }
 

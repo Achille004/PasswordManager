@@ -45,6 +45,8 @@ import org.jetbrains.annotations.NotNull;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -98,6 +100,9 @@ public final class IOManager {
 
     private final AtomicBoolean HAS_CHANGED, IS_LOADING;
 
+    public enum SaveState { SUCCESS, SAVING, ERROR };
+    private final SimpleObjectProperty<SaveState> IS_SAVING;
+
     private final ObjectMapper OBJECT_MAPPER;
     private final ExecutorService ACCOUNT_EXECUTOR;
 
@@ -108,11 +113,12 @@ public final class IOManager {
         USER_PREFERENCES = UserPreferences.empty();
 
         masterPassword = null;
-        isFirstRun = true;
+        isFirstRun = true; // Assume first run until data is loaded
         isAuthenticated = false;
 
         HAS_CHANGED = new AtomicBoolean(false);
         IS_LOADING = new AtomicBoolean(false);
+        IS_SAVING = new SimpleObjectProperty<>(SaveState.SUCCESS);
         setupListeners();
 
         OBJECT_MAPPER = new ObjectMapper();
@@ -129,6 +135,15 @@ public final class IOManager {
 
     public @NotNull UserPreferences getUserPreferences() {
         return this.USER_PREFERENCES;
+    }
+
+    /**
+     * Returns a read-only property that indicates the current save state.
+     * You can listen to this property to show/hide save status UI.
+     * @return {@link ReadOnlyObjectProperty} of the current {@link SaveState}
+     */
+    public ReadOnlyObjectProperty<SaveState> savingProperty() {
+        return this.IS_SAVING;
     }
 
     // #region Persistence and lifecycle management
@@ -162,8 +177,8 @@ public final class IOManager {
     }
 
     private void loadData() {
-        if (FILE_PATH.toFile().mkdirs()) {
-            Logger.getInstance().addInfo("The directory FILE_PATH did not exist and was therefore created, skipping data loading");
+        if (!(DATA_FILE.exists() || BACKUP_FILE.exists())) {
+            Logger.getInstance().addInfo("Neither DATA_FILE nor BACKUP_FILE exists, skipping data loading");
             return;
         }
         
@@ -226,14 +241,20 @@ public final class IOManager {
         }
 
         // Save asynchronously
-        HAS_CHANGED.set(false);
         ACCOUNT_EXECUTOR.submit(() -> {
             Logger.getInstance().addInfo("Saving data...");
+            Platform.runLater(() -> IS_SAVING.set(SaveState.SAVING));
+
+            // Change preemptively to avoid losing if changes are added during save
+            HAS_CHANGED.set(false);
+
             try {
                 saveDataFile(DATA_FILE);
                 Logger.getInstance().addInfo("Save OK");
+                Platform.runLater(() -> IS_SAVING.set(SaveState.SUCCESS));
             } catch (IOException e) {
                 Logger.getInstance().addError(e);
+                Platform.runLater(() -> IS_SAVING.set(SaveState.ERROR));    
             }
         });
     }
@@ -379,7 +400,7 @@ public final class IOManager {
         return true;
     }
 
-    public <T extends PasswordInputControl> void displayMasterPassword(T element) {
+    public void displayMasterPassword(PasswordInputControl element) {
         element.setText(masterPassword);
     }
 
@@ -430,7 +451,6 @@ public final class IOManager {
         Logger.getInstance().addInfo("Attempting to load " + fileVarName + "...");
 
         if (!file.exists()) throw new FileNotFoundException("File not found: " + file.getAbsolutePath());
-        if (IS_LOADING.get()) throw new IllegalStateException("Data is already being loaded");
 
         IS_LOADING.set(true);
 
@@ -450,13 +470,20 @@ public final class IOManager {
     }
 
     private void saveDataFile(File file) throws IOException {
-        List<Account> snapshot;
-        synchronized(ACCOUNT_LIST) {
-            snapshot = new ArrayList<>(ACCOUNT_LIST);
+        // Create snapshots to ensure consistency during serialization
+        UserPreferences prefsSnapshot = new UserPreferences(); // Add a copy method if needed
+        List<Account> accountSnapshot;
+
+        synchronized(USER_PREFERENCES) {
+            prefsSnapshot.set(USER_PREFERENCES);
         }
 
-        AppData data = new AppData(this.USER_PREFERENCES, snapshot);
-        OBJECT_MAPPER.writeValue(DATA_FILE, data);
+        synchronized(ACCOUNT_LIST) {
+            accountSnapshot = new ArrayList<>(ACCOUNT_LIST);
+        }
+
+        AppData data = new AppData(prefsSnapshot, accountSnapshot);
+        OBJECT_MAPPER.writerWithDefaultPrettyPrinter().writeValue(DATA_FILE, data);
     }
 
     // Wrapper class for application data

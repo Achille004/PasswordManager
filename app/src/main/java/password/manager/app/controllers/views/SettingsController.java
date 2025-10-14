@@ -68,12 +68,12 @@ public class SettingsController extends AbstractViewController {
         final ObjectProperty<SortingOrder> sortingOrderProperty = ioManager.getUserPreferences().getSortingOrderProperty();
 
         final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
-        langResources.bindTextProperty(settingsLangLbl, "language");
-        langResources.bindTextProperty(settingsSortingOrderLbl, "sorting_ord");
-        langResources.bindTextProperty(settingsMasterPasswordLbl, "master_pas");
-        langResources.bindTextProperty(settingsMasterPasswordDesc, "master_pas.desc");
-        langResources.bindTextProperty(settingsDriveConnLbl, "drive_con");
-        langResources.bindTextProperty(wip, "wip");
+        langResources.bindTextProperty(settingsLangLbl, "settings.language");
+        langResources.bindTextProperty(settingsSortingOrderLbl, "settings.sorting_ord");
+        langResources.bindTextProperty(settingsMasterPasswordLbl, "settings.master_pas");
+        langResources.bindTextProperty(settingsMasterPasswordDesc, "settings.master_pas.desc");
+        langResources.bindTextProperty(settingsDriveConnLbl, "settings.drive_con");
+        langResources.bindTextProperty(wip, "settings.wip");
 
         // Language box
 

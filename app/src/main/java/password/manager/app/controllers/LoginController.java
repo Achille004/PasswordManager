@@ -63,7 +63,7 @@ public class LoginController extends AbstractController {
         Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
 
         final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
-        langResources.bindTextProperty(loginTitle, "welcome_back");
+        langResources.bindTextProperty(loginTitle, "login.title");
         langResources.bindTextProperty(loginSubmitBtn, "lets_go");
 
         loginPassword.setOnAction(_ -> doLogin());

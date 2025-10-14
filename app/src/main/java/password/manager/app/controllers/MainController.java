@@ -29,21 +29,29 @@ import java.util.ResourceBundle;
 
 import org.jetbrains.annotations.NotNull;
 
+import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
+import javafx.stage.Popup;
+import javafx.stage.Window;
 import javafx.util.Duration;
+import password.manager.app.App;
+import password.manager.app.controllers.extra.PopupContentController;
 import password.manager.app.controllers.views.AbstractViewController;
 import password.manager.app.controllers.views.ManagerController;
 import password.manager.app.controllers.views.SettingsController;
 import password.manager.app.singletons.IOManager;
+import password.manager.app.singletons.IOManager.SaveState;
 import password.manager.app.singletons.Logger;
 
 public class MainController extends AbstractController {
@@ -57,22 +65,21 @@ public class MainController extends AbstractController {
         final LinkedList<String> stages = new LinkedList<>();
         StringBuilder currString = new StringBuilder();
 
+        char[] target;
+        boolean isLower, isUpper;
         for (char c : title.toCharArray()) {
+            isLower = Character.isLowerCase(c);
+            isUpper = Character.isUpperCase(c);
+
+            if(!isLower && !isUpper) {
+                currString.append(c);
+                continue;
+            }
+
+            target = isLower ? lower : upper;
             for (int i = 0; i < 26; i++) {
-                if (Character.isLowerCase(c)) {
-                    stages.add(currString.toString() + lower[i]);
-                    if (lower[i] == c) {
-                        break;
-                    }
-                } else if (Character.isUpperCase(c)) {
-                    stages.add(currString.toString() + upper[i]);
-                    if (upper[i] == c) {
-                        break;
-                    }
-                } else {
-                    stages.add(currString.toString() + c);
-                    break;
-                }
+                stages.add(currString.toString() + target[i]);
+                if (target[i] == c) break;
             }
             currString.append(c);
         }
@@ -119,6 +126,7 @@ public class MainController extends AbstractController {
         managerController = new ManagerController();
         managerPane = (Pane) loadFxml("/fxml/views/manager.fxml", managerController);
 
+        createAutosavePopup();
         swapOnMainPane(managerController, managerPane);
     }
 
@@ -160,5 +168,73 @@ public class MainController extends AbstractController {
         // Show selected pane
         destinationController.reset();
         mainPane.centerProperty().set(destinationPane);
+    }
+
+    private void createAutosavePopup() {
+        final int SPACING = 20;
+        
+        final PopupContentController popupController = new PopupContentController();
+        final AnchorPane popupContent = (AnchorPane) loadFxml("/fxml/extra/popup_content.fxml", popupController);
+        popupContent.setVisible(false);
+
+        final Popup testPopup = new Popup();
+        testPopup.getContent().add(popupContent);
+        // testPopup.setAutoFix(true); TODO test if useful
+        // DONT EVEN TRY REMOVING THESE PROPERTIES, TWO HOURS OF MY LIFE WASTED!!
+        testPopup.setAutoHide(false);
+        testPopup.setHideOnEscape(false);
+
+        // Bind position to bottom-left of window //
+
+        final Window window = App.getAppScenePane().getScene().getWindow();
+        
+        // Set position when height is first computed
+        popupContent.heightProperty().addListener((_, oldValue, newValue) -> {
+            // Only listen when height is first set
+            if(oldValue.doubleValue() != 0 || newValue.doubleValue() <= 0) return; 
+            final double HEIGHT = newValue.doubleValue();
+            
+            testPopup.setX(window.getX() + SPACING);
+            testPopup.setY(window.getY() + window.getHeight() - HEIGHT - SPACING);
+
+            window.xProperty().addListener((_, _, newX) -> testPopup.setX(newX.doubleValue() + SPACING));
+            window.yProperty().addListener((_, _, newY) -> testPopup.setY(newY.doubleValue() + window.getHeight() - HEIGHT - SPACING));
+            window.heightProperty().addListener((_, _, newHeight) -> testPopup.setY(window.getY() + newHeight.doubleValue() - HEIGHT - SPACING));
+        });
+
+        // This ensures that everything is actually computed
+        Platform.runLater(() ->{
+            popupContent.applyCss();
+            popupContent.layout();
+            testPopup.show(window);
+        });
+
+        // Animation and styling //
+
+        final FadeTransition disappearTransition = new FadeTransition(Duration.seconds(3), popupContent);
+        disappearTransition.setFromValue(1.0);
+        disappearTransition.setToValue(0.0);
+        disappearTransition.setCycleCount(1);
+        disappearTransition.setOnFinished(_ -> popupContent.setVisible(false));
+
+        IOManager.getInstance().savingProperty().addListener((_, _, newValue) -> {
+            switch (newValue) {
+                case SAVING -> {
+                    disappearTransition.stop();
+                    popupController.setState("saving", "-fx-color-element-bg");
+                    popupContent.setVisible(true);
+                    popupContent.setOpacity(1.0);
+                }
+
+                case SUCCESS, ERROR -> {
+                    if(newValue == SaveState.SUCCESS) {
+                        popupController.setState("success", "-fx-color-green");
+                    } else {
+                        popupController.setState("error", "-fx-color-red");
+                    }
+                    disappearTransition.playFromStart();
+                }
+            }
+        });
     }
 }

@@ -54,7 +54,7 @@ public class FirstRunController extends AbstractController {
         Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
 
         final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
-        langResources.bindTextProperty(firstRunTitle, "hi");
+        langResources.bindTextProperty(firstRunTitle, "first_run.title");
         langResources.bindTextProperty(firstRunDescTop, "first_run.desc.top");
         langResources.bindTextProperty(firstRunDescBtm, "first_run.desc.btm");
         langResources.bindTextProperty(firstRunCheckBox, "first_run.check_box");

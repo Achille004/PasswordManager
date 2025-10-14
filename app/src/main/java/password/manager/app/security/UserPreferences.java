@@ -80,7 +80,7 @@ public final class UserPreferences {
         isPasswordSet = true;
     }
 
-    public void set(@NotNull UserPreferences userPreferences) {
+    public synchronized void set(@NotNull UserPreferences userPreferences) {
         setLocale(userPreferences.getLocale());
         setSortingOrder(userPreferences.getSortingOrder());
 
@@ -107,12 +107,12 @@ public final class UserPreferences {
         sortingOrderProperty.set(sortingOrder);
     }
 
-    public @NotNull @JsonIgnore Boolean isLatestVersion() {
+    public synchronized @NotNull @JsonIgnore Boolean isLatestVersion() {
         return this.securityVersion == SecurityVersion.LATEST;
     }
 
-    public @NotNull Boolean verifyPassword(@Nullable String passwordToVerify) {
-        if (!isPasswordSet) throw new IllegalStateException("UserPreferences password not set");
+    public synchronized @NotNull Boolean verifyPassword(@Nullable String passwordToVerify) {
+        if (!isPasswordSet) return true; // No password set, so any password is valid
         if (passwordToVerify == null) return false;
 
         final boolean wasLatestSecurityVersion = isLatestVersion();
@@ -123,13 +123,13 @@ public final class UserPreferences {
         return res;
     }
 
-    public @NotNull Boolean setPasswordVerified(@Nullable String oldPassword, @NotNull String newPassword) {
+    public synchronized @NotNull Boolean setPasswordVerified(@Nullable String oldPassword, @NotNull String newPassword) {
         final boolean res = verifyPassword(oldPassword);
         if (res) setPassword(newPassword);
         return res;
     }
 
-    private void setPassword(@NotNull String password) {
+    private synchronized void setPassword(@NotNull String password) {
         final SecureRandom random = new SecureRandom();
         random.nextBytes(salt);
 

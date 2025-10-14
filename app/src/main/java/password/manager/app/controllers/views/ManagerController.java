@@ -140,10 +140,10 @@ public class ManagerController extends AbstractViewController {
         searchTimeline.playFrom(SEARCH_DELAY);
     }
 
-    private void setupAutoCompletion(ObservableList<Account> sortedAccountList) {
+    private void setupAutoCompletion(ObservableList<Account> accountList) {
         // Listen for changes in the account list and update suggestions
         ListChangeListener<Account> ACCOUNT_LIST_CHANGE_HANDLER = _ -> {
-            possibleSoftwares = sortedAccountList.stream()
+            possibleSoftwares = accountList.stream()
                     .map(Account::getSoftware)
                     .collect(Collectors.groupingBy(s -> s, Collectors.counting()))
                     .entrySet().stream()
@@ -151,7 +151,7 @@ public class ManagerController extends AbstractViewController {
                     .map(Entry::getKey)
                     .toList();
 
-            possibleUsernames = sortedAccountList.stream()
+            possibleUsernames = accountList.stream()
                     .map(Account::getUsername)
                     .collect(Collectors.groupingBy(s -> s, Collectors.counting()))
                     .entrySet().stream()
@@ -162,7 +162,7 @@ public class ManagerController extends AbstractViewController {
             // Trigger update of auto-completion suggestions by just incrementing the property
             suggestionsUpdateTrigger.set(suggestionsUpdateTrigger.get() + 1);
         };
-        sortedAccountList.addListener(ACCOUNT_LIST_CHANGE_HANDLER);
+        accountList.addListener(ACCOUNT_LIST_CHANGE_HANDLER);
 
         // Initial population
         ACCOUNT_LIST_CHANGE_HANDLER.onChanged(null);
@@ -190,10 +190,7 @@ public class ManagerController extends AbstractViewController {
         }));
         searchTimeline.setCycleCount(1);
 
-        searchField.textProperty().addListener((_, _, _) -> {
-            searchTimeline.stop();
-            searchTimeline.playFromStart();
-        });
+        searchField.textProperty().addListener((_, _, _) -> searchTimeline.playFromStart());
         searchField.setOnAction(_ -> {
             searchTimeline.stop();
             searchTimeline.playFrom(SEARCH_DELAY);
