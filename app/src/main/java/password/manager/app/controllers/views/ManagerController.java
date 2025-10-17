@@ -358,18 +358,21 @@ public class ManagerController extends AbstractViewController {
             // Force the correct size to prevent unwanted stretching
             editorPassword.setPrefSize(548.0, 40.0);
 
-            // Setup auto-completion for software and username fields
-            @SuppressWarnings("unchecked")
-            final AutoCompletionBinding<String>[] autoCompletionBindings = new AutoCompletionBinding[2];
-            autoCompletionBindings[0] = TextFields.bindAutoCompletion(editorSoftware, possibleSoftwares);
-            autoCompletionBindings[1] = TextFields.bindAutoCompletion(editorUsername, possibleUsernames);
-
-            suggestionsUpdateTrigger.addListener((_, _, _) -> {
-                autoCompletionBindings[0].dispose();
-                autoCompletionBindings[1].dispose();
-
+            // This un-lobotomizes the app on login (it hangs otherwise)
+            Platform.runLater(() -> {
+                // Setup auto-completion for software and username fields
+                @SuppressWarnings("unchecked")
+                final AutoCompletionBinding<String>[] autoCompletionBindings = new AutoCompletionBinding[2];
                 autoCompletionBindings[0] = TextFields.bindAutoCompletion(editorSoftware, possibleSoftwares);
                 autoCompletionBindings[1] = TextFields.bindAutoCompletion(editorUsername, possibleUsernames);
+
+                suggestionsUpdateTrigger.addListener((_, _, _) -> {
+                    autoCompletionBindings[0].dispose();
+                    autoCompletionBindings[1].dispose();
+
+                    autoCompletionBindings[0] = TextFields.bindAutoCompletion(editorSoftware, possibleSoftwares);
+                    autoCompletionBindings[1] = TextFields.bindAutoCompletion(editorUsername, possibleUsernames);
+                });
             });
 
             // Disable the delete button if this is the add editor
