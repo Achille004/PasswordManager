@@ -22,29 +22,35 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
+import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
 
+import password.manager.app.enums.SecurityVersion;
 import password.manager.app.security.Encrypter;
 
 class AppTest {
     @Test
-    void testAES() throws GeneralSecurityException {
-        String masterPassword = "logPass";
-        String s = "soft", u = "user", p = "pass";
+    void testAES() {
+        String masterPassword = "myTestPassword123!", password = "aintThisStrong?";
 
-        // Generate IV
+        // Generate salt and initialization vector
         byte[] iv = new byte[16];
-        SecureRandom random = new SecureRandom();
+        byte[] salt = new byte[16];
+
+        final SecureRandom random = new SecureRandom();
+        random.nextBytes(salt);
         random.nextBytes(iv);
 
-        // Generate salt
-        byte[] salt = (s + u).getBytes();
-
-        byte[] key = Encrypter.getKey(masterPassword, salt);
-
-        byte[] e = Encrypter.encryptAES(p, key, iv);
-        String d = Encrypter.decryptAES(e, key, iv);
-        assertEquals(p, d, "Decrypted password (" + d + ") doesn't match the original one (" + p + ")");
+        Arrays.asList(SecurityVersion.values()).forEach(securityVersion -> {
+            try {
+                byte[] key = securityVersion.getKey(masterPassword, salt);
+                byte[] encrypted = Encrypter.encryptAES(password, key, iv);
+                String decrypted = Encrypter.decryptAES(encrypted, key, iv);
+                assertEquals(password, decrypted, "Decrypted password (" + decrypted + ") doesn't match the original one (" + password + ")");
+            } catch (GeneralSecurityException e) {
+                fail("Encryption/Decryption failed: " + e.getMessage());
+            }
+        });
     }
 }

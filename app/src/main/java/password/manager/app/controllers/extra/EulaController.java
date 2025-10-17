@@ -21,25 +21,19 @@ package password.manager.app.controllers.extra;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import javafx.application.HostServices;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import password.manager.app.utils.IOManager;
+import password.manager.app.App;
+import password.manager.app.singletons.Logger;
 
 public class EulaController implements Initializable {
     public static final String FM_LINK = "https://github.com/Achille004", SS_LINK = "https://github.com/samustocco";
 
-    private final IOManager ioManager;
-    private final HostServices hostServices;
-
-    public EulaController(IOManager ioManager, HostServices hostServices) {
-        this.ioManager = ioManager;
-        this.hostServices = hostServices;
-    }
-
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
     }
 
     @FXML
@@ -53,6 +47,6 @@ public class EulaController implements Initializable {
     }
 
     private void browse(String uri) {
-        Thread.startVirtualThread(() -> hostServices.showDocument(uri));
+        Platform.runLater(() -> App.getAppHostServices().showDocument(uri));
     }
 }

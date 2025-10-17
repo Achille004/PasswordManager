@@ -18,7 +18,7 @@
 
 package password.manager.app.controllers;
 
-import static password.manager.app.utils.Utils.*;
+import static password.manager.app.Utils.*;
 
 import java.awt.Desktop;
 import java.io.IOException;
@@ -29,10 +29,10 @@ import java.util.ResourceBundle;
 
 import org.jetbrains.annotations.NotNull;
 
+import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.application.HostServices;
-import javafx.css.PseudoClass;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -41,46 +41,45 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.stage.Popup;
+import javafx.stage.Window;
 import javafx.util.Duration;
+import password.manager.app.App;
+import password.manager.app.controllers.extra.PopupContentController;
 import password.manager.app.controllers.views.AbstractViewController;
-import password.manager.app.controllers.views.DecrypterController;
-import password.manager.app.controllers.views.EncrypterController;
-import password.manager.app.controllers.views.HomeController;
+import password.manager.app.controllers.views.ManagerController;
 import password.manager.app.controllers.views.SettingsController;
-import password.manager.app.utils.IOManager;
-import password.manager.app.utils.Logger;
-import password.manager.app.utils.ObservableResourceFactory;
+import password.manager.app.singletons.IOManager;
+import password.manager.app.singletons.IOManager.SaveState;
+import password.manager.app.singletons.Logger;
 
 public class MainController extends AbstractController {
-    public static final PseudoClass PSEUDOCLASS_NOTCH = PseudoClass.getPseudoClass("notch");
     private static final String[] titleStages;
 
     static {
-        final String title = "Password Manager";
+        final String title = App.APP_NAME;
         final char[] lower = "abcdefghijklmnopqrstuvwxyz".toCharArray();
         final char[] upper = "ABCDEFGHIJKLMNOPQRTSUVWXYZ".toCharArray();
 
         final LinkedList<String> stages = new LinkedList<>();
         StringBuilder currString = new StringBuilder();
 
+        char[] target;
+        boolean isLower, isUpper;
         for (char c : title.toCharArray()) {
+            isLower = Character.isLowerCase(c);
+            isUpper = Character.isUpperCase(c);
+
+            if(!isLower && !isUpper) {
+                currString.append(c);
+                continue;
+            }
+
+            target = isLower ? lower : upper;
             for (int i = 0; i < 26; i++) {
-                if (Character.isLowerCase(c)) {
-                    stages.add(currString.toString() + lower[i]);
-                    if (lower[i] == c) {
-                        break;
-                    }
-                } else if (Character.isUpperCase(c)) {
-                    stages.add(currString.toString() + upper[i]);
-                    if (upper[i] == c) {
-                        break;
-                    }
-                } else {
-                    stages.add(currString.toString() + c);
-                    break;
-                }
+                stages.add(currString.toString() + target[i]);
+                if (target[i] == c) break;
             }
             currString.append(c);
         }
@@ -88,40 +87,47 @@ public class MainController extends AbstractController {
         titleStages = stages.toArray(new String[0]);
     }
 
-    public MainController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices) {
-        super(ioManager, langResources, hostServices);
-    }
+    private final Image settingsImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/icons/navbar/settings.png")));
+    private final Image backImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/icons/navbar/back.png")));
 
-    private Button lastSidebarButton = null;
-    private String lastMainTitleKey = "";
+    private boolean isSettingsOpen = false;
     private Timeline titleAnimation;
 
     @FXML
     private BorderPane mainPane;
 
     @FXML
-    private Label psmgTitle, mainTitle;
+    private Label psmgTitle;
 
     @FXML
-    private Button homeButton, folderButton;
+    private ImageView settingsButtonImageView;
+
+    @FXML
+    private Button folderButton;
 
     // Keep views cached once they are loaded
-    private AnchorPane homePane;
-    private GridPane encrypterPane, decrypterPane, settingsPane;
-    private AbstractViewController homeController, encrypterController, decrypterController, settingsController;
+    private Pane managerPane, settingsPane;
+    private AbstractViewController managerController, settingsController;
 
     public void initialize(URL location, ResourceBundle resources) {
+        Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
+
+        if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+            Logger.getInstance().addInfo("Unsupported action: Desktop.Action.OPEN");
+            folderButton.setVisible(false);
+        }
+
         titleAnimation = new Timeline();
         for (int i = 0; i < titleStages.length; i++) {
             final String str = titleStages[i];
             titleAnimation.getKeyFrames().add(new KeyFrame(Duration.millis(8 * i), _ -> psmgTitle.setText(str)));
         }
 
-        if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
-            Logger.getInstance().addInfo("Unsupported action: Desktop.Action.OPEN");
-            folderButton.setVisible(false);
-        }
-        homeButton(null);
+        managerController = new ManagerController();
+        managerPane = (Pane) loadFxml("/fxml/views/manager.fxml", managerController);
+
+        createAutosavePopup();
+        swapOnMainPane(managerController, managerPane);
     }
 
     public void mainTitleAnimation() {
@@ -130,55 +136,7 @@ public class MainController extends AbstractController {
     }
 
     @FXML
-    public void homeButton(ActionEvent event) {
-        if(homePane == null || homeController == null) {
-            Logger.getInstance().addInfo("Loading home pane...");
-            homeController = new HomeController(ioManager, langResources, hostServices);
-            homePane = (AnchorPane) loadFxml("/fxml/views/home.fxml", homeController);
-            triggerUiErrorIfNull(homePane, ioManager, langResources);
-            Logger.getInstance().addInfo("Success [home]");
-        }
-        sidebarButtonAction(null, homeController, homePane, "");
-    }
-
-    @FXML
-    public void encryptSidebarButton(ActionEvent event) {
-        if(encrypterPane == null || encrypterController == null) {
-            Logger.getInstance().addInfo("Loading encrypter pane...");
-            encrypterController = new EncrypterController(ioManager, langResources, hostServices);
-            encrypterPane = (GridPane) loadFxml("/fxml/views/encrypter.fxml", encrypterController);
-            triggerUiErrorIfNull(encrypterPane, ioManager, langResources);
-            Logger.getInstance().addInfo("Success [encrypter]");
-        }
-        sidebarButtonAction(event, encrypterController, encrypterPane, "encryption");
-    }
-
-    @FXML
-    public void decryptSidebarButton(ActionEvent event) {
-        if(decrypterPane == null || decrypterController == null) {
-            Logger.getInstance().addInfo("Loading decrypter pane...");
-            decrypterController = new DecrypterController(ioManager, langResources, hostServices);
-            decrypterPane = (GridPane) loadFxml("/fxml/views/decrypter.fxml", decrypterController);
-            triggerUiErrorIfNull(decrypterPane, ioManager, langResources);
-            Logger.getInstance().addInfo("Success [decrypter]");
-        }
-        sidebarButtonAction(event, decrypterController, decrypterPane, "decryption");
-    }
-
-    @FXML
-    public void settingsSidebarButton(ActionEvent event) {
-        if(settingsPane == null || settingsController == null) {
-            Logger.getInstance().addInfo("Loading settings pane...");
-            settingsController = new SettingsController(ioManager, langResources, hostServices);
-            settingsPane = (GridPane) loadFxml("/fxml/views/settings.fxml", settingsController);
-            triggerUiErrorIfNull(settingsPane, ioManager, langResources);
-            Logger.getInstance().addInfo("Success [settings]");
-        }
-        sidebarButtonAction(event, settingsController, settingsPane, "settings");
-    }
-
-    @FXML
-    public void folderSidebarButton(ActionEvent event) {
+    private void folderNavBarAction(ActionEvent event) {
         Thread.startVirtualThread(() -> {
             try {
                 Desktop.getDesktop().open(IOManager.FILE_PATH.toFile());
@@ -188,38 +146,95 @@ public class MainController extends AbstractController {
         });
     }
 
-    private void sidebarButtonAction(ActionEvent event, @NotNull AbstractViewController destinationController, Pane destinationPane, @NotNull String mainTitleKey) {
+    @FXML
+    public void settingsNavBarAction(ActionEvent event) {
+        // Load lazily
+        if(settingsPane == null || settingsController == null) {
+            settingsController = new SettingsController();
+            settingsPane = (Pane) loadFxml("/fxml/views/settings.fxml", settingsController);
+        }
+
+        isSettingsOpen = !isSettingsOpen;
+        if (isSettingsOpen) {
+            swapOnMainPane(settingsController, settingsPane);
+            settingsButtonImageView.setImage(backImage);
+        } else {
+            swapOnMainPane(managerController, managerPane);
+            settingsButtonImageView.setImage(settingsImage);
+        }
+    }
+
+    private void swapOnMainPane(@NotNull AbstractViewController destinationController, @NotNull Pane destinationPane) {
         // Show selected pane
         destinationController.reset();
         mainPane.centerProperty().set(destinationPane);
+    }
 
-        // Set main title
-        boolean isNotHome = !mainTitleKey.isBlank();
-        homeButton.setVisible(isNotHome);
-        mainTitle.setVisible(isNotHome);
-        langResources.bindTextProperty(mainTitle, mainTitleKey);
-
-        // Lowlight the previous button, if there is one
-        if (lastSidebarButton != null && lastSidebarButton.getStyleClass().contains("navBtn")) {
-            lastSidebarButton.pseudoClassStateChanged(PSEUDOCLASS_NOTCH, false);
-            lastSidebarButton.getChildrenUnmodifiable().filtered(node -> node instanceof ImageView).forEach(node -> {
-                ImageView imageView = (ImageView) node;
-                imageView.setImage(new Image(Objects.requireNonNull(getClass().getResource("/images/icons/sidebar/" + lastMainTitleKey + "-outlined.png")).toExternalForm()));
-            });
-        }
-
-        // Get and highlight the new button, if it's a navigation button
-        Button newSidebarButton = (event != null && event.getSource() instanceof Button btn) ? btn : null;
-        // Checking isNotHome is optional, but it can help avoid unnecessary processing.
-        if(isNotHome && newSidebarButton != null && newSidebarButton.getStyleClass().contains("navBtn")) {
-            newSidebarButton.pseudoClassStateChanged(PSEUDOCLASS_NOTCH, true);
-            newSidebarButton.getChildrenUnmodifiable().filtered(node -> node instanceof ImageView).forEach(node -> {
-                ImageView imageView = (ImageView) node;
-                imageView.setImage(new Image(Objects.requireNonNull(getClass().getResource("/images/icons/sidebar/" + mainTitleKey + "-solid.png")).toExternalForm()));
-            });
-        }
+    private void createAutosavePopup() {
+        final int SPACING = 20;
         
-        lastMainTitleKey = mainTitleKey;
-        lastSidebarButton = newSidebarButton;
+        final PopupContentController popupController = new PopupContentController();
+        final AnchorPane popupContent = (AnchorPane) loadFxml("/fxml/extra/popup_content.fxml", popupController);
+        popupContent.setVisible(false);
+
+        final Popup testPopup = new Popup();
+        testPopup.getContent().add(popupContent);
+        // testPopup.setAutoFix(true); TODO test if useful
+        // DONT EVEN TRY REMOVING THESE PROPERTIES, TWO HOURS OF MY LIFE WASTED!!
+        testPopup.setAutoHide(false);
+        testPopup.setHideOnEscape(false);
+
+        // Bind position to bottom-left of window //
+
+        final Window window = App.getAppScenePane().getScene().getWindow();
+        
+        // Set position when height is first computed
+        popupContent.heightProperty().addListener((_, oldValue, newValue) -> {
+            // Only listen when height is first set
+            if(oldValue.doubleValue() != 0 || newValue.doubleValue() <= 0) return; 
+            final double HEIGHT = newValue.doubleValue();
+            
+            testPopup.setX(window.getX() + SPACING);
+            testPopup.setY(window.getY() + window.getHeight() - HEIGHT - SPACING);
+
+            window.xProperty().addListener((_, _, newX) -> testPopup.setX(newX.doubleValue() + SPACING));
+            window.yProperty().addListener((_, _, newY) -> testPopup.setY(newY.doubleValue() + window.getHeight() - HEIGHT - SPACING));
+            window.heightProperty().addListener((_, _, newHeight) -> testPopup.setY(window.getY() + newHeight.doubleValue() - HEIGHT - SPACING));
+        });
+
+        // This ensures that everything is actually computed
+        Platform.runLater(() ->{
+            popupContent.applyCss();
+            popupContent.layout();
+            testPopup.show(window);
+        });
+
+        // Animation and styling //
+
+        final FadeTransition disappearTransition = new FadeTransition(Duration.seconds(3), popupContent);
+        disappearTransition.setFromValue(1.0);
+        disappearTransition.setToValue(0.0);
+        disappearTransition.setCycleCount(1);
+        disappearTransition.setOnFinished(_ -> popupContent.setVisible(false));
+
+        IOManager.getInstance().savingProperty().addListener((_, _, newValue) -> {
+            switch (newValue) {
+                case SAVING -> {
+                    disappearTransition.stop();
+                    popupController.setState("saving", "-fx-color-element-bg");
+                    popupContent.setVisible(true);
+                    popupContent.setOpacity(1.0);
+                }
+
+                case SUCCESS, ERROR -> {
+                    if(newValue == SaveState.SUCCESS) {
+                        popupController.setState("success", "-fx-color-green");
+                    } else {
+                        popupController.setState("error", "-fx-color-red");
+                    }
+                    disappearTransition.playFromStart();
+                }
+            }
+        });
     }
 }

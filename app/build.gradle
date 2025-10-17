@@ -1,3 +1,23 @@
+import java.security.MessageDigest
+
+/*
+    Password Manager: Manages accounts given by user with encrypted password.
+    Copyright (C) 2022-2025  Francesco Marras (2004marras@gmail.com)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
+ */
+
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     id 'java'
@@ -6,13 +26,12 @@ plugins {
 
     id 'org.openjfx.javafxplugin' version '0.1.0'
     id 'io.franzbecker.gradle-lombok' version '5.0.0'
-    id 'org.javamodularity.moduleplugin' version '1.8.13'
 
     // https://github.com/gradlex-org/java-module-dependencies
     id 'org.gradlex.java-module-dependencies' version '1.6.4'
 }
 
-project.version = '3.0.4'
+project.version = '3.1.0'
 
 repositories {
     // Use Maven Central for resolving dependencies.
@@ -29,15 +48,13 @@ mainModuleInfo {
 
 testModuleInfo {
     annotationProcessor 'lombok'
-    requiresStatic 'org.junit.jupiter.api'
-    requires 'org.junit.jupiter.engine'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
 java {
-    sourceCompatibility = JavaVersion.VERSION_24
+    sourceCompatibility = JavaVersion.VERSION_25
     toolchain {
-        languageVersion = JavaLanguageVersion.of(24)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -45,10 +62,24 @@ application {
     // Define the main class for the application.
     mainModule = 'password.manager.app'
     mainClass = 'password.manager.app.App'
+
+    // JVM arguments
+    applicationDefaultJvmArgs = [
+        '--enable-native-access=javafx.graphics',
+        '--add-exports', 'javafx.base/com.sun.javafx.event=org.controlsfx.controls'
+    ]
+}
+
+testing {
+    suites {
+        test {
+            useJUnitJupiter '5.13.4'
+        }
+    }
 }
 
 javafx {
-    version = '24.0.1'
+    version = '25'
     modules = [ 'javafx.base', 'javafx.controls', 'javafx.fxml', 'javafx.graphics', 'javafx.web' ]
 }
 
@@ -59,7 +90,11 @@ jar {
     }
 }
 
-def gpgSignable = project.hasProperty('signing.keyId') && project.hasProperty('signing.password') && project.hasProperty('signing.secretKeyRingFile')
+def gpgExists = new File('gpg.exe').exists()
+def gpgSignable = (gpgExists
+        && project.hasProperty('signing.keyId') 
+        && project.hasProperty('signing.password') 
+        && project.hasProperty('signing.secretKeyRingFile'))
 
 signing {
     if(gpgSignable) {
@@ -73,12 +108,17 @@ signing {
 
 def resourceDir = layout.projectDirectory.dir('src/main/resources')
 def compileDir = rootProject.layout.projectDirectory.dir('compiled')
+resourceDir.asFile.mkdirs()
+compileDir.asFile.mkdirs()
+
 def distDir = compileDir.dir('distributions')
 def installerDir = compileDir.dir('installers')
+distDir.asFile.mkdirs()
+installerDir.asFile.mkdirs()
 
 tasks.register('assemblePortables', Delete) {
     delete distDir
-    
+
     dependsOn tasks.distTar, tasks.distZip
     if(gpgSignable) {
         dependsOn tasks.signDistTar, tasks.signDistZip
@@ -127,10 +167,9 @@ tasks.register('assembleInstallers', FullJPackageTask) {
     licenseFile	= resourceDir.file('license.txt')
     module = 'password.manager.app/password.manager.app.App'
     modulePaths = ['build/jars']
-    resourceDir = resourceDir
     runtimeImage = System.getProperty('java.home')
     vendor = 'Francesco Marras'
-    
+
     windows {
         icon =  resourceDir.file('icon.ico')
         destination = installerDir.dir('windows')
@@ -148,7 +187,7 @@ tasks.register('assembleInstallers', FullJPackageTask) {
         destination = installerDir.dir('mac')
         macAppCategory  = 'security'
         macAppStore = false
-        macPackageIdentifier = 'PasswordManager-3.0.4'
+        macPackageIdentifier = 'PasswordManager-3.1.0'
         macPackageName = 'PasswordManager'
         macSigningKeyUserName = 'Francesco Marras'
     }
@@ -162,6 +201,8 @@ tasks.register('assembleInstallers', FullJPackageTask) {
         linuxRpmLicenseType = 'GPLv3'
         linuxShortcut = true
     }
+
+    finalizedBy tasks.generateChecksums
 }
 
 tasks.register('dryAssembleInstallers') {
@@ -171,7 +212,10 @@ tasks.register('dryAssembleInstallers') {
 
 tasks.register('generateChecksums') {
     def out = compileDir.file("checksums.txt").asFile
-    def digest = java.security.MessageDigest.getInstance('SHA-256')
+    out.parentFile.mkdirs()
+    out.createNewFile()
+
+    def digest = MessageDigest.getInstance('SHA-256')
     out.withWriter { w -> fileTree(compileDir).each { f ->
         if(!f.name.endsWith('.asc') && !f.name.endsWith('.txt')) {
             println "Generating checksum for ${f.name}"

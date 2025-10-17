@@ -21,22 +21,20 @@ package password.manager.app.controllers;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import javafx.application.HostServices;
 import javafx.beans.property.BooleanProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
-import password.manager.app.utils.IOManager;
-import password.manager.app.utils.ObservableResourceFactory;
-import password.manager.lib.ReadablePasswordField;
+import password.manager.app.singletons.IOManager;
+import password.manager.app.singletons.Logger;
+import password.manager.app.singletons.ObservableResourceFactory;
+import password.manager.lib.ReadablePasswordFieldWithStr;
 
 public class FirstRunController extends AbstractController {
     private final BooleanProperty switchToMain;
 
-    public FirstRunController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices, BooleanProperty switchToMain) {
-        super(ioManager, langResources, hostServices);
+    public FirstRunController(BooleanProperty switchToMain) {
         this.switchToMain = switchToMain;
     }
 
@@ -44,7 +42,7 @@ public class FirstRunController extends AbstractController {
     private Label firstRunTitle, firstRunDescTop, firstRunDescBtm, firstRunTermsCred, firstRunDisclaimer;
 
     @FXML
-    private ReadablePasswordField firstRunPassword;
+    private ReadablePasswordFieldWithStr firstRunPassword;
 
     @FXML
     private CheckBox firstRunCheckBox;
@@ -52,11 +50,11 @@ public class FirstRunController extends AbstractController {
     @FXML
     private Button firstRunSubmitBtn;
 
-    @FXML
-    private ProgressBar firstRunPassStr;
-
     public void initialize(URL location, ResourceBundle resources) {
-        langResources.bindTextProperty(firstRunTitle, "hi");
+        Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
+
+        final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
+        langResources.bindTextProperty(firstRunTitle, "first_run.title");
         langResources.bindTextProperty(firstRunDescTop, "first_run.desc.top");
         langResources.bindTextProperty(firstRunDescBtm, "first_run.desc.btm");
         langResources.bindTextProperty(firstRunCheckBox, "first_run.check_box");
@@ -64,19 +62,21 @@ public class FirstRunController extends AbstractController {
         langResources.bindTextProperty(firstRunSubmitBtn, "lets_go");
         langResources.bindTextProperty(firstRunDisclaimer, "first_run.disclaimer");
 
-        firstRunPassword.bindPasswordStrength(firstRunPassStr);
         firstRunPassword.setOnAction(_ -> doFirstRun());
-        firstRunPassword.sceneProperty().addListener((obs, oldScene, newScene) -> {
+        firstRunPassword.sceneProperty().addListener((_, _, newScene) -> {
             if (newScene != null) {
                 firstRunPassword.requestFocus();
             }
         });
+
+        // Force the correct size to prevent unwanted stretching
+        firstRunPassword.setPrefSize(560.0, 40.0);
     }
 
     @FXML
     public void doFirstRun() {
         if (checkTextFields(firstRunPassword.getTextField()) && firstRunCheckBox.isSelected()) {
-            ioManager.changeMasterPassword(firstRunPassword.getText());
+            IOManager.getInstance().changeMasterPassword(firstRunPassword.getText().strip());
             switchToMain.set(true);
         }
     }

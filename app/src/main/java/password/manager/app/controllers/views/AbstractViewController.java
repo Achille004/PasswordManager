@@ -18,15 +18,8 @@
 
 package password.manager.app.controllers.views;
 
-import javafx.application.HostServices;
 import password.manager.app.controllers.AbstractController;
-import password.manager.app.utils.IOManager;
-import password.manager.app.utils.ObservableResourceFactory;
 
 public abstract class AbstractViewController extends AbstractController {
-    protected AbstractViewController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices) {
-        super(ioManager, langResources, hostServices);
-    }
-
     public abstract void reset();
 }

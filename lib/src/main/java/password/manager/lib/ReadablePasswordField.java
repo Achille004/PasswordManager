@@ -1,6 +1,22 @@
-package password.manager.lib;
+/*
+    Password Manager: Manages accounts given by user with encrypted password.
+    Copyright (C) 2022-2025  Francesco Marras (2004marras@gmail.com)
 
-import static password.manager.lib.Utils.*;
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
+ */
+
+package password.manager.lib;
 
 import java.io.IOException;
 import java.net.URL;
@@ -8,33 +24,25 @@ import java.util.Objects;
 import java.util.ResourceBundle;
 
 import lombok.Getter;
-import org.jetbrains.annotations.NotNull;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.control.PasswordField;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.util.Duration;
 
-public class ReadablePasswordField extends AnchorPane implements Initializable {
+public class ReadablePasswordField extends AnchorPane implements Initializable, PasswordInputControl {
 
-    private final Image showingImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/readablePasswordField/open-eye.png")));
-    private final Image hiddenImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/readablePasswordField/closed-eye.png")));
+    private final Image showingImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/icons/open-eye.png")));
+    private final Image hiddenImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/icons/closed-eye.png")));
 
     private final BooleanProperty readable = new SimpleBooleanProperty(false);
 
@@ -83,9 +91,6 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
         });
 
         imageView.addEventFilter(MouseEvent.MOUSE_PRESSED, _ -> toggleReadable());
-        // imageView.addEventFilter(MouseEvent.MOUSE_PRESSED, _ -> setReadable(true));
-        // imageView.addEventFilter(MouseEvent.MOUSE_RELEASED, _ -> setReadable(false));
-
         imageView.setImage(hiddenImage);
     }
 
@@ -165,55 +170,5 @@ public class ReadablePasswordField extends AnchorPane implements Initializable {
         } else {
             passwordField.requestFocus();
         }
-    }
-
-    public void bindPasswordStrength(@NotNull ProgressBar progressBar) {
-        Timeline[] timeline = new Timeline[1];
-        timeline[0] = null;
-
-        ChangeListener<String> listener = (_, _, newValue) -> {
-            double passwordStrength = passwordStrength(newValue);
-            passwordStrength = Math.max(20d, passwordStrength);
-            passwordStrength = Math.min(50d, passwordStrength);
-
-            double initialProgress = progressBar.getProgress();
-            double progress = (passwordStrength - 20) / 30;
-
-            if(progress == initialProgress) {
-                return;
-            }
-
-            Node bar = progressBar.lookup(".bar");
-            if(bar == null) {
-                return;
-            }
-
-            KeyFrame[] keyFrames = new KeyFrame[200];
-            for (int i = 0; i < 200; i++) {
-                double curProg = initialProgress + (progress - initialProgress) * i / 200;
-                keyFrames[i] = new KeyFrame(Duration.millis(i),
-                        new KeyValue(progressBar.progressProperty(), curProg),
-                        new KeyValue(bar.styleProperty(), "-fx-background-color:" + passwordStrengthGradient(curProg) + ";")
-                );
-            }
-
-            if (timeline[0] != null) {
-                timeline[0].stop();
-            }
-            
-            timeline[0] = new Timeline(keyFrames);
-            timeline[0].play();
-        };
-
-        // Listen for text changes
-        textField.textProperty().addListener(listener);
-
-        // Trigger initial update once the ProgressBar skin is ready
-        // This is a workaround for the fact that the skin may not be ready immediately
-        progressBar.skinProperty().addListener((_, _, newSkin) -> {
-            if (newSkin != null) {
-                listener.changed(textField.textProperty(), "", textField.getText());
-            }
-        });
     }
 }

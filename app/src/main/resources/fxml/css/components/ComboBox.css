@@ -1,0 +1,27 @@
+ComboBox {
+  -fx-background-color: -fx-color-element-bg;
+  -fx-border-color: -fx-color-grey;
+  -fx-border-radius: 3deg;
+}
+
+ComboBox>.list-cell {
+  -fx-text-fill: -fx-color-text;
+}
+
+ComboBox .combo-box-popup>.list-view {
+  -fx-background-color: -fx-color-element-bg;
+  -fx-border-color: -fx-color-grey;
+  -fx-border-radius: 4deg;
+}
+
+ComboBox .combo-box-popup>.list-view>.virtual-flow>.clipped-container>.sheet>.list-cell {
+  -fx-background-color: -fx-color-element-bg;
+  -fx-text-fill: -fx-color-text;
+  -fx-border-radius: 4deg;
+}
+
+ComboBox .combo-box-popup>.list-view>.virtual-flow>.clipped-container>.sheet>.list-cell:filled:hover,
+ComboBox .combo-box-popup>.list-view>.virtual-flow>.clipped-container>.sheet>.list-cell:filled:selected {
+  -fx-background-color: -fx-color-background;
+  -fx-border-radius: 4deg;
+}

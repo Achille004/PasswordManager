@@ -23,22 +23,20 @@ import java.util.ResourceBundle;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.application.HostServices;
 import javafx.beans.property.BooleanProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.util.Duration;
-import password.manager.app.utils.IOManager;
-import password.manager.app.utils.ObservableResourceFactory;
+import password.manager.app.singletons.IOManager;
+import password.manager.app.singletons.Logger;
+import password.manager.app.singletons.ObservableResourceFactory;
 import password.manager.lib.ReadablePasswordField;
 
 public class LoginController extends AbstractController {
     private final BooleanProperty switchToMain;
 
-    public LoginController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices,
-            BooleanProperty switchToMain) {
-        super(ioManager, langResources, hostServices);
+    public LoginController(BooleanProperty switchToMain) {
         this.switchToMain = switchToMain;
     }
 
@@ -51,24 +49,25 @@ public class LoginController extends AbstractController {
     @FXML
     private Button loginSubmitBtn;
 
-    private Timeline wrongPasswordTimeline;
+    final private Timeline wrongPasswordTimeline =  new Timeline(
+            new KeyFrame(Duration.ZERO, _ -> {
+                loginSubmitBtn.setDisable(true);
+                loginSubmitBtn.setStyle("-fx-border-color: -fx-color-red");
+            }),
+            new KeyFrame(Duration.seconds(1), _ -> {
+                loginSubmitBtn.setDisable(false);
+                clearStyle(loginSubmitBtn);
+            }));
 
     public void initialize(URL location, ResourceBundle resources) {
-        wrongPasswordTimeline = new Timeline(
-                new KeyFrame(Duration.ZERO, _ -> {
-                    loginSubmitBtn.setDisable(true);
-                    loginSubmitBtn.setStyle("-fx-border-color: #ff5f5f");
-                }),
-                new KeyFrame(Duration.seconds(1), _ -> {
-                    loginSubmitBtn.setDisable(false);
-                    clearStyle(loginSubmitBtn);
-                }));
+        Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
 
-        langResources.bindTextProperty(loginTitle, "welcome_back");
+        final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
+        langResources.bindTextProperty(loginTitle, "login.title");
         langResources.bindTextProperty(loginSubmitBtn, "lets_go");
 
         loginPassword.setOnAction(_ -> doLogin());
-        loginPassword.sceneProperty().addListener((obs, oldScene, newScene) -> {
+        loginPassword.sceneProperty().addListener((_, _, newScene) -> {
             if (newScene != null) {
                 loginPassword.requestFocus();
             }
@@ -79,9 +78,9 @@ public class LoginController extends AbstractController {
     public void doLogin() {
         if (checkTextFields(loginPassword.getTextField())) {
             wrongPasswordTimeline.stop();
-            ioManager.authenticate(loginPassword.getText());
+            IOManager.getInstance().authenticate(loginPassword.getText().strip());
 
-            if (ioManager.isAuthenticated()) {
+            if (IOManager.getInstance().isAuthenticated()) {
                 switchToMain.set(true);
             } else {
                 wrongPasswordTimeline.playFromStart();

@@ -16,7 +16,7 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package password.manager.app.utils;
+package password.manager.app.singletons;
 
 import java.util.ResourceBundle;
 
@@ -26,20 +26,33 @@ import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.control.Labeled;
+import javafx.stage.Stage;
 
 public final class ObservableResourceFactory {
-    private final ObjectProperty<ResourceBundle> resources = new SimpleObjectProperty<>();
+    private final ObjectProperty<ResourceBundle> resources;
+
+    private ObservableResourceFactory(ResourceBundle resources) {
+        this.resources = new SimpleObjectProperty<>(resources);
+    }
+
+    private ObservableResourceFactory(String bundleName) {
+        this(ResourceBundle.getBundle(bundleName));
+    }
 
     public ObjectProperty<ResourceBundle> resourcesProperty() {
         return resources;
     }
 
     public ResourceBundle getResources() {
-        return resourcesProperty().get();
+        return resources.get();
     }
 
     public void setResources(ResourceBundle resources) {
         resourcesProperty().set(resources);
+    }
+
+    public void setResources(String bundleName) {
+        this.setResources(ResourceBundle.getBundle(bundleName));
     }
 
     public StringBinding getStringBinding(String key) {
@@ -66,4 +79,22 @@ public final class ObservableResourceFactory {
             field.textProperty().bind(getStringBinding(key));
         }
     }
+
+    public void bindTitleProperty(@NotNull Stage stage, @NotNull String key) {
+        if (key.isBlank()) {
+            stage.titleProperty().unbind();
+        } else {
+            stage.titleProperty().bind(getStringBinding(key));
+        }
+    }
+
+    // #region Singleton methods
+    public static synchronized void createInstance(String bundleName) throws IllegalStateException {
+        Singletons.register(ObservableResourceFactory.class, new ObservableResourceFactory(bundleName));
+    }
+
+    public static ObservableResourceFactory getInstance() {
+        return Singletons.get(ObservableResourceFactory.class);
+    }
+    // #endregion
 }

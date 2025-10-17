@@ -16,7 +16,7 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package password.manager.app.utils;
+package password.manager.app;
 
 import java.awt.Desktop;
 import java.io.File;
@@ -28,28 +28,38 @@ import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
 import java.util.Locale;
+import java.util.Objects;
 
+import javafx.scene.layout.Pane;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.SortedList;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import password.manager.app.singletons.Logger;
+import password.manager.app.singletons.ObservableResourceFactory;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.DialogPane;
+import javafx.scene.control.ListView;
 
 public final class Utils {
+    private Utils() {} // Prevent instantiation
+
     public static final Locale[] SUPPORTED_LOCALE;
     public static final Locale DEFAULT_LOCALE;
 
     static {
         SUPPORTED_LOCALE = new Locale[] { Locale.ENGLISH, Locale.ITALIAN };
 
-        Locale systemLang = Locale.forLanguageTag(Locale.getDefault().getLanguage());
+        final Locale systemLang = Locale.forLanguageTag(Locale.getDefault().getLanguage());
         DEFAULT_LOCALE = Arrays.asList(SUPPORTED_LOCALE).contains(systemLang)
                 ? systemLang
                 : Locale.ENGLISH;
@@ -64,24 +74,24 @@ public final class Utils {
     }
 
     /**
-     * Returns the selected index in a Combo Box with a first blank option. If
+     * Returns the selected index in a ListView with a first blank option. If
      * the value is -1, the selected index is the blank one.
      *
-     * @param comboBox The combo box to extract the index from.
+     * @param listView The {@code ListView} to extract the index from.
      * @return The index of the current selected item.
      */
-    public static <T> int selectedComboBoxIndex(@NotNull ComboBox<T> comboBox) {
-        return comboBox.getSelectionModel().getSelectedIndex();
+    public static <T> int selectedListViewIndex(@NotNull ListView<T> listView) {
+        return listView.getSelectionModel().getSelectedIndex();
     }
 
     /**
-     * Returns the selected item in a Combo Box.
+     * Returns the selected item in a ListView.
      *
-     * @param comboBox The combo box to extract the index from.
+     * @param listView The ListView to extract the index from.
      * @return The index of the current selected item.
      */
-    public static <T> T selectedComboBoxItem(@NotNull ComboBox<T> comboBox) {
-        return comboBox.getSelectionModel().getSelectedItem();
+    public static <T> T selectedListViewItem(@NotNull ListView<T> listView) {
+        return listView.getSelectionModel().getSelectedItem();
     }
 
     /**
@@ -93,17 +103,15 @@ public final class Utils {
      * @return The index.
      */
     public static @NotNull String addZerosToIndex(@NotNull Integer listSize, @NotNull Integer index) {
-        int listDigits = (int) Math.log10(listSize) + 1;
+        final int listDigits = (int) Math.log10(listSize) + 1;
         return String.format("%0" + listDigits + "d", index);
     }
 
     public static String byteToBase64(byte[] src) {
-        // Base64-encode the encrypted password for a readable representation
         return BASE64ENC.encodeToString(src);
     }
 
     public static byte[] base64ToByte(@NotNull String src) {
-        // Base64-encode the encrypted password for a readable representation
         return BASE64DEC.decode(src);
     }
 
@@ -119,11 +127,11 @@ public final class Utils {
         return alert;
     }
 
-    public static FileWriter getFileWriter(@NotNull Path path, @NotNull Boolean append) {
+    public static @Nullable FileWriter getFileWriter(@NotNull Path path, @NotNull Boolean append) {
         return getFileWriter(path.toFile(), append);
     }
 
-    public static FileWriter getFileWriter(@NotNull File file, @NotNull Boolean append) {
+    public static @Nullable FileWriter getFileWriter(@NotNull File file, @NotNull Boolean append) {
         try {
             return new FileWriter(file, append);
         } catch (IOException e) {
@@ -131,23 +139,40 @@ public final class Utils {
         }
     }
 
-    public static void triggerUiErrorIfNull(Object pane, @NotNull IOManager ioManager, @NotNull ObservableResourceFactory langResources) {
-        if(pane == null) {
-            // Since it's a one-time error, just create it during the error process
-            Alert alert = new Alert(AlertType.ERROR, langResources.getValue("ui_error"), ButtonType.YES, ButtonType.NO);
-            setDefaultButton(alert, ButtonType.NO);
+    public static @NotNull Parent loadFxml(@NotNull String path, @NotNull Initializable controller) {
+        final String uiElementPath = path.replace("/fxml/", "").replace(".fxml", "");
+        Logger.getInstance().addDebug("Loading [" + uiElementPath + "] pane...");
 
-            alert.showAndWait();
-            if (alert.getResult() == ButtonType.YES) {
-                Thread.startVirtualThread(() -> {
-                    try {
-                        Desktop.getDesktop().open(Logger.getInstance().getLoggingPath().toFile());
-                    } catch (IOException e) {
-                        Logger.getInstance().addError(e);
-                    }
-                });
-            }
-            Platform.exit();
+        Parent parent = null;
+        try {
+            final FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(Utils.class.getResource(path)));
+            loader.setController(controller);
+            parent = loader.load();
+        } catch (IOException e) {
+            Logger.getInstance().addError(e);
         }
+
+        final String outcome = (parent != null) ? "Success" : "Error";
+        Logger.getInstance().addDebug(outcome + " [" + uiElementPath + "]");
+
+        if(parent != null) return parent;
+
+        // Since it's a one-time error, just create it during the error process
+        final String errMsg = ObservableResourceFactory.getInstance().getValue("ui_error");
+        final Alert alert = new Alert(AlertType.ERROR, errMsg, ButtonType.YES, ButtonType.NO);
+        setDefaultButton(alert, ButtonType.NO);
+
+        alert.showAndWait();
+        if (alert.getResult() == ButtonType.YES) {
+            Thread.startVirtualThread(() -> {
+                try {
+                    Desktop.getDesktop().open(Logger.getInstance().getLoggingPath().toFile());
+                } catch (IOException e) {
+                    Logger.getInstance().addError(e);
+                }
+            });
+        }
+        Platform.exit(); // Exit gracefully (saves data, etc.)
+        return new Pane(); // return dummy pane
     }
 }

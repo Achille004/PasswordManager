@@ -16,17 +16,12 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package password.manager.app.inerfaces;
+package password.manager.lib;
 
-import java.util.Objects;
-import java.util.function.Function;
-
-@FunctionalInterface
-public interface TriFunction<T, U, V, R> {
-    R apply(T t, U u, V v) throws Exception;
-
-    default <S> TriFunction<T, U, V, S> andThen(Function<? super R, ? extends S> after) {
-        Objects.requireNonNull(after);
-        return (T t, U u, V v) -> after.apply(apply(t, u, v));
-    }
+public interface PasswordInputControl {
+    String getText();
+    void setText(String text);
+    void setReadable(boolean readable);
+    boolean isReadable();
+    void requestFocus();
 }

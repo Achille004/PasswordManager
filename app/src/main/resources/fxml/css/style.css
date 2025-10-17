@@ -1,0 +1,128 @@
+/* https://gist.github.com/maxd/63691840fc372f22f470 */
+
+/* FONT */
+
+.label,
+.text-area,
+.text-field,
+.button,
+.check-box {
+  -fx-font-family: "Roboto Regular";
+  -fx-text-fill: -fx-color-text;
+  -fx-text-inner-color: -fx-color-text;
+}
+
+.label,
+.text-area,
+.button {
+  -fx-font-size: 18px;
+}
+
+.title {
+  -fx-font-family: "Charm Bold";
+  -fx-font-size: 48px;
+}
+
+.bold {
+  -fx-font-family: "Roboto Bold";
+  -fx-font-size: 18px;
+}
+
+.bold-italic {
+  -fx-font-family: "Roboto Bold Italic";
+  -fx-font-size: 18px;
+}
+
+.italic {
+  -fx-font-family: "Roboto Italic";
+  -fx-font-size: 18px;
+}
+
+.sz14 {
+  -fx-font-size: 14px;
+}
+
+.sz24 {
+  -fx-font-size: 24px;
+}
+
+.sz36 {
+  -fx-font-size: 36px;
+}
+
+.green-text {
+  -fx-text-fill: -fx-color-green;
+}
+
+.light-grey-text {
+  -fx-text-fill: -fx-color-grey;
+}
+
+/* COMPONENTS */
+
+AnchorPane,
+BorderPane,
+GridPane {
+  -fx-background-color: -fx-color-background;
+}
+
+TextField,
+PasswordField {
+  -fx-background-color: -fx-color-element-bg;
+  -fx-border-color: -fx-color-grey;
+  -fx-border-radius: 3deg;
+}
+
+Button {
+  -fx-background-color: transparent;
+  -fx-background-radius: 8deg; 
+}
+
+Button:focused {
+  -fx-focus-color: transparent; 
+}
+
+CheckBox .box {
+  /* background color of unselected checkbox */
+  -fx-background-color: -fx-color-element-bg;
+  -fx-border-color: -fx-color-grey;
+  -fx-border-radius: 4deg;
+}
+CheckBox:selected .box .mark {
+  /* modify mark color */
+  -fx-background-color: -fx-color-grey;
+}
+
+Separator .line {
+  -fx-background-color: -fx-color-element-bg;
+  -fx-pref-height: 2px;
+  -fx-border-color: null;
+}
+
+/* CLASSES */
+
+.titlebar {
+  -fx-background-color: -fx-color-green;
+}
+
+.navbar {
+  -fx-border-color: -fx-color-element-bg;
+  -fx-border-width: 0 2px 0 0;
+}
+
+.green-button {
+  -fx-text-inner-color: -fx-color-text;
+  -fx-background-color: none;
+  -fx-border-color: -fx-color-green;
+  -fx-border-width: 3px;
+  -fx-border-radius: 8deg;
+}
+
+.editor-button {
+  -fx-background-color: -fx-color-grey;
+  -fx-background-radius: 8deg;
+}
+
+.eula-text:hover {
+  -fx-underline: true;
+}

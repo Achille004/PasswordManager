@@ -16,13 +16,15 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package password.manager.app.utils;
+package password.manager.app.singletons;
 
-import static password.manager.app.utils.Utils.*;
+import static password.manager.app.Utils.*;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -34,14 +36,26 @@ import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
 
-import lombok.Getter;
+import password.manager.app.App;
 
 public final class Logger {
-    private static final String FOLDER_PREFIX, LOG_FILE_NAME, STACKTRACE_FILE_NAME;
-    private static final int MAX_LOG_FILES;
+    public static final String FOLDER_PREFIX, LOG_FILE_NAME, STACKTRACE_FILE_NAME;
+    public static final int MAX_LOG_FILES;
 
-    private static final DateTimeFormatter FILE_DTF;
-    private static final DateTimeFormatter DTF;
+    private static final DateTimeFormatter FILE_DTF, MSG_DTF;
+
+    private static final String INITIAL_MESSAGE = String.format("""
+    =========== %s %s by Francesco Marras ===========
+
+                            %s
+
+              --- Debug          >>> Info          !!! Error
+
+            WARNING: Debug entries may contain sensitive data!
+
+    ==================================================================
+
+    """, App.APP_NAME, App.APP_VERSION, "%s");
 
     static {
         FOLDER_PREFIX = "log_";
@@ -49,26 +63,14 @@ public final class Logger {
         STACKTRACE_FILE_NAME = "stacktrace.log";
         MAX_LOG_FILES = 5;
 
-        FILE_DTF = DateTimeFormatter.ofPattern("yyyy.MM.dd_HH.mm.ss");
-        DTF = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.MEDIUM);
+        FILE_DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
+        MSG_DTF = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.MEDIUM);
     }
 
     private final Path currPath;
     private final FileWriter logWriter, stacktraceWriter;
 
-    private static @Getter Logger instance = null;
-
-    /**
-     * Creates the singleton Logger.
-     */
-    public static synchronized void createInstance(Path baseLogPath) throws IllegalStateException {
-        if (instance != null) {
-            throw new IllegalStateException("Logger instance already created");
-        }
-        instance = new Logger(baseLogPath);
-    }
-
-    public Logger(Path filePath) {
+    private Logger(Path filePath) {
         rotateLogs(filePath);
 
         this.currPath = filePath.resolve(FOLDER_PREFIX + FILE_DTF.format(LocalDateTime.now()));
@@ -79,27 +81,41 @@ public final class Logger {
 
         stacktraceWriter = getFileWriter(currPath.resolve(STACKTRACE_FILE_NAME), false);
         Objects.requireNonNull(stacktraceWriter, "stacktraceWriter must not be null");
+
+        final String MSG = String.format(INITIAL_MESSAGE, MSG_DTF.format(LocalDateTime.now()));
+        write(logWriter, new StringBuilder(MSG));
     }
 
     public Path getLoggingPath() {
         return currPath;
     }
 
-    public @NotNull Boolean addInfo(String str) {
+    public void addDebug(String str) {
         StringBuilder logStrBuilder = new StringBuilder();
         logStrBuilder
-                .append(DTF.format(LocalDateTime.now()))
+                .append(MSG_DTF.format(LocalDateTime.now()))
+                .append(" --- ")
+                .append(str)
+                .append("\n");
+
+        write(logWriter, logStrBuilder);
+    }
+
+    public void addInfo(String str) {
+        StringBuilder logStrBuilder = new StringBuilder();
+        logStrBuilder
+                .append(MSG_DTF.format(LocalDateTime.now()))
                 .append(" >>> ")
                 .append(str)
                 .append("\n");
 
-        return write(logWriter, logStrBuilder);
+        write(logWriter, logStrBuilder);
     }
 
-    public @NotNull Boolean addError(@NotNull Throwable e) {
+    public void addError(@NotNull Throwable e) {
         StringBuilder logStrBuilder = new StringBuilder();
         logStrBuilder
-                .append(DTF.format(LocalDateTime.now()))
+                .append(MSG_DTF.format(LocalDateTime.now()))
                 .append(" !!! An exception has been thrown. See '")
                 .append(STACKTRACE_FILE_NAME)
                 .append("' for details.\n");
@@ -107,19 +123,24 @@ public final class Logger {
         // Write the stack trace to the stacktrace log file
         StringBuilder stacktraceStrBuilder = new StringBuilder();
         stacktraceStrBuilder
-                .append(DTF.format(LocalDateTime.now()))
+                .append(MSG_DTF.format(LocalDateTime.now()))
                 .append(" => Exception thrown while executing '")
                 .append(getCurrentMethodName(1))
                 .append("', follows error and full stack trace:\n");
-        stacktraceStrBuilder.append(e.getClass().getName())
-                .append(": ")
-                .append(e.getMessage())
-                .append("\n");
-        for (StackTraceElement element : e.getStackTrace()) {
-            stacktraceStrBuilder.append("        ").append(element).append('\n');
+
+        try {
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            stacktraceStrBuilder.append(sw).append("\n");
+            pw.close();
+            sw.close();
+        } catch (IOException e1) {
+            e1.printStackTrace();
         }
 
-        return write(logWriter, logStrBuilder) && write(stacktraceWriter, stacktraceStrBuilder);
+        write(logWriter, logStrBuilder);
+        write(stacktraceWriter, stacktraceStrBuilder);
     }
 
     private static @NotNull String getCurrentMethodName(@NotNull Integer walkDist) {
@@ -134,7 +155,7 @@ public final class Logger {
 
     public void closeStreams() {
         try {
-            addInfo("Closing logger streams...");
+            addInfo("Closing logger streams");
             logWriter.close();
             stacktraceWriter.close();
         } catch (IOException e) {
@@ -142,14 +163,12 @@ public final class Logger {
         }
     }
 
-    private @NotNull Boolean write(@NotNull FileWriter writer, @NotNull StringBuilder builder) {
+    private void write(@NotNull FileWriter writer, @NotNull StringBuilder builder) {
         try {
             writer.write(builder.toString());
             writer.flush();
-            return true;
         } catch (IOException e) {
             e.printStackTrace();
-            return false;
         }
     }
 
@@ -180,4 +199,14 @@ public final class Logger {
                  .forEach(File::delete);
         }
     }
+
+    // #region Singleton methods
+    public static synchronized void createInstance(Path baseLogPath) throws IllegalStateException {
+        Singletons.register(Logger.class, new Logger(baseLogPath));
+    }
+
+    public static @NotNull Logger getInstance() {
+        return Singletons.get(Logger.class);
+    }
+    // #endregion
 }

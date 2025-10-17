@@ -18,7 +18,7 @@
 
 package password.manager.app.controllers.views;
 
-import static password.manager.app.utils.Utils.*;
+import static password.manager.app.Utils.*;
 
 import java.net.URL;
 import java.text.Collator;
@@ -30,27 +30,24 @@ import java.util.function.Function;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import javafx.application.HostServices;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import password.manager.app.Utils;
 import password.manager.app.enums.SortingOrder;
-import password.manager.app.utils.IOManager;
-import password.manager.app.utils.ObservableResourceFactory;
-import password.manager.app.utils.Utils;
-import password.manager.lib.ReadablePasswordField;
+import password.manager.app.singletons.IOManager;
+import password.manager.app.singletons.Logger;
+import password.manager.app.singletons.ObservableResourceFactory;
+import password.manager.lib.ReadablePasswordFieldWithStr;
 
 public class SettingsController extends AbstractViewController {
-    public SettingsController(IOManager ioManager, ObservableResourceFactory langResources, HostServices hostServices) {
-        super(ioManager, langResources, hostServices);
-    }
 
     @FXML
     private ComboBox<Locale> settingsLangCB;
@@ -58,74 +55,77 @@ public class SettingsController extends AbstractViewController {
     private ComboBox<SortingOrder> settingsOrderCB;
 
     @FXML
-    private ReadablePasswordField settingsMasterPassword;
+    private ReadablePasswordFieldWithStr settingsMasterPassword;
 
     @FXML
     private Label settingsLangLbl, settingsSortingOrderLbl, settingsMasterPasswordLbl, settingsMasterPasswordDesc, settingsDriveConnLbl, wip;
 
-    @FXML
-    private ProgressBar settingsLoginPassStr;
-
     public void initialize(URL location, ResourceBundle resources) {
-        ObjectProperty<Locale> localeProperty = ioManager.getUserPreferences().getLocaleProperty();
-        ObjectProperty<SortingOrder> sortingOrderProperty = ioManager.getUserPreferences().getSortingOrderProperty();
+        Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
 
-        langResources.bindTextProperty(settingsLangLbl, "language");
-        langResources.bindTextProperty(settingsSortingOrderLbl, "sorting_ord");
-        langResources.bindTextProperty(settingsMasterPasswordLbl, "master_pas");
-        langResources.bindTextProperty(settingsMasterPasswordDesc, "master_pas.desc");
-        langResources.bindTextProperty(settingsDriveConnLbl, "drive_con");
-        langResources.bindTextProperty(wip, "wip");
+        final IOManager ioManager = IOManager.getInstance();
+        final ObjectProperty<Locale> localeProperty = ioManager.getUserPreferences().getLocaleProperty();
+        final ObjectProperty<SortingOrder> sortingOrderProperty = ioManager.getUserPreferences().getSortingOrderProperty();
+
+        final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
+        langResources.bindTextProperty(settingsLangLbl, "settings.language");
+        langResources.bindTextProperty(settingsSortingOrderLbl, "settings.sorting_ord");
+        langResources.bindTextProperty(settingsMasterPasswordLbl, "settings.master_pas");
+        langResources.bindTextProperty(settingsMasterPasswordDesc, "settings.master_pas.desc");
+        langResources.bindTextProperty(settingsDriveConnLbl, "settings.drive_con");
+        langResources.bindTextProperty(wip, "settings.wip");
 
         // Language box
 
-        SortedList<Locale> languages = getFXSortedList(Utils.SUPPORTED_LOCALE);
+        final SortedList<Locale> languages = getFXSortedList(Utils.SUPPORTED_LOCALE);
 
         settingsLangCB.setItems(languages);
         settingsLangCB.getSelectionModel().select(ioManager.getUserPreferences().getLocale());
-        bindValueConverter(settingsLangCB, localeProperty, this::languageStringConverter);
+        bindValueConverter(settingsLangCB, localeProperty, SettingsController::localeStringConverter);
         bindValueComparator(languages, localeProperty, settingsLangCB);
-
-        localeProperty.bind(settingsLangCB.valueProperty());
+ 
+        localeProperty.bind(notNullBinding(settingsLangCB.valueProperty()));
 
         // Sorting order box
 
-        SortedList<SortingOrder> sortingOrders = getFXSortedList(SortingOrder.class.getEnumConstants());
+        final SortedList<SortingOrder> sortingOrders = getFXSortedList(SortingOrder.class.getEnumConstants());
 
         settingsOrderCB.setItems(sortingOrders);
         settingsOrderCB.getSelectionModel().select(ioManager.getUserPreferences().getSortingOrder());
-        bindValueConverter(settingsOrderCB, localeProperty, this::sortingOrderStringConverter);
+        bindValueConverter(settingsOrderCB, localeProperty, SettingsController::sortingOrderStringConverter);
         bindValueComparator(sortingOrders, localeProperty, settingsOrderCB);
 
-        sortingOrderProperty.bind(settingsOrderCB.valueProperty());
+        sortingOrderProperty.bind(notNullBinding(settingsOrderCB.valueProperty()));
 
         // Master password
+
         settingsMasterPassword.setOnAction(_ -> {
             if (checkTextFields(settingsMasterPassword.getTextField())) {
-                ioManager.changeMasterPassword(settingsMasterPassword.getText());
+                ioManager.changeMasterPassword(settingsMasterPassword.getText().strip());
             }
         });
 
-        settingsMasterPassword.bindPasswordStrength(settingsLoginPassStr);
+        // Force the correct size to prevent unwanted stretching
+        settingsMasterPassword.setPrefSize(465.0, 40.0);
     }
 
     public void reset() {
         clearStyle(settingsMasterPassword.getTextField());
-        ioManager.displayMasterPassword(settingsMasterPassword);
+        IOManager.getInstance().displayMasterPassword(settingsMasterPassword);
         settingsMasterPassword.setReadable(false);
     }
 
+    ///// Utility methods /////
+
     @Contract(value = "_ -> new", pure = true)
-    private @NotNull StringConverter<Locale> languageStringConverter(Locale locale) {
+    private static @NotNull StringConverter<Locale> localeStringConverter(Locale locale) {
         return toStringConverter(item -> item != null ? capitalizeWord(item.getDisplayLanguage(item)) : null);
     }
 
     @Contract(value = "_ -> new", pure = true)
-    private @NotNull StringConverter<SortingOrder> sortingOrderStringConverter(Locale locale) {
-        return toStringConverter(item -> item != null ? langResources.getValue(item.getI18nKey()) : null);
+    private static @NotNull StringConverter<SortingOrder> sortingOrderStringConverter(Locale locale) {
+        return toStringConverter(item -> item != null ? ObservableResourceFactory.getInstance().getValue(item.getI18nKey()) : null);
     }
-
-    ///// Utility methods /////
 
     @Contract(value = "_ -> new", pure = true)
     private static <T> @NotNull StringConverter<T> toStringConverter(@NotNull Callback<? super T, String> converter) {
@@ -142,13 +142,30 @@ public class SettingsController extends AbstractViewController {
         };
     }
 
+    @Contract(value = "_ -> new", pure = true)
+    private static <T> @NotNull ObjectBinding<T> notNullBinding(@NotNull ObjectProperty<T> property) {
+        return new ObjectBinding<>() {
+            private T cachedValue = property.getValue();
+            
+            {
+                bind(property);
+            }
+            
+            @Override
+            protected @NotNull T computeValue() {
+                T val = property.getValue();
+                if (val != null) {
+                    cachedValue = val;
+                }
+                return cachedValue;
+            }
+        };
+    }
+
     private static <T> @NotNull ObservableValue<Comparator<T>> comparatorBinding(@NotNull ObjectProperty<Locale> locale, @NotNull ObjectProperty<? extends StringConverter<T>> converter) {
         return Bindings.createObjectBinding(
-                () -> Comparator.comparing(
-                        converter.getValue()::toString,
-                        Collator.getInstance(locale.getValue())),
-                locale,
-                converter);
+                () -> Comparator.comparing(converter.getValue()::toString, Collator.getInstance(locale.getValue())),
+                locale, converter);
     }
 
     private static <T> void bindValueConverter(@NotNull ComboBox<T> comboBox, @NotNull ObjectProperty<Locale> locale, @NotNull Function<Locale, StringConverter<T>> mapper) {

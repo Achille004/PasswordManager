@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.net.URL?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.control.Button?>
@@ -9,7 +10,7 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" styleClass="body" stylesheets="@../style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
    <Label layoutX="142.0" layoutY="86.0" styleClass="bold, sz36, green-text" text="Password Manager " />
    <Label layoutX="466.0" layoutY="91.0" prefHeight="42.0" prefWidth="331.0" styleClass="sz24, light-grey-text" text="is a project created by:" />
    <Label layoutX="142.0" layoutY="133.0" styleClass="bold, sz24" text="Francesco Marras " />
@@ -50,5 +51,10 @@
    </Button>
    <TextArea editable="false" layoutX="120.0" layoutY="260.0" prefHeight="250.0" prefWidth="660.0" text="Password Manager: Manages accounts given by user with encrypted password.&#10;Copyright (C) 2022-2025  Francesco Marras (2004marras@gmail.com)&#10;&#10;This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.&#10;&#10;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.&#10;&#10;You should have received a copy of the GNU General Public License along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html." wrapText="true" />
    <Label layoutX="406.0" layoutY="224.0" styleClass="bold, sz24" text="EULA" />
-   <Label alignment="CENTER_RIGHT" layoutX="824.0" layoutY="567.0" prefHeight="27.0" prefWidth="65.0" styleClass="italic, light-grey-text" text="v3.0.4" />
+   <Label alignment="CENTER_RIGHT" layoutX="824.0" layoutY="567.0" prefHeight="27.0" prefWidth="65.0" styleClass="italic, light-grey-text" text="v3.1.0" />
+   <stylesheets>
+      <URL value="@../css/root.css" />
+      <URL value="@../css/style.css" />
+      <URL value="@../css/eula.css" />
+   </stylesheets>
 </AnchorPane>
