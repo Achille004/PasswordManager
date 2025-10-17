@@ -90,14 +90,19 @@ jar {
     }
 }
 
-def gpgExists = new File('gpg.exe').exists()
-def gpgSignable = (gpgExists
-        && project.hasProperty('signing.keyId') 
+def gpgExists = ['gpg', 'gpg.exe'].any { executable ->
+    System.getenv('PATH').split(File.pathSeparator).any { path -> new File(path, executable).exists() }
+}
+def gpgPropertiesExist = (project.hasProperty('signing.keyId') 
         && project.hasProperty('signing.password') 
         && project.hasProperty('signing.secretKeyRingFile'))
 
 signing {
-    if(gpgSignable) {
+    if(!gpgExists) {
+        println "Gpg executable not found in PATH"
+    } else if(!gpgPropertiesExist) {
+        println "Gpg signing properties missing"
+    } else {
         println "Gpg signing enabled"
         useGpgCmd()
         sign jar
@@ -105,6 +110,8 @@ signing {
         sign distTar
     }
 }
+
+def gpgSignable = gpgExists && gpgPropertiesExist
 
 def resourceDir = layout.projectDirectory.dir('src/main/resources')
 def compileDir = rootProject.layout.projectDirectory.dir('compiled')
@@ -175,7 +182,7 @@ tasks.register('assembleInstallers', FullJPackageTask) {
         destination = installerDir.dir('windows')
         winConsole = false
         winDirChooser = true
-        winHelpUrl = 'https://github.com/Achille004/PasswordManager'
+        winHelpUrl = 'https://github.com/Achille004/PasswordManager/issues'
         winMenu = true
         winMenuGroup = 'Francesco Marras'
         winShortcut = true
@@ -201,8 +208,6 @@ tasks.register('assembleInstallers', FullJPackageTask) {
         linuxRpmLicenseType = 'GPLv3'
         linuxShortcut = true
     }
-
-    finalizedBy tasks.generateChecksums
 }
 
 tasks.register('dryAssembleInstallers') {
@@ -223,4 +228,9 @@ tasks.register('generateChecksums') {
             w << "${sha}  ${f.name}\n"
         }
     }}
+}
+
+tasks.register('assembleAll') {
+    dependsOn tasks.assemblePortables
+    dependsOn tasks.assembleInstallers
 }

@@ -80,7 +80,17 @@ class FullJPackageTask extends JPackageTask {
                 def newName = (dot >= 0)
                     ? "${name.substring(0, dot)}-${arch}${name.substring(dot)}"
                     : "${name}-${arch}"
-                f.renameTo(new File(f.parentFile, newName))
+
+                def newFile = new File(f.parentFile, newName)
+                println " - ${f.name} => ${newFile.name}"
+                f.renameTo(newFile)
+
+                // Make sure the new file is writable (WiX was building read-only EXEs
+                // but ok MSIs, and I'm not gonna dive into that rabbit hole right now)
+                if (!newFile.canWrite()) {
+                    newFile.setWritable(true)
+                    println "   L Was read-only, removed attribute"
+                } 
             }
         }
     }
