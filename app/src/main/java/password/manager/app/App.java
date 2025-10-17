@@ -91,6 +91,30 @@ public class App extends Application {
         ObservableResourceFactory.getInstance().resourcesProperty().bind(Bindings.createObjectBinding(
                 () -> ResourceBundle.getBundle("/bundles/Lang", locale.getValue()), locale));
 
+        final BooleanProperty switchToMain = getBooleanProperty();
+
+        final List<String> list = App.getAppParameters().getRaw();
+        Logger.getInstance().addDebug("Found " + list.size() + " parameters");
+        if (!IO_MANAGER.isFirstRun() && list.size() > 1 && ("-p".equals(list.get(0)) || "--password".equals(list.get(0)))) {
+            Logger.getInstance().addInfo("Trying to authenticate via arguments");
+            if (IO_MANAGER.authenticate(list.get(1))) {
+                Logger.getInstance().addInfo("Correct password, skipping login");
+                switchToMain.set(true);
+                return; // Exit early
+            } else {
+                Logger.getInstance().addInfo("Incorrect password, redirecting to login");
+            }
+        }
+
+        final AnchorPane pane = IO_MANAGER.isFirstRun()
+            ? (AnchorPane) loadFxml("/fxml/first_run.fxml", new FirstRunController(switchToMain))
+            : (AnchorPane) loadFxml("/fxml/login.fxml", new LoginController(switchToMain));
+
+        appScenePane.getChildren().clear();
+        appScenePane.getChildren().add(pane);
+    }
+
+    private static @NotNull BooleanProperty getBooleanProperty() {
         final BooleanProperty switchToMain = new SimpleBooleanProperty(false);
         switchToMain.addListener((_, _, newValue) -> {
             if (newValue) {
@@ -102,27 +126,7 @@ public class App extends Application {
                 mainController.mainTitleAnimation();
             }
         });
-
-        final List<String> list = App.getAppParameters().getRaw();
-        Logger.getInstance().addDebug("Found " + list.size() + " parameters");
-        if (!IO_MANAGER.isFirstRun() && list.size() > 1 && ("-p".equals(list.get(0)) || "--password".equals(list.get(0)))) {
-            Logger.getInstance().addInfo("Trying to authenticate via arguments");
-            if (IO_MANAGER.authenticate(list.get(1))) {
-                Logger.getInstance().addInfo("Correct password, skipping login");
-                switchToMain.set(true);
-            } else {
-                Logger.getInstance().addInfo("Incorrect password, redirecting to login");
-            }
-        }
-
-        if (!switchToMain.get()) {
-            final AnchorPane pane = IO_MANAGER.isFirstRun()
-                ? (AnchorPane) loadFxml("/fxml/first_run.fxml", new FirstRunController(switchToMain))
-                : (AnchorPane) loadFxml("/fxml/login.fxml", new LoginController(switchToMain));
-
-            appScenePane.getChildren().clear();
-            appScenePane.getChildren().add(pane);
-        }
+        return switchToMain;
     }
 
     @Override

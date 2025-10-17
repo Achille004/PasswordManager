@@ -26,6 +26,7 @@ import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.control.Labeled;
+import javafx.stage.Stage;
 
 public final class ObservableResourceFactory {
     private final ObjectProperty<ResourceBundle> resources;
@@ -76,6 +77,14 @@ public final class ObservableResourceFactory {
             field.textProperty().unbind();
         } else {
             field.textProperty().bind(getStringBinding(key));
+        }
+    }
+
+    public void bindTitleProperty(@NotNull Stage stage, @NotNull String key) {
+        if (key.isBlank()) {
+            stage.titleProperty().unbind();
+        } else {
+            stage.titleProperty().bind(getStringBinding(key));
         }
     }
 

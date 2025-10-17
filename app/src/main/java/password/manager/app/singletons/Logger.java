@@ -36,14 +36,16 @@ import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
 
+import password.manager.app.App;
+
 public final class Logger {
     public static final String FOLDER_PREFIX, LOG_FILE_NAME, STACKTRACE_FILE_NAME;
     public static final int MAX_LOG_FILES;
 
     private static final DateTimeFormatter FILE_DTF, MSG_DTF;
 
-    private static final String INITIAL_MESSAGE = """
-    ============== Password Manager by Francesco Marras ==============
+    private static final String INITIAL_MESSAGE = String.format("""
+    =========== %s %s by Francesco Marras ===========
 
                             %s
 
@@ -53,7 +55,7 @@ public final class Logger {
 
     ==================================================================
 
-    """;
+    """, App.APP_NAME, App.APP_VERSION, "%s");
 
     static {
         FOLDER_PREFIX = "log_";

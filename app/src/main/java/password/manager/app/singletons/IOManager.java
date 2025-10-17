@@ -32,6 +32,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -55,6 +56,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import lombok.Getter;
+import password.manager.app.App;
 import password.manager.app.security.Account;
 import password.manager.app.security.UserPreferences;
 import password.manager.lib.PasswordInputControl;
@@ -77,7 +79,7 @@ public final class IOManager {
         USER_HOME = System.getProperty("user.home");
 
         // gets the paths
-        String WINDOWS_PATH = Path.of("AppData", "Local", "Password Manager").toString();
+        String WINDOWS_PATH = Path.of("AppData", "Local", App.APP_NAME).toString();
         String OS_FALLBACK_PATH = ".password-manager";
         FILE_PATH = Path.of(USER_HOME, OS.toLowerCase().contains("windows") ? WINDOWS_PATH : OS_FALLBACK_PATH);
         PRESERVED_PATH = FILE_PATH.resolve("preserved");
@@ -100,7 +102,7 @@ public final class IOManager {
 
     private final AtomicBoolean HAS_CHANGED, IS_LOADING;
 
-    public enum SaveState { SUCCESS, SAVING, ERROR };
+    public enum SaveState { SUCCESS, SAVING, ERROR }
     private final SimpleObjectProperty<SaveState> IS_SAVING;
 
     private final ObjectMapper OBJECT_MAPPER;
@@ -169,7 +171,7 @@ public final class IOManager {
         ACCOUNT_LIST.addListener(listListener);
 
         USER_PREFERENCES.getLocaleProperty().addListener((_, _, newValue) ->
-            Logger.getInstance().addInfo("Changed locale to: " + newValue)
+            Logger.getInstance().addInfo("Changed locale to: " + newValue.getDisplayLanguage(Locale.ENGLISH))
         );
         USER_PREFERENCES.getSortingOrderProperty().addListener((_, _, newValue) ->
             Logger.getInstance().addInfo("Changed sorting order to: " + newValue)

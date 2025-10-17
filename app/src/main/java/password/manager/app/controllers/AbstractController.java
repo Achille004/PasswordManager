@@ -20,8 +20,6 @@ package password.manager.app.controllers;
 
 import static password.manager.app.Utils.*;
 
-import java.util.Objects;
-
 import org.jetbrains.annotations.NotNull;
 
 import javafx.fxml.FXML;
@@ -29,10 +27,10 @@ import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.TextInputControl;
-import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import password.manager.app.App;
 import password.manager.app.controllers.extra.EulaController;
 import password.manager.app.singletons.ObservableResourceFactory;
 
@@ -47,11 +45,11 @@ public abstract class AbstractController implements Initializable {
         eulaStage.toFront();
     }
 
-    private static final void loadEula() {
+    private static void loadEula() {
         if (eulaStage == null) {
             eulaStage = new Stage();
-            eulaStage.setTitle(ObservableResourceFactory.getInstance().getValue("terms_credits"));
-            eulaStage.getIcons().add(new Image(Objects.requireNonNull(AbstractController.class.getResourceAsStream("/images/icon.png"))));
+            ObservableResourceFactory.getInstance().bindTitleProperty(eulaStage, "terms_credits");
+            eulaStage.getIcons().add(App.MAIN_ICON);
             eulaStage.setResizable(false);
 
             AnchorPane eulaParent = (AnchorPane) loadFxml("/fxml/extra/eula.fxml", new EulaController());

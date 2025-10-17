@@ -58,7 +58,7 @@ public class MainController extends AbstractController {
     private static final String[] titleStages;
 
     static {
-        final String title = "Password Manager";
+        final String title = App.APP_NAME;
         final char[] lower = "abcdefghijklmnopqrstuvwxyz".toCharArray();
         final char[] upper = "ABCDEFGHIJKLMNOPQRTSUVWXYZ".toCharArray();
 

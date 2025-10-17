@@ -51,6 +51,8 @@ import javafx.scene.control.DialogPane;
 import javafx.scene.control.ListView;
 
 public final class Utils {
+    private Utils() {} // Prevent instantiation
+
     public static final Locale[] SUPPORTED_LOCALE;
     public static final Locale DEFAULT_LOCALE;
 

@@ -1,4 +1,9 @@
 # Next up:
+- QoL:
+  - Disable autosave (?)
+  - Add language flags to their selector => refactor ObsResFact for a mapped approach
+  - Google drive linking
+  - Password generator
 - Guide (github pages):
   - App guide
   - Building guide
@@ -9,10 +14,6 @@
   - tests, a lot of them
 
 # Future:
-- Password generator
-- Add language flags to their selector
-- Google drive linking
-- More animations
 - Resizable window
 
 # Ideas:
