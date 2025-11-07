@@ -18,8 +18,10 @@
 
 package password.manager.app.enums;
 
+import static java.util.Comparator.comparing;
+
 import java.util.Comparator;
-import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -30,17 +32,17 @@ import password.manager.app.security.Account;
 @Getter
 @RequiredArgsConstructor
 public enum SortingOrder {
-    SOFTWARE("software", (software, username) -> software + "\n" + username, (acc1, acc2) -> {
-        final int softwareCompScore = acc1.getSoftware().compareToIgnoreCase(acc2.getSoftware());
-        return (softwareCompScore == 0) ? acc1.getUsername().compareToIgnoreCase(acc2.getUsername()) : softwareCompScore;
-    }),
-    USERNAME("username", (software, username) -> username + "\n" + software, (acc1, acc2) -> {
-        final int usernameCompScore = acc1.getUsername().compareToIgnoreCase(acc2.getUsername());
-        return (usernameCompScore == 0) ? acc1.getSoftware().compareToIgnoreCase(acc2.getSoftware()) : usernameCompScore;
-    });
+    SOFTWARE(
+        "software", (software, username) -> software + "\n" + username, 
+        InnerComparators.SOFTWARE_COMPARATOR.thenComparing(InnerComparators.USERNAME_COMPARATOR)
+    ),
+    USERNAME(
+        "username", (software, username) -> username + "\n" + software,
+        InnerComparators.USERNAME_COMPARATOR.thenComparing(InnerComparators.SOFTWARE_COMPARATOR)
+    );
 
     private final String i18nKey;
-    private final BiFunction<String, String, String> converter;
+    private final BinaryOperator<String> converter;
     private final Comparator<Account> comparator;
 
     public String convert(String software, String username) {
@@ -48,6 +50,14 @@ public enum SortingOrder {
     }
 
     public String convert(@NotNull Account account) {
-        return this.convert(account.getSoftware(), account.getUsername());
+        return convert(account.getSoftware(), account.getUsername());
+    }
+
+    /**
+     * Inner class to hold comparators to avoid creating them multiple times.
+     */
+    static class InnerComparators {
+        private static final Comparator<Account> SOFTWARE_COMPARATOR = comparing(Account::getSoftware, String.CASE_INSENSITIVE_ORDER);
+        private static final Comparator<Account> USERNAME_COMPARATOR = comparing(Account::getUsername, String.CASE_INSENSITIVE_ORDER);
     }
 }
