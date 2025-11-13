@@ -47,9 +47,8 @@ import javafx.stage.Window;
 import javafx.util.Duration;
 import password.manager.app.App;
 import password.manager.app.controllers.extra.PopupContentController;
-import password.manager.app.controllers.views.AbstractViewController;
-import password.manager.app.controllers.views.ManagerController;
-import password.manager.app.controllers.views.SettingsController;
+import password.manager.app.controllers.main.ManagerController;
+import password.manager.app.controllers.main.SettingsController;
 import password.manager.app.singletons.IOManager;
 import password.manager.app.singletons.IOManager.SaveState;
 import password.manager.app.singletons.Logger;
@@ -107,7 +106,7 @@ public class MainController extends AbstractController {
 
     // Keep views cached once they are loaded
     private Pane managerPane, settingsPane;
-    private AbstractViewController managerController, settingsController;
+    private AbstractController managerController, settingsController;
 
     public void initialize(URL location, ResourceBundle resources) {
         Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
@@ -164,10 +163,10 @@ public class MainController extends AbstractController {
         }
     }
 
-    private void swapOnMainPane(@NotNull AbstractViewController destinationController, @NotNull Pane destinationPane) {
+    private <T extends AbstractController> void swapOnMainPane(@NotNull T destinationController, @NotNull Pane destinationPane) {
         // Show selected pane
-        destinationController.reset();
         mainPane.centerProperty().set(destinationPane);
+        destinationController.reset();
     }
 
     private void createAutosavePopup() {

@@ -16,7 +16,7 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package password.manager.app.controllers.views;
+package password.manager.app.controllers.main;
 
 import static password.manager.app.Utils.*;
 
@@ -41,13 +41,14 @@ import javafx.scene.control.Label;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import password.manager.app.Utils;
+import password.manager.app.controllers.AbstractController;
 import password.manager.app.enums.SortingOrder;
 import password.manager.app.singletons.IOManager;
 import password.manager.app.singletons.Logger;
 import password.manager.app.singletons.ObservableResourceFactory;
 import password.manager.lib.ReadablePasswordFieldWithStr;
 
-public class SettingsController extends AbstractViewController {
+public class SettingsController extends AbstractController {
 
     @FXML
     private ComboBox<Locale> settingsLangCB;

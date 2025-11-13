@@ -16,7 +16,7 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package password.manager.app.controllers.views;
+package password.manager.app.controllers.main;
 
 import static password.manager.app.Utils.*;
 
@@ -59,6 +59,7 @@ import javafx.scene.layout.Pane;
 import javafx.util.Callback;
 import javafx.util.Duration;
 import lombok.Getter;
+import password.manager.app.controllers.AbstractController;
 import password.manager.app.enums.SortingOrder;
 import password.manager.app.security.Account;
 import password.manager.app.singletons.IOManager;
@@ -66,7 +67,7 @@ import password.manager.app.singletons.Logger;
 import password.manager.app.singletons.ObservableResourceFactory;
 import password.manager.lib.ReadablePasswordFieldWithStr;
 
-public class ManagerController extends AbstractViewController {
+public class ManagerController extends AbstractController {
     public static final Duration SEARCH_DELAY = Duration.millis(300);
 
     @FXML
@@ -282,7 +283,7 @@ public class ManagerController extends AbstractViewController {
         TabManager.loadTab(addTab, "/fxml/views/manager/editor.fxml", new EditorController(null));
     }
 
-    static class HomeController extends AbstractViewController {
+    static class HomeController extends AbstractController {
         @FXML
         private Label homeDescTop, homeDescBtm;
 
@@ -300,7 +301,7 @@ public class ManagerController extends AbstractViewController {
         }
     }
 
-    private class EditorController extends AbstractViewController {
+    private class EditorController extends AbstractController {
         private static final Duration LOAD_ANIM_TIME_UNIT = Duration.millis(125);
 
         @FXML
@@ -538,14 +539,14 @@ public class ManagerController extends AbstractViewController {
 
         // Static utility methods for tab management
 
-        public static <T extends AbstractViewController> void loadTab(@NotNull Tab tab, @NotNull  String fxmlPath, @NotNull T controller) {
+        public static <T extends AbstractController> void loadTab(@NotNull Tab tab, @NotNull  String fxmlPath, @NotNull T controller) {
             Pane pane = (Pane) loadFxml(fxmlPath, controller);
             tab.setContent(pane);
             tab.getProperties().put("controller", controller);
         }
 
-        public static AbstractViewController getController(@NotNull Tab tab) {
-            return (AbstractViewController) tab.getProperties().get("controller");
+        public static AbstractController getController(@NotNull Tab tab) {
+            return (AbstractController) tab.getProperties().get("controller");
         }
     }
 }
