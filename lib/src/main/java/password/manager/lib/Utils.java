@@ -26,6 +26,7 @@ import me.gosimple.nbvcxz.Nbvcxz;
 
 public class Utils {
     private static final Nbvcxz NBVCXZ = new Nbvcxz();
+    private static final char[] hexArray = "0123456789ABCDEF".toCharArray();
 
     // Ideal gap is from 20 to 50, represented with linear progress bar with gaps of 1
     public static double passwordStrength(@Nullable String password) {
@@ -33,26 +34,32 @@ public class Utils {
     }
 
     public static String passwordStrengthGradient(@NotNull Double progress) throws IllegalArgumentException {
-        if (progress < 0 || progress > 1) {
-            throw new IllegalArgumentException("Progress must be between 0 and 1");
-        }
+        if (progress < 0 || progress > 1) throw new IllegalArgumentException("Progress must be between 0 and 1");
+
         StringBuilder gradientStr = new StringBuilder("linear-gradient(to right, #f00 0%, ");
-        boolean isHalfProgress = progress >= 0.5;
 
-        // .replace("0x", "#") -> change 0x to # for color
-        // .replace("ffx", "") -> remove alpha from color, used with x to not remove other ff by accident
-        if (isHalfProgress) {
+        Color interpolatedColor;
+        if (progress >= 0.5) {
             gradientStr.append("#ff0 50%, ");
-
-            double halfProgress = progress - 0.5;
-            gradientStr.append((Color.YELLOW.interpolate(Color.LIME, halfProgress * 2) + "x").replace("0x", "#").replace("ffx", ""));
-            gradientStr.append(" 100%");
+            interpolatedColor = Color.YELLOW.interpolate(Color.LIME, progress * 2 - 1);
         } else {
-            gradientStr.append((Color.RED.interpolate(Color.YELLOW, progress * 2) + "x").replace("0x", "#").replace("ffx", ""));
-            gradientStr.append(" 100%");
+            interpolatedColor = Color.RED.interpolate(Color.YELLOW, progress * 2);
         }
-        gradientStr.append(")");
+        
+        gradientStr.append("#")
+                .append(toHex(interpolatedColor.hashCode()))
+                .append(" 100%)");
 
         return gradientStr.toString();
+    }
+
+    public static char[] toHex(int colorHashCode) {
+        colorHashCode >>= 8;
+        char[] hexChars = new char[6];
+        for (int j = 5; j >= 0; j--) {
+            hexChars[j] = hexArray[colorHashCode & 0xF];
+            colorHashCode >>= 4;
+        }
+        return hexChars;
     }
 }

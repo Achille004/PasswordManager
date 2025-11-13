@@ -40,14 +40,16 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.util.Duration;
+import lombok.AccessLevel;
+import lombok.Getter;
 
-public class ReadablePasswordFieldWithStr extends AnchorPane implements Initializable, PasswordInputControl {
+public class ReadablePasswordFieldWithStr extends AnchorPane implements Initializable, PasswordInputControl, AnimationAwareControl {
 
     @FXML
     private ReadablePasswordField passwordField;
 
     @FXML
-    private ProgressBar passwordStrengthBar;
+    private @Getter(value=AccessLevel.PACKAGE) ProgressBar passwordStrengthBar;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -68,32 +70,12 @@ public class ReadablePasswordFieldWithStr extends AnchorPane implements Initiali
         }
     }
 
-    // Adjust height to account for the ProgressBar
-    // TODO also scale the ProgressBar
-
-    public void setReadable(boolean readable) {
-        passwordField.setReadable(readable);
-    }
-
-    public void toggleReadable() {
-        passwordField.toggleReadable();
-    }
-
-    public boolean isReadable() {
-        return passwordField.isReadable();
-    }
-
-    public void setText(String text) {
-        passwordField.setText(text);
-    }
-
-    public String getText() {
-        return passwordField.getText();
-    }
-
     public TextField getTextField() {
         return passwordField.getTextField();
     }
+
+    // Adjust height to account for the ProgressBar
+    // TODO also scale the ProgressBar
 
     @Override
     public void setPrefSize(double width, double height) {
@@ -123,8 +105,26 @@ public class ReadablePasswordFieldWithStr extends AnchorPane implements Initiali
         }
     }
 
-    public void setOnAction(EventHandler<ActionEvent> value) {
-        passwordField.setOnAction(value);
+    ///// PASSWORD INPUT CONTROL METHODS /////
+
+    public void setReadable(boolean readable) {
+        passwordField.setReadable(readable);
+    }
+
+    public void toggleReadable() {
+        passwordField.toggleReadable();
+    }
+
+    public boolean isReadable() {
+        return passwordField.isReadable();
+    }
+
+    public void setText(String text) {
+        passwordField.setText(text);
+    }
+
+    public String getText() {
+        return passwordField.getText();
     }
 
     @Override
@@ -132,11 +132,26 @@ public class ReadablePasswordFieldWithStr extends AnchorPane implements Initiali
         passwordField.requestFocus();
     }
 
+    public void setOnAction(EventHandler<ActionEvent> value) {
+        passwordField.setOnAction(value);
+    }
+
+    ///// ANIMATION AWARE CONTROL METHODS /////
+
+    @Override
+    public void hideExtraElements() {
+        passwordStrengthBar.setVisible(false);
+    }
+
+    @Override
+    public void showExtraElements() {
+        passwordStrengthBar.setVisible(true);
+    }
+
     ///// HELPER METHODS /////
 
     private void bindPasswordStrength(@NotNull ProgressBar progressBar) {
-        Timeline[] timeline = new Timeline[1];
-        timeline[0] = null;
+        Timeline[] previousTimeline = { null };
 
         ChangeListener<String> listener = (_, _, newValue) -> {
             double passwordStrength = passwordStrength(newValue);
@@ -146,14 +161,10 @@ public class ReadablePasswordFieldWithStr extends AnchorPane implements Initiali
             double initialProgress = progressBar.getProgress();
             double progress = (passwordStrength - 20) / 30;
 
-            if(progress == initialProgress) {
-                return;
-            }
+            if(progress == initialProgress) return;
 
             Node bar = progressBar.lookup(".bar");
-            if(bar == null) {
-                return;
-            }
+            if(bar == null) return;
 
             KeyFrame[] keyFrames = new KeyFrame[200];
             for (int i = 0; i < 200; i++) {
@@ -164,12 +175,10 @@ public class ReadablePasswordFieldWithStr extends AnchorPane implements Initiali
                 );
             }
 
-            if (timeline[0] != null) {
-                timeline[0].stop();
-            }
+            if (previousTimeline[0] != null) previousTimeline[0].stop();
 
-            timeline[0] = new Timeline(keyFrames);
-            timeline[0].play();
+            previousTimeline[0] = new Timeline(keyFrames);
+            previousTimeline[0].play();
         };
 
         // Listen for text changes

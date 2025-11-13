@@ -59,6 +59,7 @@ import lombok.Getter;
 import password.manager.app.App;
 import password.manager.app.security.Account;
 import password.manager.app.security.UserPreferences;
+import password.manager.lib.LoadingAnimation;
 import password.manager.lib.PasswordInputControl;
 
 public final class IOManager {
@@ -359,6 +360,7 @@ public final class IOManager {
 
         return CompletableFuture
                 .supplyAsync(() -> {
+                    LoadingAnimation.start(element);
                     try {
                         return account.getPassword(USER_PREFERENCES.getSecurityVersion(), masterPassword);
                     } catch (GeneralSecurityException e) {
@@ -367,6 +369,7 @@ public final class IOManager {
                     }
                 }, ACCOUNT_EXECUTOR)
                 .thenAccept(password -> {
+                    LoadingAnimation.stop(element);
                     if (password == null) throw new RuntimeException("Failed to retrieve password for account: " + account.getSoftware());
                     Platform.runLater(() -> element.setText(password));
                 });

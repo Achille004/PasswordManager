@@ -302,7 +302,6 @@ public class ManagerController extends AbstractController {
     }
 
     private class EditorController extends AbstractController {
-        private static final Duration LOAD_ANIM_TIME_UNIT = Duration.millis(125);
 
         @FXML
         private TextField editorSoftware, editorUsername;
@@ -322,7 +321,7 @@ public class ManagerController extends AbstractController {
         private final @Getter Account account;
         private final @Getter boolean isAddEditor;
 
-        private Timeline editorSaveTimeline, passLoadTimeline;
+        private Timeline editorSaveTimeline;
 
         public EditorController(Account account) {
             this.account = account;
@@ -346,15 +345,6 @@ public class ManagerController extends AbstractController {
                 new KeyFrame(Duration.seconds(1), _ -> clearStyle(editorSaveBtn))
             );
             editorSaveTimeline.setCycleCount(1);
-
-            passLoadTimeline = new Timeline(
-                new KeyFrame(Duration.ZERO, _ -> editorPassword.setText("Loading")),
-                new KeyFrame(LOAD_ANIM_TIME_UNIT, _ -> editorPassword.setText("Loading.")),
-                new KeyFrame(LOAD_ANIM_TIME_UNIT.multiply(2), _ -> editorPassword.setText("Loading..")),
-                new KeyFrame(LOAD_ANIM_TIME_UNIT.multiply(3), _ -> editorPassword.setText("Loading...")),
-                new KeyFrame(LOAD_ANIM_TIME_UNIT.multiply(4), _ -> editorPassword.setText("Loading"))
-            );
-            passLoadTimeline.setCycleCount(Timeline.INDEFINITE);
 
             // Force the correct size to prevent unwanted stretching
             editorPassword.setPrefSize(548.0, 40.0);
@@ -388,18 +378,7 @@ public class ManagerController extends AbstractController {
                 editorSoftware.setText(account.getSoftware());
                 editorUsername.setText(account.getUsername());
 
-                // editorPassword never actually changes, but the thenRun() function needs a final reference
-                final ReadablePasswordFieldWithStr editorPasswordClone = this.editorPassword;
-                editorPasswordClone.setDisable(true);
-                editorPasswordClone.setReadable(true);
-                passLoadTimeline.playFromStart();
-
-                IOManager.getInstance().getAccountPassword(editorPasswordClone, account)
-                        .thenRun(() -> {
-                            passLoadTimeline.stop();
-                            editorPasswordClone.setDisable(false);
-                            editorPasswordClone.setReadable(false);
-                        })
+                IOManager.getInstance().getAccountPassword(editorPassword, account)
                         .exceptionally(e -> {
                             Logger.getInstance().addError(e);
                             return null;
