@@ -38,6 +38,8 @@ public abstract class AbstractController implements Initializable {
     // Store EULA stage as singleton to avoid multiple instances
     private static Stage eulaStage = null;
 
+    public void reset() { /* do nothing */ }
+
     @FXML
     protected final void showEula(MouseEvent event) {
         AbstractController.loadEula();
@@ -46,18 +48,18 @@ public abstract class AbstractController implements Initializable {
     }
 
     private static void loadEula() {
-        if (eulaStage == null) {
-            eulaStage = new Stage();
-            ObservableResourceFactory.getInstance().bindTitleProperty(eulaStage, "terms_credits");
-            eulaStage.getIcons().add(App.MAIN_ICON);
-            eulaStage.setResizable(false);
+        if (eulaStage != null) return;
 
-            AnchorPane eulaParent = (AnchorPane) loadFxml("/fxml/extra/eula.fxml", new EulaController());
-            eulaStage.setScene(new Scene(eulaParent, 900, 600));
-        }
+        eulaStage = new Stage();
+        ObservableResourceFactory.getInstance().bindTitleProperty(eulaStage, "terms_credits");
+        eulaStage.getIcons().add(App.MAIN_ICON);
+        eulaStage.setResizable(false);
+
+        AnchorPane eulaParent = (AnchorPane) loadFxml("/fxml/extra/eula.fxml", new EulaController());
+        eulaStage.setScene(new Scene(eulaParent, 900, 600));
     }
 
-    protected static boolean checkTextFields(TextInputControl @NotNull... fields) {
+    protected static final boolean checkTextFields(TextInputControl @NotNull... fields) {
         boolean nonEmpty = true;
 
         for (@NotNull TextInputControl field : fields) {
@@ -72,15 +74,11 @@ public abstract class AbstractController implements Initializable {
         return nonEmpty;
     }
 
-    protected static void clearStyle(Node @NotNull... nodes) {
-        for (@NotNull Node node : nodes) {
-            node.setStyle("");
-        }
+    protected static final void clearStyle(Node @NotNull... nodes) {
+        for (@NotNull Node node : nodes) node.setStyle("");
     }
 
-    protected static void clearTextFields(TextInputControl @NotNull... fields) {
-        for (@NotNull TextInputControl field : fields) {
-            field.clear();
-        }
+    protected static final void clearTextFields(TextInputControl @NotNull... fields) {
+        for (@NotNull TextInputControl field : fields) field.clear();
     }
 }

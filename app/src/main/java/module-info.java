@@ -41,7 +41,7 @@ module password.manager.app {
     exports password.manager.app;
     exports password.manager.app.controllers;
     exports password.manager.app.controllers.extra;
-    exports password.manager.app.controllers.views;
+    exports password.manager.app.controllers.main;
     exports password.manager.app.enums;
     exports password.manager.app.security;
     exports password.manager.app.singletons;
@@ -49,7 +49,7 @@ module password.manager.app {
     opens password.manager.app to javafx.fxml;
     opens password.manager.app.controllers to javafx.fxml;
     opens password.manager.app.controllers.extra to javafx.fxml;
-    opens password.manager.app.controllers.views to javafx.fxml;
+    opens password.manager.app.controllers.main to javafx.fxml;
 
     opens password.manager.app.security to com.fasterxml.jackson.databind;
     opens password.manager.app.singletons to com.fasterxml.jackson.databind;
