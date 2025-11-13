@@ -27,9 +27,7 @@ public final class Singletons {
      * @throws IllegalStateException if the class is already registered
      */
     public static <T> void register(@NotNull Class<T> cls, @NotNull T instance) {
-        if (isRegistered(cls)) {
-            throw new IllegalStateException(cls.getName() + " is already registered");
-        }
+        if (isRegistered(cls)) throw new IllegalStateException(cls.getName() + " is already registered");
         INSTANCES.put(cls, instance);
     }
 
@@ -47,9 +45,7 @@ public final class Singletons {
     @SuppressWarnings("unchecked")
     public static <T> @NotNull T get(@NotNull Class<T> cls) {
         Object inst = INSTANCES.get(cls);
-        if (!isRegistered(cls)) {
-            throw new IllegalStateException(cls.getName() + " is not yet registered");
-        }
+        if (inst == null) throw new IllegalStateException(cls.getName() + " is not yet registered");
         return (T) inst;
     }
 

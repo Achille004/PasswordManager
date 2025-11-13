@@ -18,17 +18,18 @@
 
 package password.manager.lib;
 
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-
-public interface PasswordInputControl {
-    void setReadable(boolean readable);
-    void toggleReadable();
-    boolean isReadable();
-    String getText();
-    void setText(String text);
-    void requestFocus();
-    void setOnAction(EventHandler<ActionEvent> value);
-
-    void setDisable(boolean disable);
+/**
+ * Interface for controls that need to hide/show additional elements during loading animations.
+ * For example, password strength indicators that should be hidden while loading.
+ */
+public interface AnimationAwareControl {
+    /**
+     * Hides additional UI elements when loading animation starts.
+     */
+    void hideExtraElements();
+    
+    /**
+     * Shows additional UI elements when loading animation stops.
+     */
+    void showExtraElements();
 }

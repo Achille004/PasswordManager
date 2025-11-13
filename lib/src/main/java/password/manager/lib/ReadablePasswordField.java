@@ -106,28 +106,6 @@ public class ReadablePasswordField extends AnchorPane implements Initializable, 
         }
     }
 
-    public void setReadable(boolean readable) {
-        if (readable ^ isReadable()) {
-            this.readable.set(readable);
-        }
-    }
-
-    public void toggleReadable() {
-        setReadable(!isReadable());
-    }
-
-    public boolean isReadable() {
-        return readable.get();
-    }
-
-    public void setText(String text) {
-        textField.setText(text);
-    }
-
-    public String getText() {
-        return textField.getText();
-    }
-
     @Override
     public void setPrefSize(double width, double height) {
         super.setPrefSize(width, height);
@@ -158,9 +136,28 @@ public class ReadablePasswordField extends AnchorPane implements Initializable, 
         textField.setMaxSize(width, height);
     }
 
-    public void setOnAction(EventHandler<ActionEvent> value) {
-        passwordField.setOnAction(value);
-        textField.setOnAction(value);
+    ///// PASSWORD INPUT CONTROL METHODS ///// 
+
+    public void setReadable(boolean readable) {
+        if (readable ^ isReadable()) {
+            this.readable.set(readable);
+        }
+    }
+
+    public void toggleReadable() {
+        setReadable(!isReadable());
+    }
+
+    public boolean isReadable() {
+        return readable.get();
+    }
+
+    public void setText(String text) {
+        textField.setText(text);
+    }
+
+    public String getText() {
+        return textField.getText();
     }
 
     @Override
@@ -170,5 +167,10 @@ public class ReadablePasswordField extends AnchorPane implements Initializable, 
         } else {
             passwordField.requestFocus();
         }
+    }
+
+    public void setOnAction(EventHandler<ActionEvent> value) {
+        passwordField.setOnAction(value);
+        textField.setOnAction(value);
     }
 }
