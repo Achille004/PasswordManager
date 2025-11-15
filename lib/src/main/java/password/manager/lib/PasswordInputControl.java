@@ -18,15 +18,21 @@
 
 package password.manager.lib;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 
 public interface PasswordInputControl {
+    BooleanProperty readableProperty();
     void setReadable(boolean readable);
     void toggleReadable();
     boolean isReadable();
-    String getText();
+
+    StringProperty textProperty();
     void setText(String text);
+    String getText();
+    
     void requestFocus();
     void setOnAction(EventHandler<ActionEvent> value);
 

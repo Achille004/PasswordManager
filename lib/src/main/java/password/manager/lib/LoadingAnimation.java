@@ -27,6 +27,9 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.util.Duration;
 
+/**
+ * Utility class to manage loading animations for PasswordInputControl elements.
+ */
 public class LoadingAnimation {
     private static final Duration LOAD_ANIM_TIME_UNIT = Duration.millis(125);
 
@@ -45,7 +48,7 @@ public class LoadingAnimation {
 
         element.setDisable(true);
         element.setReadable(true);
-        if(element instanceof AnimationAwareControl aControl) aControl.hideExtraElements();
+        if(element instanceof AnimationAwareControl aControl) aControl.stopListening();
 
         timeline.playFromStart();
     }
@@ -58,9 +61,9 @@ public class LoadingAnimation {
 
         element.setDisable(false);
         element.setReadable(false);
-        if(element instanceof AnimationAwareControl aControl) aControl.showExtraElements();
+        if(element instanceof AnimationAwareControl aControl) aControl.startListening();
     }
-    
+
     ///// HELPER METHODS /////
 
     private static Timeline createTimeline(PasswordInputControl element) {
