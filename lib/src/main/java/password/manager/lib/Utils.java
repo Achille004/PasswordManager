@@ -34,7 +34,7 @@ public class Utils {
     }
 
     public static String passwordStrengthGradient(@NotNull Double progress) throws IllegalArgumentException {
-        if (progress < 0 || progress > 1) throw new IllegalArgumentException("Progress must be between 0 and 1");
+        if (progress < 0d || progress > 1d) throw new IllegalArgumentException("Progress must be between 0 and 1, received: " + progress);
 
         StringBuilder gradientStr = new StringBuilder("linear-gradient(to right, #f00 0%, ");
 

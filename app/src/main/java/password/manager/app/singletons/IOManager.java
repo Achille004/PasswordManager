@@ -355,7 +355,7 @@ public final class IOManager {
     }
 
     // Asynchronously retrieves and injects the password into the given PasswordInputControl
-    public @NotNull CompletableFuture<Void> getAccountPassword(@NotNull PasswordInputControl element, @NotNull Account account) {
+    public <T extends PasswordInputControl> @NotNull CompletableFuture<Void> getAccountPassword(@NotNull T element, @NotNull Account account) {
         if (!isAuthenticated()) throw new IllegalStateException("User is not authenticated [getAccountPassword]");
 
         return CompletableFuture

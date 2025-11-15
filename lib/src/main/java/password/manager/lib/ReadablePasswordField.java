@@ -27,6 +27,7 @@ import lombok.Getter;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -138,18 +139,26 @@ public class ReadablePasswordField extends AnchorPane implements Initializable, 
 
     ///// PASSWORD INPUT CONTROL METHODS ///// 
 
+    public BooleanProperty readableProperty() {
+        return readable;
+    }
+
     public void setReadable(boolean readable) {
         if (readable ^ isReadable()) {
             this.readable.set(readable);
         }
+    }
+    
+    public boolean isReadable() {
+        return readable.get();
     }
 
     public void toggleReadable() {
         setReadable(!isReadable());
     }
 
-    public boolean isReadable() {
-        return readable.get();
+    public StringProperty textProperty() {
+        return passwordField.textProperty();
     }
 
     public void setText(String text) {

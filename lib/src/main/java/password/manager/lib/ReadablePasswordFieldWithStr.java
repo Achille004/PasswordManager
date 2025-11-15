@@ -23,13 +23,13 @@ import static password.manager.lib.Utils.*;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.function.Function;
 
 import org.jetbrains.annotations.NotNull;
 
-import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
-import javafx.beans.value.ChangeListener;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -39,7 +39,6 @@ import javafx.scene.Node;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
-import javafx.util.Duration;
 import lombok.AccessLevel;
 import lombok.Getter;
 
@@ -107,12 +106,20 @@ public class ReadablePasswordFieldWithStr extends AnchorPane implements Initiali
 
     ///// PASSWORD INPUT CONTROL METHODS /////
 
+    public BooleanProperty readableProperty() {
+        return passwordField.readableProperty();
+    }
+
     public void setReadable(boolean readable) {
         passwordField.setReadable(readable);
     }
 
     public void toggleReadable() {
         passwordField.toggleReadable();
+    }
+    
+    public StringProperty textProperty() {
+        return passwordField.textProperty();
     }
 
     public boolean isReadable() {
@@ -139,58 +146,32 @@ public class ReadablePasswordFieldWithStr extends AnchorPane implements Initiali
     ///// ANIMATION AWARE CONTROL METHODS /////
 
     @Override
-    public void hideExtraElements() {
+    public void doExtraStopSteps() {
         passwordStrengthBar.setVisible(false);
     }
 
     @Override
-    public void showExtraElements() {
+    public void doExtraStartSteps() {
         passwordStrengthBar.setVisible(true);
     }
 
     ///// HELPER METHODS /////
 
     private void bindPasswordStrength(@NotNull ProgressBar progressBar) {
-        Timeline[] previousTimeline = { null };
-
-        ChangeListener<String> listener = (_, _, newValue) -> {
-            double passwordStrength = passwordStrength(newValue);
-            passwordStrength = Math.max(20d, passwordStrength);
-            passwordStrength = Math.min(50d, passwordStrength);
-
-            double initialProgress = progressBar.getProgress();
-            double progress = (passwordStrength - 20) / 30;
-
-            if(progress == initialProgress) return;
-
+        final Function<Double, KeyValue> styleFunction = prog -> {
             Node bar = progressBar.lookup(".bar");
-            if(bar == null) return;
-
-            KeyFrame[] keyFrames = new KeyFrame[200];
-            for (int i = 0; i < 200; i++) {
-                double curProg = initialProgress + (progress - initialProgress) * i / 200;
-                keyFrames[i] = new KeyFrame(Duration.millis(i),
-                        new KeyValue(progressBar.progressProperty(), curProg),
-                        new KeyValue(bar.styleProperty(), "-fx-background-color:" + passwordStrengthGradient(curProg) + ";")
-                );
-            }
-
-            if (previousTimeline[0] != null) previousTimeline[0].stop();
-
-            previousTimeline[0] = new Timeline(keyFrames);
-            previousTimeline[0].play();
+            if(bar == null) return null;
+            return new KeyValue(bar.styleProperty(), "-fx-background-color:" + passwordStrengthGradient(prog) + ";");
         };
 
-        // Listen for text changes
-        TextField textField = passwordField.getTextField();
-        textField.textProperty().addListener(listener);
+        final Function<String, Double> progressExtractor = pass -> {
+            double passwordStrength = passwordStrength(pass);
+            passwordStrength = Math.max(0d, passwordStrength - 20d);
+            return Math.min(1d, passwordStrength / 30d);
+        };
 
-        // Trigger initial update once the ProgressBar skin is ready
-        // This is a workaround for the fact that the skin may not be ready immediately
-        progressBar.skinProperty().addListener((_, _, newSkin) -> {
-            if (newSkin != null) {
-                listener.changed(textField.textProperty(), "", textField.getText());
-            }
-        });
+        addAnimAwareProperty(passwordField.textProperty(),
+                progressExtractor, progressBar.progressProperty(),
+                styleFunction, progressBar);
     }
 }
