@@ -78,7 +78,7 @@ public class SettingsController extends AbstractController {
 
         // Language box
 
-        final SortedList<Locale> languages = getFXSortedList(Utils.SUPPORTED_LOCALE);
+        final SortedList<Locale> languages = getFXSortedList(SUPPORTED_LOCALE);
 
         settingsLangCB.setItems(languages);
         settingsLangCB.getSelectionModel().select(ioManager.getUserPreferences().getLocale());

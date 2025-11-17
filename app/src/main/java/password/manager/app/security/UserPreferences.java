@@ -18,6 +18,8 @@
 
 package password.manager.app.security;
 
+import static password.manager.app.Utils.*;
+
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Arrays;
@@ -38,7 +40,6 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
-import password.manager.app.Utils;
 import password.manager.app.enums.SecurityVersion;
 import password.manager.app.enums.SortingOrder;
 
@@ -52,7 +53,7 @@ public final class UserPreferences {
     private boolean isPasswordSet;
 
     public UserPreferences() {
-        this.localeProperty = new SimpleObjectProperty<>(Utils.DEFAULT_LOCALE);
+        this.localeProperty = new SimpleObjectProperty<>(DEFAULT_LOCALE);
         this.sortingOrderProperty = new SimpleObjectProperty<>(SortingOrder.SOFTWARE);
 
         this.securityVersion = SecurityVersion.LATEST;
@@ -160,8 +161,8 @@ public final class UserPreferences {
 
             final Locale locale = Locale.forLanguageTag(node.get("locale").asText());
             final SortingOrder sortingOrder = SortingOrder.valueOf(node.get("sortingOrder").asText());
-            final byte[] hashedPassword = Utils.base64ToByte(node.get("hashedPassword").asText());
-            final byte[] salt = Utils.base64ToByte(node.get("salt").asText());
+            final byte[] hashedPassword = base64ToByte(node.get("hashedPassword").asText());
+            final byte[] salt = base64ToByte(node.get("salt").asText());
 
             // This field has been added since Argon2 was implemented, so if it isn't present we'll assume it's older than that
             final SecurityVersion securityVersion = node.has("securityVersion")

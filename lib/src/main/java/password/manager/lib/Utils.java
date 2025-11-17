@@ -25,8 +25,11 @@ import javafx.scene.paint.Color;
 import me.gosimple.nbvcxz.Nbvcxz;
 
 public class Utils {
+    private Utils() {} // Prevent instantiation
+
     private static final Nbvcxz NBVCXZ = new Nbvcxz();
-    private static final char[] hexArray = "0123456789ABCDEF".toCharArray();
+    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+    private static final double DOUBLE_EPSILON = Math.ulp(1.0);
 
     // Ideal gap is from 20 to 50, represented with linear progress bar with gaps of 1
     public static double passwordStrength(@Nullable String password) {
@@ -57,9 +60,21 @@ public class Utils {
         colorHashCode >>= 8;
         char[] hexChars = new char[6];
         for (int j = 5; j >= 0; j--) {
-            hexChars[j] = hexArray[colorHashCode & 0xF];
+            hexChars[j] = HEX_ARRAY[colorHashCode & 0xF];
             colorHashCode >>= 4;
         }
         return hexChars;
+    }
+
+    public static boolean doubleEquals(double a, double b) {
+        return Math.abs(a - b) < DOUBLE_EPSILON;
+    }
+
+    public static int intSquash(int lowerBound, int value, int upperBound) {
+        return Math.min(Math.max(value, lowerBound), upperBound);
+    }
+
+    public static double doubleSquash(double lowerBound, double value, double upperBound) {
+        return Math.min(Math.max(value, lowerBound), upperBound);
     }
 }

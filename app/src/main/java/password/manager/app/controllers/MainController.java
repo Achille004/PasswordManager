@@ -54,6 +54,7 @@ import password.manager.app.singletons.IOManager.SaveState;
 import password.manager.app.singletons.Logger;
 
 public class MainController extends AbstractController {
+    private static final Duration TITLE_ANIM_TIME_UNIT = Duration.millis(8);
     private static final String[] titleStages;
 
     static {
@@ -119,7 +120,7 @@ public class MainController extends AbstractController {
         titleAnimation = new Timeline();
         for (int i = 0; i < titleStages.length; i++) {
             final String str = titleStages[i];
-            titleAnimation.getKeyFrames().add(new KeyFrame(Duration.millis(8 * i), _ -> psmgTitle.setText(str)));
+            titleAnimation.getKeyFrames().add(new KeyFrame(TITLE_ANIM_TIME_UNIT.multiply(i), _ -> psmgTitle.setText(str)));
         }
 
         managerController = new ManagerController();
