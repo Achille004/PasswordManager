@@ -25,8 +25,6 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.function.Function;
 
-import org.jetbrains.annotations.NotNull;
-
 import javafx.animation.KeyValue;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.StringProperty;
@@ -43,6 +41,13 @@ import lombok.AccessLevel;
 import lombok.Getter;
 
 public class ReadablePasswordFieldWithStr extends AnchorPane implements Initializable, PasswordInputControl, AnimationAwareControl {
+
+    private static final Function<String, Double> PROGRESS_EXTRACTOR = pass -> {
+        double passwordStrength = passwordStrength(pass);
+        return doubleSquash(0d, (passwordStrength - 20d) / 30d, 1d);
+    };
+
+    private AnimationController<String> animationController;
 
     @FXML
     private ReadablePasswordField passwordField;
@@ -61,9 +66,17 @@ public class ReadablePasswordFieldWithStr extends AnchorPane implements Initiali
         fxmlLoader.setRoot(this);
         fxmlLoader.setController(this);
 
+        final Function<Double, KeyValue> STYLE_FUNCTION = prog -> {
+            Node bar = passwordStrengthBar.lookup(".bar");
+            if(bar == null) return null;
+            return new KeyValue(bar.styleProperty(), "-fx-background-color:" + passwordStrengthGradient(prog) + ";");
+        };
+
         try {
             fxmlLoader.load();
-            bindPasswordStrength(passwordStrengthBar);
+            animationController = new AnimationController<>(passwordField.textProperty(),
+                    PROGRESS_EXTRACTOR, passwordStrengthBar.progressProperty(),
+                    STYLE_FUNCTION, passwordStrengthBar);
         } catch (IOException exception) {
             throw new RuntimeException(exception);
         }
@@ -117,7 +130,7 @@ public class ReadablePasswordFieldWithStr extends AnchorPane implements Initiali
     public void toggleReadable() {
         passwordField.toggleReadable();
     }
-    
+
     public StringProperty textProperty() {
         return passwordField.textProperty();
     }
@@ -146,32 +159,17 @@ public class ReadablePasswordFieldWithStr extends AnchorPane implements Initiali
     ///// ANIMATION AWARE CONTROL METHODS /////
 
     @Override
-    public void doExtraStopSteps() {
+    public AnimationController<?> getAnimationController() {
+        return animationController;
+    }
+
+    @Override
+    public void onListenerDetached() {
         passwordStrengthBar.setVisible(false);
     }
 
     @Override
-    public void doExtraStartSteps() {
+    public void onListenerAttached() {
         passwordStrengthBar.setVisible(true);
-    }
-
-    ///// HELPER METHODS /////
-
-    private void bindPasswordStrength(@NotNull ProgressBar progressBar) {
-        final Function<Double, KeyValue> styleFunction = prog -> {
-            Node bar = progressBar.lookup(".bar");
-            if(bar == null) return null;
-            return new KeyValue(bar.styleProperty(), "-fx-background-color:" + passwordStrengthGradient(prog) + ";");
-        };
-
-        final Function<String, Double> progressExtractor = pass -> {
-            double passwordStrength = passwordStrength(pass);
-            passwordStrength = Math.max(0d, passwordStrength - 20d);
-            return Math.min(1d, passwordStrength / 30d);
-        };
-
-        addAnimAwareProperty(passwordField.textProperty(),
-                progressExtractor, progressBar.progressProperty(),
-                styleFunction, progressBar);
     }
 }

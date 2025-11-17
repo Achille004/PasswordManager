@@ -48,7 +48,7 @@ public class LoadingAnimation {
 
         element.setDisable(true);
         element.setReadable(true);
-        if(element instanceof AnimationAwareControl aControl) aControl.stopListening();
+        if(element instanceof AnimationAwareControl aControl) aControl.onListenerDetached();
 
         timeline.playFromStart();
     }
@@ -61,7 +61,7 @@ public class LoadingAnimation {
 
         element.setDisable(false);
         element.setReadable(false);
-        if(element instanceof AnimationAwareControl aControl) aControl.startListening();
+        if(element instanceof AnimationAwareControl aControl) aControl.onListenerAttached();
     }
 
     ///// HELPER METHODS /////

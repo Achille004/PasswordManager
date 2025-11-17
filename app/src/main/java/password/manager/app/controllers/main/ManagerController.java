@@ -19,6 +19,7 @@
 package password.manager.app.controllers.main;
 
 import static password.manager.app.Utils.*;
+import static password.manager.lib.Utils.*;
 
 import java.net.URL;
 import java.util.Arrays;
@@ -503,7 +504,7 @@ public class ManagerController extends AbstractController {
 
         public void selectAdjacentTab(int direction) {
             int currentIndex = TAB_PANE.getSelectionModel().getSelectedIndex();
-            int newIndex = Math.max(0, Math.min(TAB_PANE.getTabs().size() - 1, currentIndex + direction));
+            int newIndex = intSquash(0, currentIndex + direction, TAB_PANE.getTabs().size() - 1);
             TAB_PANE.getSelectionModel().select(newIndex);
         }
 
