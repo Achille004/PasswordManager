@@ -37,8 +37,10 @@ import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 
 import password.manager.app.App;
+import password.manager.app.interfaces.SingletonPattern;
 
-public final class Logger {
+@SingletonPattern
+public final class Logger implements AutoCloseable {
     public static final String FOLDER_PREFIX, LOG_FILE_NAME, STACKTRACE_FILE_NAME;
     public static final int MAX_LOG_FILES;
 
@@ -143,17 +145,8 @@ public final class Logger {
         write(stacktraceWriter, stacktraceStrBuilder);
     }
 
-    private static @NotNull String getCurrentMethodName(@NotNull Integer walkDist) {
-        StackTraceElement[] sckTrc = Thread.currentThread().getStackTrace();
-        if (sckTrc.length >= walkDist + 2) {
-            StackTraceElement stckTrcElem = sckTrc[walkDist + 2];
-            return stckTrcElem.getClassName() + '.' + stckTrcElem.getMethodName();
-        } else {
-            return "unknown";
-        }
-    }
-
-    public void closeStreams() {
+    @Override
+    public void close() {
         try {
             addInfo("Closing logger streams");
             logWriter.close();
@@ -163,6 +156,21 @@ public final class Logger {
         }
     }
 
+    // #region Singleton methods
+    public static synchronized void createInstance(Path baseLogPath) throws IllegalStateException {
+        Singletons.register(Logger.class, new Logger(baseLogPath));
+    }
+
+    public static @NotNull Logger getInstance() throws IllegalStateException {
+        return Singletons.get(Logger.class);
+    }
+
+    public static synchronized void destroyInstance() throws IllegalStateException {
+        Singletons.unregister(Logger.class);
+    }
+    // #endregion
+
+    // #region Private methods
     private void write(@NotNull FileWriter writer, @NotNull StringBuilder builder) {
         try {
             writer.write(builder.toString());
@@ -200,13 +208,14 @@ public final class Logger {
         }
     }
 
-    // #region Singleton methods
-    public static synchronized void createInstance(Path baseLogPath) throws IllegalStateException {
-        Singletons.register(Logger.class, new Logger(baseLogPath));
-    }
-
-    public static @NotNull Logger getInstance() {
-        return Singletons.get(Logger.class);
+    private static @NotNull String getCurrentMethodName(@NotNull Integer walkDist) {
+        StackTraceElement[] sckTrc = Thread.currentThread().getStackTrace();
+        if (sckTrc.length >= walkDist + 2) {
+            StackTraceElement stckTrcElem = sckTrc[walkDist + 2];
+            return stckTrcElem.getClassName() + '.' + stckTrcElem.getMethodName();
+        } else {
+            return "unknown";
+        }
     }
     // #endregion
 }
