@@ -90,7 +90,7 @@ class FullJPackageTask extends JPackageTask {
                 if (!newFile.canWrite()) {
                     newFile.setWritable(true)
                     println "   L Was read-only, removed attribute"
-                } 
+                }
             }
         }
     }

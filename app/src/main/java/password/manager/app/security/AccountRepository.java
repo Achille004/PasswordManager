@@ -51,7 +51,7 @@ import password.manager.app.singletons.Logger;
  * Thread Safety: This class is thread-safe. The internal list is synchronized and all
  * operations are executed through a dedicated executor service.
  * </p>
- * 
+ *
  * @see Account
  * @see SecurityVersion
  */
@@ -70,7 +70,7 @@ public class AccountRepository {
 
     /**
      * Retrieves all accounts in the repository.
-     * 
+     *
      * @return an unmodifiable observable list of all accounts
      */
     public ObservableList<Account> findAll() {
@@ -79,7 +79,7 @@ public class AccountRepository {
 
     /**
      * Replaces all accounts in the repository with the provided list.
-     * 
+     *
      * @param newAccounts the new list of accounts to set
      */
     public void setAll(List<Account> newAccounts) {
@@ -92,7 +92,7 @@ public class AccountRepository {
      * This operation encrypts the password using the specified security version and master password
      * in a background thread to avoid blocking the UI.
      * </p>
-     * 
+     *
      * @param securityVersion the encryption algorithm version to use
      * @param masterPassword the master password for encryption
      * @param software the name of the software/service for this account
@@ -103,8 +103,8 @@ public class AccountRepository {
     public @NotNull CompletableFuture<Account> add(
             @NotNull SecurityVersion securityVersion,
             @NotNull String masterPassword,
-            @NotNull String software, 
-            @NotNull String username, 
+            @NotNull String software,
+            @NotNull String username,
             @NotNull String password) {
 
         return CompletableFuture
@@ -126,7 +126,7 @@ public class AccountRepository {
      * This operation re-encrypts the password with the new data using the specified security version
      * and master password in a background thread. The list change is triggered to notify listeners.
      * </p>
-     * 
+     *
      * @param securityVersion the encryption algorithm version to use
      * @param masterPassword the master password for encryption
      * @param account the account to update (must exist in the repository)
@@ -139,9 +139,9 @@ public class AccountRepository {
     public @NotNull CompletableFuture<Account> edit(
                 @NotNull SecurityVersion securityVersion,
                 @NotNull String masterPassword,
-                @NotNull Account account, 
-                @NotNull String software, 
-                @NotNull String username, 
+                @NotNull Account account,
+                @NotNull String software,
+                @NotNull String username,
                 @NotNull String password) {
 
         if(!accounts.contains(account)) throw new IllegalArgumentException("Account not found in list");
@@ -160,7 +160,7 @@ public class AccountRepository {
 
     /**
      * Removes an account from the repository asynchronously.
-     * 
+     *
      * @param account the account to remove (must exist in the repository)
      * @return a CompletableFuture that completes with true if removal was successful, false otherwise
      * @throws IllegalArgumentException if the account is not found in the repository
@@ -176,7 +176,7 @@ public class AccountRepository {
      * This operation decrypts the password using the specified security version and master password
      * in a background thread to avoid blocking the UI.
      * </p>
-     * 
+     *
      * @param securityVersion the encryption algorithm version used for this account
      * @param masterPassword the master password for decryption
      * @param account the account whose password to retrieve
@@ -204,7 +204,7 @@ public class AccountRepository {
      * Each account is processed in a separate virtual thread. The iteration over the list
      * is synchronized to ensure thread safety.
      * </p>
-     * 
+     *
      * @param action the action to perform on each account
      */
     public void executeOnAll(Consumer<? super Account> action) {
@@ -235,7 +235,7 @@ public class AccountRepository {
 
     /**
      * Checks if the executor service has been shut down.
-     * 
+     *
      * @return true if the executor has been shut down, false otherwise
      */
     public boolean isShutdown() {

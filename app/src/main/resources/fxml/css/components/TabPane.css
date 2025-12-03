@@ -1,5 +1,5 @@
 TabPane:focused {
-  -fx-focus-color: transparent; 
+  -fx-focus-color: transparent;
 }
 
 TabPane .tab {

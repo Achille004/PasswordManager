@@ -33,7 +33,7 @@ import password.manager.app.security.Account;
 @RequiredArgsConstructor
 public enum SortingOrder {
     SOFTWARE(
-        "software", (software, username) -> software + "\n" + username, 
+        "software", (software, username) -> software + "\n" + username,
         InnerComparators.SOFTWARE_COMPARATOR.thenComparing(InnerComparators.USERNAME_COMPARATOR)
     ),
     USERNAME(

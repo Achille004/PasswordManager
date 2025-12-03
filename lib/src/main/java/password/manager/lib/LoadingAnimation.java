@@ -37,11 +37,12 @@ public class LoadingAnimation {
     private static final Map<PasswordInputControl, Timeline> timelines = new IdentityHashMap<>();
 
     public static <T extends PasswordInputControl> void start(@NotNull T element) {
+        // Check if a timeline is already associated with the element
         Timeline timeline = timelines.get(element);
 
         if(timeline == null) {
             timeline = createTimeline(element);
-            timelines.put(element, timeline);    
+            timelines.put(element, timeline);
         } else if(timeline.getStatus() == Timeline.Status.RUNNING) {
             return;
         }
@@ -54,7 +55,8 @@ public class LoadingAnimation {
     }
 
     public static <T extends PasswordInputControl> void stop(@NotNull T element) {
-        Timeline timeline = timelines.get(element);
+        // Retrieve and remove the timeline associated with the element
+        Timeline timeline = timelines.remove(element);
         if(timeline == null) return;
 
         timeline.stop();

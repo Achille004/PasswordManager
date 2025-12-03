@@ -60,10 +60,10 @@ public class AnimationController<T> {
      * @param styleFunction function that generates the style {@link KeyValue} based on current {@link Double} progress
      * @param destinationControl control whose skin will be updated
      */
-    public AnimationController(Property<T> source, 
+    public AnimationController(Property<T> source,
                                Function<T, Double> progressExtractor,
                                DoubleProperty progressProperty,
-                               Function<Double, KeyValue> styleFunction, 
+                               Function<Double, KeyValue> styleFunction,
                                Control destinationControl) {
         this.sourceProperty = source;
         this.progressProperty = progressProperty;
@@ -110,7 +110,7 @@ public class AnimationController<T> {
     /**
      * Provides a timeline for animating a dobule property of the while also updating its style.
      * The animation will target to about {@code ANIM_FPS} fps over {@code ANIM_DURATION_MS} milliseconds.
-     * 
+     *
      * @param property {@link DoubleProperty} to animate
      * @param destination destination value of {@code property}
      * @param styleFunction function that generates the style {@link KeyValue} based on current {@code property} progress

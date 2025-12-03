@@ -48,7 +48,7 @@ public class Utils {
         } else {
             interpolatedColor = Color.RED.interpolate(Color.YELLOW, progress * 2);
         }
-        
+
         gradientStr.append("#")
                 .append(toHex(interpolatedColor.hashCode()))
                 .append(" 100%)");

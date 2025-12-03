@@ -172,7 +172,7 @@ public class MainController extends AbstractController {
 
     private void createAutosavePopup() {
         final int SPACING = 20;
-        
+
         final PopupContentController popupController = new PopupContentController();
         final AnchorPane popupContent = (AnchorPane) loadFxml("/fxml/extra/popup_content.fxml", popupController);
         popupContent.setVisible(false);
@@ -187,13 +187,13 @@ public class MainController extends AbstractController {
         // Bind position to bottom-left of window //
 
         final Window window = App.getAppScenePane().getScene().getWindow();
-        
+
         // Set position when height is first computed
         popupContent.heightProperty().addListener((_, oldValue, newValue) -> {
             // Only listen when height is first set
-            if(oldValue.doubleValue() != 0 || newValue.doubleValue() <= 0) return; 
+            if(oldValue.doubleValue() != 0 || newValue.doubleValue() <= 0) return;
             final double HEIGHT = newValue.doubleValue();
-            
+
             testPopup.setX(window.getX() + SPACING);
             testPopup.setY(window.getY() + window.getHeight() - HEIGHT - SPACING);
 

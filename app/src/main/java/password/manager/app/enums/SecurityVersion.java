@@ -30,7 +30,7 @@ public enum SecurityVersion {
             Logger.getInstance().addError(e);
             return null;
         }
-    }), 
+    }),
     ARGON2((bits, password, salt) -> {
         final Argon2Parameters params = new Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
             .withSalt(salt)
@@ -58,7 +58,7 @@ public enum SecurityVersion {
 
     /**
      * Hashes the given password using the embedded key derivation function.
-     * 
+     *
      * @param password The password to hash.
      * @param salt     The salt used for hashing.
      * @return The hashed password.
@@ -69,7 +69,7 @@ public enum SecurityVersion {
 
     /**
      * Derives an AES key from the master password using the embedded key derivation function.
-     * 
+     *
      * @param masterPassword The master password to generate the key from.
      * @param salt           The salt used for key derivation.
      * @return The derived AES key.

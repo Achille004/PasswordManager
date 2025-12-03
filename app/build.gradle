@@ -93,8 +93,8 @@ jar {
 def gpgExists = ['gpg', 'gpg.exe'].any { executable ->
     System.getenv('PATH').split(File.pathSeparator).any { path -> new File(path, executable).exists() }
 }
-def gpgPropertiesExist = (project.hasProperty('signing.keyId') 
-        && project.hasProperty('signing.password') 
+def gpgPropertiesExist = (project.hasProperty('signing.keyId')
+        && project.hasProperty('signing.password')
         && project.hasProperty('signing.secretKeyRingFile'))
 
 signing {
@@ -137,7 +137,7 @@ tasks.register('assemblePortables', Delete) {
             from tasks.distTar
             if(gpgSignable) {
                 from tasks.signDistTar
-            } 
+            }
             into distDir.dir('tar')
         }
         copy {
