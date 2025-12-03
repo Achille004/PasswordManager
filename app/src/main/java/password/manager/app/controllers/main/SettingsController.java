@@ -84,7 +84,7 @@ public class SettingsController extends AbstractController {
         settingsLangCB.getSelectionModel().select(ioManager.getUserPreferences().getLocale());
         bindValueConverter(settingsLangCB, localeProperty, SettingsController::localeStringConverter);
         bindValueComparator(languages, localeProperty, settingsLangCB);
- 
+
         localeProperty.bind(notNullBinding(settingsLangCB.valueProperty()));
 
         // Sorting order box
@@ -147,11 +147,11 @@ public class SettingsController extends AbstractController {
     private static <T> @NotNull ObjectBinding<T> notNullBinding(@NotNull ObjectProperty<T> property) {
         return new ObjectBinding<>() {
             private T cachedValue = property.getValue();
-            
+
             {
                 bind(property);
             }
-            
+
             @Override
             protected @NotNull T computeValue() {
                 T val = property.getValue();

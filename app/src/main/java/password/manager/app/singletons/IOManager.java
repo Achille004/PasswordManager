@@ -66,14 +66,14 @@ import password.manager.lib.PasswordInputControl;
 public final class IOManager {
     public static final String OS, USER_HOME;
     public static final Path FILE_PATH, PRESERVED_PATH;
-    
+
     public static final String LANG_BUNDLE_RESOURCE = "/bundles/Lang";
 
     private static final String DATA_FILE_NAME = "data.json";
     private static final String BACKUP_FILE_NAME = "data.json.bak";
     private static final File DATA_FILE, BACKUP_FILE;
 
-    private static final int AUTOSAVE_INTERVAL = 2; 
+    private static final int AUTOSAVE_INTERVAL = 2;
 
     static {
         // gets system properties
@@ -182,7 +182,7 @@ public final class IOManager {
             Logger.getInstance().addInfo("Neither DATA_FILE nor BACKUP_FILE exists, skipping data loading");
             return;
         }
-        
+
         // Try to load DATA_FILE
         try {
             loadDataFile(DATA_FILE, "DATA_FILE");
@@ -255,7 +255,7 @@ public final class IOManager {
                 Platform.runLater(() -> IS_SAVING.set(SaveState.SUCCESS));
             } catch (IOException e) {
                 Logger.getInstance().addError(e);
-                Platform.runLater(() -> IS_SAVING.set(SaveState.ERROR));    
+                Platform.runLater(() -> IS_SAVING.set(SaveState.ERROR));
             }
         });
     }

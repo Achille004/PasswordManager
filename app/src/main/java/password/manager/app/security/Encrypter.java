@@ -35,7 +35,7 @@ import password.manager.app.singletons.Logger;
 
 /**
  * Cryptographic utility class for password hashing and key derivation.
- * 
+ *
  * <p><b>Design Note (Java 25+ HKDF consideration):</b>
  * While Java 25 introduces native HKDF support, this implementation continues to use
  * Argon2 for both password hashing and key derivation. This design choice maintains:
@@ -44,7 +44,7 @@ import password.manager.app.singletons.Logger;
  *   <li>Consistent performance characteristics across the application</li>
  *   <li>Simplified architecture with lazy decryption (decrypt-on-demand per account)</li>
  * </ul>
- * 
+ *
  * HKDF would only provide benefits for bulk operations (e.g., mass password changes),
  * which are infrequent in typical password manager usage patterns.
  * </p>
@@ -78,7 +78,7 @@ public final class Encrypter {
 
     /**
      * Uses AES to encrypt a password.
-     * 
+     *
      * @param password The password to encrypt.
      * @param key      The AES key.
      * @param iv       The initialization vector.
@@ -96,7 +96,7 @@ public final class Encrypter {
 
     /**
      * Decrypts and AES encrypted password.
-     * 
+     *
      * @param encryptedPassword The encrypted password to decrypt.
      * @param key               The AES key.
      * @param iv                The initialization vector.

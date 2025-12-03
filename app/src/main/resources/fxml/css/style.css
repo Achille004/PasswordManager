@@ -75,11 +75,11 @@ PasswordField {
 
 Button {
   -fx-background-color: transparent;
-  -fx-background-radius: 8deg; 
+  -fx-background-radius: 8deg;
 }
 
 Button:focused {
-  -fx-focus-color: transparent; 
+  -fx-focus-color: transparent;
 }
 
 CheckBox .box {

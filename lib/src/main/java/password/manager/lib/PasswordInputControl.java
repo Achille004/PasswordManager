@@ -32,7 +32,7 @@ public interface PasswordInputControl {
     StringProperty textProperty();
     void setText(String text);
     String getText();
-    
+
     void requestFocus();
     void setOnAction(EventHandler<ActionEvent> value);
 

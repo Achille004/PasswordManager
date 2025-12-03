@@ -199,7 +199,7 @@ public class ManagerController extends AbstractController {
         });
     }
 
-    private void setupAccountListView(ObjectProperty<SortingOrder> sortingOrderProperty, SortedList<Account> sortedAccountList, 
+    private void setupAccountListView(ObjectProperty<SortingOrder> sortingOrderProperty, SortedList<Account> sortedAccountList,
                                       FilteredList<Account> filteredAccountList, TabManager tabManager) {
         // #region Sorted Account List setup
         final ListChangeListener<Account> ACCOUNT_LIST_CHANGE_HANDLER = change -> {
@@ -218,7 +218,7 @@ public class ManagerController extends AbstractController {
         // #endregion
 
         // #region Account ListView setup
-        final Function<SortingOrder, Callback<ListView<Account>, ListCell<Account>>> ACCOUNT_CELL_FACTORY = order -> 
+        final Function<SortingOrder, Callback<ListView<Account>, ListCell<Account>>> ACCOUNT_CELL_FACTORY = order ->
                 _ -> new ListCell<>() {
                     @Override
                     protected void updateItem(Account account, boolean empty) {
@@ -250,9 +250,9 @@ public class ManagerController extends AbstractController {
             if (!keyEvent.isControlDown() || selectedTab == null) return;
 
             switch(keyEvent.getCode()) {
-                case W -> { 
+                case W -> {
                     keyEvent.consume();
-                    if (selectedTab == homeTab) break; 
+                    if (selectedTab == homeTab) break;
                     // It's better to just handle this manually
                     if (selectedTab == addTab) {
                         tabManager.selectTab(homeTab);
@@ -402,7 +402,7 @@ public class ManagerController extends AbstractController {
                 final String password = editorPassword.getText().strip();
 
                 // save the new attributes of the account
-                /*  
+                /*
                   I know that the different reset handling is weird, but let me explain:
                     if the account is null, it means that the user is creating a new account,
                     so we just reset the editor, but if the account is not null, it means that

@@ -137,7 +137,7 @@ public class ReadablePasswordField extends AnchorPane implements Initializable, 
         textField.setMaxSize(width, height);
     }
 
-    ///// PASSWORD INPUT CONTROL METHODS ///// 
+    ///// PASSWORD INPUT CONTROL METHODS /////
 
     public BooleanProperty readableProperty() {
         return readable;
@@ -148,7 +148,7 @@ public class ReadablePasswordField extends AnchorPane implements Initializable, 
             this.readable.set(readable);
         }
     }
-    
+
     public boolean isReadable() {
         return readable.get();
     }
