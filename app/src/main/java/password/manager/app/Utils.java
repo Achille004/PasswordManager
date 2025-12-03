@@ -29,6 +29,8 @@ import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javafx.scene.layout.Pane;
 import org.jetbrains.annotations.Contract;
@@ -48,7 +50,6 @@ import password.manager.app.singletons.ObservableResourceFactory;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.DialogPane;
-import javafx.scene.control.ListView;
 
 public final class Utils {
     private Utils() {} // Prevent instantiation
@@ -68,30 +69,15 @@ public final class Utils {
     private static final Encoder BASE64ENC = Base64.getEncoder();
     private static final Decoder BASE64DEC = Base64.getDecoder();
 
+    private static final ReentrantReadWriteLock MEM_RW_LOCK = new ReentrantReadWriteLock(true); // fair mode
+    private static final Lock MEM_READ_LOCK = MEM_RW_LOCK.readLock();
+    private static final Lock MEM_WRITE_LOCK = MEM_RW_LOCK.writeLock();
+    private static final float MEM_SAFETY_FACTOR = 0.8f;
+    private static long reservedMemory = 0;
+
     @SafeVarargs
     public static <T> SortedList<T> getFXSortedList(T @NotNull... items) {
         return FXCollections.observableArrayList(items).sorted(null);
-    }
-
-    /**
-     * Returns the selected index in a ListView with a first blank option. If
-     * the value is -1, the selected index is the blank one.
-     *
-     * @param listView The {@code ListView} to extract the index from.
-     * @return The index of the current selected item.
-     */
-    public static <T> int selectedListViewIndex(@NotNull ListView<T> listView) {
-        return listView.getSelectionModel().getSelectedIndex();
-    }
-
-    /**
-     * Returns the selected item in a ListView.
-     *
-     * @param listView The ListView to extract the index from.
-     * @return The index of the current selected item.
-     */
-    public static <T> T selectedListViewItem(@NotNull ListView<T> listView) {
-        return listView.getSelectionModel().getSelectedItem();
     }
 
     /**
@@ -174,5 +160,70 @@ public final class Utils {
         }
         Platform.exit(); // Exit gracefully (saves data, etc.)
         return new Pane(); // return dummy pane
+    }
+
+    /**
+     * Waits until sufficient memory is available for an operation.
+     * Checks free memory and suggests garbage collection if needed.
+     *
+     * @param requiredMemory The amount of memory required in bytes.
+     * @throws RuntimeException if interrupted while waiting.
+     */
+    public static void reserveMemory(int requiredMemory) {
+        MEM_READ_LOCK.lock();
+        try {
+            Runtime runtime = Runtime.getRuntime();
+            int attempts = 0;
+            final int MAX_ATTEMPTS = 100;
+
+            while (attempts < MAX_ATTEMPTS) {
+                MEM_READ_LOCK.unlock();
+                MEM_WRITE_LOCK.lock();
+
+                try {
+                    long maxMemory = runtime.maxMemory();
+                    long allocatedMemory = runtime.totalMemory();
+                    long freeMemory = runtime.freeMemory();
+                    long availableMemory = (maxMemory - allocatedMemory) + freeMemory - reservedMemory;
+
+                    if (availableMemory * MEM_SAFETY_FACTOR > requiredMemory) {
+                        reservedMemory += requiredMemory;
+                        return;
+                    }
+                } finally {
+                    MEM_WRITE_LOCK.unlock();
+                    MEM_READ_LOCK.lock();
+                }
+
+                try {
+                    System.gc();
+                    Thread.sleep(100);
+                    attempts++;
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Interrupted while waiting for memory", e);
+                }
+            }
+
+            throw new RuntimeException("Unable to allocate sufficient memory after " + MAX_ATTEMPTS + " attempts");
+        } finally {
+            MEM_READ_LOCK.unlock();
+        }
+    }
+
+    /**
+     * Releases reserved memory after an Argon2 operation completes.
+     * Must be called after the operation that reserved memory via waitForSufficientMemory.
+     *
+     * @param requiredMemory The amount of memory to release in bytes.
+     */
+    public static void releaseMemory(int requiredMemory) {
+        MEM_WRITE_LOCK.lock();
+        try {
+            reservedMemory -= requiredMemory;
+            if (reservedMemory < 0) reservedMemory = 0;
+        } finally {
+            MEM_WRITE_LOCK.unlock();
+        }
     }
 }

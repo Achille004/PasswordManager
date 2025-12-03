@@ -90,7 +90,7 @@ public final class Account {
 
     public String getPassword(@NotNull SecurityVersion securityVersion, @NotNull String masterPassword) throws GeneralSecurityException {
         byte[] key = securityVersion.getKey(masterPassword, salt);
-        return Encrypter.decryptAES(encryptedPassword, key, iv);
+        return AES.decryptAES(encryptedPassword, key, iv);
     }
 
     private void setPassword(@NotNull SecurityVersion securityVersion, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
@@ -100,7 +100,7 @@ public final class Account {
         random.nextBytes(iv);
 
         final byte[] key = securityVersion.getKey(masterPassword, salt);
-        this.encryptedPassword = Encrypter.encryptAES(password, key, iv);
+        this.encryptedPassword = AES.encryptAES(password, key, iv);
     }
 
     public void setData(@NotNull SecurityVersion securityVersion, @NotNull String software, @NotNull String username, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
@@ -132,7 +132,7 @@ public final class Account {
     public void updateToLatestVersion(@NotNull SecurityVersion securityVersion, @NotNull String masterPassword) throws GeneralSecurityException {
         if (isDerivedSaltVersion) {
             final byte[] key = securityVersion.getKey(masterPassword, (getSoftware() + getUsername()).getBytes());
-            final String oldPassword = Encrypter.decryptAES(encryptedPassword, key, iv);
+            final String oldPassword = AES.decryptAES(encryptedPassword, key, iv);
             setPassword(securityVersion, oldPassword, masterPassword);
         }
     }
