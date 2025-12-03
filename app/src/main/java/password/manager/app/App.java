@@ -131,7 +131,7 @@ public class App extends Application {
 
     @Override
     public void stop() {
-        IOManager.getInstance().requestShutdown();
+        IOManager.destroyInstance();
     }
 
     static void main(String[] args) {

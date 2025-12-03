@@ -17,25 +17,19 @@ public final class Singletons {
 
     /**
      * Registers the singleton {@code cls} instance.
-     * <p>
-     * This method must be called exactly once per class, else it will throw an {@link IllegalStateException}.
-     * </p>
      *
      * @param <T> the type of the class
      * @param cls the class of the instance
      * @param instance the instance to register
      * @throws IllegalStateException if the class is already registered
      */
-    public static <T> void register(@NotNull Class<T> cls, @NotNull T instance) {
+    public static <T extends AutoCloseable> void register(@NotNull Class<T> cls, @NotNull T instance) {
         if (isRegistered(cls)) throw new IllegalStateException(cls.getName() + " is already registered");
         INSTANCES.put(cls, instance);
     }
 
     /**
      * Returns the singleton {@code cls} instance.
-     * <p>
-     * This method should only be called after {@link #register} has been invoked for the provided class,
-     * else it will throw an {@link IllegalStateException}.
      *
      * @param <T> the type of the class
      * @param cls the class of the instance
@@ -43,7 +37,7 @@ public final class Singletons {
      * @throws IllegalStateException if the class is not yet registered
      */
     @SuppressWarnings("unchecked")
-    public static <T> @NotNull T get(@NotNull Class<T> cls) {
+    public static <T extends AutoCloseable> @NotNull T get(@NotNull Class<T> cls) {
         Object inst = INSTANCES.get(cls);
         if (inst == null) throw new IllegalStateException(cls.getName() + " is not yet registered");
         return (T) inst;
@@ -52,11 +46,29 @@ public final class Singletons {
     /**
      * Returns whether the {@code cls} is already registered.
      *
-     * @param <T> the type of the class
      * @param cls the class to check
      * @return true if the class is registered, false otherwise
      */
-    public static <T> boolean isRegistered(@NotNull Class<T> cls) {
+    public static <T extends AutoCloseable> boolean isRegistered(@NotNull Class<T> cls) {
         return INSTANCES.containsKey(cls);
+    }
+
+    /**
+     * Unregisters the singleton {@code cls} instance.
+     *
+     * @param <T> the type of the class
+     * @param cls the class of the instance
+     * @throws IllegalStateException if the class is not registered
+     */
+    @SuppressWarnings("unchecked")
+    public static <T extends AutoCloseable> void unregister(@NotNull Class<T> cls) {
+        if(!isRegistered(cls)) throw new IllegalStateException(cls.getName() + " is not registered");
+        T instance =  (T) INSTANCES.remove(cls);
+        
+        try {
+            instance.close();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to close instance of " + cls.getName(), e);
+        }
     }
 }

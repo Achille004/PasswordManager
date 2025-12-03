@@ -57,13 +57,15 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import lombok.Getter;
 import password.manager.app.App;
+import password.manager.app.interfaces.SingletonPattern;
 import password.manager.app.security.Account;
 import password.manager.app.security.AccountRepository;
 import password.manager.app.security.UserPreferences;
 import password.manager.lib.LoadingAnimation;
 import password.manager.lib.PasswordInputControl;
 
-public final class IOManager {
+@SingletonPattern
+public final class IOManager implements AutoCloseable {
     public static final String OS, USER_HOME;
     public static final Path FILE_PATH, PRESERVED_PATH;
 
@@ -94,6 +96,9 @@ public final class IOManager {
         BACKUP_FILE = FILE_PATH.resolve(BACKUP_FILE_NAME).toFile();
         Logger.getInstance().addDebug("DATA_FILE: '" + DATA_FILE + "'");
         Logger.getInstance().addDebug("BACKUP_FILE: '" + BACKUP_FILE + "'");
+
+        // creates the ObservableResourceFactory singleton
+        ObservableResourceFactory.createInstance(LANG_BUNDLE_RESOURCE);
     }
 
     private final AccountRepository ACCOUNT_REPOSITORY;
@@ -258,17 +263,6 @@ public final class IOManager {
                 Platform.runLater(() -> IS_SAVING.set(SaveState.ERROR));
             }
         });
-    }
-
-    public void requestShutdown() {
-        Logger.getInstance().addInfo("Shutdown requested");
-        saveData(); // when the user shuts down the program on the first run, it won't save (not authenticated)
-
-        Logger.getInstance().addInfo("Shutting down executor services");
-        ACCOUNT_REPOSITORY.shutdown();
-        AUTOSAVE_SCHEDULER.shutdown();
-
-        Logger.getInstance().closeStreams();
     }
     // #endregion
 
@@ -451,15 +445,31 @@ public final class IOManager {
 
     // Wrapper class for application data
     private record AppData(UserPreferences userPreferences, List<Account> accountList) {}
+    
+    @Override
+    public void close() {
+        Logger.getInstance().addInfo("Shutdown requested");
+        saveData(); // when the user shuts down the program on the first run, it won't save (not authenticated)
+
+        Logger.getInstance().addInfo("Shutting down executor services");
+        ACCOUNT_REPOSITORY.shutdown();
+        AUTOSAVE_SCHEDULER.shutdown();
+
+        ObservableResourceFactory.destroyInstance();
+        Logger.destroyInstance();
+    }
 
     // #region Singleton methods
     public static synchronized void createInstance() throws IllegalStateException {
-        ObservableResourceFactory.createInstance(LANG_BUNDLE_RESOURCE);
         Singletons.register(IOManager.class, new IOManager());
     }
 
     public static IOManager getInstance() throws IllegalStateException {
         return Singletons.get(IOManager.class);
+    }
+
+    public static synchronized void destroyInstance() throws IllegalStateException {
+        Singletons.unregister(IOManager.class);
     }
     // #endregion
 }

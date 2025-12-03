@@ -28,7 +28,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.control.Labeled;
 import javafx.stage.Stage;
 
-public final class ObservableResourceFactory {
+public final class ObservableResourceFactory implements AutoCloseable {
     private final ObjectProperty<ResourceBundle> resources;
 
     private ObservableResourceFactory(ResourceBundle resources) {
@@ -88,13 +88,22 @@ public final class ObservableResourceFactory {
         }
     }
 
+    @Override
+    public void close() {
+        // Nothing to close
+    }
+
     // #region Singleton methods
     public static synchronized void createInstance(String bundleName) throws IllegalStateException {
         Singletons.register(ObservableResourceFactory.class, new ObservableResourceFactory(bundleName));
     }
 
-    public static ObservableResourceFactory getInstance() {
+    public static ObservableResourceFactory getInstance() throws IllegalStateException {
         return Singletons.get(ObservableResourceFactory.class);
+    }
+
+    public static synchronized void destroyInstance() throws IllegalStateException {
+        Singletons.unregister(ObservableResourceFactory.class);
     }
     // #endregion
 }
