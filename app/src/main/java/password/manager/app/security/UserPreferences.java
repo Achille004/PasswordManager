@@ -59,7 +59,7 @@ public final class UserPreferences {
         this.securityVersion = SecurityVersion.LATEST;
 
         this.salt = new byte[16];
-        this.hashedPassword = new byte[Encrypter.HASH_BITS / 8];
+        this.hashedPassword = new byte[SecurityVersion.HASH_BITS / 8];
         isPasswordSet = false;
     }
 

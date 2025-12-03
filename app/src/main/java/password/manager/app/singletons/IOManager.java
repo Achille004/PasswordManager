@@ -445,7 +445,7 @@ public final class IOManager implements AutoCloseable {
 
     // Wrapper class for application data
     private record AppData(UserPreferences userPreferences, List<Account> accountList) {}
-    
+
     @Override
     public void close() {
         Logger.getInstance().addInfo("Shutdown requested");

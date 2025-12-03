@@ -19,61 +19,23 @@
 package password.manager.app.security;
 
 import java.security.GeneralSecurityException;
-import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 
 import javax.crypto.Cipher;
-import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jetbrains.annotations.NotNull;
 
-import lombok.Getter;
-import password.manager.app.singletons.Logger;
-
 /**
- * Cryptographic utility class for password hashing and key derivation.
- *
- * <p><b>Design Note (Java 25+ HKDF consideration):</b>
- * While Java 25 introduces native HKDF support, this implementation continues to use
- * Argon2 for both password hashing and key derivation. This design choice maintains:
- * <ul>
- *   <li>Optimal security for password-based operations (Argon2's memory-hard properties)</li>
- *   <li>Consistent performance characteristics across the application</li>
- *   <li>Simplified architecture with lazy decryption (decrypt-on-demand per account)</li>
- * </ul>
- *
- * HKDF would only provide benefits for bulk operations (e.g., mass password changes),
- * which are infrequent in typical password manager usage patterns.
- * </p>
+ * Provides AES encryption and decryption methods, powered by Bouncy Castle.
  */
-public final class Encrypter {
-    @Deprecated
-    private static @Getter SecretKeyFactory keyFactory;
-
-    public static final int HASH_BITS = 512;
-    public static final int AES_BITS = 256;
-
-    // PBKDF2 parameters
-    @Deprecated
-    public static final int PBKDF2_ITERATIONS = 65536;
-
-    // Argon2 parameters
-    public static final int ARGON2_MEMORY = 65536;       // 64MB in KB
-    public static final int ARGON2_ITERATIONS = 4;       // Time cost
-    public static final int ARGON2_PARALLELISM = 4;      // Parallelism factor
+public final class AES {
 
     static {
         Security.addProvider(new BouncyCastleProvider());
         Security.setProperty("crypto.policy", "unlimited");
-
-        try {
-            keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
-        } catch (NoSuchAlgorithmException e) {
-            Logger.getInstance().addError(e);
-        }
     }
 
     /**
@@ -95,7 +57,7 @@ public final class Encrypter {
     }
 
     /**
-     * Decrypts and AES encrypted password.
+     * Decrypts an AES-encrypted password.
      *
      * @param encryptedPassword The encrypted password to decrypt.
      * @param key               The AES key.

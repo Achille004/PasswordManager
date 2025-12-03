@@ -64,7 +64,7 @@ public final class Singletons {
     public static <T extends AutoCloseable> void unregister(@NotNull Class<T> cls) {
         if(!isRegistered(cls)) throw new IllegalStateException(cls.getName() + " is not registered");
         T instance =  (T) INSTANCES.remove(cls);
-        
+
         try {
             instance.close();
         } catch (Exception e) {
