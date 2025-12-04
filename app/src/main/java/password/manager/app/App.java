@@ -53,7 +53,7 @@ public class App extends Application {
 
     public static final String ROOT_STYLESHEET = App.class.getResource("/fxml/css/root.css").toExternalForm();
     public static final String AUTOCOMPLETION_STYLESHEET = App.class.getResource("/fxml/css/autocompletion.css").toExternalForm();
-    public static final Image MAIN_ICON = new Image(App.class.getResource("/images/icon.png").toExternalForm());
+    public static final Image MAIN_ICON = new Image(App.class.getResource("/icon.png").toExternalForm());
 
     private static @Getter HostServices appHostServices;
     private static @Getter AnchorPane appScenePane;
