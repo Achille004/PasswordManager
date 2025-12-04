@@ -200,7 +200,7 @@ tasks.register('assembleInstallers', FullJPackageTask) {
     }
 
     linux {
-        icon =  resourceDir.file('icon.ico')
+        icon =  resourceDir.file('icon.png')
         destination = installerDir.dir('linux')
         linuxAppCategory = 'security'
         linuxDebMaintainer = '2004marras@gmail.com'

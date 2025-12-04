@@ -43,14 +43,14 @@ class FullJPackageTask extends JPackageTask {
 
         if (isWindows) {
             println "Targeting Windows"
-            types += addImgType('cmd /C wix --version', "WiX toolset", [ImageType.EXE, ImageType.MSI])
+            types += addImgType("wix --version", "WiX toolset", [ImageType.EXE, ImageType.MSI])
         } else if (isMac) {
             println "Targeting Mac"
             types += [ImageType.DMG, ImageType.PKG]
         } else if (isUnix) {
             println "Targeting Linux/Unix"
-            types += addImgType('bash -c which dpkg-deb', "DEB package manager", [ImageType.DEB])
-            types += addImgType('bash -c which rpmbuild', "RPM package manager", [ImageType.RPM])
+            types += addImgType("which dpkg-deb", "DEB package manager", [ImageType.DEB])
+            types += addImgType("which rpmbuild", "RPM package manager", [ImageType.RPM])
         }
 
         if (types.isEmpty()) {
@@ -60,7 +60,8 @@ class FullJPackageTask extends JPackageTask {
 
         println "Building"
         types.each { type ->
-            print " - ${type}..."
+            // Clear the line and print the type being built
+            print "\33[2K\r - ${type}..."
             System.out.flush()
 
             setType(type)
@@ -69,28 +70,30 @@ class FullJPackageTask extends JPackageTask {
             println " OK"
         }
 
-        def arch = System.getProperty('os.arch')
+        def arch = System.getProperty("os.arch")
         println "Renaming files for ${arch}"
 
         def outDir = new File(destination)
         outDir.listFiles().each { f ->
-            if (!f.name.contains("-${arch}")) {
-                def name = f.name
-                def dot  = name.lastIndexOf('.')
-                def newName = (dot >= 0)
+            def name = f.name.replaceAll("\\s+", "").replaceAll("_", "-")
+            def dot  = name.lastIndexOf(".")
+
+            def newName = (name.contains("-${arch}")) 
+                ? name
+                : (dot >= 0)
                     ? "${name.substring(0, dot)}-${arch}${name.substring(dot)}"
                     : "${name}-${arch}"
 
-                def newFile = new File(f.parentFile, newName)
-                println " - ${f.name} => ${newFile.name}"
-                f.renameTo(newFile)
+            def newFile = new File(f.parentFile, newName)
+            println " - ${f.name} => ${newFile.name}"
+            f.renameTo(newFile)
+            f.delete()
 
-                // Make sure the new file is writable (WiX was building read-only EXEs
-                // but ok MSIs, and I'm not gonna dive into that rabbit hole right now)
-                if (!newFile.canWrite()) {
-                    newFile.setWritable(true)
-                    println "   L Was read-only, removed attribute"
-                }
+            // Make sure the new file is writable (WiX was building read-only EXEs
+            // but ok MSIs, and I'm not gonna dive into that rabbit hole right now)
+            if (!newFile.canWrite()) {
+                newFile.setWritable(true)
+                println "   L Was read-only, removed attribute"
             }
         }
     }
