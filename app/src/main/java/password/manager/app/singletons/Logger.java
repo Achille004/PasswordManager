@@ -30,9 +30,10 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -84,8 +85,8 @@ public final class Logger implements AutoCloseable {
         stacktraceWriter = getFileWriter(currPath.resolve(STACKTRACE_FILE_NAME), false);
         Objects.requireNonNull(stacktraceWriter, "stacktraceWriter must not be null");
 
-        final String MSG = String.format(INITIAL_MESSAGE, MSG_DTF.format(LocalDateTime.now()));
-        write(logWriter, new StringBuilder(MSG));
+        String msg = String.format(INITIAL_MESSAGE, MSG_DTF.format(LocalDateTime.now()));
+        write(logWriter, new StringBuilder(msg));
     }
 
     public Path getLoggingPath() {
@@ -130,13 +131,10 @@ public final class Logger implements AutoCloseable {
                 .append(getCurrentMethodName(1))
                 .append("', follows error and full stack trace:\n");
 
-        try {
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
+        try (StringWriter sw = new StringWriter();
+             PrintWriter pw = new PrintWriter(sw)) {
             e.printStackTrace(pw);
-            stacktraceStrBuilder.append(sw).append("\n");
-            pw.close();
-            sw.close();
+            stacktraceStrBuilder.append(sw.toString()).append("\n");
         } catch (IOException e1) {
             e1.printStackTrace();
         }
@@ -171,9 +169,9 @@ public final class Logger implements AutoCloseable {
     // #endregion
 
     // #region Private methods
-    private void write(@NotNull FileWriter writer, @NotNull StringBuilder builder) {
+    private synchronized void write(@NotNull FileWriter writer, @NotNull StringBuilder buffer) {
         try {
-            writer.write(builder.toString());
+            writer.write(buffer.toString());
             writer.flush();
         } catch (IOException e) {
             e.printStackTrace();
@@ -181,41 +179,37 @@ public final class Logger implements AutoCloseable {
     }
 
     private void rotateLogs(@NotNull Path filePath) {
-        try {
-            // Get the list of log directories
-            File logDir = filePath.toFile();
-            File[] logDirs = logDir.listFiles((_, name) -> name.startsWith(FOLDER_PREFIX));
+        // Get the list of log directories
+        File logDir = filePath.toFile();
+        File[] logDirs = logDir.listFiles((_, name) -> name.startsWith(FOLDER_PREFIX));
+        if (logDirs == null) return;
 
-            if (logDirs != null && logDirs.length > MAX_LOG_FILES - 1) {
-                // Sort the directories by last modified date, oldest first
-                Arrays.sort(logDirs, Comparator.comparingLong(File::lastModified));
+        // Delete the oldest directories if the count exceeds MAX_LOG_FILES - 1 (the -1 is for the current log)
+        int limit = logDirs.length - MAX_LOG_FILES + 1;
+        if (limit <= 0) return;
 
-                // Delete the oldest directories if the count exceeds MAX_LOG_FILES
-                for (int i = 0; i < logDirs.length - MAX_LOG_FILES + 1; i++) {
-                    deleteDirectory(logDirs[i].toPath());
-                }
-            }
+        Stream.of(logDirs)
+                .sorted(Comparator.comparingLong(File::lastModified))
+                .limit(limit)
+                .map(File::toPath)
+                .forEach(this::deleteDirectory);
+    }
+
+    private void deleteDirectory(Path path) {
+        try (Stream<Path> paths = Files.walk(path)) {
+            List<Path> toDelete = paths.sorted(Comparator.reverseOrder()).toList();
+            for (Path p : toDelete) Files.delete(p);
         } catch (IOException e) {
             addError(e);
         }
     }
 
-    private void deleteDirectory(Path path) throws IOException {
-        try (var paths = Files.walk(path)) {
-            paths.sorted(Comparator.reverseOrder())
-                 .map(Path::toFile)
-                 .forEach(File::delete);
-        }
-    }
-
     private static @NotNull String getCurrentMethodName(@NotNull Integer walkDist) {
         StackTraceElement[] sckTrc = Thread.currentThread().getStackTrace();
-        if (sckTrc.length >= walkDist + 2) {
-            StackTraceElement stckTrcElem = sckTrc[walkDist + 2];
-            return stckTrcElem.getClassName() + '.' + stckTrcElem.getMethodName();
-        } else {
-            return "unknown";
-        }
+        if (sckTrc.length < walkDist + 2) return "unknown";
+
+        StackTraceElement stckTrcElem = sckTrc[walkDist + 2];
+        return stckTrcElem.getClassName() + '.' + stckTrcElem.getMethodName();
     }
     // #endregion
 }

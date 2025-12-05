@@ -76,6 +76,6 @@ javafx {
 jar {
     archiveBaseName.set(rootProject.name + 'Components')
     manifest {
-        attributes 'Implementation-Title': 'Custom components for Password Manager'
+        attributes 'Implementation-Title': 'Custom components for ' + project.appName
     }
 }

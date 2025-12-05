@@ -40,7 +40,6 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
-import password.manager.app.Utils;
 import password.manager.app.controllers.AbstractController;
 import password.manager.app.enums.SortingOrder;
 import password.manager.app.singletons.IOManager;

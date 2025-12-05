@@ -31,8 +31,6 @@ plugins {
     id 'org.gradlex.java-module-dependencies' version '1.6.4'
 }
 
-project.version = '3.1.0'
-
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
@@ -66,7 +64,9 @@ application {
     // JVM arguments
     applicationDefaultJvmArgs = [
         '--enable-native-access=javafx.graphics',
-        '--add-exports', 'javafx.base/com.sun.javafx.event=org.controlsfx.controls'
+        '--add-exports', 'javafx.base/com.sun.javafx.event=org.controlsfx.controls',
+        '-Dapp.name=' + project.appName,
+        '-Dapp.version=' + project.appVersion
     ]
 }
 
@@ -86,7 +86,7 @@ javafx {
 jar {
     archiveBaseName.set(rootProject.name)
     manifest {
-        attributes 'Implementation-Title': 'Password Manager', 'Main-Class': 'password.manager.app.App'
+        attributes 'Implementation-Title': project.appName, 'Main-Class': 'password.manager.app.App'
     }
 }
 
@@ -166,16 +166,16 @@ tasks.register('assembleInstallers', FullJPackageTask) {
     dependsOn tasks.readyAllJars
 
     aboutUrl = 'https://github.com/Achille004/PasswordManager'
-    appDescription = 'Password Manager'
-    appName = 'Password Manager'
-    appVersion = project.version
-    copyright = '© Francesco Marras'
+    appDescription = project.appName
+    appName = project.appName
+    appVersion = project.appVersion
+    copyright = '© ' + rootProject.appVendor
     javaOptions = ['-Dfile.encoding=UTF-8']
     licenseFile	= resourceDir.file('license.txt')
     module = 'password.manager.app/password.manager.app.App'
     modulePaths = ['build/jars']
     runtimeImage = System.getProperty('java.home')
-    vendor = 'Francesco Marras'
+    vendor = project.appVendor
 
     windows {
         icon =  resourceDir.file('icon.ico')
@@ -184,7 +184,7 @@ tasks.register('assembleInstallers', FullJPackageTask) {
         winDirChooser = true
         winHelpUrl = 'https://github.com/Achille004/PasswordManager/issues'
         winMenu = true
-        winMenuGroup = 'Francesco Marras'
+        winMenuGroup = project.appVendor
         winShortcut = true
         winShortcutPrompt = true
     }
@@ -194,9 +194,9 @@ tasks.register('assembleInstallers', FullJPackageTask) {
         destination = installerDir.dir('mac')
         macAppCategory  = 'security'
         macAppStore = false
-        macPackageIdentifier = 'PasswordManager-3.1.0'
-        macPackageName = 'PasswordManager'
-        macSigningKeyUserName = 'Francesco Marras'
+        macPackageIdentifier = (project.appName.replace(" ", "") + "-" + project.appVersion)
+        macPackageName = project.appName
+        macSigningKeyUserName = project.appVendor
     }
 
     linux {
@@ -204,7 +204,7 @@ tasks.register('assembleInstallers', FullJPackageTask) {
         destination = installerDir.dir('linux')
         linuxAppCategory = 'security'
         linuxDebMaintainer = '2004marras@gmail.com'
-        linuxMenuGroup = 'Francesco Marras'
+        linuxMenuGroup = project.appVendor
         linuxRpmLicenseType = 'GPLv3'
         linuxShortcut = true
     }
