@@ -20,13 +20,22 @@ package testing;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class TestingUtils {
 
     // Define a common log path for all tests, starting from the project root
     // (Path is hardcoded, but I guess it's fine for testing purposes)
-    public static final Path LOG_PATH = Path.of("app/build/test-logs/");
+    public static final Path LOG_PATH = Path.of("build/test-logs/");
+
+    static {
+        try {
+            Files.createDirectories(LOG_PATH);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to create test log directory", e);
+        }
+    }
 
     public static String readBlnsLine(BufferedReader reader) throws IOException {
         String line;

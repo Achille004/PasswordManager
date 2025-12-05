@@ -48,12 +48,13 @@ import java.util.ResourceBundle;
 import org.jetbrains.annotations.NotNull;
 
 public class App extends Application {
-    public static final String APP_NAME = "Password Manager";
-    public static final String APP_VERSION = "3.1.0";
+    public static final String APP_NAME = System.getProperty("app.name", "Password Manager");
+    public static final String APP_VERSION = System.getProperty("app.version", "3.1.0");
 
     public static final String ROOT_STYLESHEET = App.class.getResource("/fxml/css/root.css").toExternalForm();
     public static final String AUTOCOMPLETION_STYLESHEET = App.class.getResource("/fxml/css/autocompletion.css").toExternalForm();
-    public static final Image MAIN_ICON = new Image(App.class.getResource("/icon.png").toExternalForm());
+    // Keep as String to prevent crashing when JavaFX is not available (e.g., during build processes)
+    public static final String MAIN_ICON = App.class.getResource("/icon.png").toExternalForm();
 
     private static @Getter HostServices appHostServices;
     private static @Getter AnchorPane appScenePane;
@@ -74,7 +75,7 @@ public class App extends Application {
         Font.loadFont(getClass().getResourceAsStream("/font/Charm-Bold.ttf"), 14);
 
         primaryStage.setTitle(APP_NAME);
-        primaryStage.getIcons().add(MAIN_ICON);
+        primaryStage.getIcons().add(new Image(MAIN_ICON));
         primaryStage.setOnCloseRequest(_ -> Platform.exit());
         primaryStage.setResizable(false);
         primaryStage.setScene(new Scene(appScenePane, 900, 600));

@@ -15,8 +15,6 @@ import org.bouncycastle.crypto.generators.Argon2BytesGenerator;
 import org.bouncycastle.crypto.params.Argon2Parameters;
 import org.jetbrains.annotations.NotNull;
 
-import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import password.manager.app.interfaces.TriFunction;
 import password.manager.app.singletons.Logger;
@@ -41,10 +39,17 @@ import password.manager.app.singletons.Logger;
 public enum SecurityVersion {
     @Deprecated
     PBKDF2((bits, password, salt) -> {
-        final KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, Parameters.PBKDF2_ITERATIONS, bits);
-        SecretKey secretKey;
+        SecretKeyFactory keyFactory;
         try {
-            secretKey = Parameters.getKeyFactory().generateSecret(spec);
+            keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
+        } catch (NoSuchAlgorithmException e) {
+            Logger.getInstance().addError(e);
+            throw new RuntimeException(e);
+        }
+
+        final KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, Parameters.PBKDF2_ITERATIONS, bits);
+        try {
+            SecretKey secretKey = keyFactory.generateSecret(spec);
             return secretKey.getEncoded();
         } catch (InvalidKeySpecException e) {
             Logger.getInstance().addError(e);
@@ -53,17 +58,19 @@ public enum SecurityVersion {
     }),
     ARGON2((bits, password, salt) -> {
         final Argon2Parameters params = new Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
-                .withSalt(salt)
-                .withParallelism(Parameters.ARGON2_PARALLELISM)
-                .withMemoryAsKB(Parameters.ARGON2_MEMORY_KIB)
-                .withIterations(Parameters.ARGON2_ITERATIONS)
-                .build();
+                    .withParallelism(Parameters.ARGON2_PARALLELISM)
+                    .withMemoryAsKB(Parameters.ARGON2_MEMORY_KIB)
+                    .withIterations(Parameters.ARGON2_ITERATIONS)
+                    .withSalt(salt)
+                    .build();
 
+        // Ask utility to consider this memory as reserved
         reserveMemory(Parameters.ARGON2_MEMORY_KIB * 1024);
 
         final Argon2BytesGenerator generator = new Argon2BytesGenerator();
         generator.init(params);
 
+        // Release the reserved memory after initialization (it has been allocated)
         releaseMemory(Parameters.ARGON2_MEMORY_KIB * 1024);
 
         final byte[] result = new byte[bits / 8];
@@ -109,27 +116,16 @@ public enum SecurityVersion {
     }
 
     /**
-     * Holds parameters for this enum.
+     * Inner class to hold parameters for this enum.
      */
     private static class Parameters {
-        @Deprecated
-        private static @Getter(value = AccessLevel.PRIVATE) SecretKeyFactory keyFactory;
-
         // PBKDF2 parameters
         @Deprecated
         private static final int PBKDF2_ITERATIONS = 65536;
 
         // Argon2 parameters
-        private static final int ARGON2_MEMORY_KIB = 65536;       // 64MiB in KiB
+        private static final int ARGON2_MEMORY_KIB = 65536;   // 64MiB in KiB
         private static final int ARGON2_ITERATIONS = 4;       // Time cost
         private static final int ARGON2_PARALLELISM = 4;      // Parallelism factor
-
-        static {
-            try {
-                keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
-            } catch (NoSuchAlgorithmException e) {
-                Logger.getInstance().addError(e);
-            }
-        }
     }
 }

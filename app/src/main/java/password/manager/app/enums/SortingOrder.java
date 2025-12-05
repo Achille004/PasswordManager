@@ -18,8 +18,6 @@
 
 package password.manager.app.enums;
 
-import static java.util.Comparator.comparing;
-
 import java.util.Comparator;
 import java.util.function.BinaryOperator;
 
@@ -34,11 +32,11 @@ import password.manager.app.security.Account;
 public enum SortingOrder {
     SOFTWARE(
         "software", (software, username) -> software + "\n" + username,
-        InnerComparators.SOFTWARE_COMPARATOR.thenComparing(InnerComparators.USERNAME_COMPARATOR)
+        CachedComparators.SOFTWARE_COMPARATOR.thenComparing(CachedComparators.USERNAME_COMPARATOR)
     ),
     USERNAME(
         "username", (software, username) -> username + "\n" + software,
-        InnerComparators.USERNAME_COMPARATOR.thenComparing(InnerComparators.SOFTWARE_COMPARATOR)
+        CachedComparators.USERNAME_COMPARATOR.thenComparing(CachedComparators.SOFTWARE_COMPARATOR)
     );
 
     private final String i18nKey;
@@ -56,8 +54,8 @@ public enum SortingOrder {
     /**
      * Inner class to hold comparators to avoid creating them multiple times.
      */
-    static class InnerComparators {
-        private static final Comparator<Account> SOFTWARE_COMPARATOR = comparing(Account::getSoftware, String.CASE_INSENSITIVE_ORDER);
-        private static final Comparator<Account> USERNAME_COMPARATOR = comparing(Account::getUsername, String.CASE_INSENSITIVE_ORDER);
+    private static class CachedComparators {
+        private static final Comparator<Account> SOFTWARE_COMPARATOR = Comparator.comparing(Account::getSoftware, String.CASE_INSENSITIVE_ORDER);
+        private static final Comparator<Account> USERNAME_COMPARATOR = Comparator.comparing(Account::getUsername, String.CASE_INSENSITIVE_ORDER);
     }
 }

@@ -23,6 +23,9 @@ import org.panteleyev.jpackage.ImageType
 import org.panteleyev.jpackage.JPackageTask
 
 class FullJPackageTask extends JPackageTask {
+    // appName and appVersion are inherited from JPackageTask
+    static def osArch = System.getProperty("os.arch")
+
     static def isWindows = Os.isFamily(Os.FAMILY_WINDOWS)
     static def isMac = Os.isFamily(Os.FAMILY_MAC)
     static def isUnix = Os.isFamily(Os.FAMILY_UNIX) && !isMac
@@ -54,7 +57,7 @@ class FullJPackageTask extends JPackageTask {
         }
 
         if (types.isEmpty()) {
-            println "OS not listed as target, building only the app image"
+            println "No package builder found, defaulting to app image"
             types += ImageType.APP_IMAGE
         }
 
@@ -70,21 +73,15 @@ class FullJPackageTask extends JPackageTask {
             println " OK"
         }
 
-        def arch = System.getProperty("os.arch")
-        println "Renaming files for ${arch}"
-
+        println "Renaming files for ${osArch}"
+        def basename = appName.replace(" ", "") + "-" + appVersion + "-" + osArch
         def outDir = new File(destination)
         outDir.listFiles().each { f ->
-            def name = f.name.replaceAll("\\s+", "").replaceAll("_", "-")
-            def dot  = name.lastIndexOf(".")
+            def targetname = basename
+            def dot  = f.name.lastIndexOf(".")
+            if (dot >= 0) targetname += f.name.substring(dot)
 
-            def newName = (name.contains("-${arch}")) 
-                ? name
-                : (dot >= 0)
-                    ? "${name.substring(0, dot)}-${arch}${name.substring(dot)}"
-                    : "${name}-${arch}"
-
-            def newFile = new File(f.parentFile, newName)
+            def newFile = new File(f.parentFile, targetname)
             println " - ${f.name} => ${newFile.name}"
             f.renameTo(newFile)
             f.delete()
