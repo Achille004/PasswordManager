@@ -20,22 +20,28 @@ package password.manager.app.security;
 
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import lombok.Getter;
+import javafx.beans.property.ReadOnlyProperty;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import password.manager.app.enums.SecurityVersion;
 
 public final class Account {
+    private final transient ReadWriteLock lock = new ReentrantReadWriteLock();
+    private final transient Lock readLock = lock.readLock();
+    private final transient Lock writeLock = lock.writeLock();
+
     // JsonProperty is redundant if there are getters
-    private final @JsonIgnore @Getter StringProperty softwareProperty = new SimpleStringProperty(),
-                                                     usernameProperty = new SimpleStringProperty();
+    private final transient ReadOnlyStringWrapper softwareProperty = new ReadOnlyStringWrapper(),
+                                                  usernameProperty = new ReadOnlyStringWrapper();
+
     private @JsonProperty byte[] encryptedPassword;
     private final @JsonProperty byte[] salt, iv;
 
@@ -47,7 +53,6 @@ public final class Account {
             @JsonProperty("encryptedPassword") byte[] encryptedPassword,
             @JsonProperty("salt") byte[] salt,
             @JsonProperty("iv") byte[] iv) {
-        // Don't use Platform.runLater, it causes synchronization issues
         this.softwareProperty.set(software);
         this.usernameProperty.set(username);
 
@@ -59,7 +64,6 @@ public final class Account {
     }
 
     public Account(@NotNull SecurityVersion securityVersion, @NotNull String software, @NotNull String username, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
-        // Don't use Platform.runLater, it causes synchronization issues
         this.softwareProperty.set(software);
         this.usernameProperty.set(username);
 
@@ -70,70 +74,39 @@ public final class Account {
         setPassword(securityVersion, password, masterPassword);
     }
 
-    public String getSoftware() {
-        return this.softwareProperty.get();
+    public ReadOnlyProperty<String> softwareProperty() {
+        return softwareProperty.getReadOnlyProperty();
     }
 
-    public void setSoftware(@NotNull String software) {
-        if (software.isEmpty()) return;
-        softwareProperty.set(software);
+    public String getSoftware() {
+        readLock.lock();
+        try {
+            return this.softwareProperty.get();
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    public ReadOnlyProperty<String> usernameProperty() {
+        return usernameProperty.getReadOnlyProperty();
     }
 
     public String getUsername() {
-        return this.usernameProperty.get();
-    }
-
-    public void setUsername(@NotNull String username) {
-        if (username.isEmpty()) return;
-        usernameProperty.set(username);
+        readLock.lock();
+        try {
+            return this.usernameProperty.get();
+        } finally {
+            readLock.unlock();
+        }
     }
 
     public String getPassword(@NotNull SecurityVersion securityVersion, @NotNull String masterPassword) throws GeneralSecurityException {
-        byte[] key = securityVersion.getKey(masterPassword, salt);
-        return AES.decryptAES(encryptedPassword, key, iv);
-    }
-
-    private void setPassword(@NotNull SecurityVersion securityVersion, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
-        // Generate salt and IV
-        final SecureRandom random = new SecureRandom();
-        random.nextBytes(salt);
-        random.nextBytes(iv);
-
-        final byte[] key = securityVersion.getKey(masterPassword, salt);
-        this.encryptedPassword = AES.encryptAES(password, key, iv);
-    }
-
-    public void setData(@NotNull SecurityVersion securityVersion, @NotNull String software, @NotNull String username, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
-        if (software.isEmpty() || password.isEmpty() || username.isEmpty()) return;
-
-        // Save current password in case of rollback
-        final byte[] oldEncryptedPassword = this.encryptedPassword;
-        final byte[] oldSalt = this.salt.clone();
-        final byte[] oldIv = this.iv.clone();
-
+        readLock.lock();
         try {
-            setPassword(securityVersion, password, masterPassword);
-        } catch (GeneralSecurityException e) {
-            this.encryptedPassword = oldEncryptedPassword;
-            System.arraycopy(oldSalt, 0, salt, 0, oldSalt.length);
-            System.arraycopy(oldIv, 0, iv, 0, oldIv.length);
-            throw e;
-        }
-
-        // Update software and username after updating the password to avoid having to rollback in case of error
-        setSoftware(software);
-        setUsername(username);
-    }
-
-    public void changeMasterPassword(@NotNull SecurityVersion securityVersion, @NotNull String oldMasterPassword, @NotNull String newMasterPassword) throws GeneralSecurityException {
-        setPassword(securityVersion, getPassword(securityVersion, oldMasterPassword), newMasterPassword);
-    }
-
-    public void updateToLatestVersion(@NotNull SecurityVersion securityVersion, @NotNull String masterPassword) throws GeneralSecurityException {
-        if (isDerivedSaltVersion) {
-            final byte[] key = securityVersion.getKey(masterPassword, (getSoftware() + getUsername()).getBytes());
-            final String oldPassword = AES.decryptAES(encryptedPassword, key, iv);
-            setPassword(securityVersion, oldPassword, masterPassword);
+            byte[] key = securityVersion.getKey(masterPassword, salt);
+            return AES.decryptAES(encryptedPassword, key, iv);
+        } finally {
+            readLock.unlock();
         }
     }
 
@@ -143,4 +116,116 @@ public final class Account {
         // creates the account, adding its attributes by constructor
         return new Account(securityVersion, software, username, password, masterPassword);
     }
+
+    // #region Package-private methods (exposed to AccountRepository)
+    void setSoftware(@NotNull String software) {
+        if (software.isEmpty()) return;
+        writeLock.lock();
+        try {
+            softwareProperty.set(software);
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
+    void setUsername(@NotNull String username) {
+        if (username.isEmpty()) return;
+        writeLock.lock();
+        try {
+            usernameProperty.set(username);
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
+    void setPassword(@NotNull SecurityVersion securityVersion, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
+        writeLock.lock();
+        try {
+            // Generate salt and IV
+            final SecureRandom random = new SecureRandom();
+            random.nextBytes(salt);
+            random.nextBytes(iv);
+
+            final byte[] key = securityVersion.getKey(masterPassword, salt);
+            this.encryptedPassword = AES.encryptAES(password, key, iv);
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
+    void updateToLatestVersion(@NotNull SecurityVersion securityVersion, @NotNull String masterPassword) throws GeneralSecurityException {
+        if (isDerivedSaltVersion) return;
+
+        writeLock.lock();
+        try {
+            // Get software and username while holding lock
+            String software = this.softwareProperty.get();
+            String username = this.usernameProperty.get();
+
+            final byte[] key = securityVersion.getKey(masterPassword, (software + username).getBytes());
+            final String oldPassword = AES.decryptAES(encryptedPassword, key, iv);
+
+            // Generate new salt and IV
+            final SecureRandom random = new SecureRandom();
+            random.nextBytes(salt);
+            random.nextBytes(iv);
+
+            final byte[] newKey = securityVersion.getKey(masterPassword, salt);
+            this.encryptedPassword = AES.encryptAES(oldPassword, newKey, iv);
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
+    /**
+     * Captures the current state of this account for rollback purposes.
+     *
+     * @return a memento object containing the account's current state
+     */
+    @NotNull AccountMemento captureState() {
+        readLock.lock();
+        try {
+            return new AccountMemento(
+                this.softwareProperty.get(),
+                this.usernameProperty.get(),
+                encryptedPassword.clone(),
+                salt.clone(),
+                iv.clone()
+            );
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    /**
+     * Restores the account's state from a memento.
+     *
+     * @param memento the memento containing the state to restore
+     */
+    void restoreState(@NotNull AccountMemento memento) {
+        writeLock.lock();
+        try {
+            this.softwareProperty.set(memento.software());
+            this.usernameProperty.set(memento.username());
+
+            this.encryptedPassword = memento.encryptedPassword().clone();
+            System.arraycopy(memento.salt(), 0, this.salt, 0, this.salt.length);
+            System.arraycopy(memento.iv(), 0, this.iv, 0, this.iv.length);
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
+    /**
+     * Memento record that captures the state of an Account for rollback purposes.
+     * This implements the Memento pattern for transactional support.
+     */
+    public record AccountMemento(
+        @NotNull String software,
+        @NotNull String username,
+        byte[] encryptedPassword,
+        byte[] salt,
+        byte[] iv
+    ) {}
+    // #endregion
 }

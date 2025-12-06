@@ -484,7 +484,7 @@ public class ManagerController extends AbstractController {
             Tab tab = new Tab();
 
             TabManager.loadTab(tab, "/fxml/views/manager/editor.fxml", controller);
-            tab.textProperty().bind(account.getSoftwareProperty());
+            tab.textProperty().bind(account.softwareProperty());
 
             return tab;
         }

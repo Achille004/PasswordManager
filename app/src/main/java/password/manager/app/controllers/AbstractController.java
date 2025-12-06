@@ -60,6 +60,12 @@ public abstract class AbstractController implements Initializable {
         eulaStage.setScene(new Scene(eulaParent, 900, 600));
     }
 
+    /**
+     * Check if text fields are non-empty. If empty, set red border style.
+     * All calls made from the JavaFX Application Thread are safe without further synchronization.
+     * @param fields the text fields to check
+     * @return true if all fields are non-empty, false otherwise
+     */
     protected static final boolean checkTextFields(TextInputControl @NotNull... fields) {
         boolean nonEmpty = true;
 

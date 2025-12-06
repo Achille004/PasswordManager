@@ -37,6 +37,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 
 import org.jetbrains.annotations.NotNull;
@@ -104,7 +108,8 @@ public final class IOManager implements AutoCloseable {
     private String masterPassword;
     private @Getter boolean isFirstRun, isAuthenticated;
 
-    private final AtomicBoolean HAS_CHANGED, IS_LOADING;
+    private final AtomicBoolean HAS_CHANGED;
+    private final Lock LOADING_LOCK;
 
     public enum SaveState { SUCCESS, SAVING, ERROR }
     private final SimpleObjectProperty<SaveState> IS_SAVING;
@@ -121,7 +126,8 @@ public final class IOManager implements AutoCloseable {
         isAuthenticated = false;
 
         HAS_CHANGED = new AtomicBoolean(false);
-        IS_LOADING = new AtomicBoolean(false);
+        LOADING_LOCK = new ReentrantLock();
+
         IS_SAVING = new SimpleObjectProperty<>(SaveState.SUCCESS);
         setupListeners();
 
@@ -152,21 +158,23 @@ public final class IOManager implements AutoCloseable {
     // #region Persistence and lifecycle management
     private void setupListeners() {
         final ChangeListener<? super Object> propListener = (_, oldValue, newValue) -> {
-            if (IS_LOADING.get()) return; // prevents triggering when loading data
-            if (oldValue != newValue) HAS_CHANGED.set(true);
+            if (!LOADING_LOCK.tryLock()) return; // prevents triggering when loading data
+            HAS_CHANGED.set(true);
+            LOADING_LOCK.unlock();
         };
 
         USER_PREFERENCES.getLocaleProperty().addListener(propListener);
         USER_PREFERENCES.getSortingOrderProperty().addListener(propListener);
 
         final ListChangeListener<Account> listListener = change -> {
-            if (IS_LOADING.get()) return; // prevents triggering when loading data
+            if (!LOADING_LOCK.tryLock()) return;
             while (change.next()) {
                 if (change.wasAdded() || change.wasRemoved() || change.wasUpdated()) {
                     HAS_CHANGED.set(true);
-                    return; // no need to check further changes
+                    break; // no need to check further changes
                 }
             }
+            LOADING_LOCK.unlock();
         };
 
         getAccountList().addListener(listListener);
@@ -325,27 +333,14 @@ public final class IOManager implements AutoCloseable {
                     Platform.runLater(() -> element.setText(password));
                 });
     }
-
-    private void accountListTaskExec(Consumer<? super Account> action) {
-        // MUST wrap iteration in synchronized(...) when using Collections.synchronizedList
-        ACCOUNT_REPOSITORY.executeOnAll(account -> {
-            try {
-                action.accept(account);
-                // If an auto-save is triggered during this process, this ensures the remaining changes are saved anyway
-                HAS_CHANGED.compareAndSet(false, true);
-            } catch (Exception e) {
-                Logger.getInstance().addError(e);
-            }
-        });
-    }
     // #endregion
 
     // #region UserPreferences methods
     public @NotNull Boolean changeMasterPassword(String newMasterPassword) {
-        final String oldMasterPassword = this.masterPassword;
+        String oldMasterPassword = this.masterPassword;
         if (!(oldMasterPassword == null || isAuthenticated())) return false;
 
-        final boolean res = USER_PREFERENCES.setPasswordVerified(oldMasterPassword, newMasterPassword);
+        boolean res = USER_PREFERENCES.setPasswordVerified(oldMasterPassword, newMasterPassword);
         if (!res) return false;
 
         HAS_CHANGED.set(true);
@@ -354,13 +349,19 @@ public final class IOManager implements AutoCloseable {
         if (oldMasterPassword != null) {
             Logger.getInstance().addInfo("Master password changed");
 
-            accountListTaskExec(account -> {
-                try {
-                    account.changeMasterPassword(USER_PREFERENCES.getSecurityVersion(), oldMasterPassword, newMasterPassword);
-                } catch (GeneralSecurityException e) {
+            ACCOUNT_REPOSITORY.changeMasterPassword(USER_PREFERENCES.getSecurityVersion(), oldMasterPassword, newMasterPassword)
+                .thenAccept(success -> {
+                    if (success) {
+                        Logger.getInstance().addInfo("All account passwords re-encrypted successfully");
+                        HAS_CHANGED.set(true);
+                    } else {
+                        Logger.getInstance().addError(new RuntimeException("Failed to re-encrypt some account passwords"));
+                    }
+                })
+                .exceptionally(e -> {
                     Logger.getInstance().addError(e);
-                }
-            });
+                    return null;
+                });
         } else {
             Logger.getInstance().addInfo("Master password set");
             isAuthenticated = true;
@@ -374,30 +375,35 @@ public final class IOManager implements AutoCloseable {
     }
 
     public @NotNull Boolean authenticate(String masterPassword) {
-        if (isAuthenticated()) {
-            return false;
-        }
+        // If already authenticated, no need to re-authenticate
+        if (isAuthenticated()) return false;
 
         final boolean wasLatestSecurity = USER_PREFERENCES.isLatestVersion();
         isAuthenticated = USER_PREFERENCES.verifyPassword(masterPassword);
 
-        if (isAuthenticated) {
-            this.masterPassword = masterPassword;
-            Logger.getInstance().addInfo("User authenticated");
+        if (!isAuthenticated) return false;
 
-            if(!wasLatestSecurity) {
-                accountListTaskExec(account -> {
-                    try {
-                        account.updateToLatestVersion(USER_PREFERENCES.getSecurityVersion(), masterPassword);
-                    } catch (GeneralSecurityException e) {
-                        Logger.getInstance().addError(e);
-                    }
-                });
-                Logger.getInstance().addInfo("Updated to latest security version");
-            }
-        }
+        this.masterPassword = masterPassword;
+        Logger.getInstance().addInfo("User authenticated");
 
-        return isAuthenticated;
+        if (wasLatestSecurity) return true;
+
+        // Update all accounts to latest security version
+        ACCOUNT_REPOSITORY.updateToLatestSecurityVersion(USER_PREFERENCES.getSecurityVersion(), masterPassword)
+            .thenAccept(success -> {
+                if (success) {
+                    Logger.getInstance().addInfo("Updated to latest security version");
+                    HAS_CHANGED.set(true);
+                } else {
+                    Logger.getInstance().addError(new RuntimeException("Failed to update some accounts to latest security version"));
+                }
+            })
+            .exceptionally(e -> {
+                Logger.getInstance().addError(e);
+                return null;
+            });
+
+        return true;
     }
     // #endregion
 
@@ -406,7 +412,7 @@ public final class IOManager implements AutoCloseable {
 
         if (!file.exists()) throw new FileNotFoundException("File not found: " + file.getAbsolutePath());
 
-        IS_LOADING.set(true);
+        LOADING_LOCK.lock();
 
         AppData data;
         try {
@@ -419,7 +425,7 @@ public final class IOManager implements AutoCloseable {
             Logger.getInstance().addInfo(" => Failed");
             throw e;
         } finally {
-            IS_LOADING.set(false);
+            LOADING_LOCK.unlock();
         }
     }
 
@@ -449,7 +455,7 @@ public final class IOManager implements AutoCloseable {
         saveData(); // when the user shuts down the program on the first run, it won't save (not authenticated)
 
         Logger.getInstance().addInfo("Shutting down executor services");
-        ACCOUNT_REPOSITORY.shutdown();
+        ACCOUNT_REPOSITORY.close();
         AUTOSAVE_SCHEDULER.shutdown();
 
         ObservableResourceFactory.destroyInstance();
