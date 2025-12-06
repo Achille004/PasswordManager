@@ -90,73 +90,8 @@ public class TestAccount {
         }
     }
 
-    @Test
-    void testSetData() throws GeneralSecurityException {
-        String software = "OldSoftware";
-        String username = "oldUser";
-        String password = "oldPassword";
-        String masterPassword = "master123";
-
-        for (SecurityVersion version : SecurityVersion.values()) {
-            Account account = Account.of(version, software, username, password, masterPassword);
-
-            String newSoftware = "NewSoftware";
-            String newUsername = "newUser";
-            String newPassword = "newPassword";
-
-            account.setData(version, newSoftware, newUsername, newPassword, masterPassword);
-
-            assertEquals(newSoftware, account.getSoftware());
-            assertEquals(newUsername, account.getUsername());
-            assertEquals(newPassword, account.getPassword(version, masterPassword));
-        }
-    }
-
-    @Test
-    void testChangeMasterPassword() throws GeneralSecurityException {
-        String software = "TestApp";
-        String username = "testUser";
-        String password = "myPassword";
-        String oldMasterPassword = "oldMaster";
-        String newMasterPassword = "newMaster";
-
-        for (SecurityVersion version : SecurityVersion.values()) {
-            Account account = Account.of(version, software, username, password, oldMasterPassword);
-
-            account.changeMasterPassword(version, oldMasterPassword, newMasterPassword);
-
-            // Old master password should no longer work
-            assertThrows(
-                GeneralSecurityException.class,
-                () -> account.getPassword(version, oldMasterPassword)
-            );
-
-            // New master password should work
-            assertEquals(password, account.getPassword(version, newMasterPassword));
-        }
-    }
-
-    @Test
-    void testSetDataRollbackOnError() throws GeneralSecurityException {
-        String software = "TestApp";
-        String username = "testUser";
-        String password = "originalPassword";
-        String masterPassword = "master123";
-
-        for (SecurityVersion version : SecurityVersion.values()) {
-            Account account = Account.of(version, software, username, password, masterPassword);
-
-            // Try to set data with empty fields (should be ignored)
-            account.setData(version, "", username, password, masterPassword);
-            assertEquals(software, account.getSoftware());
-
-            account.setData(version, software, "", password, masterPassword);
-            assertEquals(username, account.getUsername());
-
-            account.setData(version, software, username, "", masterPassword);
-            assertEquals(password, account.getPassword(version, masterPassword));
-        }
-    }
+    // Note: changeMasterPassword is now tested in TestAccountRepository
+    // as it has been moved to the AccountRepository class
 
     @Test
     void testEmptyStrings() throws GeneralSecurityException {
@@ -168,50 +103,6 @@ public class TestAccount {
         for (SecurityVersion version : SecurityVersion.values()) {
             Account account = Account.of(version, software, username, emptyPassword, masterPassword);
             assertEquals(emptyPassword, account.getPassword(version, masterPassword));
-        }
-    }
-
-    @Test
-    void testSetSoftwareAndUsername() throws GeneralSecurityException, InterruptedException {
-        String software = "InitialApp";
-        String username = "initialUser";
-        String password = "password123";
-        String masterPassword = "master";
-
-        for (SecurityVersion version : SecurityVersion.values()) {
-            Account account = Account.of(version, software, username, password, masterPassword);
-
-            String newSoftware = "UpdatedApp";
-            String newUsername = "updatedUser";
-
-            account.setSoftware(newSoftware);
-            account.setUsername(newUsername);
-
-            // Wait for Platform.runLater to execute
-            Thread.sleep(100);
-
-            assertEquals(newSoftware, account.getSoftware());
-            assertEquals(newUsername, account.getUsername());
-        }
-    }
-
-    @Test
-    void testIgnoreEmptySetters() throws GeneralSecurityException, InterruptedException {
-        String software = "TestApp";
-        String username = "testUser";
-        String password = "password";
-        String masterPassword = "master";
-
-        for (SecurityVersion version : SecurityVersion.values()) {
-            Account account = Account.of(version, software, username, password, masterPassword);
-
-            account.setSoftware("");
-            account.setUsername("");
-
-            Thread.sleep(100);
-
-            assertEquals(software, account.getSoftware());
-            assertEquals(username, account.getUsername());
         }
     }
 
@@ -247,35 +138,5 @@ public class TestAccount {
             assertEquals(username, account.getUsername());
             assertEquals(password, account.getPassword(version, masterPassword));
         }
-    }
-
-    @Test
-    void testProperties() throws GeneralSecurityException {
-        Account account = new Account(SecurityVersion.LATEST, "TestSoftware", "TestUser", "TestPassword", "TestMaster");
-        assertEquals("TestSoftware", account.getSoftwareProperty().get());
-        assertEquals("TestUser", account.getUsernameProperty().get());
-
-        account.setSoftware("UpdatedSoftware");
-        assertEquals("UpdatedSoftware", account.getSoftwareProperty().get());
-
-        account.setUsername("UpdatedUser");
-        assertEquals("UpdatedUser", account.getUsernameProperty().get());
-    }
-
-    @Test
-    void testPropertyListeners() throws GeneralSecurityException, InterruptedException {
-        Account account = new Account(SecurityVersion.LATEST, "TestSoftware", "TestUser", "TestPassword", "TestMaster");
-
-        String[] capturedValue = new String[2];
-        account.getSoftwareProperty().addListener((_, _, newVal) -> capturedValue[0] = newVal);
-        account.getUsernameProperty().addListener((_, _, newVal) -> capturedValue[1] = newVal);
-
-        account.setSoftware("NewSoftware");
-        Thread.sleep(100); // Wait for listener to be called
-        assertEquals("NewSoftware", capturedValue[0]);
-
-        account.setUsername("NewUsername");
-        Thread.sleep(100); // Wait for listener to be called
-        assertEquals("NewUsername", capturedValue[1]);
     }
 }

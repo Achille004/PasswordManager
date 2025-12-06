@@ -20,19 +20,17 @@ package password.manager.app.security;
 
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 import org.jetbrains.annotations.NotNull;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import password.manager.app.enums.SecurityVersion;
+import password.manager.app.persistence.TransactionManager;
 import password.manager.app.singletons.Logger;
 
 /**
@@ -48,24 +46,31 @@ import password.manager.app.singletons.Logger;
  * in background threads and return {@link CompletableFuture} objects for handling results.
  * </p>
  * <p>
- * Thread Safety: This class is thread-safe. The internal list is synchronized and all
- * operations are executed through a dedicated executor service.
+ * Thread Safety: This class is thread-safe. All transactional operations properly synchronize
+ * access to the internal account list. Each transaction is isolated, and the repository uses
+ * the Memento pattern to capture and restore account state for proper rollback support.
+ * However, note that individual {@link password.manager.app.persistence.Transaction} objects
+ * are NOT thread-safe and should not be shared between threads.
  * </p>
  *
  * @see Account
  * @see SecurityVersion
+ * @see password.manager.app.persistence.TransactionManager
  */
-public class AccountRepository {
-    private final ObservableList<Account> accounts;
-    private final ExecutorService executor;
+public final class AccountRepository implements AutoCloseable {
+    private final List<Account> accounts;
+    private final ObservableList<Account> observableAccountsUnmodifiable;
+    private final TransactionManager transactionManager;
 
     /**
      * Constructs a new AccountRepository with an empty synchronized observable list
-     * and a virtual thread executor for asynchronous operations.
+     * and a transaction manager for asynchronous operations.
      */
     public AccountRepository() {
-        accounts = FXCollections.observableList(Collections.synchronizedList(new ArrayList<>()));
-        executor = Executors.newVirtualThreadPerTaskExecutor();
+        accounts = Collections.synchronizedList(new ArrayList<>());
+        transactionManager = new TransactionManager();
+
+        observableAccountsUnmodifiable = FXCollections.unmodifiableObservableList(FXCollections.observableList(accounts));
     }
 
     /**
@@ -74,7 +79,7 @@ public class AccountRepository {
      * @return an unmodifiable observable list of all accounts
      */
     public ObservableList<Account> findAll() {
-        return FXCollections.unmodifiableObservableList(this.accounts);
+        return observableAccountsUnmodifiable;
     }
 
     /**
@@ -82,15 +87,16 @@ public class AccountRepository {
      *
      * @param newAccounts the new list of accounts to set
      */
-    public void setAll(List<Account> newAccounts) {
-        accounts.setAll(newAccounts);
+    public void setAll(@NotNull List<Account> newAccounts) {
+        if (!accounts.isEmpty()) throw new IllegalStateException("Accounts list is not empty.");
+        accounts.addAll(newAccounts);
     }
 
     /**
-     * Creates and adds a new account to the repository asynchronously.
+     * Creates and adds a new account to the repository within a transaction.
      * <p>
-     * This operation encrypts the password using the specified security version and master password
-     * in a background thread to avoid blocking the UI.
+     * This operation encrypts the password and adds the account as a single atomic transaction.
+     * If encryption fails, the transaction is rolled back and no account is added.
      * </p>
      *
      * @param securityVersion the encryption algorithm version to use
@@ -98,7 +104,7 @@ public class AccountRepository {
      * @param software the name of the software/service for this account
      * @param username the username for this account
      * @param password the password to encrypt and store
-     * @return a CompletableFuture that completes with the created Account, or null if encryption fails
+     * @return a CompletableFuture that completes with the created Account, or null if the transaction fails
      */
     public @NotNull CompletableFuture<Account> add(
             @NotNull SecurityVersion securityVersion,
@@ -107,24 +113,31 @@ public class AccountRepository {
             @NotNull String username,
             @NotNull String password) {
 
-        return CompletableFuture
-                .supplyAsync(() -> {
-                    try {
-                        Account a = Account.of(securityVersion, software, username, password, masterPassword);
-                        accounts.add(a);
-                        return a;
-                    } catch (GeneralSecurityException e) {
-                        Logger.getInstance().addError(e);
-                        return null;
-                    }
-                }, executor);
+        // Use a holder to capture the account reference for rollback
+        final Account[] accountHolder = new Account[1];
+
+        return transactionManager.executeInTransaction(
+            () -> {
+                try {
+                    accountHolder[0] = Account.of(securityVersion, software, username, password, masterPassword);
+                    accounts.add(accountHolder[0]);
+                    return accountHolder[0];
+                } catch (GeneralSecurityException e) {
+                    Logger.getInstance().addError(e);
+                    return null;
+                }
+            },
+            () -> {
+                if (accountHolder[0] != null) accounts.remove(accountHolder[0]);
+            }
+        );
     }
 
     /**
-     * Updates an existing account with new data asynchronously.
+     * Updates an existing account with new data within a transaction.
      * <p>
-     * This operation re-encrypts the password with the new data using the specified security version
-     * and master password in a background thread. The list change is triggered to notify listeners.
+     * This operation re-encrypts the password with the new data as a single atomic transaction.
+     * If any step fails, all changes are rolled back to the original state.
      * </p>
      *
      * @param securityVersion the encryption algorithm version to use
@@ -133,48 +146,74 @@ public class AccountRepository {
      * @param software the new name of the software/service
      * @param username the new username
      * @param password the new password to encrypt and store
-     * @return a CompletableFuture that completes with the updated Account, or null if encryption fails
+     * @return a CompletableFuture that completes with the updated Account, or null if the transaction fails
      * @throws IllegalArgumentException if the account is not found in the repository
      */
     public @NotNull CompletableFuture<Account> edit(
-                @NotNull SecurityVersion securityVersion,
-                @NotNull String masterPassword,
-                @NotNull Account account,
-                @NotNull String software,
-                @NotNull String username,
-                @NotNull String password) {
+            @NotNull SecurityVersion securityVersion,
+            @NotNull String masterPassword,
+            @NotNull Account account,
+            @NotNull String software,
+            @NotNull String username,
+            @NotNull String password) {
 
-        if(!accounts.contains(account)) throw new IllegalArgumentException("Account not found in list");
-        return CompletableFuture
-                .supplyAsync(() -> {
-                    try {
-                        account.setData(securityVersion, software, username, password, masterPassword);
-                        accounts.set(accounts.indexOf(account), account); // trigger the list change listeners, if any
-                        return account;
-                    } catch (GeneralSecurityException e) {
-                        Logger.getInstance().addError(e);
-                        return null;
-                    }
-                }, executor);
+        if (!accounts.contains(account)) throw new IllegalArgumentException("Account not found in list");
+
+        // Capture complete original state for rollback using Account's memento pattern
+        final Account.AccountMemento originalState = account.captureState();
+
+        return transactionManager.executeInTransaction(
+            () -> {
+                try {
+                    account.setSoftware(software);
+                    account.setUsername(username);
+                    account.setPassword(securityVersion, password, masterPassword);
+                    // Trigger ObservableList change notification
+                    accounts.set(accounts.indexOf(account), account);
+                    return account;
+                } catch (GeneralSecurityException e) {
+                    Logger.getInstance().addError(e);
+                    return null;
+                }
+            },
+            () -> {
+                // Rollback all changes using captured state
+                account.restoreState(originalState);
+                // Trigger ObservableList change notification
+                accounts.set(accounts.indexOf(account), account);
+            }
+        );
     }
 
     /**
-     * Removes an account from the repository asynchronously.
+     * Removes an account from the repository within a transaction.
+     * <p>
+     * This operation removes the account as a single atomic transaction.
+     * If removal needs to be rolled back, the account is re-added at its original position.
+     * </p>
      *
      * @param account the account to remove (must exist in the repository)
      * @return a CompletableFuture that completes with true if removal was successful, false otherwise
      * @throws IllegalArgumentException if the account is not found in the repository
      */
     public @NotNull CompletableFuture<Boolean> remove(@NotNull Account account) {
-        if(!accounts.contains(account)) throw new IllegalArgumentException("Account not found in list");
-        return CompletableFuture.supplyAsync(() -> accounts.remove(account), executor);
+        if (!accounts.contains(account)) throw new IllegalArgumentException("Account not found in list");
+
+        // Capture index before transaction starts
+        final int originalIndex = accounts.indexOf(account);
+
+        return transactionManager.executeInTransaction(
+            () -> accounts.remove(account),
+            () -> accounts.add(originalIndex, account) // Rollback: restore at original position
+        );
     }
 
     /**
      * Retrieves and decrypts the password for an account asynchronously.
      * <p>
      * This operation decrypts the password using the specified security version and master password
-     * in a background thread to avoid blocking the UI.
+     * in a background thread to avoid blocking the UI. This is a read-only operation and does not
+     * use transactions.
      * </p>
      *
      * @param securityVersion the encryption algorithm version used for this account
@@ -187,58 +226,144 @@ public class AccountRepository {
                 @NotNull String masterPassword,
                 @NotNull Account account) {
 
-        return CompletableFuture
-                .supplyAsync(() -> {
-                    try {
-                        return account.getPassword(securityVersion, masterPassword);
-                    } catch (GeneralSecurityException e) {
-                        Logger.getInstance().addError(e);
-                        return null;
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return account.getPassword(securityVersion, masterPassword);
+            } catch (GeneralSecurityException e) {
+                Logger.getInstance().addError(e);
+                return null;
+            }
+        });
+    }
+
+    /**
+     * Changes the master password for all accounts in the repository within a single transaction.
+     * <p>
+     * This operation re-encrypts all account passwords with the new master password.
+     * All updates succeed or fail as a unit. If any update fails, all changes are rolled back.
+     * </p>
+     *
+     * @param securityVersion the encryption algorithm version to use
+     * @param oldMasterPassword the current master password for decryption
+     * @param newMasterPassword the new master password for encryption
+     * @return a CompletableFuture that completes with true if all passwords were changed successfully, false otherwise
+     */
+    public @NotNull CompletableFuture<Boolean> changeMasterPassword(
+            @NotNull SecurityVersion securityVersion,
+            @NotNull String oldMasterPassword,
+            @NotNull String newMasterPassword) {
+
+        // Capture all accounts and their states before starting transaction
+        List<Account> accountList;
+        List<Account.AccountMemento> originalStates;
+        synchronized (accounts) {
+            accountList = new ArrayList<>(accounts);
+            originalStates = accounts.stream().map(Account::captureState).toList();
+        }
+
+        return transactionManager.executeInTransaction(transaction -> {
+            List<CompletableFuture<Boolean>> changeFutures = new ArrayList<>(accountList.size());
+
+            for (int i = 0; i < accountList.size(); i++) {
+                Account account = accountList.get(i);
+                Account.AccountMemento originalState = originalStates.get(i);
+
+                CompletableFuture<Boolean> changeFuture = transaction.addOperation(
+                    () -> {
+                        try {
+                            // Decrypt with old master password
+                            String password = account.getPassword(securityVersion, oldMasterPassword);
+                            // Re-encrypt with new master password
+                            account.setPassword(securityVersion, password, newMasterPassword);
+                            // Trigger ObservableList change notification
+                            accounts.set(accounts.indexOf(account), account);
+                            return true;
+                        } catch (GeneralSecurityException e) {
+                            Logger.getInstance().addError(e);
+                            return false;
+                        }
+                    },
+                    () -> {
+                        // Rollback using captured state
+                        account.restoreState(originalState);
+                        // Trigger ObservableList change notification
+                        accounts.set(accounts.indexOf(account), account);
                     }
-                }, executor);
+                );
+
+                changeFutures.add(changeFuture);
+            }
+
+            return allSuccessful(changeFutures);
+        });
     }
 
     /**
-     * Executes an action on all accounts asynchronously.
+     * Updates all accounts to the latest security version within a single transaction.
      * <p>
-     * Each account is processed in a separate virtual thread. The iteration over the list
-     * is synchronized to ensure thread safety.
+     * This operation re-encrypts all account passwords using the latest security version.
+     * All updates succeed or fail as a unit. If any update fails, all changes are rolled back.
      * </p>
      *
-     * @param action the action to perform on each account
+     * @param securityVersion the latest security version to update to
+     * @param masterPassword the master password for decryption and encryption
+     * @return a CompletableFuture that completes with true if all accounts were updated successfully, false otherwise
      */
-    public void executeOnAll(Consumer<? super Account> action) {
-        // MUST wrap iteration in synchronized(...) when using Collections.synchronizedList
-        synchronized(accounts) {
-            accounts.forEach(account -> executor.submit(() -> action.accept(account)));
+    public @NotNull CompletableFuture<Boolean> updateToLatestSecurityVersion(
+            @NotNull SecurityVersion securityVersion,
+            @NotNull String masterPassword) {
+
+        // Capture all accounts and their states before starting transaction
+        List<Account> accountList;
+        List<Account.AccountMemento> originalStates;
+        synchronized (accounts) {
+            accountList = new ArrayList<>(accounts);
+            originalStates = accounts.stream().map(Account::captureState).toList();
         }
+
+        return transactionManager.executeInTransaction(transaction -> {
+            List<CompletableFuture<Boolean>> updateFutures = new ArrayList<>();
+
+            for (int i = 0; i < accountList.size(); i++) {
+                Account account = accountList.get(i);
+                Account.AccountMemento originalState = originalStates.get(i);
+
+                CompletableFuture<Boolean> updateFuture = transaction.addOperation(
+                    () -> {
+                        try {
+                            account.updateToLatestVersion(securityVersion, masterPassword);
+                            // Trigger ObservableList change notification
+                            accounts.set(accounts.indexOf(account), account);
+                            return true;
+                        } catch (GeneralSecurityException e) {
+                            Logger.getInstance().addError(e);
+                            return false;
+                        }
+                    },
+                    () -> {
+                        // Rollback using captured state
+                        account.restoreState(originalState);
+                        // Trigger ObservableList change notification
+                        accounts.set(accounts.indexOf(account), account);
+                    }
+                );
+
+                updateFutures.add(updateFuture);
+            }
+
+            return allSuccessful(updateFutures);
+        });
     }
 
-    /**
-     * Initiates an orderly shutdown of the executor service.
-     * <p>
-     * This method blocks until all tasks have completed execution, or the thread is interrupted.
-     * If interrupted, it attempts to cancel currently executing tasks.
-     * </p>
-     */
-    public void shutdown() {
-        executor.shutdown();
-
-        try {
-            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        } catch (InterruptedException e) {
-            Logger.getInstance().addError(e);
-            executor.shutdownNow();
-            Thread.currentThread().interrupt();
-        }
+    @Override
+    public void close() {
+        transactionManager.shutdown();
     }
 
-    /**
-     * Checks if the executor service has been shut down.
-     *
-     * @return true if the executor has been shut down, false otherwise
-     */
-    public boolean isShutdown() {
-        return executor.isShutdown();
+    private static CompletableFuture<Boolean> allSuccessful(Collection<CompletableFuture<Boolean>> futures) {
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                .thenApply(_ -> futures.stream().allMatch(
+                    f -> (f.isDone() && !f.isCompletedExceptionally() && f.join())
+                ));
     }
 }

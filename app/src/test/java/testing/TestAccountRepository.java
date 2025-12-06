@@ -14,7 +14,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -61,7 +60,7 @@ public class TestAccountRepository {
 
     @AfterEach
     void tearDown() {
-        if (!repository.isShutdown()) repository.shutdown();
+        repository.close();
         Logger.destroyInstance();
     }
 
@@ -203,28 +202,6 @@ public class TestAccountRepository {
     }
 
     @Test
-    void testExecuteOnAll() throws ExecutionException, InterruptedException, TimeoutException {
-        int count = 5;
-        for (int i = 0; i < count; i++) {
-            repository.add(
-                SecurityVersion.LATEST,
-                masterPassword,
-                "Software" + i,
-                "user" + i,
-                "pass" + i
-            ).get(5, TimeUnit.SECONDS);
-        }
-
-        AtomicInteger counter = new AtomicInteger(0);
-        repository.executeOnAll(account -> counter.incrementAndGet());
-
-        // Give executor time to process
-        Thread.sleep(1000);
-
-        assertEquals(count, counter.get(), "ExecuteOnAll should process all accounts");
-    }
-
-    @Test
     void testFindAllIsUnmodifiable() throws ExecutionException, InterruptedException, TimeoutException {
         repository.add(
             SecurityVersion.LATEST,
@@ -239,15 +216,6 @@ public class TestAccountRepository {
             () -> repository.findAll().add(accounts.get(0)),
             "findAll should return unmodifiable list"
         );
-    }
-
-    @Test
-    void testShutdown() {
-        assertFalse(repository.isShutdown(), "Repository should not be shut down initially");
-
-        repository.shutdown();
-
-        assertTrue(repository.isShutdown(), "Repository should be shut down after shutdown() call");
     }
 
     @Test
@@ -271,5 +239,43 @@ public class TestAccountRepository {
 
         assertEquals(operationCount, repository.findAll().size(),
             "All concurrent add operations should complete successfully");
+    }
+
+    @Test
+    void testChangeMasterPassword() throws Exception {
+        // Add accounts
+        int count = Math.min(5, accounts.size());
+        for (int i = 0; i < count; i++) {
+            Account source = accounts.get(i);
+            repository.add(
+                SecurityVersion.LATEST,
+                masterPassword,
+                source.getSoftware(),
+                source.getUsername(),
+                "password" + i
+            ).get(5, TimeUnit.SECONDS);
+        }
+
+        String newMasterPassword = "NewMasterPassword456!";
+        List<Account> beforeChange = repository.findAll();
+
+        CompletableFuture<Boolean> future = repository.changeMasterPassword(
+            SecurityVersion.LATEST,
+            masterPassword,
+            newMasterPassword
+        );
+        Boolean result = future.get(5, TimeUnit.SECONDS);
+
+        assertTrue(result, "Master password should be changed successfully");
+
+        // Try to get password with new master password
+        for (Account account : beforeChange) {
+            String password = repository.getPassword(
+                SecurityVersion.LATEST,
+                newMasterPassword,
+                account
+            ).get(5, TimeUnit.SECONDS);
+            assertNotNull(password, "Password should be retrievable with new master password");
+        }
     }
 }
