@@ -278,4 +278,57 @@ public class TestAccountRepository {
             assertNotNull(password, "Password should be retrievable with new master password");
         }
     }
+
+    @Test
+    void testUpdateToLatestSecurityVersion() throws Exception {
+        // Add accounts to repository
+        int count = Math.min(5, accounts.size());
+        List<String> expectedPasswords = new ArrayList<>();
+        SecurityVersion initialVersion = SecurityVersion.PBKDF2;
+
+        for (int i = 0; i < count; i++) {
+            Account source = accounts.get(i);
+            String password = "password_" + i;
+            expectedPasswords.add(password);
+
+            repository.add(
+                initialVersion,
+                masterPassword,
+                source.getSoftware(),
+                source.getUsername(),
+                password
+            ).get(5, TimeUnit.SECONDS);
+        }
+
+        List<Account> beforeUpdate = new ArrayList<>(repository.findAll());
+
+        // Update all accounts to latest security version
+        CompletableFuture<Boolean> future = repository.updateToLatestSecurityVersion(initialVersion, masterPassword);
+        Boolean result = future.get(5, TimeUnit.SECONDS);
+
+        assertTrue(result, "Update to latest security version should succeed");
+
+        // Verify all passwords are still accessible and correct
+        List<Account> afterUpdate = repository.findAll();
+        assertEquals(beforeUpdate.size(), afterUpdate.size(), "Account count should remain the same");
+
+        for (int i = 0; i < afterUpdate.size(); i++) {
+            Account account = afterUpdate.get(i);
+            String password = repository
+                .getPassword(SecurityVersion.LATEST, masterPassword, account)
+                .get(5, TimeUnit.SECONDS);
+
+            assertEquals(expectedPasswords.get(i), password,
+                "Password should remain the same after security version update");
+        }
+    }
+
+    @Test
+    void testUpdateToLatestSecurityVersionWithEmptyRepository() throws Exception {
+        CompletableFuture<Boolean> future = repository.updateToLatestSecurityVersion(SecurityVersion.LATEST, masterPassword);
+        Boolean result = future.get(5, TimeUnit.SECONDS);
+
+        assertTrue(result, "Update on empty repository should succeed");
+        assertEquals(0, repository.findAll().size(), "Repository should remain empty");
+    }
 }
