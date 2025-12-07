@@ -305,7 +305,7 @@ public final class AccountRepository implements AutoCloseable {
      * All updates succeed or fail as a unit. If any update fails, all changes are rolled back.
      * </p>
      *
-     * @param securityVersion the latest security version to update to
+     * @param securityVersion the current security version of the accounts
      * @param masterPassword the master password for decryption and encryption
      * @return a CompletableFuture that completes with true if all accounts were updated successfully, false otherwise
      */

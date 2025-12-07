@@ -153,25 +153,28 @@ public final class Account {
         }
     }
 
-    void updateToLatestVersion(@NotNull SecurityVersion securityVersion, @NotNull String masterPassword) throws GeneralSecurityException {
+    void updateToLatestVersion(@NotNull SecurityVersion oldSecurityVersion, @NotNull String masterPassword) throws GeneralSecurityException {
         if (isDerivedSaltVersion) return;
 
         writeLock.lock();
         try {
-            // Get software and username while holding lock
-            String software = this.softwareProperty.get();
-            String username = this.usernameProperty.get();
+            // Get old salt based on version
+            byte[] oldSalt = isDerivedSaltVersion 
+                ? (softwareProperty.get() + usernameProperty.get()).getBytes()
+                : this.salt;
 
-            final byte[] key = securityVersion.getKey(masterPassword, (software + username).getBytes());
-            final String oldPassword = AES.decryptAES(encryptedPassword, key, iv);
+            // Decrypt with old key
+            final byte[] oldKey = oldSecurityVersion.getKey(masterPassword, oldSalt);
+            final String oldPassword = AES.decryptAES(encryptedPassword, oldKey, iv);
 
             // Generate new salt and IV
             final SecureRandom random = new SecureRandom();
-            random.nextBytes(salt);
-            random.nextBytes(iv);
+            random.nextBytes(this.salt);
+            random.nextBytes(this.iv);
 
-            final byte[] newKey = securityVersion.getKey(masterPassword, salt);
-            this.encryptedPassword = AES.encryptAES(oldPassword, newKey, iv);
+            // Encrypt with new key using the new salt
+            final byte[] newKey = SecurityVersion.LATEST.getKey(masterPassword, this.salt);
+            this.encryptedPassword = AES.encryptAES(oldPassword, newKey, this.iv);
         } finally {
             writeLock.unlock();
         }

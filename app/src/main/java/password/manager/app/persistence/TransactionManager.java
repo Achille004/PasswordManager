@@ -87,7 +87,7 @@ public class TransactionManager {
     /**
      * Shorthand method to execute an operation within a transaction with a rollback action.
      * See {@link #executeInTransaction} for details.
-     * 
+     *
      * @param <T> the return type of the operation
      * @param operation the operation to execute within the transaction
      * @param rollback the rollback action to perform if the transaction fails
