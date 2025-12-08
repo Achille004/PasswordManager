@@ -131,7 +131,7 @@ public class TestAccountRepository {
         Account account = accounts.get(0);
 
         assertThrows(
-                IllegalArgumentException.class, 
+                IllegalArgumentException.class,
                 () -> repository.edit(account, "Software", "user", "pass"),
                 "Editing non-existent account should throw IllegalArgumentException"
         );
@@ -257,6 +257,33 @@ public class TestAccountRepository {
 
         // Change master password
         masterPasswordProperty.set("NewMasterPassword456!");
+
+        // Try to get password with new master password
+        for (Account account : repository.findAll()) {
+            Logger.getInstance().addDebug("Testing account: " + account.getSoftware() + " / " +  account.getUsername());
+            String password = repository.getPassword(account).get(5, TimeUnit.SECONDS);
+            assertNotNull(password, "Password should be retrievable with new master password");
+        }
+    }
+
+    @Test
+    void testChangeMasterPasswordFromNull() throws Exception {
+        TestingUtils.initLogger();
+
+        // Set initial master password to null
+        masterPasswordProperty.set(null);
+
+        // Add accounts
+        int count = Math.min(5, accounts.size());
+        for (int i = 0; i < count; i++) {
+            Account source = accounts.get(i);
+            repository
+                    .add(source.getSoftware(), source.getUsername(), "password" + i)
+                    .get(5, TimeUnit.SECONDS);
+        }
+
+        // Change master password from null to a valid password
+        masterPasswordProperty.set("InitialMasterPassword123!");
 
         // Try to get password with new master password
         for (Account account : repository.findAll()) {

@@ -158,7 +158,7 @@ public final class Account {
         writeLock.lock();
         try {
             // Get old salt based on version
-            byte[] oldSalt = isDerivedSaltVersion 
+            byte[] oldSalt = isDerivedSaltVersion
                 ? (softwareProperty.get() + usernameProperty.get()).getBytes()
                 : this.salt;
 

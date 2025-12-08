@@ -116,6 +116,7 @@ public class ManagerController extends AbstractController {
         setupSpecialTabs(TAB_MANAGER);
     }
 
+    @Override
     public void reset() {}
 
     @FXML
@@ -296,6 +297,7 @@ public class ManagerController extends AbstractController {
             langResources.bindTextProperty(homeDescBtm, "home_desc.btm");
         }
 
+        @Override
         public void reset() {
             // Just focus the top label to keep consistent behavior
             Platform.runLater(() -> homeDescTop.requestFocus());
@@ -371,6 +373,7 @@ public class ManagerController extends AbstractController {
             editorDeleteBtn.setVisible(!isAddEditor);
         }
 
+        @Override
         public void reset() {
             if(isAddEditor) {
                 clearTextFields(editorSoftware, editorUsername, editorPassword.getTextField());

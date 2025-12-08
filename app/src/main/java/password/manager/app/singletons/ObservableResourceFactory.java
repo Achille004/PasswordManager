@@ -102,6 +102,10 @@ public final class ObservableResourceFactory implements AutoCloseable {
         return Singletons.get(ObservableResourceFactory.class);
     }
 
+    public static boolean hasInstance() {
+        return Singletons.isRegistered(ObservableResourceFactory.class);
+    }
+
     public static synchronized void destroyInstance() throws IllegalStateException {
         Singletons.unregister(ObservableResourceFactory.class);
     }

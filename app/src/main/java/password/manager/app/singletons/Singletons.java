@@ -39,7 +39,7 @@ public final class Singletons {
     @SuppressWarnings("unchecked")
     public static <T extends AutoCloseable> @NotNull T get(@NotNull Class<T> cls) {
         Object inst = INSTANCES.get(cls);
-        if (inst == null) throw new IllegalStateException(cls.getName() + " is not yet registered");
+        if (inst == null) throw new IllegalStateException(cls.getName() + " is not registered");
         return (T) inst;
     }
 

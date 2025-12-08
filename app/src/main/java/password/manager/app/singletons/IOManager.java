@@ -250,23 +250,20 @@ public final class IOManager implements AutoCloseable {
             return;
         }
 
-        // Save in background virtual thread
-        Thread.startVirtualThread(() -> {
-            Logger.getInstance().addInfo("Saving data...");
-            Platform.runLater(() -> IS_SAVING.set(SaveState.SAVING));
+        Logger.getInstance().addInfo("Saving data...");
+        Platform.runLater(() -> IS_SAVING.set(SaveState.SAVING));
 
-            // Change preemptively to avoid losing if changes are added during save
-            HAS_CHANGED.set(false);
+        // Change preemptively to avoid losing if changes are added during save
+        HAS_CHANGED.set(false);
 
-            try {
-                saveDataFile(DATA_FILE);
-                Logger.getInstance().addInfo("Save OK");
-                Platform.runLater(() -> IS_SAVING.set(SaveState.SUCCESS));
-            } catch (IOException e) {
-                Logger.getInstance().addError(e);
-                Platform.runLater(() -> IS_SAVING.set(SaveState.ERROR));
-            }
-        });
+        try {
+            saveDataFile(DATA_FILE);
+            Logger.getInstance().addInfo("Save OK");
+            Platform.runLater(() -> IS_SAVING.set(SaveState.SUCCESS));
+        } catch (IOException e) {
+            Logger.getInstance().addError(e);
+            Platform.runLater(() -> IS_SAVING.set(SaveState.ERROR));
+        }
     }
     // #endregion
 
@@ -362,10 +359,10 @@ public final class IOManager implements AutoCloseable {
     public @NotNull Boolean authenticate(String masterPassword) {
         // If already authenticated, no need to re-authenticate
         if (isAuthenticated()) return false;
-        
+
         isAuthenticated = USER_PREFERENCES.verifyPassword(masterPassword);
         if (!isAuthenticated) return false;
-        
+
         this.MASTER_PASSWORD_PROPERTY.set(masterPassword);
         Logger.getInstance().addInfo("User authenticated");
         return true;
@@ -417,11 +414,13 @@ public final class IOManager implements AutoCloseable {
     @Override
     public void close() {
         Logger.getInstance().addInfo("Shutdown requested");
-        saveData(); // when the user shuts down the program on the first run, it won't save (not authenticated)
 
         Logger.getInstance().addInfo("Shutting down executor services");
-        ACCOUNT_REPOSITORY.close();
         AUTOSAVE_SCHEDULER.shutdown();
+        ACCOUNT_REPOSITORY.close();
+
+        // when the user shuts down the program on the first run, it won't save (not authenticated)
+        saveData();
 
         ObservableResourceFactory.destroyInstance();
         Logger.destroyInstance();
@@ -434,6 +433,10 @@ public final class IOManager implements AutoCloseable {
 
     public static IOManager getInstance() throws IllegalStateException {
         return Singletons.get(IOManager.class);
+    }
+
+    public static boolean hasInstance() {
+        return Singletons.isRegistered(IOManager.class);
     }
 
     public static synchronized void destroyInstance() throws IllegalStateException {

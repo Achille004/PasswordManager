@@ -40,7 +40,7 @@ public class TestTransactionManager {
     @Test
     void testBeginTransaction() {
         TestingUtils.initLogger();
-        
+
         Transaction transaction = manager.beginTransaction();
         assertNotNull(transaction, "Transaction should not be null");
         assertFalse(transaction.isCommitted(), "New transaction should not be committed");
@@ -50,7 +50,7 @@ public class TestTransactionManager {
     @Test
     void testExecuteInTransactionSuccess() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.initLogger();
-        
+
         AtomicInteger value = new AtomicInteger(0);
 
         CompletableFuture<Integer> result = manager.executeInTransaction(transaction -> {
@@ -70,7 +70,7 @@ public class TestTransactionManager {
     @Test
     void testExecuteInTransactionFailure() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.initLogger();
-        
+
         AtomicBoolean rollbackExecuted = new AtomicBoolean(false);
 
         CompletableFuture<String> result = manager.executeInTransaction(transaction -> {
@@ -86,7 +86,7 @@ public class TestTransactionManager {
     @Test
     void testExecuteInTransactionWithException() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.initLogger();
-        
+
         AtomicBoolean rollbackExecuted = new AtomicBoolean(false);
 
         CompletableFuture<String> result = manager.executeInTransaction(transaction -> {
@@ -105,7 +105,7 @@ public class TestTransactionManager {
     @Test
     void testExecuteInTransactionShorthand() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.initLogger();
-        
+
         AtomicInteger value = new AtomicInteger(0);
 
         CompletableFuture<Boolean> result = manager.executeInTransaction(
@@ -124,7 +124,7 @@ public class TestTransactionManager {
     @Test
     void testExecuteInTransactionShorthandWithFailure() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.initLogger();
-        
+
         AtomicInteger value = new AtomicInteger(0);
 
         CompletableFuture<Boolean> result = manager.executeInTransaction(
@@ -143,7 +143,7 @@ public class TestTransactionManager {
     @Test
     void testMultipleTransactionsConcurrently() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.initLogger();
-        
+
         int transactionCount = 10;
         List<CompletableFuture<Integer>> futures = new ArrayList<>();
         AtomicInteger counter = new AtomicInteger(0);
@@ -172,7 +172,7 @@ public class TestTransactionManager {
     @Test
     void testShutdown() {
         TestingUtils.initLogger();
-        
+
         assertFalse(manager.isShutdown(), "Manager should not be shut down initially");
 
         manager.shutdown();
@@ -183,7 +183,7 @@ public class TestTransactionManager {
     @Test
     void testShutdownIdempotent() {
         TestingUtils.initLogger();
-        
+
         manager.shutdown();
         manager.shutdown();
 
@@ -193,7 +193,7 @@ public class TestTransactionManager {
     @Test
     void testTransactionExecutionAfterShutdown() {
         TestingUtils.initLogger();
-        
+
         manager.shutdown();
 
         // This test verifies that transactions can still be created after shutdown,
@@ -205,7 +205,7 @@ public class TestTransactionManager {
     @Test
     void testComplexTransactionWithMultipleOperations() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.initLogger();
-        
+
         AtomicInteger counter = new AtomicInteger(0);
         List<Integer> executionOrder = new ArrayList<>();
 
@@ -246,7 +246,7 @@ public class TestTransactionManager {
     @Test
     void testTransactionRollbackInComplexScenario() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.initLogger();
-        
+
         AtomicInteger counter = new AtomicInteger(0);
         List<Integer> rollbackOrder = new ArrayList<>();
 
@@ -298,7 +298,7 @@ public class TestTransactionManager {
     @Test
     void testTransactionWithDelayedOperations() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.initLogger();
-        
+
         AtomicBoolean operation1Complete = new AtomicBoolean(false);
         AtomicBoolean operation2Complete = new AtomicBoolean(false);
 
@@ -335,7 +335,7 @@ public class TestTransactionManager {
     @Test
     void testNestedTransactionExecution() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.initLogger();
-        
+
         AtomicInteger outerCounter = new AtomicInteger(0);
         AtomicInteger innerCounter = new AtomicInteger(0);
 
@@ -374,7 +374,7 @@ public class TestTransactionManager {
     @Test
     void testTransactionWithNullRollback() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.initLogger();
-        
+
         AtomicInteger value = new AtomicInteger(0);
 
         CompletableFuture<Integer> result = manager.executeInTransaction(

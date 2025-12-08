@@ -67,7 +67,7 @@ public final class AccountRepository implements AutoCloseable {
 
     private final ObjectProperty<SecurityVersion> securityVersionProperty;
     private final StringProperty masterPasswordProperty;
-    
+
     // Tracks ongoing master password change operations
     private volatile CompletableFuture<Boolean> masterPasswordChangeFuture = CompletableFuture.completedFuture(true);
     private volatile CompletableFuture<Boolean> securityVersionChangeFuture = CompletableFuture.completedFuture(true);
@@ -81,7 +81,7 @@ public final class AccountRepository implements AutoCloseable {
         this.transactionManager = new TransactionManager();
 
         this.observableAccountsUnmodifiable = FXCollections.unmodifiableObservableList(FXCollections.observableList(accounts));
-        
+
         this.securityVersionProperty = securityVersionProperty;
         this.securityVersionProperty.addListener(this::securityVersionListener);
 
@@ -226,22 +226,31 @@ public final class AccountRepository implements AutoCloseable {
     public @NotNull CompletableFuture<String> getPassword(@NotNull Account account) {
         // Wait for any ongoing master password or security version changes to complete
         return CompletableFuture.allOf(masterPasswordChangeFuture, securityVersionChangeFuture)
-            .thenCompose(_ -> CompletableFuture.supplyAsync(() -> {
-                try {
-                    return account.getPassword(securityVersionProperty.get(), masterPasswordProperty.get());
-                } catch (GeneralSecurityException e) {
-                    Logger.getInstance().addError(e);
-                    return null;
-                }
-            }));
+                .thenCompose(_ -> CompletableFuture.supplyAsync(() -> {
+                    try {
+                        return account.getPassword(securityVersionProperty.get(), masterPasswordProperty.get());
+                    } catch (GeneralSecurityException e) {
+                        Logger.getInstance().addError(e);
+                        return null;
+                    }
+                }));
     }
 
+    /**
+     * Closes the repository and shuts down the transaction manager.
+     * <p>
+     * This method should be called when the repository is no longer needed
+     * to release resources held by the transaction manager.
+     * </p>
+     * <strong>Note:</strong> After calling this method, the account list is still accessible,
+     * but no further transactions can be executed.
+     */
     @Override
     public void close() {
         transactionManager.shutdown();
     }
 
-    /** 
+    /**
      * Helper method to check if all CompletableFutures in a collection completed successfully with true.
      * @param futures the collection of CompletableFutures to check
      * @return a CompletableFuture that completes with true if all futures completed successfully with true, false otherwise
@@ -257,10 +266,10 @@ public final class AccountRepository implements AutoCloseable {
      * Listener for changes in the security version property.
      * <p>
      * When the security version changes, this listener updates all
-     * accounts to use the new security version within a single transaction. 
+     * accounts to use the new security version within a single transaction.
      * If any update fails, all changes are rolled back to the original states.
      * </p>
-     * 
+     *
      * @param observable the observable value that changed
      * @param oldVersion the old security version
      * @param newVersion the new security version
@@ -268,7 +277,7 @@ public final class AccountRepository implements AutoCloseable {
     private void securityVersionListener(ObservableValue<? extends SecurityVersion> observable, SecurityVersion oldVersion, SecurityVersion newVersion) {
         // Capture master password at the time of listener invocation
         final String currentMasterPassword = masterPasswordProperty.get();
-        
+
         // Wait for any ongoing master password change to complete first
         securityVersionChangeFuture = masterPasswordChangeFuture.thenCompose(_ -> {
             List<Account> accountList;
@@ -330,12 +339,15 @@ public final class AccountRepository implements AutoCloseable {
      * to use the new password within a single transaction. If any update fails,
      * all changes are rolled back to the original states.
      * </p>
-     * 
+     *
      * @param observable the observable value that changed
      * @param oldMasterPassword the old master password
      * @param newMasterPassword the new master password
      */
     private void masterPasswordListener(ObservableValue<? extends String> observable, String oldMasterPassword, String newMasterPassword) {
+        // Initial set, no need to re-encrypt existing accounts
+        if (oldMasterPassword == null || oldMasterPassword.isEmpty()) return;
+
         // Wait for any ongoing security version change to complete first
         masterPasswordChangeFuture = securityVersionChangeFuture.thenCompose(_ -> {
             // Capture all accounts and their states before starting transaction
