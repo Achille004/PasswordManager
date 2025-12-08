@@ -22,6 +22,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
+
+import password.manager.app.singletons.Logger;
 
 public class TestingUtils {
 
@@ -35,6 +38,21 @@ public class TestingUtils {
         } catch (IOException e) {
             throw new RuntimeException("Failed to create test log directory", e);
         }
+    }
+
+    public static void initLogger() {
+        Optional<StackWalker.StackFrame> method = StackWalker.getInstance()
+                .walk(frames -> frames.skip(1).findFirst());
+
+        String className = "UnknownClass", methodName = "UnknownMethod";
+
+        if (method.isPresent()) {
+            StackWalker.StackFrame frame = method.get();
+            className = frame.getClassName();
+            methodName = frame.getMethodName();
+        }
+
+        Logger.createInstance(LOG_PATH.resolve(className).resolve(methodName));
     }
 
     public static String readBlnsLine(BufferedReader reader) throws IOException {
