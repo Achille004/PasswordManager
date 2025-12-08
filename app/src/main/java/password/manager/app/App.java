@@ -88,7 +88,7 @@ public class App extends Application {
     private void startApp() {
         final IOManager IO_MANAGER = IOManager.getInstance();
 
-        final ObjectProperty<Locale> locale = IOManager.getInstance().getUserPreferences().getLocaleProperty();
+        final ObjectProperty<Locale> locale = IOManager.getInstance().getUserPreferences().localeProperty();
         ObservableResourceFactory.getInstance().resourcesProperty().bind(Bindings.createObjectBinding(
                 () -> ResourceBundle.getBundle("/bundles/Lang", locale.getValue()), locale));
 

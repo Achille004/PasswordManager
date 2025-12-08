@@ -53,10 +53,11 @@ public final class Account {
             @JsonProperty("encryptedPassword") byte[] encryptedPassword,
             @JsonProperty("salt") byte[] salt,
             @JsonProperty("iv") byte[] iv) {
+
         this.softwareProperty.set(software);
         this.usernameProperty.set(username);
 
-        this.isDerivedSaltVersion = salt == null;
+        this.isDerivedSaltVersion = (salt == null);
 
         this.salt = isDerivedSaltVersion ? new byte[16] : salt;
         this.iv = iv;
@@ -69,9 +70,9 @@ public final class Account {
 
         this.isDerivedSaltVersion = false;
 
-        salt = new byte[16];
-        iv = new byte[16];
-        setPassword(securityVersion, password, masterPassword);
+        this.salt = new byte[16];
+        this.iv = new byte[16];
+        this.setPassword(securityVersion, password, masterPassword);
     }
 
     public ReadOnlyProperty<String> softwareProperty() {
@@ -119,7 +120,6 @@ public final class Account {
 
     // #region Package-private methods (exposed to AccountRepository)
     void setSoftware(@NotNull String software) {
-        if (software.isEmpty()) return;
         writeLock.lock();
         try {
             softwareProperty.set(software);
@@ -129,7 +129,6 @@ public final class Account {
     }
 
     void setUsername(@NotNull String username) {
-        if (username.isEmpty()) return;
         writeLock.lock();
         try {
             usernameProperty.set(username);
@@ -153,7 +152,7 @@ public final class Account {
         }
     }
 
-    void updateToLatestVersion(@NotNull SecurityVersion oldSecurityVersion, @NotNull String masterPassword) throws GeneralSecurityException {
+    void updateSecurityVersion(@NotNull SecurityVersion oldSecurityVersion, @NotNull SecurityVersion newSecurityVersion, @NotNull String masterPassword) throws GeneralSecurityException {
         if (isDerivedSaltVersion) return;
 
         writeLock.lock();
@@ -173,7 +172,7 @@ public final class Account {
             random.nextBytes(this.iv);
 
             // Encrypt with new key using the new salt
-            final byte[] newKey = SecurityVersion.LATEST.getKey(masterPassword, this.salt);
+            final byte[] newKey = newSecurityVersion.getKey(masterPassword, this.salt);
             this.encryptedPassword = AES.encryptAES(oldPassword, newKey, this.iv);
         } finally {
             writeLock.unlock();

@@ -18,18 +18,16 @@
 
 package password.manager.app.security;
 
-import static password.manager.app.Utils.*;
-
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.Optional;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -39,24 +37,24 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import lombok.Getter;
+import password.manager.app.Utils;
 import password.manager.app.enums.SecurityVersion;
 import password.manager.app.enums.SortingOrder;
 
 @JsonDeserialize(using = UserPreferences.UserPreferencesDeserializer.class)
 public final class UserPreferences {
-    private final @JsonIgnore @Getter ObjectProperty<Locale> localeProperty;
-    private final @JsonIgnore @Getter ObjectProperty<SortingOrder> sortingOrderProperty;
-    private @Getter SecurityVersion securityVersion;
+    private final transient ObjectProperty<Locale> localeProperty;
+    private final transient ObjectProperty<SortingOrder> sortingOrderProperty;
+    private final transient ObjectProperty<SecurityVersion> securityVersionProperty;
+
     private final @JsonProperty byte[] hashedPassword, salt;
 
     private boolean isPasswordSet;
 
     public UserPreferences() {
-        this.localeProperty = new SimpleObjectProperty<>(DEFAULT_LOCALE);
+        this.localeProperty = new SimpleObjectProperty<>(Utils.DEFAULT_LOCALE);
         this.sortingOrderProperty = new SimpleObjectProperty<>(SortingOrder.SOFTWARE);
-
-        this.securityVersion = SecurityVersion.LATEST;
+        this.securityVersionProperty = new SimpleObjectProperty<>(SecurityVersion.LATEST);
 
         this.salt = new byte[16];
         this.hashedPassword = new byte[SecurityVersion.HASH_BITS / 8];
@@ -73,8 +71,7 @@ public final class UserPreferences {
 
         this.localeProperty.set(locale);
         this.sortingOrderProperty.set(sortingOrder);
-
-        this.securityVersion = securityVersion;
+        this.securityVersionProperty.set(securityVersion);
 
         System.arraycopy(hashedPassword, 0, this.hashedPassword, 0, this.hashedPassword.length);
         System.arraycopy(salt, 0, this.salt, 0, this.salt.length);
@@ -84,12 +81,16 @@ public final class UserPreferences {
     public synchronized void set(@NotNull UserPreferences userPreferences) {
         setLocale(userPreferences.getLocale());
         setSortingOrder(userPreferences.getSortingOrder());
+        setSecurityVersion(userPreferences.getSecurityVersion());
 
-        this.securityVersion = userPreferences.securityVersion;
         System.arraycopy(userPreferences.hashedPassword, 0, this.hashedPassword, 0, this.hashedPassword.length);
         System.arraycopy(userPreferences.salt, 0, this.salt, 0, this.salt.length);
 
         this.isPasswordSet = userPreferences.isPasswordSet;
+    }
+
+    public ObjectProperty<Locale> localeProperty() {
+        return localeProperty;
     }
 
     public Locale getLocale() {
@@ -100,6 +101,10 @@ public final class UserPreferences {
         localeProperty.set(locale);
     }
 
+    public ObjectProperty<SortingOrder> sortingOrderProperty() {
+        return sortingOrderProperty;
+    }
+
     public SortingOrder getSortingOrder() {
         return sortingOrderProperty.get();
     }
@@ -108,19 +113,30 @@ public final class UserPreferences {
         sortingOrderProperty.set(sortingOrder);
     }
 
-    public synchronized @NotNull @JsonIgnore Boolean isLatestVersion() {
-        return this.securityVersion == SecurityVersion.LATEST;
+    public ObjectProperty<SecurityVersion> securityVersionProperty() {
+        return securityVersionProperty;
+    }
+
+    public SecurityVersion getSecurityVersion() {
+        return securityVersionProperty.get();
+    }
+
+    public void setSecurityVersion(@NotNull SecurityVersion securityVersion) {
+        securityVersionProperty.set(securityVersion);
     }
 
     public synchronized @NotNull Boolean verifyPassword(@Nullable String passwordToVerify) {
         if (!isPasswordSet) return true; // No password set, so any password is valid
         if (passwordToVerify == null) return false;
 
-        final boolean wasLatestSecurityVersion = isLatestVersion();
-        final byte[] hashedPasswordToVerify = this.securityVersion.hash(passwordToVerify, salt);
-
+        byte[] hashedPasswordToVerify = getSecurityVersion().hash(passwordToVerify, salt);
         final boolean res = Arrays.equals(hashedPassword, hashedPasswordToVerify);
-        if (res && !wasLatestSecurityVersion) setPassword(passwordToVerify);
+
+        if (res && !SecurityVersion.LATEST.equals(getSecurityVersion())) {
+            setSecurityVersion(SecurityVersion.LATEST);
+            setPassword(passwordToVerify);
+        }
+
         return res;
     }
 
@@ -134,8 +150,7 @@ public final class UserPreferences {
         final SecureRandom random = new SecureRandom();
         random.nextBytes(salt);
 
-        this.securityVersion = SecurityVersion.LATEST;
-        final byte[] hashedPassword = securityVersion.hash(password, salt);
+        final byte[] hashedPassword = getSecurityVersion().hash(password, salt);
         System.arraycopy(hashedPassword, 0, this.hashedPassword, 0, this.hashedPassword.length);
         isPasswordSet = true;
     }
@@ -150,7 +165,7 @@ public final class UserPreferences {
         return new UserPreferences();
     }
 
-    protected static class UserPreferencesDeserializer extends StdDeserializer<UserPreferences> {
+    static class UserPreferencesDeserializer extends StdDeserializer<UserPreferences> {
         public UserPreferencesDeserializer() {
             super(UserPreferences.class);
         }
@@ -159,17 +174,21 @@ public final class UserPreferences {
         public UserPreferences deserialize(@NotNull JsonParser jp, DeserializationContext ctxt) throws IOException {
             final JsonNode node = jp.getCodec().readTree(jp);
 
-            final Locale locale = Locale.forLanguageTag(node.get("locale").asText());
-            final SortingOrder sortingOrder = SortingOrder.valueOf(node.get("sortingOrder").asText());
-            final byte[] hashedPassword = base64ToByte(node.get("hashedPassword").asText());
-            final byte[] salt = base64ToByte(node.get("salt").asText());
+            final Locale locale = getAsOptional(node, "locale").map(Locale::forLanguageTag).orElseThrow(() -> new IOException("Missing locale field"));
+            final SortingOrder sortingOrder = getAsOptional(node, "sortingOrder").map(SortingOrder::valueOf).orElseThrow(() -> new IOException("Missing sortingOrder field"));
+            final byte[] hashedPassword = getAsOptional(node, "hashedPassword").map(Utils::base64ToByte).orElseThrow(() -> new IOException("Missing hashedPassword field"));
+            final byte[] salt = getAsOptional(node, "salt").map(Utils::base64ToByte).orElseThrow(() -> new IOException("Missing salt field"));
 
             // This field has been added since Argon2 was implemented, so if it isn't present we'll assume it's older than that
-            final SecurityVersion securityVersion = node.has("securityVersion")
-                    ? SecurityVersion.fromString(node.get("securityVersion").asText())
-                    : SecurityVersion.PBKDF2;
+            final SecurityVersion securityVersion = getAsOptional(node, "securityVersion").map(SecurityVersion::fromString).orElse(SecurityVersion.PBKDF2);
 
             return new UserPreferences(locale, sortingOrder, securityVersion, hashedPassword, salt);
+        }
+
+        private static @NotNull Optional<String> getAsOptional(@NotNull JsonNode node, @NotNull String fieldName) {
+            return node.has(fieldName)
+                    ? Optional.of(node.get(fieldName).asText())
+                    : Optional.empty();
         }
     }
 }

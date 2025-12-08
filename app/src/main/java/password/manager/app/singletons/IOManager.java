@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -38,10 +37,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.Consumer;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -50,6 +46,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -102,10 +100,10 @@ public final class IOManager implements AutoCloseable {
         ObservableResourceFactory.createInstance(LANG_BUNDLE_RESOURCE);
     }
 
-    private final AccountRepository ACCOUNT_REPOSITORY;
     private final UserPreferences USER_PREFERENCES;
+    private final AccountRepository ACCOUNT_REPOSITORY;
 
-    private String masterPassword;
+    private final StringProperty MASTER_PASSWORD_PROPERTY;
     private @Getter boolean isFirstRun, isAuthenticated;
 
     private final AtomicBoolean HAS_CHANGED;
@@ -118,10 +116,11 @@ public final class IOManager implements AutoCloseable {
     private final ScheduledExecutorService AUTOSAVE_SCHEDULER;
 
     private IOManager() {
-        ACCOUNT_REPOSITORY = new AccountRepository();
-        USER_PREFERENCES = UserPreferences.empty();
+        MASTER_PASSWORD_PROPERTY = new SimpleStringProperty(null);
 
-        masterPassword = null;
+        USER_PREFERENCES = UserPreferences.empty();
+        ACCOUNT_REPOSITORY = new AccountRepository(USER_PREFERENCES.securityVersionProperty(), MASTER_PASSWORD_PROPERTY);
+
         isFirstRun = true; // Assume first run until data is loaded
         isAuthenticated = false;
 
@@ -163,8 +162,8 @@ public final class IOManager implements AutoCloseable {
             LOADING_LOCK.unlock();
         };
 
-        USER_PREFERENCES.getLocaleProperty().addListener(propListener);
-        USER_PREFERENCES.getSortingOrderProperty().addListener(propListener);
+        USER_PREFERENCES.localeProperty().addListener(propListener);
+        USER_PREFERENCES.sortingOrderProperty().addListener(propListener);
 
         final ListChangeListener<Account> listListener = change -> {
             if (!LOADING_LOCK.tryLock()) return;
@@ -179,10 +178,10 @@ public final class IOManager implements AutoCloseable {
 
         getAccountList().addListener(listListener);
 
-        USER_PREFERENCES.getLocaleProperty().addListener((_, _, newValue) ->
+        USER_PREFERENCES.localeProperty().addListener((_, _, newValue) ->
             Logger.getInstance().addInfo("Changed locale to: " + newValue.getDisplayLanguage(Locale.ENGLISH))
         );
-        USER_PREFERENCES.getSortingOrderProperty().addListener((_, _, newValue) ->
+        USER_PREFERENCES.sortingOrderProperty().addListener((_, _, newValue) ->
             Logger.getInstance().addInfo("Changed sorting order to: " + newValue)
         );
     }
@@ -275,7 +274,7 @@ public final class IOManager implements AutoCloseable {
     public @NotNull CompletableFuture<Void> addAccount(@NotNull String software, @NotNull String username, @NotNull String password) throws IllegalStateException {
         if (!isAuthenticated()) throw new IllegalStateException("User is not authenticated [addAccount]");
 
-        return ACCOUNT_REPOSITORY.add(USER_PREFERENCES.getSecurityVersion(), masterPassword, software, username, password)
+        return ACCOUNT_REPOSITORY.add(software, username, password)
                 .thenCompose(account -> {
                     if (account == null) throw new RuntimeException("Failed to create account");
                     final CompletableFuture<Void> uiUpdate = new CompletableFuture<>();
@@ -296,7 +295,7 @@ public final class IOManager implements AutoCloseable {
     public @NotNull CompletableFuture<Void> editAccount(@NotNull Account account, @NotNull String software, @NotNull String username, @NotNull String password) throws IllegalStateException  {
         if (!isAuthenticated()) throw new IllegalStateException("User is not authenticated [editAccount]");
 
-        return ACCOUNT_REPOSITORY.edit(USER_PREFERENCES.getSecurityVersion(), masterPassword, account, software, username, password)
+        return ACCOUNT_REPOSITORY.edit(account, software, username, password)
                 .thenCompose(editedAcc -> {
                     if(editedAcc == null) throw new RuntimeException("Failed to edit account");
                     final CompletableFuture<Void> uiUpdate = new CompletableFuture<>();
@@ -326,7 +325,7 @@ public final class IOManager implements AutoCloseable {
         if (!isAuthenticated()) throw new IllegalStateException("User is not authenticated [getAccountPassword]");
 
         LoadingAnimation.start(element);
-        return ACCOUNT_REPOSITORY.getPassword(USER_PREFERENCES.getSecurityVersion(), masterPassword,  account)
+        return ACCOUNT_REPOSITORY.getPassword(account)
                 .thenAccept(password -> {
                     LoadingAnimation.stop(element);
                     if (password == null) throw new RuntimeException("Failed to retrieve password for account: " + account.getSoftware());
@@ -337,31 +336,17 @@ public final class IOManager implements AutoCloseable {
 
     // #region UserPreferences methods
     public @NotNull Boolean changeMasterPassword(String newMasterPassword) {
-        String oldMasterPassword = this.masterPassword;
+        String oldMasterPassword = this.MASTER_PASSWORD_PROPERTY.get();
         if (!(oldMasterPassword == null || isAuthenticated())) return false;
 
         boolean res = USER_PREFERENCES.setPasswordVerified(oldMasterPassword, newMasterPassword);
         if (!res) return false;
 
-        HAS_CHANGED.set(true);
+        this.MASTER_PASSWORD_PROPERTY.set(newMasterPassword);
 
-        this.masterPassword = newMasterPassword;
         if (oldMasterPassword != null) {
             Logger.getInstance().addInfo("Master password changed");
-
-            ACCOUNT_REPOSITORY.changeMasterPassword(USER_PREFERENCES.getSecurityVersion(), oldMasterPassword, newMasterPassword)
-                .thenAccept(success -> {
-                    if (success) {
-                        Logger.getInstance().addInfo("All account passwords re-encrypted successfully");
-                        HAS_CHANGED.set(true);
-                    } else {
-                        Logger.getInstance().addError(new RuntimeException("Failed to re-encrypt some account passwords"));
-                    }
-                })
-                .exceptionally(e -> {
-                    Logger.getInstance().addError(e);
-                    return null;
-                });
+            HAS_CHANGED.set(true);
         } else {
             Logger.getInstance().addInfo("Master password set");
             isAuthenticated = true;
@@ -371,38 +356,18 @@ public final class IOManager implements AutoCloseable {
     }
 
     public void displayMasterPassword(PasswordInputControl element) {
-        element.setText(masterPassword);
+        element.setText(MASTER_PASSWORD_PROPERTY.get());
     }
 
     public @NotNull Boolean authenticate(String masterPassword) {
         // If already authenticated, no need to re-authenticate
         if (isAuthenticated()) return false;
-
-        final boolean wasLatestSecurity = USER_PREFERENCES.isLatestVersion();
+        
         isAuthenticated = USER_PREFERENCES.verifyPassword(masterPassword);
-
         if (!isAuthenticated) return false;
-
-        this.masterPassword = masterPassword;
+        
+        this.MASTER_PASSWORD_PROPERTY.set(masterPassword);
         Logger.getInstance().addInfo("User authenticated");
-
-        if (wasLatestSecurity) return true;
-
-        // Update all accounts to latest security version
-        ACCOUNT_REPOSITORY.updateToLatestSecurityVersion(USER_PREFERENCES.getSecurityVersion(), masterPassword)
-            .thenAccept(success -> {
-                if (success) {
-                    Logger.getInstance().addInfo("Updated to latest security version");
-                    HAS_CHANGED.set(true);
-                } else {
-                    Logger.getInstance().addError(new RuntimeException("Failed to update some accounts to latest security version"));
-                }
-            })
-            .exceptionally(e -> {
-                Logger.getInstance().addError(e);
-                return null;
-            });
-
         return true;
     }
     // #endregion

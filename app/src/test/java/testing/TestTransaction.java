@@ -1,7 +1,6 @@
 package testing;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static testing.TestingUtils.*;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -26,7 +25,6 @@ public class TestTransaction {
 
     @BeforeEach
     void setUp() {
-        Logger.createInstance(TestingUtils.LOG_PATH);
         executor = Executors.newVirtualThreadPerTaskExecutor();
         transaction = new Transaction(executor);
     }
@@ -47,6 +45,8 @@ public class TestTransaction {
 
     @Test
     void testSuccessfulCommit() throws ExecutionException, InterruptedException, TimeoutException {
+        TestingUtils.initLogger();
+        
         AtomicInteger value = new AtomicInteger(0);
 
         transaction.addOperation(() -> {
@@ -68,6 +68,8 @@ public class TestTransaction {
 
     @Test
     void testRollbackOnFailure() throws ExecutionException, InterruptedException, TimeoutException {
+        TestingUtils.initLogger();
+        
         AtomicInteger value = new AtomicInteger(0);
         AtomicBoolean rollbackExecuted = new AtomicBoolean(false);
 
@@ -94,6 +96,8 @@ public class TestTransaction {
 
     @Test
     void testRollbackOnException() throws ExecutionException, InterruptedException, TimeoutException {
+        TestingUtils.initLogger();
+        
         AtomicBoolean rollbackExecuted = new AtomicBoolean(false);
 
         transaction.addOperation(() -> {
@@ -108,6 +112,8 @@ public class TestTransaction {
 
     @Test
     void testRollbackInReverseOrder() throws ExecutionException, InterruptedException, TimeoutException {
+        TestingUtils.initLogger();
+        
         AtomicInteger executionOrder = new AtomicInteger(0);
         int[] rollbackOrder = new int[3];
 
@@ -125,6 +131,8 @@ public class TestTransaction {
 
     @Test
     void testManualRollback() {
+        TestingUtils.initLogger();
+        
         AtomicBoolean rollbackExecuted = new AtomicBoolean(false);
 
         transaction.addOperation(() -> true, () -> rollbackExecuted.set(true));
@@ -137,6 +145,8 @@ public class TestTransaction {
 
     @Test
     void testRollbackIdempotent() {
+        TestingUtils.initLogger();
+        
         AtomicInteger rollbackCount = new AtomicInteger(0);
 
         transaction.addOperation(() -> true, rollbackCount::incrementAndGet);
@@ -150,6 +160,8 @@ public class TestTransaction {
 
     @Test
     void testAddOperationAfterCommit() throws ExecutionException, InterruptedException, TimeoutException {
+        TestingUtils.initLogger();
+        
         transaction.addOperation(() -> true, null);
         transaction.commit().get(5, TimeUnit.SECONDS);
 
@@ -159,6 +171,8 @@ public class TestTransaction {
 
     @Test
     void testAddOperationAfterRollback() {
+        TestingUtils.initLogger();
+        
         transaction.addOperation(() -> true, null);
         transaction.rollback();
 
@@ -168,6 +182,8 @@ public class TestTransaction {
 
     @Test
     void testCommitWithoutOperations() throws ExecutionException, InterruptedException, TimeoutException {
+        TestingUtils.initLogger();
+        
         CompletableFuture<Boolean> result = transaction.commit();
         assertTrue(result.get(5, TimeUnit.SECONDS), "Empty transaction should commit successfully");
         assertTrue(transaction.isCommitted(), "Transaction should be marked as committed");
@@ -175,12 +191,16 @@ public class TestTransaction {
 
     @Test
     void testRollbackWithoutOperations() {
+        TestingUtils.initLogger();
+        
         transaction.rollback();
         assertTrue(transaction.isRolledBack(), "Empty transaction should roll back successfully");
     }
 
     @Test
     void testOperationWithoutRollback() throws ExecutionException, InterruptedException, TimeoutException {
+        TestingUtils.initLogger();
+        
         AtomicBoolean executed = new AtomicBoolean(false);
 
         transaction.addOperation(() -> {
@@ -195,6 +215,8 @@ public class TestTransaction {
 
     @Test
     void testMultipleOperationsWithMixedRollbacks() throws ExecutionException, InterruptedException, TimeoutException {
+        TestingUtils.initLogger();
+        
         AtomicInteger value = new AtomicInteger(0);
         AtomicBoolean rollback1 = new AtomicBoolean(false);
         AtomicBoolean rollback3 = new AtomicBoolean(false);
@@ -223,6 +245,8 @@ public class TestTransaction {
 
     @Test
     void testRollbackContinuesOnException() {
+        TestingUtils.initLogger();
+        
         AtomicBoolean rollback1 = new AtomicBoolean(false);
         AtomicBoolean rollback3 = new AtomicBoolean(false);
 
@@ -243,6 +267,8 @@ public class TestTransaction {
 
     @Test
     void testConcurrentOperations() throws ExecutionException, InterruptedException, TimeoutException {
+        TestingUtils.initLogger();
+        
         AtomicInteger counter = new AtomicInteger(0);
         int operationCount = 10;
 
@@ -260,6 +286,8 @@ public class TestTransaction {
 
     @Test
     void testCommitAfterAlreadyCommitted() throws ExecutionException, InterruptedException, TimeoutException {
+        TestingUtils.initLogger();
+        
         transaction.addOperation(() -> true, null);
         transaction.commit().get(5, TimeUnit.SECONDS);
 
@@ -269,6 +297,8 @@ public class TestTransaction {
 
     @Test
     void testCommitAfterRollback() throws ExecutionException, InterruptedException, TimeoutException {
+        TestingUtils.initLogger();
+        
         transaction.addOperation(() -> true, null);
         transaction.rollback();
 
@@ -278,6 +308,8 @@ public class TestTransaction {
 
     @Test
     void testOperationReturningValue() throws ExecutionException, InterruptedException, TimeoutException {
+        TestingUtils.initLogger();
+        
         String expectedValue = "test_value";
 
         CompletableFuture<String> operationFuture = transaction.addOperation(() -> expectedValue, null);
@@ -290,6 +322,8 @@ public class TestTransaction {
 
     @Test
     void testOperationWithDelay() throws ExecutionException, InterruptedException, TimeoutException {
+        TestingUtils.initLogger();
+        
         AtomicBoolean executed = new AtomicBoolean(false);
 
         transaction.addOperation(() -> {

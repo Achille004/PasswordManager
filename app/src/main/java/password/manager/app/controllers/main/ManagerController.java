@@ -106,7 +106,7 @@ public class ManagerController extends AbstractController {
         final SortedList<Account> SORTED_ACCOUNT_LIST = new SortedList<>(ACCOUNT_LIST);
         final FilteredList<Account> FILTERED_ACCOUNT_LIST = new FilteredList<>(SORTED_ACCOUNT_LIST);
 
-        final ObjectProperty<SortingOrder> SORTING_ORDER_PROPERTY = IO_MANAGER.getUserPreferences().getSortingOrderProperty();
+        final ObjectProperty<SortingOrder> SORTING_ORDER_PROPERTY = IO_MANAGER.getUserPreferences().sortingOrderProperty();
         final TabManager TAB_MANAGER = new TabManager(accountTabPane, homeTab);
 
         setupAutoCompletion(ACCOUNT_LIST);

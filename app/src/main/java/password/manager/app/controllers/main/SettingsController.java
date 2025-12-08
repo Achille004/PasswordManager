@@ -64,8 +64,8 @@ public class SettingsController extends AbstractController {
         Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
 
         final IOManager ioManager = IOManager.getInstance();
-        final ObjectProperty<Locale> localeProperty = ioManager.getUserPreferences().getLocaleProperty();
-        final ObjectProperty<SortingOrder> sortingOrderProperty = ioManager.getUserPreferences().getSortingOrderProperty();
+        final ObjectProperty<Locale> localeProperty = ioManager.getUserPreferences().localeProperty();
+        final ObjectProperty<SortingOrder> sortingOrderProperty = ioManager.getUserPreferences().sortingOrderProperty();
 
         final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
         langResources.bindTextProperty(settingsLangLbl, "settings.language");

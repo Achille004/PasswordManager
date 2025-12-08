@@ -27,6 +27,9 @@ import java.util.concurrent.CompletableFuture;
 
 import org.jetbrains.annotations.NotNull;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.StringProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import password.manager.app.enums.SecurityVersion;
@@ -62,15 +65,28 @@ public final class AccountRepository implements AutoCloseable {
     private final ObservableList<Account> observableAccountsUnmodifiable;
     private final TransactionManager transactionManager;
 
+    private final ObjectProperty<SecurityVersion> securityVersionProperty;
+    private final StringProperty masterPasswordProperty;
+    
+    // Tracks ongoing master password change operations
+    private volatile CompletableFuture<Boolean> masterPasswordChangeFuture = CompletableFuture.completedFuture(true);
+    private volatile CompletableFuture<Boolean> securityVersionChangeFuture = CompletableFuture.completedFuture(true);
+
     /**
      * Constructs a new AccountRepository with an empty synchronized observable list
      * and a transaction manager for asynchronous operations.
      */
-    public AccountRepository() {
-        accounts = Collections.synchronizedList(new ArrayList<>());
-        transactionManager = new TransactionManager();
+    public AccountRepository(ObjectProperty<SecurityVersion> securityVersionProperty, StringProperty masterPasswordProperty) {
+        this.accounts = Collections.synchronizedList(new ArrayList<>());
+        this.transactionManager = new TransactionManager();
 
-        observableAccountsUnmodifiable = FXCollections.unmodifiableObservableList(FXCollections.observableList(accounts));
+        this.observableAccountsUnmodifiable = FXCollections.unmodifiableObservableList(FXCollections.observableList(accounts));
+        
+        this.securityVersionProperty = securityVersionProperty;
+        this.securityVersionProperty.addListener(this::securityVersionListener);
+
+        this.masterPasswordProperty = masterPasswordProperty;
+        this.masterPasswordProperty.addListener(this::masterPasswordListener);
     }
 
     /**
@@ -99,27 +115,20 @@ public final class AccountRepository implements AutoCloseable {
      * If encryption fails, the transaction is rolled back and no account is added.
      * </p>
      *
-     * @param securityVersion the encryption algorithm version to use
-     * @param masterPassword the master password for encryption
      * @param software the name of the software/service for this account
      * @param username the username for this account
      * @param password the password to encrypt and store
      * @return a CompletableFuture that completes with the created Account, or null if the transaction fails
      */
-    public @NotNull CompletableFuture<Account> add(
-            @NotNull SecurityVersion securityVersion,
-            @NotNull String masterPassword,
-            @NotNull String software,
-            @NotNull String username,
-            @NotNull String password) {
-
+    public @NotNull CompletableFuture<Account> add(@NotNull String software, @NotNull String username, @NotNull String password) {
         // Use a holder to capture the account reference for rollback
         final Account[] accountHolder = new Account[1];
 
         return transactionManager.executeInTransaction(
             () -> {
                 try {
-                    accountHolder[0] = Account.of(securityVersion, software, username, password, masterPassword);
+                    Logger.getInstance().addDebug("Creating new account for security version: " + securityVersionProperty.get().name());
+                    accountHolder[0] = Account.of(securityVersionProperty.get(), software, username, password, masterPasswordProperty.get());
                     accounts.add(accountHolder[0]);
                     return accountHolder[0];
                 } catch (GeneralSecurityException e) {
@@ -140,8 +149,6 @@ public final class AccountRepository implements AutoCloseable {
      * If any step fails, all changes are rolled back to the original state.
      * </p>
      *
-     * @param securityVersion the encryption algorithm version to use
-     * @param masterPassword the master password for encryption
      * @param account the account to update (must exist in the repository)
      * @param software the new name of the software/service
      * @param username the new username
@@ -149,14 +156,7 @@ public final class AccountRepository implements AutoCloseable {
      * @return a CompletableFuture that completes with the updated Account, or null if the transaction fails
      * @throws IllegalArgumentException if the account is not found in the repository
      */
-    public @NotNull CompletableFuture<Account> edit(
-            @NotNull SecurityVersion securityVersion,
-            @NotNull String masterPassword,
-            @NotNull Account account,
-            @NotNull String software,
-            @NotNull String username,
-            @NotNull String password) {
-
+    public @NotNull CompletableFuture<Account> edit(@NotNull Account account, @NotNull String software, @NotNull String username, @NotNull String password) {
         if (!accounts.contains(account)) throw new IllegalArgumentException("Account not found in list");
 
         // Capture complete original state for rollback using Account's memento pattern
@@ -167,7 +167,7 @@ public final class AccountRepository implements AutoCloseable {
                 try {
                     account.setSoftware(software);
                     account.setUsername(username);
-                    account.setPassword(securityVersion, password, masterPassword);
+                    account.setPassword(securityVersionProperty.get(), password, masterPasswordProperty.get());
                     // Trigger ObservableList change notification
                     accounts.set(accounts.indexOf(account), account);
                     return account;
@@ -215,144 +215,25 @@ public final class AccountRepository implements AutoCloseable {
      * in a background thread to avoid blocking the UI. This is a read-only operation and does not
      * use transactions.
      * </p>
+     * <p>
+     * This method will wait for any ongoing master password or security version changes to complete
+     * before attempting to decrypt the password, ensuring consistency.
+     * </p>
      *
-     * @param securityVersion the encryption algorithm version used for this account
-     * @param masterPassword the master password for decryption
      * @param account the account whose password to retrieve
      * @return a CompletableFuture that completes with the decrypted password, or null if decryption fails
      */
-    public @NotNull CompletableFuture<String> getPassword(
-                @NotNull SecurityVersion securityVersion,
-                @NotNull String masterPassword,
-                @NotNull Account account) {
-
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                return account.getPassword(securityVersion, masterPassword);
-            } catch (GeneralSecurityException e) {
-                Logger.getInstance().addError(e);
-                return null;
-            }
-        });
-    }
-
-    /**
-     * Changes the master password for all accounts in the repository within a single transaction.
-     * <p>
-     * This operation re-encrypts all account passwords with the new master password.
-     * All updates succeed or fail as a unit. If any update fails, all changes are rolled back.
-     * </p>
-     *
-     * @param securityVersion the encryption algorithm version to use
-     * @param oldMasterPassword the current master password for decryption
-     * @param newMasterPassword the new master password for encryption
-     * @return a CompletableFuture that completes with true if all passwords were changed successfully, false otherwise
-     */
-    public @NotNull CompletableFuture<Boolean> changeMasterPassword(
-            @NotNull SecurityVersion securityVersion,
-            @NotNull String oldMasterPassword,
-            @NotNull String newMasterPassword) {
-
-        // Capture all accounts and their states before starting transaction
-        List<Account> accountList;
-        List<Account.AccountMemento> originalStates;
-        synchronized (accounts) {
-            accountList = new ArrayList<>(accounts);
-            originalStates = accounts.stream().map(Account::captureState).toList();
-        }
-
-        return transactionManager.executeInTransaction(transaction -> {
-            List<CompletableFuture<Boolean>> changeFutures = new ArrayList<>(accountList.size());
-
-            for (int i = 0; i < accountList.size(); i++) {
-                Account account = accountList.get(i);
-                Account.AccountMemento originalState = originalStates.get(i);
-
-                CompletableFuture<Boolean> changeFuture = transaction.addOperation(
-                    () -> {
-                        try {
-                            // Decrypt with old master password
-                            String password = account.getPassword(securityVersion, oldMasterPassword);
-                            // Re-encrypt with new master password
-                            account.setPassword(securityVersion, password, newMasterPassword);
-                            // Trigger ObservableList change notification
-                            accounts.set(accounts.indexOf(account), account);
-                            return true;
-                        } catch (GeneralSecurityException e) {
-                            Logger.getInstance().addError(e);
-                            return false;
-                        }
-                    },
-                    () -> {
-                        // Rollback using captured state
-                        account.restoreState(originalState);
-                        // Trigger ObservableList change notification
-                        accounts.set(accounts.indexOf(account), account);
-                    }
-                );
-
-                changeFutures.add(changeFuture);
-            }
-
-            return allSuccessful(changeFutures);
-        });
-    }
-
-    /**
-     * Updates all accounts to the latest security version within a single transaction.
-     * <p>
-     * This operation re-encrypts all account passwords using the latest security version.
-     * All updates succeed or fail as a unit. If any update fails, all changes are rolled back.
-     * </p>
-     *
-     * @param securityVersion the current security version of the accounts
-     * @param masterPassword the master password for decryption and encryption
-     * @return a CompletableFuture that completes with true if all accounts were updated successfully, false otherwise
-     */
-    public @NotNull CompletableFuture<Boolean> updateToLatestSecurityVersion(
-            @NotNull SecurityVersion securityVersion,
-            @NotNull String masterPassword) {
-
-        // Capture all accounts and their states before starting transaction
-        List<Account> accountList;
-        List<Account.AccountMemento> originalStates;
-        synchronized (accounts) {
-            accountList = new ArrayList<>(accounts);
-            originalStates = accounts.stream().map(Account::captureState).toList();
-        }
-
-        return transactionManager.executeInTransaction(transaction -> {
-            List<CompletableFuture<Boolean>> updateFutures = new ArrayList<>();
-
-            for (int i = 0; i < accountList.size(); i++) {
-                Account account = accountList.get(i);
-                Account.AccountMemento originalState = originalStates.get(i);
-
-                CompletableFuture<Boolean> updateFuture = transaction.addOperation(
-                    () -> {
-                        try {
-                            account.updateToLatestVersion(securityVersion, masterPassword);
-                            // Trigger ObservableList change notification
-                            accounts.set(accounts.indexOf(account), account);
-                            return true;
-                        } catch (GeneralSecurityException e) {
-                            Logger.getInstance().addError(e);
-                            return false;
-                        }
-                    },
-                    () -> {
-                        // Rollback using captured state
-                        account.restoreState(originalState);
-                        // Trigger ObservableList change notification
-                        accounts.set(accounts.indexOf(account), account);
-                    }
-                );
-
-                updateFutures.add(updateFuture);
-            }
-
-            return allSuccessful(updateFutures);
-        });
+    public @NotNull CompletableFuture<String> getPassword(@NotNull Account account) {
+        // Wait for any ongoing master password or security version changes to complete
+        return CompletableFuture.allOf(masterPasswordChangeFuture, securityVersionChangeFuture)
+            .thenCompose(_ -> CompletableFuture.supplyAsync(() -> {
+                try {
+                    return account.getPassword(securityVersionProperty.get(), masterPasswordProperty.get());
+                } catch (GeneralSecurityException e) {
+                    Logger.getInstance().addError(e);
+                    return null;
+                }
+            }));
     }
 
     @Override
@@ -360,10 +241,157 @@ public final class AccountRepository implements AutoCloseable {
         transactionManager.shutdown();
     }
 
+    /** 
+     * Helper method to check if all CompletableFutures in a collection completed successfully with true.
+     * @param futures the collection of CompletableFutures to check
+     * @return a CompletableFuture that completes with true if all futures completed successfully with true, false otherwise
+    */
     private static CompletableFuture<Boolean> allSuccessful(Collection<CompletableFuture<Boolean>> futures) {
         return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
                 .thenApply(_ -> futures.stream().allMatch(
                     f -> (f.isDone() && !f.isCompletedExceptionally() && f.join())
                 ));
+    }
+
+    /**
+     * Listener for changes in the security version property.
+     * <p>
+     * When the security version changes, this listener updates all
+     * accounts to use the new security version within a single transaction. 
+     * If any update fails, all changes are rolled back to the original states.
+     * </p>
+     * 
+     * @param observable the observable value that changed
+     * @param oldVersion the old security version
+     * @param newVersion the new security version
+     */
+    private void securityVersionListener(ObservableValue<? extends SecurityVersion> observable, SecurityVersion oldVersion, SecurityVersion newVersion) {
+        // Capture master password at the time of listener invocation
+        final String currentMasterPassword = masterPasswordProperty.get();
+        
+        // Wait for any ongoing master password change to complete first
+        securityVersionChangeFuture = masterPasswordChangeFuture.thenCompose(_ -> {
+            List<Account> accountList;
+            List<Account.AccountMemento> originalStates;
+            synchronized (accounts) {
+                accountList = new ArrayList<>(accounts);
+                originalStates = accounts.stream().map(Account::captureState).toList();
+            }
+
+            return transactionManager.executeInTransaction(transaction -> {
+                List<CompletableFuture<Boolean>> updateFutures = new ArrayList<>(accountList.size());
+
+                for (int i = 0; i < accountList.size(); i++) {
+                    Account account = accountList.get(i);
+                    Account.AccountMemento originalState = originalStates.get(i);
+
+                    CompletableFuture<Boolean> updateFuture = transaction.addOperation(
+                        () -> {
+                            try {
+                                account.updateSecurityVersion(oldVersion, newVersion, currentMasterPassword);
+                                // Trigger ObservableList change notification
+                                accounts.set(accounts.indexOf(account), account);
+                                return true;
+                            } catch (GeneralSecurityException e) {
+                                Logger.getInstance().addError(e);
+                                return false;
+                            }
+                        },
+                        () -> {
+                            // Rollback using captured state
+                            account.restoreState(originalState);
+                            // Trigger ObservableList change notification
+                            accounts.set(accounts.indexOf(account), account);
+                        }
+                    );
+
+                    updateFutures.add(updateFuture);
+                }
+
+                return allSuccessful(updateFutures);
+            });
+        });
+
+        securityVersionChangeFuture
+                .thenAccept(success -> {
+                    if (success) Logger.getInstance().addInfo("Updated all accounts to latest security version");
+                    else Logger.getInstance().addError(new RuntimeException("Failed to update some accounts to latest security version"));
+                })
+                .exceptionally(e -> {
+                    Logger.getInstance().addError(e);
+                    return null;
+                });
+    }
+
+    /**
+     * Listener for changes in the master password property.
+     * <p>
+     * When the master password changes, this listener updates all accounts
+     * to use the new password within a single transaction. If any update fails,
+     * all changes are rolled back to the original states.
+     * </p>
+     * 
+     * @param observable the observable value that changed
+     * @param oldMasterPassword the old master password
+     * @param newMasterPassword the new master password
+     */
+    private void masterPasswordListener(ObservableValue<? extends String> observable, String oldMasterPassword, String newMasterPassword) {
+        // Wait for any ongoing security version change to complete first
+        masterPasswordChangeFuture = securityVersionChangeFuture.thenCompose(_ -> {
+            // Capture all accounts and their states before starting transaction
+            List<Account> accountList;
+            List<Account.AccountMemento> originalStates;
+            synchronized (accounts) {
+                accountList = new ArrayList<>(accounts);
+                originalStates = accounts.stream().map(Account::captureState).toList();
+            }
+
+            return transactionManager.executeInTransaction(transaction -> {
+                List<CompletableFuture<Boolean>> changeFutures = new ArrayList<>(accountList.size());
+                SecurityVersion securityVersion = securityVersionProperty.get();
+
+                for (int i = 0; i < accountList.size(); i++) {
+                    Account account = accountList.get(i);
+                    Account.AccountMemento originalState = originalStates.get(i);
+
+                    CompletableFuture<Boolean> changeFuture = transaction.addOperation(
+                        () -> {
+                            try {
+                                // Decrypt with old master password
+                                String password = account.getPassword(securityVersion, oldMasterPassword);
+                                // Re-encrypt with new master password
+                                account.setPassword(securityVersion, password, newMasterPassword);
+                                // Trigger ObservableList change notification
+                                accounts.set(accounts.indexOf(account), account);
+                                return true;
+                            } catch (GeneralSecurityException e) {
+                                Logger.getInstance().addError(e);
+                                return false;
+                            }
+                        },
+                        () -> {
+                            // Rollback using captured state
+                            account.restoreState(originalState);
+                            // Trigger ObservableList change notification
+                            accounts.set(accounts.indexOf(account), account);
+                        }
+                    );
+
+                    changeFutures.add(changeFuture);
+                }
+
+                return allSuccessful(changeFutures);
+            });
+        });
+
+        masterPasswordChangeFuture
+                .thenAccept(success -> {
+                    if (success) Logger.getInstance().addInfo("All account passwords re-encrypted successfully");
+                    else Logger.getInstance().addError(new RuntimeException("Failed to re-encrypt some account passwords"));
+                })
+                .exceptionally(e -> {
+                    Logger.getInstance().addError(e);
+                    return null;
+                });
     }
 }
