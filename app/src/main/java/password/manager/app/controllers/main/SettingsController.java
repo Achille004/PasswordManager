@@ -109,6 +109,7 @@ public class SettingsController extends AbstractController {
         settingsMasterPassword.setPrefSize(465.0, 40.0);
     }
 
+    @Override
     public void reset() {
         clearStyle(settingsMasterPassword.getTextField());
         IOManager.getInstance().displayMasterPassword(settingsMasterPassword);

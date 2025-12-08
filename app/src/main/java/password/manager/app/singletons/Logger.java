@@ -163,6 +163,10 @@ public final class Logger implements AutoCloseable {
         return Singletons.get(Logger.class);
     }
 
+    public static boolean hasInstance() {
+        return Singletons.isRegistered(Logger.class);
+    }
+
     public static synchronized void destroyInstance() throws IllegalStateException {
         Singletons.unregister(Logger.class);
     }

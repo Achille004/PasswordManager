@@ -23,6 +23,9 @@ public class PopupContentController implements Initializable {
     }
 
     public void setState(String i18nKey, String bottomBarColor) {
+        // This happens on the closing save, so just return since we don't need the popup
+        if (!ObservableResourceFactory.hasInstance()) return;
+
         final ObservableResourceFactory resources = ObservableResourceFactory.getInstance();
         label.setText(resources.getValue("popup." + i18nKey));
         bottomBar.setStyle("-fx-background-color: " + bottomBarColor + ";");
