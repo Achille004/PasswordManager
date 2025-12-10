@@ -28,7 +28,10 @@ plugins {
     id 'io.franzbecker.gradle-lombok' version '5.0.0'
 
     // https://github.com/gradlex-org/java-module-dependencies
-    id 'org.gradlex.java-module-dependencies' version '1.6.4'
+    id 'org.gradlex.java-module-dependencies' version '1.11'
+
+    // https://github.com/petr-panteleyev/jpackage-gradle-plugin
+    id 'org.panteleyev.jpackageplugin'
 }
 
 repositories {
@@ -64,6 +67,12 @@ def defaultJvmArgs = [
     '-Dapp.version=' + project.appVersion
 ]
 
+def resourceDir = layout.projectDirectory.dir('src/main/resources')
+resourceDir.asFile.mkdirs()
+
+def compileDir = layout.projectDirectory.dir('compiled')
+compileDir.asFile.mkdirs()
+
 application {
     // Define the main class for the application.
     mainModule = 'password.manager.app'
@@ -73,9 +82,12 @@ application {
     applicationDefaultJvmArgs = defaultJvmArgs
 }
 
-tasks.named('test') {
-    // Use JUnit Platform for unit tests.
-    useJUnitPlatform()
+testing {
+    suites {
+        test {
+            useJUnitJupiter '6.0.1'
+        }
+    }
 }
 
 javafx {
@@ -113,17 +125,8 @@ signing {
 
 def gpgSignable = gpgExists && gpgPropertiesExist
 
-def resourceDir = layout.projectDirectory.dir('src/main/resources')
-def compileDir = rootProject.layout.projectDirectory.dir('compiled')
-resourceDir.asFile.mkdirs()
-compileDir.asFile.mkdirs()
-
-def distDir = compileDir.dir('distributions')
-def installerDir = compileDir.dir('installers')
-distDir.asFile.mkdirs()
-installerDir.asFile.mkdirs()
-
 tasks.register('assemblePortables', Delete) {
+    def distDir = compileDir.dir('distributions')
     delete distDir
 
     dependsOn tasks.distTar, tasks.distZip
@@ -163,58 +166,7 @@ tasks.register('readyAllJars', Copy) {
     into layout.buildDirectory.dir('jars')
 }
 
-tasks.register('assembleInstallers', FullJPackageTask) {
-    dependsOn tasks.readyAllJars
-
-    aboutUrl = 'https://github.com/Achille004/PasswordManager'
-    appDescription = project.appName
-    appName = project.appName
-    appVersion = project.appVersion
-    copyright = '© ' + rootProject.appVendor
-    javaOptions = ['-Dfile.encoding=UTF-8'] + defaultJvmArgs
-    licenseFile	= resourceDir.file('license.txt')
-    module = 'password.manager.app/password.manager.app.App'
-    modulePaths = files(layout.buildDirectory.dir('jars'))
-    runtimeImage = file(System.getProperty('java.home'))
-    vendor = project.appVendor
-
-    windows {
-        icon =  resourceDir.file('icon.ico')
-        destination = installerDir.dir('windows')
-        winConsole = false
-        winDirChooser = true
-        winHelpUrl = 'https://github.com/Achille004/PasswordManager/issues'
-        winMenu = true
-        winMenuGroup = project.appVendor
-        winShortcut = true
-        winShortcutPrompt = true
-    }
-
-    mac {
-        icon =  resourceDir.file('icon.icns')
-        destination = installerDir.dir('mac')
-        macAppCategory  = 'security'
-        macAppStore = false
-        macPackageIdentifier = (project.appName.replace(" ", "") + "-" + project.appVersion)
-        macPackageName = project.appName
-        macSigningKeyUserName = project.appVendor
-    }
-
-    linux {
-        icon =  resourceDir.file('icon.png')
-        destination = installerDir.dir('linux')
-        linuxAppCategory = 'security'
-        linuxDebMaintainer = '2004marras@gmail.com'
-        linuxMenuGroup = project.appVendor
-        linuxRpmLicenseType = 'GPLv3'
-        linuxShortcut = true
-    }
-}
-
-tasks.register('dryAssembleInstallers') {
-    System.setProperty("jpackage.dryRun", "true")
-    finalizedBy tasks.assembleInstallers
-}
+apply from: 'packaging.gradle'
 
 tasks.register('generateChecksums') {
     def out = compileDir.file("checksums.txt").asFile

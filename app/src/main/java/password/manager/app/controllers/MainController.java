@@ -29,10 +29,12 @@ import java.util.ResourceBundle;
 
 import org.jetbrains.annotations.NotNull;
 
+import javafx.animation.Animation.Status;
 import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -52,6 +54,7 @@ import password.manager.app.controllers.main.SettingsController;
 import password.manager.app.singletons.IOManager;
 import password.manager.app.singletons.IOManager.SaveState;
 import password.manager.app.singletons.Logger;
+import password.manager.app.singletons.ObservableResourceFactory;
 
 public class MainController extends AbstractController {
     private static final Duration TITLE_ANIM_TIME_UNIT = Duration.millis(8);
@@ -211,18 +214,36 @@ public class MainController extends AbstractController {
 
         // Animation and styling //
 
+        final ReadOnlyBooleanProperty focusedProperty = App.getAppScenePane().getScene().getWindow().focusedProperty();
+
         final FadeTransition disappearTransition = new FadeTransition(Duration.seconds(3), popupContent);
         disappearTransition.setFromValue(1.0);
         disappearTransition.setToValue(0.0);
         disappearTransition.setCycleCount(1);
         disappearTransition.setOnFinished(_ -> popupContent.setVisible(false));
 
+        // Track focused state to prevent unwanted popup visibility changes
+        focusedProperty.addListener((_, _, isFocused) -> {
+            boolean isVisible = popupContent.isVisible();
+
+            if (!isFocused && isVisible) {
+                // Window lost focus while popup is visible - hide it
+                popupContent.setVisible(false);
+            } else if (isFocused && !isVisible && disappearTransition.getStatus() == Status.RUNNING) {
+                // Window gained focus while popup is hidden - show it
+                popupContent.setVisible(true);
+            }
+        });
+
         IOManager.getInstance().savingProperty().addListener((_, _, newValue) -> {
+            // This happens on the closing save, so just return since we don't need the popup
+            if (!ObservableResourceFactory.hasInstance()) return;
+
             switch (newValue) {
                 case SAVING -> {
                     disappearTransition.stop();
                     popupController.setState("saving", "-fx-color-element-bg");
-                    popupContent.setVisible(true);
+                    popupContent.setVisible(focusedProperty.get());
                     popupContent.setOpacity(1.0);
                 }
 

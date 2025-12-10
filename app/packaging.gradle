@@ -1,0 +1,136 @@
+import org.panteleyev.jpackage.ImageType
+import org.panteleyev.jpackage.JPackageTask
+
+// #region Copied from build.gradle
+
+// https://github.com/controlsfx/controlsfx/wiki/Using-ControlsFX-with-JDK-9-and-above
+def defaultJvmArgs = [
+    '--enable-native-access=javafx.graphics',
+    '--add-exports', 'javafx.base/com.sun.javafx.event=org.controlsfx.controls',
+    '-Dapp.name=' + project.appName,
+    '-Dapp.version=' + project.appVersion
+]
+
+def resourceDir = layout.projectDirectory.dir('src/main/resources')
+resourceDir.asFile.mkdirs()
+
+def compileDir = layout.projectDirectory.dir('compiled')
+compileDir.asFile.mkdirs()
+
+// #endregion
+
+// appName and appVersion are inherited from JPackageTask
+def osArch = System.getProperty("os.arch")
+def basename = appName.replace(" ", "") + "-" + appVersion + "-" + osArch
+
+def types = PackagingUtils.getTypes()
+
+def installerDir = compileDir.dir('installers')
+def dest
+
+types.each { t ->
+    def isAppImage = (t == ImageType.APP_IMAGE)
+    tasks.register("jpackage_$t", JPackageTask.class) {
+        dependsOn tasks.readyAllJars
+
+        type = t
+
+        appDescription = project.appName
+        appName = project.appName
+        appVersion = project.appVersion
+        copyright = '© ' + project.appVendor
+        vendor = project.appVendor
+
+        if (isAppImage) {
+            javaOptions = ['-Dfile.encoding=UTF-8'] + defaultJvmArgs
+            module = 'password.manager.app/password.manager.app.App'
+            modulePaths = files(layout.buildDirectory.dir('jars'))
+            runtimeImage = file(System.getProperty('java.home'))
+        } else {
+            aboutUrl = 'https://github.com/Achille004/PasswordManager'
+            appImage = installerDir.dir(project.appName).toString()
+            licenseFile = resourceDir.file('license.txt')
+        }
+
+        windows {
+            dest = installerDir.dir('windows')
+            icon =  resourceDir.file('icon.ico')
+
+            winConsole = isAppImage
+
+            if (!isAppImage) {
+                winDirChooser = true
+                winHelpUrl = 'https://github.com/Achille004/PasswordManager/issues'
+                winMenu = true
+                winMenuGroup = project.appVendor
+                winShortcut = true
+                winShortcutPrompt = true
+            }
+        }
+
+        mac {
+            dest = installerDir.dir('mac')
+            icon =  resourceDir.file('icon.icns')
+
+            if (!isAppImage) {
+                macAppCategory  = 'security'
+                macAppStore = false
+                macPackageName = project.appName
+                macPackageIdentifier = (project.appName.replace(" ", "") + "-" + project.appVersion)
+                macSigningKeyUserName = project.appVendor
+            }
+        }
+
+        linux {
+            dest = installerDir.dir('linux')
+            icon =  resourceDir.file('icon.png')
+
+            if (!isAppImage) {
+                linuxAppCategory = 'security'
+                linuxDebMaintainer = '2004marras@gmail.com'
+                linuxMenuGroup = project.appVendor
+                linuxRpmLicenseType = 'GPLv3'
+                linuxShortcut = true
+            }
+        }
+
+        destination = isAppImage ? installerDir : dest
+    }
+}
+
+tasks.register("assembleInstallers") {
+    delete installerDir
+    mkdir installerDir
+
+    println "Packaging ${appName} ${appVersion}"
+
+    println "Building for: ${types.join(', ')}"
+    dependsOn types.collect { type -> tasks.named("jpackage_$type") }
+
+    doLast {
+        println "Renaming files for ${osArch}"
+        dest.asFile.listFiles().each { f ->
+            def targetname = basename
+            def dot  = f.name.lastIndexOf(".")
+            if (dot >= 0) targetname += f.name.substring(dot)
+
+            def newFile = new File(f.parentFile, targetname)
+            println " - ${f.name} => ${newFile.name}"
+            f.renameTo(newFile)
+            f.delete()
+
+            // Make sure the new file is writable (WiX was building read-only EXEs
+            // but ok MSIs, and I'm not gonna dive into that rabbit hole right now)
+            if (!newFile.canWrite()) {
+                newFile.setWritable(true)
+                println "   L Was read-only, removed attribute"
+            }
+        }
+    }
+    
+}
+
+tasks.register('dryAssembleInstallers') {
+    System.setProperty("jpackage.dryRun", "true")
+    finalizedBy tasks.assembleInstallers
+}

@@ -20,12 +20,8 @@ import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.Internal
 import org.panteleyev.jpackage.ImageType
-import org.panteleyev.jpackage.JPackageTask
 
-class FullJPackageTask extends JPackageTask {
-    // appName and appVersion are inherited from JPackageTask
-    static def osArch = System.getProperty("os.arch")
-
+class PackagingUtils {
     static def isWindows = Os.isFamily(Os.FAMILY_WINDOWS)
     static def isMac = Os.isFamily(Os.FAMILY_MAC)
     static def isUnix = Os.isFamily(Os.FAMILY_UNIX) && !isMac
@@ -38,11 +34,8 @@ class FullJPackageTask extends JPackageTask {
         return types
     }
 
-    @TaskAction
-    @Override
-    void action() {
-        println "Packaging ${appName} ${appVersion}"
-        List<ImageType> types = []
+    public static List<ImageType> getTypes() {
+        List<ImageType> types = [ImageType.APP_IMAGE]
 
         if (isWindows) {
             println "Targeting Windows"
@@ -56,42 +49,7 @@ class FullJPackageTask extends JPackageTask {
             types += addImgType("which rpmbuild", "RPM package manager", [ImageType.RPM])
         }
 
-        if (types.isEmpty()) {
-            println "No package builder found, defaulting to app image"
-            types += ImageType.APP_IMAGE
-        }
-
-        println "Building"
-        types.each { type ->
-            // Clear the line and print the type being built
-            print "\33[2K\r - ${type}..."
-            System.out.flush()
-
-            setType(type)
-            super.action()
-
-            println " OK"
-        }
-
-        println "Renaming files for ${osArch}"
-        def basename = appName.replace(" ", "") + "-" + appVersion + "-" + osArch
-        def outDir = new File(destination)
-        outDir.listFiles().each { f ->
-            def targetname = basename
-            def dot  = f.name.lastIndexOf(".")
-            if (dot >= 0) targetname += f.name.substring(dot)
-
-            def newFile = new File(f.parentFile, targetname)
-            println " - ${f.name} => ${newFile.name}"
-            f.renameTo(newFile)
-            f.delete()
-
-            // Make sure the new file is writable (WiX was building read-only EXEs
-            // but ok MSIs, and I'm not gonna dive into that rabbit hole right now)
-            if (!newFile.canWrite()) {
-                newFile.setWritable(true)
-                println "   L Was read-only, removed attribute"
-            }
-        }
+        if (types.isEmpty())  println "No package builder found"
+        return types
     }
 }
