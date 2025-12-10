@@ -19,20 +19,63 @@
 package password.manager.app.singletons;
 
 import java.util.ResourceBundle;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import org.jetbrains.annotations.NotNull;
 
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.scene.control.Labeled;
+import javafx.scene.control.TextInputControl;
 import javafx.stage.Stage;
+import password.manager.lib.PasswordInputControl;
 
 public final class ObservableResourceFactory implements AutoCloseable {
     private final ObjectProperty<ResourceBundle> resources;
+    private final List<StringProperty> emptyFieldPrompts;
+    private final Random rand;
 
     private ObservableResourceFactory(ResourceBundle resources) {
-        this.resources = new SimpleObjectProperty<>(resources);
+        this.resources = new SimpleObjectProperty<>();
+        this.emptyFieldPrompts = new ArrayList<>();
+        this.rand = new Random();
+
+        this.resources.addListener((_, _, newValue) -> {
+            if (newValue == null) return;
+
+            int count = 0;
+            try {
+                String cntStr = newValue.getString("empty_field_prompts");
+                count = Integer.parseInt(cntStr.trim());
+            } catch (Exception e) {
+                // Key missing or not a number: do nothing
+                count = 0;
+            }
+
+            for (int i = 0; i < count; i++) {
+                String key = "empty_field_" + (i + 1);
+                try {
+                    String prompt = newValue.getString(key);
+                    
+                    if(i < emptyFieldPrompts.size()) {
+                        emptyFieldPrompts.get(i).set(prompt);
+                    } else {
+                        StringProperty prop = new SimpleStringProperty(prompt);
+                        emptyFieldPrompts.add(prop);
+                    }
+                } catch (Exception e) {
+                    // Key missing: skip
+                    continue;
+                }
+            }
+        });
+
+        this.setResources(resources);
     }
 
     private ObservableResourceFactory(String bundleName) {
@@ -48,7 +91,8 @@ public final class ObservableResourceFactory implements AutoCloseable {
     }
 
     public void setResources(ResourceBundle resources) {
-        resourcesProperty().set(resources);
+        if (resources == null) return;
+        this.resources.set(resources);
     }
 
     public void setResources(String bundleName) {
@@ -72,19 +116,35 @@ public final class ObservableResourceFactory implements AutoCloseable {
         return getResources().getString(key);
     }
 
-    public void bindTextProperty(@NotNull Labeled field, @NotNull String key) {
+    public void bindStringProperty(@NotNull StringProperty property, @NotNull String key) {
         if (key.isBlank()) {
-            field.textProperty().unbind();
+            property.unbind();
         } else {
-            field.textProperty().bind(getStringBinding(key));
+            property.bind(getStringBinding(key));
         }
     }
 
+    public void bindTextProperty(@NotNull Labeled field, @NotNull String key) {
+        bindStringProperty(field.textProperty(), key);
+    }
+
     public void bindTitleProperty(@NotNull Stage stage, @NotNull String key) {
-        if (key.isBlank()) {
-            stage.titleProperty().unbind();
-        } else {
-            stage.titleProperty().bind(getStringBinding(key));
+        bindStringProperty(stage.titleProperty(), key);
+    }
+
+    public void bindPromptTextProperty(@NotNull Object... fields) {
+        if (emptyFieldPrompts.isEmpty()) return;
+
+        for (@NotNull Object field : fields) {
+            int index = rand.nextInt(emptyFieldPrompts.size());
+
+            if (field instanceof TextInputControl tic) {
+                tic.promptTextProperty().unbind();
+                tic.promptTextProperty().bind(emptyFieldPrompts.get(index));
+            } else if (field instanceof PasswordInputControl pic) {
+                pic.promptTextProperty().unbind();
+                pic.promptTextProperty().bind(emptyFieldPrompts.get(index));
+            }
         }
     }
 

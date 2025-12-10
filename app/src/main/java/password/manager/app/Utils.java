@@ -76,7 +76,7 @@ public final class Utils {
     private static long reservedMemory = 0;
 
     @SafeVarargs
-    public static <T> SortedList<T> getFXSortedList(T @NotNull... items) {
+    public static <T> SortedList<T> getFXSortedList(@NotNull T... items) {
         return FXCollections.observableArrayList(items).sorted(null);
     }
 

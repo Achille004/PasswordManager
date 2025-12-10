@@ -112,6 +112,8 @@ public class SettingsController extends AbstractController {
     @Override
     public void reset() {
         clearStyle(settingsMasterPassword.getTextField());
+        ObservableResourceFactory.getInstance().bindPromptTextProperty(settingsMasterPassword);
+
         IOManager.getInstance().displayMasterPassword(settingsMasterPassword);
         settingsMasterPassword.setReadable(false);
     }

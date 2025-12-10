@@ -33,6 +33,10 @@ public interface PasswordInputControl {
     void setText(String text);
     String getText();
 
+    StringProperty promptTextProperty();
+    void setPromptText(String text);
+    String getPromptText();
+
     void requestFocus();
     void setOnAction(EventHandler<ActionEvent> value);
 

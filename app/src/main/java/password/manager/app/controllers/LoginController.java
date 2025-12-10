@@ -65,6 +65,8 @@ public class LoginController extends AbstractController {
         final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
         langResources.bindTextProperty(loginTitle, "login.title");
         langResources.bindTextProperty(loginSubmitBtn, "lets_go");
+        // Adding a whole method override just for line would be overkill, so just pass the property
+        langResources.bindStringProperty(loginPassword.promptTextProperty(), "login.password");
 
         loginPassword.setOnAction(_ -> doLogin());
         loginPassword.sceneProperty().addListener((_, _, newScene) -> {
