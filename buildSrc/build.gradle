@@ -22,5 +22,5 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.panteleyev:jpackage-gradle-plugin:1.6.1'
+    implementation 'org.panteleyev:jpackage-gradle-plugin:1.7.6'
 }
