@@ -23,6 +23,7 @@ import static password.manager.lib.Utils.*;
 
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -31,6 +32,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.controlsfx.control.textfield.AutoCompletionBinding;
+import org.controlsfx.control.textfield.AutoCompletionBinding.ISuggestionRequest;
 import org.controlsfx.control.textfield.TextFields;
 import org.jetbrains.annotations.NotNull;
 
@@ -40,6 +42,7 @@ import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -224,11 +227,7 @@ public class ManagerController extends AbstractController {
                     @Override
                     protected void updateItem(Account account, boolean empty) {
                         super.updateItem(account, empty);
-                        if (empty || account == null) {
-                            setText(null);
-                        } else {
-                            setText(order.convert(account));
-                        }
+                        Platform.runLater(() -> setText((empty || account == null) ? null : order.convert(account)));
                     }
                 };
 
@@ -325,6 +324,8 @@ public class ManagerController extends AbstractController {
         private final @Getter boolean isAddEditor;
 
         private Timeline editorSaveTimeline;
+        private AutoCompletionBinding<String> softwareAutoCompletion;
+        private AutoCompletionBinding<String> usernameAutoCompletion;
 
         public EditorController(Account account) {
             this.account = account;
@@ -352,22 +353,21 @@ public class ManagerController extends AbstractController {
             // Force the correct size to prevent unwanted stretching
             editorPassword.setPrefSize(548.0, 40.0);
 
-            // This un-lobotomizes the app on login (it hangs otherwise)
-            Platform.runLater(() -> {
-                // Setup auto-completion for software and username fields
-                @SuppressWarnings("unchecked")
-                final AutoCompletionBinding<String>[] autoCompletionBindings = new AutoCompletionBinding[2];
-                autoCompletionBindings[0] = TextFields.bindAutoCompletion(editorSoftware, possibleSoftwares);
-                autoCompletionBindings[1] = TextFields.bindAutoCompletion(editorUsername, possibleUsernames);
+            // Setup auto-completion for software and username fields
+            softwareAutoCompletion = TextFields.bindAutoCompletion(editorSoftware, getSuggetstionProvider(possibleSoftwares));
+            usernameAutoCompletion = TextFields.bindAutoCompletion(editorUsername, getSuggetstionProvider(possibleUsernames));
 
-                suggestionsUpdateTrigger.addListener((_, _, _) -> {
-                    autoCompletionBindings[0].dispose();
-                    autoCompletionBindings[1].dispose();
-
-                    autoCompletionBindings[0] = TextFields.bindAutoCompletion(editorSoftware, possibleSoftwares);
-                    autoCompletionBindings[1] = TextFields.bindAutoCompletion(editorUsername, possibleUsernames);
-                });
-            });
+            // Update auto-completion when suggestions change
+            suggestionsUpdateTrigger.addListener((_, _, _) -> Platform.runLater(() -> {
+                if (softwareAutoCompletion != null) {
+                    softwareAutoCompletion.dispose();
+                    softwareAutoCompletion = TextFields.bindAutoCompletion(editorSoftware, getSuggetstionProvider(possibleSoftwares));
+                }
+                if (usernameAutoCompletion != null) {
+                    usernameAutoCompletion.dispose();
+                    usernameAutoCompletion = TextFields.bindAutoCompletion(editorUsername, getSuggetstionProvider(possibleUsernames));
+                }
+            }));
 
             // Disable the delete button if this is the add editor
             editorDeleteBtn.setVisible(!isAddEditor);
@@ -443,6 +443,18 @@ public class ManagerController extends AbstractController {
                 editorDeleteBtn.setStyle("-fx-background-color: -fx-color-red");
                 editorDeleteCounter = true;
             }
+        }
+
+        private Callback<ISuggestionRequest, Collection<String>> getSuggetstionProvider(List<String> sourceList) {
+            return request -> {
+                String userText = request.getUserText();
+                if (userText == null || userText.isEmpty()) return List.of();
+
+                String lowerUserText = userText.toLowerCase();
+                return sourceList.stream()
+                        .filter(s -> s.toLowerCase().startsWith(lowerUserText))
+                        .toList();
+            };
         }
     }
 
