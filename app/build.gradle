@@ -56,30 +56,29 @@ java {
     }
 }
 
+def defaultJvmArgs = [
+    '--enable-native-access=javafx.graphics',
+    '--add-exports', 'javafx.base/com.sun.javafx.event=org.controlsfx.controls',
+    '-Dapp.name=' + project.appName,
+    '-Dapp.version=' + project.appVersion
+]
+
 application {
     // Define the main class for the application.
     mainModule = 'password.manager.app'
     mainClass = 'password.manager.app.App'
 
     // JVM arguments
-    applicationDefaultJvmArgs = [
-        '--enable-native-access=javafx.graphics',
-        '--add-exports', 'javafx.base/com.sun.javafx.event=org.controlsfx.controls',
-        '-Dapp.name=' + project.appName,
-        '-Dapp.version=' + project.appVersion
-    ]
+    applicationDefaultJvmArgs = defaultJvmArgs
 }
 
-testing {
-    suites {
-        test {
-            useJUnitJupiter '5.13.4'
-        }
-    }
+tasks.named('test') {
+    // Use JUnit Platform for unit tests.
+    useJUnitPlatform()
 }
 
 javafx {
-    version = '25'
+    version = '25.0.1'
     modules = [ 'javafx.base', 'javafx.controls', 'javafx.fxml', 'javafx.graphics', 'javafx.web' ]
 }
 
@@ -155,7 +154,8 @@ tasks.register('readyAllJars', Copy) {
     if(gpgSignable) {
         dependsOn tasks.signJar
     }
-    from configurations.runtimeClasspath, tasks.jar
+    from configurations.runtimeClasspath
+    from tasks.named('jar').flatMap { it.archiveFile }
     if(gpgSignable) {
         from tasks.signJar
     }
@@ -170,11 +170,11 @@ tasks.register('assembleInstallers', FullJPackageTask) {
     appName = project.appName
     appVersion = project.appVersion
     copyright = '© ' + rootProject.appVendor
-    javaOptions = ['-Dfile.encoding=UTF-8']
+    javaOptions = ['-Dfile.encoding=UTF-8'] + defaultJvmArgs
     licenseFile	= resourceDir.file('license.txt')
     module = 'password.manager.app/password.manager.app.App'
-    modulePaths = ['build/jars']
-    runtimeImage = System.getProperty('java.home')
+    modulePaths = files(layout.buildDirectory.dir('jars'))
+    runtimeImage = file(System.getProperty('java.home'))
     vendor = project.appVendor
 
     windows {

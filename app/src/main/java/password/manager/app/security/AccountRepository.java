@@ -61,8 +61,9 @@ import password.manager.app.singletons.Logger;
  * @see password.manager.app.persistence.TransactionManager
  */
 public final class AccountRepository implements AutoCloseable {
-    private final List<Account> accounts;
-    private final ObservableList<Account> observableAccountsUnmodifiable;
+
+    // This needs to internally be an observable list to allow UI to react to changes
+    private final ObservableList<Account> accounts;
     private final TransactionManager transactionManager;
 
     private final ObjectProperty<SecurityVersion> securityVersionProperty;
@@ -77,10 +78,8 @@ public final class AccountRepository implements AutoCloseable {
      * and a transaction manager for asynchronous operations.
      */
     public AccountRepository(ObjectProperty<SecurityVersion> securityVersionProperty, StringProperty masterPasswordProperty) {
-        this.accounts = Collections.synchronizedList(new ArrayList<>());
+        this.accounts = FXCollections.observableList(Collections.synchronizedList(new ArrayList<>()));
         this.transactionManager = new TransactionManager();
-
-        this.observableAccountsUnmodifiable = FXCollections.unmodifiableObservableList(FXCollections.observableList(accounts));
 
         this.securityVersionProperty = securityVersionProperty;
         this.securityVersionProperty.addListener(this::securityVersionListener);
@@ -95,7 +94,7 @@ public final class AccountRepository implements AutoCloseable {
      * @return an unmodifiable observable list of all accounts
      */
     public ObservableList<Account> findAll() {
-        return observableAccountsUnmodifiable;
+        return FXCollections.unmodifiableObservableList(accounts);
     }
 
     /**
