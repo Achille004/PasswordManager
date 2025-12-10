@@ -389,6 +389,8 @@ public class ManagerController extends AbstractController {
                         });
             }
 
+            ObservableResourceFactory.getInstance().bindPromptTextProperty(editorSoftware, editorUsername, editorPassword);
+
             editorDeleteCounter = false;
             clearStyle(editorSoftware, editorUsername, editorPassword.getTextField(), editorDeleteBtn);
             Platform.runLater(() -> editorSoftware.requestFocus());

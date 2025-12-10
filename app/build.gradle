@@ -56,6 +56,7 @@ java {
     }
 }
 
+// https://github.com/controlsfx/controlsfx/wiki/Using-ControlsFX-with-JDK-9-and-above
 def defaultJvmArgs = [
     '--enable-native-access=javafx.graphics',
     '--add-exports', 'javafx.base/com.sun.javafx.event=org.controlsfx.controls',

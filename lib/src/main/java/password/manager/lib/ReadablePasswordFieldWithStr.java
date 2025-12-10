@@ -147,6 +147,18 @@ public class ReadablePasswordFieldWithStr extends AnchorPane implements Initiali
         return passwordField.getText();
     }
 
+    public StringProperty promptTextProperty() {
+        return passwordField.promptTextProperty();
+    }
+
+    public void setPromptText(String text) {
+        passwordField.setPromptText(text);
+    }
+
+    public String getPromptText() {
+        return passwordField.getPromptText();
+    }
+
     @Override
     public void requestFocus() {
         passwordField.requestFocus();

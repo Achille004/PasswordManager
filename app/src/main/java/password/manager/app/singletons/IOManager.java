@@ -353,7 +353,9 @@ public final class IOManager implements AutoCloseable {
     }
 
     public void displayMasterPassword(PasswordInputControl element) {
-        element.setText(MASTER_PASSWORD_PROPERTY.get());
+        // Use Platform.runLater to queue the update after the the field is ready
+        // (it also ensures that it gets called on the JavaFX Application Thread)
+        Platform.runLater(() -> element.setText(MASTER_PASSWORD_PROPERTY.get()));
     }
 
     public @NotNull Boolean authenticate(String masterPassword) {

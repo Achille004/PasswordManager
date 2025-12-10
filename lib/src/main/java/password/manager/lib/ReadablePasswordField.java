@@ -64,6 +64,7 @@ public class ReadablePasswordField extends AnchorPane implements Initializable, 
 
         textField.textProperty().bindBidirectional(passwordField.textProperty());
         textField.styleProperty().bindBidirectional(passwordField.styleProperty());
+        textField.promptTextProperty().bindBidirectional(passwordField.promptTextProperty());
 
         this.prefWidthProperty().addListener((_, _, newValue) -> {
             double width = newValue.doubleValue(), height = this.getPrefHeight();
@@ -167,6 +168,18 @@ public class ReadablePasswordField extends AnchorPane implements Initializable, 
 
     public String getText() {
         return textField.getText();
+    }
+
+    public StringProperty promptTextProperty() {
+        return textField.promptTextProperty();
+    }
+
+    public void setPromptText(String text) {
+        textField.setPromptText(text);
+    }
+
+    public String getPromptText() {
+        return textField.getPromptText();
     }
 
     @Override

@@ -60,15 +60,15 @@
       <Insets bottom="50.0" left="50.0" right="50.0" top="50.0" />
    </padding>
    <AnchorPane prefHeight="82.0" prefWidth="548.0" GridPane.rowIndex="0">
-      <TextField fx:id="editorSoftware" layoutY="30.0" prefHeight="30.0" prefWidth="548.0" />
       <Label fx:id="editorSoftwareLbl" prefHeight="30.0" prefWidth="548.0" text="Software" />
+      <TextField fx:id="editorSoftware" layoutY="30.0" prefHeight="30.0" prefWidth="548.0" />
    </AnchorPane>
    <AnchorPane prefHeight="82.0" prefWidth="548.0" GridPane.rowIndex="1">
-      <TextField fx:id="editorUsername" layoutY="30.0" prefHeight="30.0" prefWidth="548.0" />
       <Label fx:id="editorUsernameLbl" prefHeight="30.0" prefWidth="548.0" text="Username" />
+      <TextField fx:id="editorUsername" layoutY="30.0" prefHeight="30.0" prefWidth="548.0" />
    </AnchorPane>
    <AnchorPane prefHeight="82.0" prefWidth="548.0" GridPane.rowIndex="2">
-      <Label fx:id="editorPasswordLbl" prefHeight="40.0" prefWidth="548.0" text="Password" />
+      <Label fx:id="editorPasswordLbl" prefHeight="30.0" prefWidth="548.0" text="Password" />
       <ReadablePasswordFieldWithStr fx:id="editorPassword" layoutY="30.0" prefHeight="40.0" prefWidth="548.0" />
    </AnchorPane>
    <AnchorPane prefHeight="82.0" prefWidth="548.0" GridPane.rowIndex="4">
