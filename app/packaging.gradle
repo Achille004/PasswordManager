@@ -57,7 +57,7 @@ types.each { t ->
             dest = installerDir.dir('windows')
             icon =  resourceDir.file('icon.ico')
 
-            winConsole = isAppImage
+            winConsole = debugMode.toBoolean()
 
             if (!isAppImage) {
                 winDirChooser = true
