@@ -14,7 +14,7 @@ def defaultJvmArgs = [
 def resourceDir = layout.projectDirectory.dir('src/main/resources')
 resourceDir.asFile.mkdirs()
 
-def compileDir = layout.projectDirectory.dir('compiled')
+def compileDir = rootProject.layout.projectDirectory.dir('compiled')
 compileDir.asFile.mkdirs()
 
 // #endregion
@@ -31,6 +31,7 @@ def dest
 types.each { t ->
     def isAppImage = (t == ImageType.APP_IMAGE)
     tasks.register("jpackage_$t", JPackageTask.class) {
+        outputs.upToDateWhen { false }
         dependsOn tasks.readyAllJars
 
         type = t
