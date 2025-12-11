@@ -70,7 +70,7 @@ def defaultJvmArgs = [
 def resourceDir = layout.projectDirectory.dir('src/main/resources')
 resourceDir.asFile.mkdirs()
 
-def compileDir = layout.projectDirectory.dir('compiled')
+def compileDir = rootProject.layout.projectDirectory.dir('compiled')
 compileDir.asFile.mkdirs()
 
 application {
@@ -128,26 +128,21 @@ def gpgSignable = gpgExists && gpgPropertiesExist
 tasks.register('assemblePortables', Delete) {
     def distDir = compileDir.dir('distributions')
     delete distDir
+    mkdir distDir
 
     dependsOn tasks.distTar, tasks.distZip
-    if(gpgSignable) {
-        dependsOn tasks.signDistTar, tasks.signDistZip
-    }
+    if(gpgSignable) dependsOn tasks.signDistTar, tasks.signDistZip
 
     doLast {
         mkdir distDir
         copy {
             from tasks.distTar
-            if(gpgSignable) {
-                from tasks.signDistTar
-            }
+            if(gpgSignable) from tasks.signDistTar
             into distDir.dir('tar')
         }
         copy {
             from tasks.distZip
-            if(gpgSignable) {
-                from tasks.signDistZip
-            }
+            if(gpgSignable) from tasks.signDistZip
             into distDir.dir('zip')
         }
     }
@@ -155,33 +150,15 @@ tasks.register('assemblePortables', Delete) {
 
 tasks.register('readyAllJars', Copy) {
     dependsOn tasks.jar
-    if(gpgSignable) {
-        dependsOn tasks.signJar
-    }
+    if(gpgSignable) dependsOn tasks.signJar
+
     from configurations.runtimeClasspath
     from tasks.named('jar').flatMap { it.archiveFile }
-    if(gpgSignable) {
-        from tasks.signJar
-    }
+    if(gpgSignable) from tasks.signJar
     into layout.buildDirectory.dir('jars')
 }
 
 apply from: 'packaging.gradle'
-
-tasks.register('generateChecksums') {
-    def out = compileDir.file("checksums.txt").asFile
-    out.parentFile.mkdirs()
-    out.createNewFile()
-
-    def digest = MessageDigest.getInstance('SHA-256')
-    out.withWriter { w -> fileTree(compileDir).each { f ->
-        if(!f.name.endsWith('.asc') && !f.name.endsWith('.txt')) {
-            println "Generating checksum for ${f.name}"
-            def sha = digest.digest(f.bytes).collect{String.format("%02x", it)}.join()
-            w << "${sha}  ${f.name}\n"
-        }
-    }}
-}
 
 tasks.register('assembleAll') {
     dependsOn tasks.assemblePortables

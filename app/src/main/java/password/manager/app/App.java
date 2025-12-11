@@ -49,7 +49,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class App extends Application {
     public static final String APP_NAME = System.getProperty("app.name", "Password Manager");
-    public static final String APP_VERSION = System.getProperty("app.version", "3.1.0");
+    public static final String APP_VERSION = System.getProperty("app.version", "3.1.1");
 
     public static final String ROOT_STYLESHEET = App.class.getResource("/fxml/css/root.css").toExternalForm();
     public static final String AUTOCOMPLETION_STYLESHEET = App.class.getResource("/fxml/css/autocompletion.css").toExternalForm();
