@@ -63,7 +63,7 @@ application {
 testing {
     suites {
         test {
-            useJUnitJupiter '5.13.4'
+            useJUnitJupiter '6.0.1'
         }
     }
 }

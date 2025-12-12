@@ -353,7 +353,7 @@ public final class IOManager implements AutoCloseable {
     }
 
     public void displayMasterPassword(PasswordInputControl element) {
-        // Use Platform.runLater to queue the update after the the field is ready
+        // Use Platform.runLater to queue the update after the field is ready
         // (it also ensures that it gets called on the JavaFX Application Thread)
         Platform.runLater(() -> element.setText(MASTER_PASSWORD_PROPERTY.get()));
     }
@@ -396,14 +396,14 @@ public final class IOManager implements AutoCloseable {
     private void saveDataFile(File file) throws IOException {
         // Create snapshots to ensure consistency during serialization
         UserPreferences prefsSnapshot = new UserPreferences(); // Add a copy method if needed
-        List<Account> accountSnapshot = new ArrayList<>();
+        List<Account> accountSnapshot;
 
         synchronized(USER_PREFERENCES) {
             prefsSnapshot.set(USER_PREFERENCES);
         }
 
         synchronized(ACCOUNT_REPOSITORY) {
-            accountSnapshot.addAll(ACCOUNT_REPOSITORY.findAll());
+            accountSnapshot = new ArrayList<>(ACCOUNT_REPOSITORY.findAll());
         }
 
         AppData data = new AppData(prefsSnapshot, accountSnapshot);

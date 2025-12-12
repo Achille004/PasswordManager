@@ -34,7 +34,7 @@ class PackagingUtils {
         return types
     }
 
-    public static List<ImageType> getTypes() {
+    static List<ImageType> getTypes() {
         List<ImageType> types = [ImageType.APP_IMAGE]
 
         if (isWindows) {
@@ -49,7 +49,7 @@ class PackagingUtils {
             types += addImgType("which rpmbuild", "RPM package manager", [ImageType.RPM])
         }
 
-        if (types.isEmpty())  println "No package builder found"
+        if (types.isEmpty()) println "No package builder found"
         return types
     }
 }

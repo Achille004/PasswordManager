@@ -153,8 +153,6 @@ public final class Account {
     }
 
     void updateSecurityVersion(@NotNull SecurityVersion oldSecurityVersion, @NotNull SecurityVersion newSecurityVersion, @NotNull String masterPassword) throws GeneralSecurityException {
-        if (isDerivedSaltVersion) return;
-
         writeLock.lock();
         try {
             // Get old salt based on version

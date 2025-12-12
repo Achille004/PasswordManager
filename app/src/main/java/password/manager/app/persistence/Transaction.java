@@ -24,6 +24,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import password.manager.app.singletons.Logger;
@@ -46,7 +47,22 @@ public class Transaction {
     private final List<Runnable> rollbackActions = new ArrayList<>();
     private final ExecutorService executor;
 
+    /**
+     * -- GETTER --
+     *  Checks if the transaction has been committed.
+     *
+     * @return true if committed, false otherwise
+     */
+    @Getter
     private boolean committed = false;
+
+    /**
+     * -- GETTER --
+     *  Checks if the transaction has been rolled back.
+     *
+     * @return true if rolled back, false otherwise
+     */
+    @Getter
     private boolean rolledBack = false;
 
     /**
@@ -127,23 +143,5 @@ public class Transaction {
         }
 
         rolledBack = true;
-    }
-
-    /**
-     * Checks if the transaction has been committed.
-     *
-     * @return true if committed, false otherwise
-     */
-    public boolean isCommitted() {
-        return committed;
-    }
-
-    /**
-     * Checks if the transaction has been rolled back.
-     *
-     * @return true if rolled back, false otherwise
-     */
-    public boolean isRolledBack() {
-        return rolledBack;
     }
 }

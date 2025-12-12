@@ -1,3 +1,21 @@
+/*
+    Password Manager: Manages accounts given by user with encrypted password.
+    Copyright (C) 2022-2025  Francesco Marras (2004marras@gmail.com)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
+ */
+
 package testing;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -128,7 +146,7 @@ public class TestAccountRepository {
     void testEditNonExistentAccount() {
         TestingUtils.initLogger();
 
-        Account account = accounts.get(0);
+        Account account = accounts.getFirst();
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -155,7 +173,7 @@ public class TestAccountRepository {
     void testRemoveNonExistentAccount() {
         TestingUtils.initLogger();
 
-        Account account = accounts.get(0);
+        Account account = accounts.getFirst();
 
         assertThrows(
             IllegalArgumentException.class,
@@ -181,7 +199,7 @@ public class TestAccountRepository {
     }
 
     @Test
-    void testSetAll() throws GeneralSecurityException {
+    void testSetAll() {
         TestingUtils.initLogger();
 
         List<Account> testAccounts = accounts.subList(0, Math.min(5, accounts.size()));
@@ -192,7 +210,7 @@ public class TestAccountRepository {
     }
 
     @Test
-    void testNonEmptySetAll() throws GeneralSecurityException, ExecutionException, InterruptedException, TimeoutException {
+    void testNonEmptySetAll() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.initLogger();
 
         repository
@@ -218,7 +236,7 @@ public class TestAccountRepository {
 
         assertThrows(
             UnsupportedOperationException.class,
-            () -> repository.findAll().add(accounts.get(0)),
+            () -> repository.findAll().add(accounts.getFirst()),
             "findAll should return unmodifiable list"
         );
     }
@@ -232,8 +250,7 @@ public class TestAccountRepository {
 
         for (int i = 0; i < operationCount; i++) {
             System.out.println("Adding account " + i);
-            final int index = i;
-            futures[i] = repository.add("Software" + index, "user" + index, "pass" + index);
+            futures[i] = repository.add("Software" + i, "user" + i, "pass" + i);
         }
 
         CompletableFuture.allOf(futures).get(10, TimeUnit.SECONDS);
@@ -337,7 +354,7 @@ public class TestAccountRepository {
     }
 
     @Test
-    void testUpdateToLatestSecurityVersionWithEmptyRepository() throws Exception {
+    void testUpdateToLatestSecurityVersionWithEmptyRepository() {
         TestingUtils.initLogger();
 
         securityVersionProperty.set(SecurityVersion.PBKDF2);

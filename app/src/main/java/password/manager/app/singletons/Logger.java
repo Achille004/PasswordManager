@@ -134,7 +134,7 @@ public final class Logger implements AutoCloseable {
         try (StringWriter sw = new StringWriter();
              PrintWriter pw = new PrintWriter(sw)) {
             e.printStackTrace(pw);
-            stacktraceStrBuilder.append(sw.toString()).append("\n");
+            stacktraceStrBuilder.append(sw).append("\n");
         } catch (IOException e1) {
             e1.printStackTrace();
         }

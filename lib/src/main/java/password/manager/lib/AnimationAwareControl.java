@@ -20,7 +20,7 @@ package password.manager.lib;
 
 public interface AnimationAwareControl {
 
-    public AnimationController<?> getAnimationController();
+    AnimationController<?> getAnimationController();
 
     /**
      * Optional hook called when animation listener is detached.

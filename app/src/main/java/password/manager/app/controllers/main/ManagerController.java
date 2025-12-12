@@ -42,7 +42,6 @@ import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -354,18 +353,18 @@ public class ManagerController extends AbstractController {
             editorPassword.setPrefSize(548.0, 40.0);
 
             // Setup auto-completion for software and username fields
-            softwareAutoCompletion = TextFields.bindAutoCompletion(editorSoftware, getSuggetstionProvider(possibleSoftwares));
-            usernameAutoCompletion = TextFields.bindAutoCompletion(editorUsername, getSuggetstionProvider(possibleUsernames));
+            softwareAutoCompletion = TextFields.bindAutoCompletion(editorSoftware, getSuggestionProvider(possibleSoftwares));
+            usernameAutoCompletion = TextFields.bindAutoCompletion(editorUsername, getSuggestionProvider(possibleUsernames));
 
             // Update auto-completion when suggestions change
             suggestionsUpdateTrigger.addListener((_, _, _) -> Platform.runLater(() -> {
                 if (softwareAutoCompletion != null) {
                     softwareAutoCompletion.dispose();
-                    softwareAutoCompletion = TextFields.bindAutoCompletion(editorSoftware, getSuggetstionProvider(possibleSoftwares));
+                    softwareAutoCompletion = TextFields.bindAutoCompletion(editorSoftware, getSuggestionProvider(possibleSoftwares));
                 }
                 if (usernameAutoCompletion != null) {
                     usernameAutoCompletion.dispose();
-                    usernameAutoCompletion = TextFields.bindAutoCompletion(editorUsername, getSuggetstionProvider(possibleUsernames));
+                    usernameAutoCompletion = TextFields.bindAutoCompletion(editorUsername, getSuggestionProvider(possibleUsernames));
                 }
             }));
 
@@ -447,7 +446,7 @@ public class ManagerController extends AbstractController {
             }
         }
 
-        private Callback<ISuggestionRequest, Collection<String>> getSuggetstionProvider(List<String> sourceList) {
+        private Callback<ISuggestionRequest, Collection<String>> getSuggestionProvider(List<String> sourceList) {
             return request -> {
                 String userText = request.getUserText();
                 if (userText == null || userText.isEmpty()) return List.of();

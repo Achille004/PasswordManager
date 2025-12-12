@@ -66,7 +66,7 @@ public abstract class AbstractController implements Initializable {
      * @param fields the text fields to check
      * @return true if all fields are non-empty, false otherwise
      */
-    protected static final boolean checkTextFields(@NotNull TextInputControl... fields) {
+    protected static boolean checkTextFields(@NotNull TextInputControl... fields) {
         boolean nonEmpty = true;
 
         for (@NotNull TextInputControl field : fields) {
@@ -81,11 +81,11 @@ public abstract class AbstractController implements Initializable {
         return nonEmpty;
     }
 
-    protected static final void clearStyle(@NotNull Node... nodes) {
+    protected static void clearStyle(@NotNull Node... nodes) {
         for (@NotNull Node node : nodes) node.setStyle("");
     }
 
-    protected static final void clearTextFields(@NotNull TextInputControl... fields) {
+    protected static void clearTextFields(@NotNull TextInputControl... fields) {
         for (@NotNull TextInputControl field : fields) field.clear();
     }
 }

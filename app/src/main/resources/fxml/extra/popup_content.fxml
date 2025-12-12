@@ -5,10 +5,8 @@
 <?import javafx.scene.layout.AnchorPane?>
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="50.0" prefWidth="200.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
-   <children>
-      <Label fx:id="label" layoutX="10.0" layoutY="6.5" prefHeight="20.0" prefWidth="180.0" text="Label" />
-      <AnchorPane fx:id="bottomBar" layoutX="2.0" layoutY="40.0" prefHeight="8.0" prefWidth="196.0" />
-   </children>
+   <Label fx:id="label" layoutX="10.0" layoutY="6.5" prefHeight="20.0" prefWidth="180.0" text="Label" />
+   <AnchorPane fx:id="bottomBar" layoutX="2.0" layoutY="40.0" prefHeight="8.0" prefWidth="196.0" />
    <stylesheets>
       <URL value="@../css/root.css" />
       <URL value="@../css/style.css" />

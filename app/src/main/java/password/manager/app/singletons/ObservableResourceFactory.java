@@ -48,7 +48,7 @@ public final class ObservableResourceFactory implements AutoCloseable {
         this.resources.addListener((_, _, newValue) -> {
             if (newValue == null) return;
 
-            int count = 0;
+            int count;
             try {
                 String cntStr = newValue.getString("empty_field_prompts");
                 count = Integer.parseInt(cntStr.trim());
@@ -61,7 +61,7 @@ public final class ObservableResourceFactory implements AutoCloseable {
                 String key = "empty_field_" + (i + 1);
                 try {
                     String prompt = newValue.getString(key);
-                    
+
                     if(i < emptyFieldPrompts.size()) {
                         emptyFieldPrompts.get(i).set(prompt);
                     } else {
@@ -70,7 +70,6 @@ public final class ObservableResourceFactory implements AutoCloseable {
                     }
                 } catch (Exception e) {
                     // Key missing: skip
-                    continue;
                 }
             }
         });

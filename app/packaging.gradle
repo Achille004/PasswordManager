@@ -128,7 +128,6 @@ tasks.register("assembleInstallers") {
             }
         }
     }
-    
 }
 
 tasks.register('dryAssembleInstallers') {

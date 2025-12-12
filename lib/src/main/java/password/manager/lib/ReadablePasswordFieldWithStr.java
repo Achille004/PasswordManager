@@ -47,7 +47,7 @@ public class ReadablePasswordFieldWithStr extends AnchorPane implements Initiali
         return doubleSquash(0d, (passwordStrength - 20d) / 30d, 1d);
     };
 
-    private AnimationController<String> animationController;
+    private final AnimationController<String> animationController;
 
     @FXML
     private ReadablePasswordField passwordField;

@@ -53,19 +53,18 @@ public class AnimationController<T> {
 
     /**
      * Registers a generic property to be animated when its source property changes.
-     * @param <T> type of the source property
      * @param sourceProperty {@code T} source property to listen to
      * @param progressExtractor function that extracts the {@link Double} progress value from the {@code T} source property value
      * @param progressProperty {@link DoubleProperty} to animate
      * @param styleFunction function that generates the style {@link KeyValue} based on current {@link Double} progress
      * @param destinationControl control whose skin will be updated
      */
-    public AnimationController(Property<T> source,
+    public AnimationController(Property<T> sourceProperty,
                                Function<T, Double> progressExtractor,
                                DoubleProperty progressProperty,
                                Function<Double, KeyValue> styleFunction,
                                Control destinationControl) {
-        this.sourceProperty = source;
+        this.sourceProperty = sourceProperty;
         this.progressProperty = progressProperty;
         this.progressExtractor = progressExtractor;
         this.styleFunction = styleFunction;
@@ -108,7 +107,7 @@ public class AnimationController<T> {
     ///// HELPER METHODS /////
 
     /**
-     * Provides a timeline for animating a dobule property of the while also updating its style.
+     * Provides a timeline for animating a double property of the while also updating its style.
      * The animation will target to about {@code ANIM_FPS} fps over {@code ANIM_DURATION_MS} milliseconds.
      *
      * @param property {@link DoubleProperty} to animate
