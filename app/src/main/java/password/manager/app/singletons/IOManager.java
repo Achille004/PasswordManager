@@ -79,10 +79,6 @@ public final class IOManager implements AutoCloseable {
         DATA_FILE = basePath.resolve(DATA_FILE_NAME).toFile();
         BACKUP_FILE = basePath.resolve(BACKUP_FILE_NAME).toFile();
         PRESERVED_PATH = basePath.resolve("preserved");
-        
-        Logger.getInstance().addDebug("DATA_FILE: '" + DATA_FILE + "'");
-        Logger.getInstance().addDebug("BACKUP_FILE: '" + BACKUP_FILE + "'");
-        Logger.getInstance().addDebug("PRESERVED_PATH: '" + PRESERVED_PATH + "'");
     }
 
     private final UserPreferences USER_PREFERENCES;
@@ -100,8 +96,12 @@ public final class IOManager implements AutoCloseable {
     private final ObjectMapper OBJECT_MAPPER;
     private final ScheduledExecutorService AUTOSAVE_SCHEDULER;
 
-    // No-arg constructor already defined privately
-    private IOManager() {
+    // Let only package classes instantiate this
+    IOManager() {
+        Logger.getInstance().addDebug("DATA_FILE: '" + DATA_FILE + "'");
+        Logger.getInstance().addDebug("BACKUP_FILE: '" + BACKUP_FILE + "'");
+        Logger.getInstance().addDebug("PRESERVED_PATH: '" + PRESERVED_PATH + "'");
+
         MASTER_PASSWORD_PROPERTY = new SimpleStringProperty(null);
 
         USER_PREFERENCES = UserPreferences.empty();
@@ -411,13 +411,7 @@ public final class IOManager implements AutoCloseable {
         saveData();
     }
 
-    // #region Singleton methods
-    static {
-        Singletons.register(IOManager.class);
-    }
-
-    public static IOManager getInstance() throws IllegalStateException {
+    public static IOManager getInstance() {
         return Singletons.get(IOManager.class);
     }
-    // #endregion
 }

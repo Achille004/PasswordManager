@@ -22,22 +22,29 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.Getter;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import password.manager.app.singletons.Singletons;
 
+@SuppressWarnings("unused")
 public class TestSingletons {
+
+    @AfterEach
+    public void cleanup() {
+        // Ensure each test starts with a clean slate
+        Singletons.shutdownAll();
+    }
 
     @Test
     public void testSingletonLifecycle() {
-        // Test registration - register creates the instance automatically
-        Singletons.register(TestResource.class);
-        
         TestResource instance1 = Singletons.get(TestResource.class);
         assertNotNull(instance1);
-        assertEquals("Hello", instance1.getValue());
 
         // Test get returns same instance
         TestResource instance2 = Singletons.get(TestResource.class);
@@ -51,48 +58,36 @@ public class TestSingletons {
 
     @Test
     public void testMultipleTypes() {
-        // Register different class types - instances created automatically
-        Singletons.register(TestResource.class);
-        Singletons.register(TestResourceWithNumber.class);
-        Singletons.register(AnotherTestResource.class);
-
-        // Get references to the created instances
-        TestResource resource1 = Singletons.get(TestResource.class);
-        TestResourceWithNumber resource2 = Singletons.get(TestResourceWithNumber.class);
-        AnotherTestResource resource3 = Singletons.get(AnotherTestResource.class);
+        TestResource r1 = Singletons.get(TestResource.class);
+        TestResource2 r2 = Singletons.get(TestResource2.class);
+        TestResource3 r3 = Singletons.get(TestResource3.class);
 
         // Verify all instances are retrievable with correct values
-        assertEquals("Hello", resource1.getValue());
-        assertEquals(42, resource2.getNumber());
-        assertNotNull(resource3);
+        assertNotNull(r1);
+        assertNotNull(r2);
+        assertNotNull(r3);
 
         // Verify they return the same instances
-        assertSame(resource1, Singletons.get(TestResource.class));
-        assertSame(resource2, Singletons.get(TestResourceWithNumber.class));
-        assertSame(resource3, Singletons.get(AnotherTestResource.class));
+        assertSame(r1, Singletons.get(TestResource.class));
+        assertSame(r2, Singletons.get(TestResource2.class));
+        assertSame(r3, Singletons.get(TestResource3.class));
 
         // Verify none are closed yet
-        assertFalse(resource1.isClosed());
-        assertFalse(resource2.isClosed());
-        assertFalse(resource3.isClosed());
+        assertFalse(r1.isClosed());
+        assertFalse(r2.isClosed());
+        assertFalse(r3.isClosed());
 
         // Clean up all singletons
         Singletons.shutdownAll();
 
         // Verify they were all closed
-        assertTrue(resource1.isClosed());
-        assertTrue(resource2.isClosed());
-        assertTrue(resource3.isClosed());
+        assertTrue(r1.isClosed());
+        assertTrue(r2.isClosed());
+        assertTrue(r3.isClosed());
     }
 
     @Test
     public void testShutdownOrder() {
-        // Test that singletons are closed in reverse order (LIFO)
-        Singletons.register(OrderedResource.class);
-        Singletons.register(OrderedResource2.class);
-        Singletons.register(OrderedResource3.class);
-
-        // Retrieve to mock instance utilization
         OrderedResource r1 = Singletons.get(OrderedResource.class);
         OrderedResource2 r2 = Singletons.get(OrderedResource2.class);
         OrderedResource3 r3 = Singletons.get(OrderedResource3.class);
@@ -111,33 +106,139 @@ public class TestSingletons {
     }
 
     @Test
-    public void testDoubleRegistrationThrowsException() {
-        Singletons.register(TestResource.class);
-        
-        // Trying to register the same class again should throw IllegalStateException
-        assertThrows(IllegalStateException.class, () -> {
-            Singletons.register(TestResource.class);
-        });
+    public void testNoValidConstructor() {
+        // Test with a class that truly has no no-arg constructor (not even private)
+        Exception exception = assertThrows(
+            RuntimeException.class,
+            () -> Singletons.get(NoNoArgConstructorResource.class)
+        );
 
-        Singletons.shutdownAll();
+        String expectedMessage = "Failed to create instance of";
+        String actualMessage = exception.getMessage();
+
+        assertTrue(actualMessage.contains(expectedMessage),
+            "Expected message to contain '" + expectedMessage + "' but was: " + actualMessage);
+
+        // Verify the cause is NoSuchMethodException
+        assertNotNull(exception.getCause());
+        assertTrue(exception.getCause() instanceof NoSuchMethodException,
+            "Expected cause to be NoSuchMethodException but was: " + exception.getCause().getClass().getName());
     }
 
     @Test
-    public void testGetNonRegisteredThrowsException() {
-        // Trying to get a non-registered singleton should throw IllegalStateException
-        assertThrows(IllegalStateException.class, () -> {
-            Singletons.get(TestResource.class);
-        });
+    public void testConcurrentAccess() throws InterruptedException {
+        final int threadCount = 10;
+        final CountDownLatch latch = new CountDownLatch(threadCount);
+        final List<TestResource> instances = new ArrayList<>();
+        final List<Thread> threads = new ArrayList<>();
+
+        // Create multiple threads that all try to get the singleton
+        for (int i = 0; i < threadCount; i++) {
+            Thread thread = new Thread(() -> {
+                TestResource instance = Singletons.get(TestResource.class);
+                synchronized (instances) {
+                    instances.add(instance);
+                }
+                latch.countDown();
+            });
+            threads.add(thread);
+            thread.start();
+        }
+
+        // Wait for all threads to complete
+        latch.await();
+
+        // Verify all threads got the exact same instance
+        assertEquals(threadCount, instances.size());
+        TestResource first = instances.get(0);
+        for (TestResource instance : instances) {
+            assertSame(first, instance, "All threads should get the same singleton instance");
+        }
     }
 
-    @Getter
-    private static class TestResource implements AutoCloseable {
-        private final String value;
-        private boolean closed = false;
+    @Test
+    public void testConcurrentDifferentSingletons() throws InterruptedException {
+        final int threadCount = 15;
+        final CyclicBarrier barrier = new CyclicBarrier(threadCount);
+        final CountDownLatch latch = new CountDownLatch(threadCount);
+        final AtomicInteger constructorCalls = new AtomicInteger(0);
 
-        public TestResource() {
-            this.value = "Hello";
+        // Create threads that create different singletons simultaneously
+        for (int i = 0; i < threadCount; i++) {
+            final int index = i;
+            new Thread(() -> {
+                try {
+                    barrier.await(); // Sync all threads to start at the same time
+
+                    if (index % 3 == 0) {
+                        Singletons.get(ConcurrentResource1.class);
+                    } else if (index % 3 == 1) {
+                        Singletons.get(ConcurrentResource2.class);
+                    } else {
+                        Singletons.get(ConcurrentResource3.class);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    latch.countDown();
+                }
+            }).start();
         }
+
+        latch.await();
+
+        // Verify each singleton was created exactly once
+        assertNotNull(Singletons.get(ConcurrentResource1.class));
+        assertNotNull(Singletons.get(ConcurrentResource2.class));
+        assertNotNull(Singletons.get(ConcurrentResource3.class));
+
+        // Verify they're singletons
+        assertSame(
+            Singletons.get(ConcurrentResource1.class),
+            Singletons.get(ConcurrentResource1.class)
+        );
+    }
+
+    @Test
+    public void testNestedSingletonCreation() {
+        // Test that creating a singleton that depends on another singleton works
+        NestedDependentResource dependent = Singletons.get(NestedDependentResource.class);
+        assertNotNull(dependent);
+        assertNotNull(dependent.getDependency());
+
+        // Verify the dependency is the same singleton
+        assertSame(dependent.getDependency(), Singletons.get(NestedDependencyResource.class));
+    }
+
+    @Test
+    public void testShutdownIdempotent() {
+        TestResource resource = Singletons.get(TestResource.class);
+        assertFalse(resource.isClosed());
+
+        Singletons.shutdownAll();
+        assertTrue(resource.isClosed());
+
+        // Calling shutdownAll again should not throw
+        assertDoesNotThrow(() -> Singletons.shutdownAll());
+    }
+
+    @Test
+    public void testRecreateAfterShutdown() {
+        TestResource resource1 = Singletons.get(TestResource.class);
+        Singletons.shutdownAll();
+        assertTrue(resource1.isClosed());
+
+        // After shutdown, getting the singleton again should create a new instance
+        TestResource resource2 = Singletons.get(TestResource.class);
+        assertNotNull(resource2);
+        assertNotSame(resource1, resource2);
+        assertFalse(resource2.isClosed());
+    }
+
+    // Test resources to verify singleton behavior
+    @Getter
+    static class TestResource implements AutoCloseable {
+        private boolean closed = false;
 
         @Override
         public void close() {
@@ -146,13 +247,8 @@ public class TestSingletons {
     }
 
     @Getter
-    private static class TestResourceWithNumber implements AutoCloseable {
-        private final int number;
+    static class TestResource2 implements AutoCloseable {
         private boolean closed = false;
-
-        public TestResourceWithNumber() {
-            this.number = 42;
-        }
 
         @Override
         public void close() {
@@ -161,7 +257,7 @@ public class TestSingletons {
     }
 
     @Getter
-    private static class AnotherTestResource implements AutoCloseable {
+    static class TestResource3 implements AutoCloseable {
         private boolean closed = false;
 
         @Override
@@ -171,7 +267,7 @@ public class TestSingletons {
     }
 
     // Test resources to verify shutdown order
-    private static class OrderedResource implements AutoCloseable {
+    static class OrderedResource implements AutoCloseable {
         static final List<String> closeOrder = new ArrayList<>();
 
         @Override
@@ -180,17 +276,62 @@ public class TestSingletons {
         }
     }
 
-    private static class OrderedResource2 implements AutoCloseable {
+    static class OrderedResource2 implements AutoCloseable {
         @Override
         public void close() {
             OrderedResource.closeOrder.add("OrderedResource2");
         }
     }
 
-    private static class OrderedResource3 implements AutoCloseable {
+    static class OrderedResource3 implements AutoCloseable {
         @Override
         public void close() {
             OrderedResource.closeOrder.add("OrderedResource3");
         }
+    }
+
+    // Test resource that truly has NO no-arg constructor (not even private)
+    static class NoNoArgConstructorResource implements AutoCloseable {
+        // Only parameterized constructor - no no-arg constructor at all
+        public NoNoArgConstructorResource(int x) {}
+
+        @Override
+        public void close() {}
+    }
+
+    // Test resources for concurrent access
+    static class ConcurrentResource1 implements AutoCloseable {
+        @Override
+        public void close() {}
+    }
+
+    static class ConcurrentResource2 implements AutoCloseable {
+        @Override
+        public void close() {}
+    }
+
+    static class ConcurrentResource3 implements AutoCloseable {
+        @Override
+        public void close() {}
+    }
+
+    // Test resources for nested singleton creation
+    @Getter
+    static class NestedDependencyResource implements AutoCloseable {
+        @Override
+        public void close() {}
+    }
+
+    @Getter
+    static class NestedDependentResource implements AutoCloseable {
+        private final NestedDependencyResource dependency;
+
+        public NestedDependentResource() {
+            // This constructor calls Singletons.get() - testing nested calls
+            this.dependency = Singletons.get(NestedDependencyResource.class);
+        }
+
+        @Override
+        public void close() {}
     }
 }

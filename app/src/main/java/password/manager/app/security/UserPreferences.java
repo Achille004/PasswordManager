@@ -171,6 +171,7 @@ public final class UserPreferences {
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         public UserPreferences deserialize(@NotNull JsonParser jp, DeserializationContext ctxt) throws IOException {
             final JsonNode node = jp.getCodec().readTree(jp);
 

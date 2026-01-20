@@ -28,9 +28,6 @@ public class AppConfig implements AutoCloseable {
         this.basePath = injectedBasePath == null || injectedBasePath.isBlank()
                 ? Path.of(userHome, operatingSystem.toLowerCase().contains("windows") ? WINDOWS_PATH : OS_FALLBACK_PATH)
                 : Path.of(injectedBasePath);
-
-        Logger.getInstance().addDebug("os.name: '" + operatingSystem + "'");
-        Logger.getInstance().addDebug("user.home: '" + userHome + "'");
     }
 
     @Override
@@ -38,13 +35,7 @@ public class AppConfig implements AutoCloseable {
         // Nothing to close
     }
     
-    // #region Singleton methods
-    static {
-        Singletons.register(AppConfig.class);
-    }
-    
     public static AppConfig getInstance() {
         return Singletons.get(AppConfig.class);
     }
-    // #endregion
 }

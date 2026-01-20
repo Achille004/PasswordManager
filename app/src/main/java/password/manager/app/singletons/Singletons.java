@@ -18,11 +18,14 @@
 
 package password.manager.app.singletons;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -32,58 +35,90 @@ import org.jetbrains.annotations.NotNull;
  * pattern in one place while remaining explicit in callers.
  * <p>
  * Singletons are closed in reverse order of registration when {@link #shutdownAll()} is called.
+ * <p>
+ * Thread-safe implementation using ReadWriteLock: multiple threads can read concurrently
+ * (fast path when instances already exist), while writes are exclusive and per-class synchronized.
  */
 public final class Singletons {
 
-    // LinkedHashMap maintains insertion order, allowing reverse-order shutdown
-    private static final Map<Class<? extends AutoCloseable>, AutoCloseable> INSTANCES = 
-        Collections.synchronizedMap(new LinkedHashMap<>());
+    // LinkedHashMap maintains insertion order for reverse-order shutdown
+    private static final Map<Class<? extends AutoCloseable>, AutoCloseable> INSTANCES = new LinkedHashMap<>();
+    private static final ReadWriteLock INSTANCES_LOCK = new ReentrantReadWriteLock();
 
     static {
         // Register shutdown hook to ensure clean shutdown
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                shutdownAll();
-            } catch (Exception e) {
-                System.err.println("Error during singleton shutdown: " + e.getMessage());
-                e.printStackTrace();
-            }
-        }, "SingletonShutdownHook"));
+        Runtime.getRuntime().addShutdownHook(new Thread(Singletons::shutdownAll, "SingletonShutdownHook"));
     }
 
     private Singletons() {}
 
     /**
-     * Registers the class {@code cls} as a singleton using the default constructor.
-     *
-     * @param <T> the type of the class
-     * @param cls the class of the instance
-     * @param supplier the supplier to create the instance
-     * @throws IllegalStateException if the class is already registered as singleton candidate
-     */
-    public static synchronized <T extends AutoCloseable> void register(@NotNull Class<T> cls) {
-        if (INSTANCES.containsKey(cls)) throw new IllegalStateException(cls.getName() + " is already registered as singleton candidate");
-
-        try {
-            INSTANCES.put(cls, cls.getDeclaredConstructor().newInstance());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create instance of " + cls.getName(), e);
-        }
-    }
-
-    /**
      * Returns the singleton {@code cls} instance.
+     * <p>
+     * Uses read-write locking with per-class synchronization:
+     * - Read lock for the fast path (checking if instance exists)
+     * - Write lock + per-class sync for lazy initialization
+     * This allows multiple threads to read concurrently while ensuring safe lazy initialization.
      *
      * @param <T> the type of the class
      * @param cls the class of the instance
      * @return the singleton instance
-     * @throws IllegalStateException if the class is not yet registered
+     * @throws RuntimeException if instantiation fails
      */
     @SuppressWarnings("unchecked")
-    public static @NotNull <T extends AutoCloseable> T get(@NotNull Class<T> cls) {
-        T inst = (T) INSTANCES.get(cls);
-        if (inst == null) throw new IllegalStateException(cls.getName() + " is not registered as singleton candidate");
-        return inst;
+    public static @NotNull <T extends AutoCloseable> T get(@NotNull Class<T> cls) throws RuntimeException {
+        // Fast path: read lock allows multiple concurrent reads
+        INSTANCES_LOCK.readLock().lock();
+        try {
+            AutoCloseable inst = INSTANCES.get(cls);
+            if (inst != null) return (T) inst;
+        } finally {
+            INSTANCES_LOCK.readLock().unlock();
+        }
+
+        // Slow path: synchronize on the specific class to allow concurrent initialization of different singletons
+        synchronized (cls) {
+            // Double-check with read lock: another thread might have created it
+            INSTANCES_LOCK.readLock().lock();
+            try {
+                AutoCloseable inst = INSTANCES.get(cls);
+                if (inst != null) return (T) inst;
+            } finally {
+                INSTANCES_LOCK.readLock().unlock();
+            }
+
+            // Create the instance (outside of INSTANCES_LOCK to avoid holding lock during construction)
+            AutoCloseable inst;
+            try {
+                Constructor<T> constr = cls.getDeclaredConstructor();
+                constr.setAccessible(true);
+                inst = constr.newInstance();
+            } catch (ReflectiveOperationException e) {
+                throw new RuntimeException("Failed to create instance of " + cls.getName(), e);
+            }
+
+            // Acquire write lock to store the instance
+            INSTANCES_LOCK.writeLock().lock();
+            try {
+                // Triple-check: another thread might have stored it while we were constructing
+                AutoCloseable existing = INSTANCES.get(cls);
+                if (existing != null) {
+                    // Another thread beat us to it, close ours and return the existing one
+                    try {
+                        inst.close();
+                    } catch (Exception e) {
+                        System.err.println("Failed to close duplicate instance of " + cls.getName() + ": " + e.getMessage());
+                    }
+                    return (T) existing;
+                }
+
+                // Store the new instance
+                INSTANCES.put(cls, inst);
+                return (T) inst;
+            } finally {
+                INSTANCES_LOCK.writeLock().unlock();
+            }
+        }
     }
 
     /**
@@ -95,25 +130,30 @@ public final class Singletons {
      * After calling this method, all singletons are unregistered.
      */
     public static void shutdownAll() {
-        synchronized (INSTANCES) {
-            // Create a list in reverse order
-            List<Map.Entry<Class<? extends AutoCloseable>, AutoCloseable>> entries = 
-                new ArrayList<>(INSTANCES.entrySet());
-            Collections.reverse(entries);
+        INSTANCES_LOCK.writeLock().lock();
+        try {
+            // Get classes in reverse order of registration
+            List<Class<? extends AutoCloseable>> classes = new ArrayList<>(INSTANCES.keySet());
+            Collections.reverse(classes);
 
             // Close each singleton in reverse order
-            for (Map.Entry<Class<? extends AutoCloseable>, AutoCloseable> entry : entries) {
+            for (Class<? extends AutoCloseable> cls : classes) {
                 try {
-                    entry.getValue().close();
+                    AutoCloseable inst = INSTANCES.get(cls);
+                    if (inst != null) {
+                        inst.close();
+                    }
                 } catch (Exception e) {
                     // Log error but continue closing others
-                    System.err.println("Failed to close instance of " + entry.getKey().getName() + ": " + e.getMessage());
+                    System.err.println("Failed to close instance of " + cls.getName() + ": " + e.getMessage());
                     e.printStackTrace();
                 }
             }
 
             // Clear all instances after shutdown
             INSTANCES.clear();
+        } finally {
+            INSTANCES_LOCK.writeLock().unlock();
         }
     }
 }
