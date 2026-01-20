@@ -25,14 +25,10 @@ import java.lang.annotation.*;
  * <p>
  * Implementing classes should provide:
  * <pre>
- *   static  {
- *       Singletons.register(T.class);
- *   }
- * 
- *   public static T getInstance() throws IllegalStateException {
- *       return Singletons.get(T.class);
- *   }
- *   </pre>
+ *&nbsp;&nbsp;public static T getInstance() throws IllegalStateException {
+ *      return Singletons.get(T.class);
+ *  }
+ * </pre>
  * </p>
  */
 @Documented

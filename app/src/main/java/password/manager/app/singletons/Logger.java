@@ -44,10 +44,10 @@ import password.manager.app.interfaces.SingletonPattern;
 public final class Logger implements AutoCloseable {
 
     private static final String FOLDER_PREFIX = "log_";
-    private static final String LOG_FILE_NAME = "report.log"; 
+    private static final String LOG_FILE_NAME = "report.log";
     private static final String STACKTRACE_FILE_NAME = "stacktrace.log";
     private static final int MAX_LOG_FILES = 5;
-    
+
     private static final String INITIAL_MESSAGE = String.format("""
             =========== %s %s by Francesco Marras ===========
 
@@ -70,8 +70,11 @@ public final class Logger implements AutoCloseable {
     private final Path currPath;
     private final FileWriter logWriter, stacktraceWriter;
 
-    private Logger() {
-        Path filePath = AppConfig.getInstance().getBasePath().resolve("logs");
+    // Let only package classes instantiate this
+    Logger() {
+        AppConfig appConfig = AppConfig.getInstance();
+
+        Path filePath = appConfig.getBasePath().resolve("logs");
         rotateLogs(filePath);
 
         this.currPath = filePath.resolve(FOLDER_PREFIX + FILE_DTF.format(LocalDateTime.now()));
@@ -85,6 +88,10 @@ public final class Logger implements AutoCloseable {
 
         String msg = String.format(INITIAL_MESSAGE, MSG_DTF.format(LocalDateTime.now())) + "\n";
         write(logWriter, new StringBuilder(msg));
+
+        // Log here since doing it in AppConfig would result in circular dependency
+        addDebug("os.name: '" + appConfig.getOperatingSystem() + "'");
+        addDebug("user.home: '" + appConfig.getUserHome() + "'");
     }
 
     public Path getLoggingPath() {
@@ -152,15 +159,9 @@ public final class Logger implements AutoCloseable {
         }
     }
 
-    // #region Singleton methods
-    static {
-        Singletons.register(Logger.class);
-    }
-
-    public static @NotNull Logger getInstance() throws IllegalStateException {
+    public static @NotNull Logger getInstance() {
         return Singletons.get(Logger.class);
     }
-    // #endregion
 
     // #region Private methods
     private synchronized void write(@NotNull FileWriter writer, @NotNull StringBuilder buffer) {

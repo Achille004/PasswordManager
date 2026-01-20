@@ -48,6 +48,7 @@ import password.manager.app.security.AccountRepository;
 import password.manager.app.singletons.Logger;
 import password.manager.app.singletons.Singletons;
 
+@SuppressWarnings("deprecation")
 public class TestAccountRepository {
 
     private static final List<Account> accounts = new ArrayList<>();

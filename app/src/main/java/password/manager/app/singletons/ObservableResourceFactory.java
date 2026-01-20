@@ -157,13 +157,7 @@ public final class ObservableResourceFactory implements AutoCloseable {
         // Nothing to close
     }
 
-    // #region Singleton methods
-    public static synchronized void createInstance(String bundleName) throws IllegalStateException {
-        Singletons.register(ObservableResourceFactory.class);
-    }
-
-    public static ObservableResourceFactory getInstance() throws IllegalStateException {
+    public static ObservableResourceFactory getInstance() {
         return Singletons.get(ObservableResourceFactory.class);
     }
-    // #endregion
 }
