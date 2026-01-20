@@ -65,39 +65,24 @@ import password.manager.lib.PasswordInputControl;
 
 @SingletonPattern
 public final class IOManager implements AutoCloseable {
-    public static final String OS, USER_HOME;
-    public static final Path FILE_PATH, PRESERVED_PATH;
-
-    public static final String LANG_BUNDLE_RESOURCE = "/bundles/Lang";
 
     private static final String DATA_FILE_NAME = "data.json";
     private static final String BACKUP_FILE_NAME = "data.json.bak";
+
     private static final File DATA_FILE, BACKUP_FILE;
+    private static final Path PRESERVED_PATH;
 
     private static final int AUTOSAVE_INTERVAL = 2;
 
     static {
-        // gets system properties
-        OS = System.getProperty("os.name");
-        USER_HOME = System.getProperty("user.home");
-
-        // gets the paths
-        String WINDOWS_PATH = Path.of("AppData", "Local", App.APP_NAME).toString();
-        String OS_FALLBACK_PATH = ".password-manager";
-        FILE_PATH = Path.of(USER_HOME, OS.toLowerCase().contains("windows") ? WINDOWS_PATH : OS_FALLBACK_PATH);
-        PRESERVED_PATH = FILE_PATH.resolve("preserved");
-
-        Logger.createInstance(FILE_PATH);
-        Logger.getInstance().addDebug("os.name: '" + OS + "'");
-        Logger.getInstance().addDebug("user.home: '" + USER_HOME + "'");
-
-        DATA_FILE = FILE_PATH.resolve(DATA_FILE_NAME).toFile();
-        BACKUP_FILE = FILE_PATH.resolve(BACKUP_FILE_NAME).toFile();
+        Path basePath = AppConfig.getInstance().getBasePath();
+        DATA_FILE = basePath.resolve(DATA_FILE_NAME).toFile();
+        BACKUP_FILE = basePath.resolve(BACKUP_FILE_NAME).toFile();
+        PRESERVED_PATH = basePath.resolve("preserved");
+        
         Logger.getInstance().addDebug("DATA_FILE: '" + DATA_FILE + "'");
         Logger.getInstance().addDebug("BACKUP_FILE: '" + BACKUP_FILE + "'");
-
-        // creates the ObservableResourceFactory singleton
-        ObservableResourceFactory.createInstance(LANG_BUNDLE_RESOURCE);
+        Logger.getInstance().addDebug("PRESERVED_PATH: '" + PRESERVED_PATH + "'");
     }
 
     private final UserPreferences USER_PREFERENCES;
@@ -115,6 +100,7 @@ public final class IOManager implements AutoCloseable {
     private final ObjectMapper OBJECT_MAPPER;
     private final ScheduledExecutorService AUTOSAVE_SCHEDULER;
 
+    // No-arg constructor already defined privately
     private IOManager() {
         MASTER_PASSWORD_PROPERTY = new SimpleStringProperty(null);
 
@@ -423,26 +409,15 @@ public final class IOManager implements AutoCloseable {
 
         // when the user shuts down the program on the first run, it won't save (not authenticated)
         saveData();
-
-        ObservableResourceFactory.destroyInstance();
-        Logger.destroyInstance();
     }
 
     // #region Singleton methods
-    public static synchronized void createInstance() throws IllegalStateException {
-        Singletons.register(IOManager.class, new IOManager());
+    static {
+        Singletons.register(IOManager.class);
     }
 
     public static IOManager getInstance() throws IllegalStateException {
         return Singletons.get(IOManager.class);
-    }
-
-    public static boolean hasInstance() {
-        return Singletons.isRegistered(IOManager.class);
-    }
-
-    public static synchronized void destroyInstance() throws IllegalStateException {
-        Singletons.unregister(IOManager.class);
     }
     // #endregion
 }

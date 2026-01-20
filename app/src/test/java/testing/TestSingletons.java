@@ -20,6 +20,9 @@ package testing;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.Getter;
 import org.junit.jupiter.api.Test;
 
@@ -29,41 +32,39 @@ public class TestSingletons {
 
     @Test
     public void testSingletonLifecycle() {
-        // Test registration
-        assertFalse(Singletons.isRegistered(TestResource.class));
-
-        TestResource instance1 = new TestResource("Hello");
-        Singletons.register(TestResource.class, instance1);
-        assertNotNull(Singletons.get(TestResource.class));
-        assertEquals("Hello", Singletons.get(TestResource.class).getValue());
+        // Test registration - register creates the instance automatically
+        Singletons.register(TestResource.class);
+        
+        TestResource instance1 = Singletons.get(TestResource.class);
+        assertNotNull(instance1);
+        assertEquals("Hello", instance1.getValue());
 
         // Test get returns same instance
         TestResource instance2 = Singletons.get(TestResource.class);
         assertSame(instance1, instance2);
 
-        // Test unregister
+        // Test shutdownAll closes the instance
         assertFalse(instance1.isClosed());
-        Singletons.unregister(TestResource.class);
+        Singletons.shutdownAll();
         assertTrue(instance1.isClosed());
-        assertFalse(Singletons.isRegistered(TestResource.class));
     }
 
     @Test
     public void testMultipleTypes() {
-        // Create instances of different AutoCloseable test types
-        TestResource resource1 = new TestResource("Test1");
-        TestResourceWithNumber resource2 = new TestResourceWithNumber(42);
-        AnotherTestResource resource3 = new AnotherTestResource();
+        // Register different class types - instances created automatically
+        Singletons.register(TestResource.class);
+        Singletons.register(TestResourceWithNumber.class);
+        Singletons.register(AnotherTestResource.class);
 
-        // Register using different class types
-        Singletons.register(TestResource.class, resource1);
-        Singletons.register(TestResourceWithNumber.class, resource2);
-        Singletons.register(AnotherTestResource.class, resource3);
+        // Get references to the created instances
+        TestResource resource1 = Singletons.get(TestResource.class);
+        TestResourceWithNumber resource2 = Singletons.get(TestResourceWithNumber.class);
+        AnotherTestResource resource3 = Singletons.get(AnotherTestResource.class);
 
-        // Verify all instances are retrievable
-        assertEquals("Test1", Singletons.get(TestResource.class).getValue());
-        assertEquals(42, Singletons.get(TestResourceWithNumber.class).getNumber());
-        assertNotNull(Singletons.get(AnotherTestResource.class));
+        // Verify all instances are retrievable with correct values
+        assertEquals("Hello", resource1.getValue());
+        assertEquals(42, resource2.getNumber());
+        assertNotNull(resource3);
 
         // Verify they return the same instances
         assertSame(resource1, Singletons.get(TestResource.class));
@@ -75,20 +76,58 @@ public class TestSingletons {
         assertFalse(resource2.isClosed());
         assertFalse(resource3.isClosed());
 
-        // Clean up
-        Singletons.unregister(TestResource.class);
-        Singletons.unregister(TestResourceWithNumber.class);
-        Singletons.unregister(AnotherTestResource.class);
+        // Clean up all singletons
+        Singletons.shutdownAll();
 
-        // Verify they were closed
+        // Verify they were all closed
         assertTrue(resource1.isClosed());
         assertTrue(resource2.isClosed());
         assertTrue(resource3.isClosed());
+    }
 
-        // Verify they're no longer registered
-        assertFalse(Singletons.isRegistered(TestResource.class));
-        assertFalse(Singletons.isRegistered(TestResourceWithNumber.class));
-        assertFalse(Singletons.isRegistered(AnotherTestResource.class));
+    @Test
+    public void testShutdownOrder() {
+        // Test that singletons are closed in reverse order (LIFO)
+        Singletons.register(OrderedResource.class);
+        Singletons.register(OrderedResource2.class);
+        Singletons.register(OrderedResource3.class);
+
+        // Retrieve to mock instance utilization
+        OrderedResource r1 = Singletons.get(OrderedResource.class);
+        OrderedResource2 r2 = Singletons.get(OrderedResource2.class);
+        OrderedResource3 r3 = Singletons.get(OrderedResource3.class);
+
+        // Clear the close order tracker
+        OrderedResource.closeOrder.clear();
+
+        // Shutdown all
+        Singletons.shutdownAll();
+
+        // Verify they were closed in reverse order: r3, r2, r1
+        assertEquals(3, OrderedResource.closeOrder.size());
+        assertEquals("OrderedResource3", OrderedResource.closeOrder.get(0));
+        assertEquals("OrderedResource2", OrderedResource.closeOrder.get(1));
+        assertEquals("OrderedResource", OrderedResource.closeOrder.get(2));
+    }
+
+    @Test
+    public void testDoubleRegistrationThrowsException() {
+        Singletons.register(TestResource.class);
+        
+        // Trying to register the same class again should throw IllegalStateException
+        assertThrows(IllegalStateException.class, () -> {
+            Singletons.register(TestResource.class);
+        });
+
+        Singletons.shutdownAll();
+    }
+
+    @Test
+    public void testGetNonRegisteredThrowsException() {
+        // Trying to get a non-registered singleton should throw IllegalStateException
+        assertThrows(IllegalStateException.class, () -> {
+            Singletons.get(TestResource.class);
+        });
     }
 
     @Getter
@@ -96,8 +135,8 @@ public class TestSingletons {
         private final String value;
         private boolean closed = false;
 
-        public TestResource(String value) {
-            this.value = value;
+        public TestResource() {
+            this.value = "Hello";
         }
 
         @Override
@@ -111,8 +150,8 @@ public class TestSingletons {
         private final int number;
         private boolean closed = false;
 
-        public TestResourceWithNumber(int number) {
-            this.number = number;
+        public TestResourceWithNumber() {
+            this.number = 42;
         }
 
         @Override
@@ -128,6 +167,30 @@ public class TestSingletons {
         @Override
         public void close() {
             closed = true;
+        }
+    }
+
+    // Test resources to verify shutdown order
+    private static class OrderedResource implements AutoCloseable {
+        static final List<String> closeOrder = new ArrayList<>();
+
+        @Override
+        public void close() {
+            closeOrder.add("OrderedResource");
+        }
+    }
+
+    private static class OrderedResource2 implements AutoCloseable {
+        @Override
+        public void close() {
+            OrderedResource.closeOrder.add("OrderedResource2");
+        }
+    }
+
+    private static class OrderedResource3 implements AutoCloseable {
+        @Override
+        public void close() {
+            OrderedResource.closeOrder.add("OrderedResource3");
         }
     }
 }

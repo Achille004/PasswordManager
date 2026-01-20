@@ -34,7 +34,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import password.manager.app.persistence.Transaction;
-import password.manager.app.singletons.Logger;
+import password.manager.app.singletons.Singletons;
 
 public class TestTransaction {
 
@@ -58,12 +58,12 @@ public class TestTransaction {
                 Thread.currentThread().interrupt();
             }
         }
-        Logger.destroyInstance();
+        Singletons.shutdownAll();
     }
 
     @Test
     void testSuccessfulCommit() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         AtomicInteger value = new AtomicInteger(0);
 
@@ -86,7 +86,7 @@ public class TestTransaction {
 
     @Test
     void testRollbackOnFailure() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         AtomicInteger value = new AtomicInteger(0);
         AtomicBoolean rollbackExecuted = new AtomicBoolean(false);
@@ -114,7 +114,7 @@ public class TestTransaction {
 
     @Test
     void testRollbackOnException() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         AtomicBoolean rollbackExecuted = new AtomicBoolean(false);
 
@@ -130,7 +130,7 @@ public class TestTransaction {
 
     @Test
     void testRollbackInReverseOrder() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         AtomicInteger executionOrder = new AtomicInteger(0);
         int[] rollbackOrder = new int[3];
@@ -149,7 +149,7 @@ public class TestTransaction {
 
     @Test
     void testManualRollback() {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         AtomicBoolean rollbackExecuted = new AtomicBoolean(false);
 
@@ -163,7 +163,7 @@ public class TestTransaction {
 
     @Test
     void testRollbackIdempotent() {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         AtomicInteger rollbackCount = new AtomicInteger(0);
 
@@ -178,7 +178,7 @@ public class TestTransaction {
 
     @Test
     void testAddOperationAfterCommit() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         transaction.addOperation(() -> true, null);
         transaction.commit().get(5, TimeUnit.SECONDS);
@@ -189,7 +189,7 @@ public class TestTransaction {
 
     @Test
     void testAddOperationAfterRollback() {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         transaction.addOperation(() -> true, null);
         transaction.rollback();
@@ -200,7 +200,7 @@ public class TestTransaction {
 
     @Test
     void testCommitWithoutOperations() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         CompletableFuture<Boolean> result = transaction.commit();
         assertTrue(result.get(5, TimeUnit.SECONDS), "Empty transaction should commit successfully");
@@ -209,7 +209,7 @@ public class TestTransaction {
 
     @Test
     void testRollbackWithoutOperations() {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         transaction.rollback();
         assertTrue(transaction.isRolledBack(), "Empty transaction should roll back successfully");
@@ -217,7 +217,7 @@ public class TestTransaction {
 
     @Test
     void testOperationWithoutRollback() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         AtomicBoolean executed = new AtomicBoolean(false);
 
@@ -233,7 +233,7 @@ public class TestTransaction {
 
     @Test
     void testMultipleOperationsWithMixedRollbacks() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         AtomicInteger value = new AtomicInteger(0);
         AtomicBoolean rollback1 = new AtomicBoolean(false);
@@ -263,7 +263,7 @@ public class TestTransaction {
 
     @Test
     void testRollbackContinuesOnException() {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         AtomicBoolean rollback1 = new AtomicBoolean(false);
         AtomicBoolean rollback3 = new AtomicBoolean(false);
@@ -285,7 +285,7 @@ public class TestTransaction {
 
     @Test
     void testConcurrentOperations() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         AtomicInteger counter = new AtomicInteger(0);
         int operationCount = 10;
@@ -304,7 +304,7 @@ public class TestTransaction {
 
     @Test
     void testCommitAfterAlreadyCommitted() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         transaction.addOperation(() -> true, null);
         transaction.commit().get(5, TimeUnit.SECONDS);
@@ -315,7 +315,7 @@ public class TestTransaction {
 
     @Test
     void testCommitAfterRollback() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         transaction.addOperation(() -> true, null);
         transaction.rollback();
@@ -326,7 +326,7 @@ public class TestTransaction {
 
     @Test
     void testOperationReturningValue() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         String expectedValue = "test_value";
 
@@ -340,7 +340,7 @@ public class TestTransaction {
 
     @Test
     void testOperationWithDelay() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         AtomicBoolean executed = new AtomicBoolean(false);
 

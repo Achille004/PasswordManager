@@ -40,6 +40,7 @@ import password.manager.app.controllers.MainController;
 import password.manager.app.singletons.IOManager;
 import password.manager.app.singletons.Logger;
 import password.manager.app.singletons.ObservableResourceFactory;
+import password.manager.app.singletons.Singletons;
 
 import java.util.List;
 import java.util.Locale;
@@ -48,6 +49,7 @@ import java.util.ResourceBundle;
 import org.jetbrains.annotations.NotNull;
 
 public class App extends Application {
+
     public static final String APP_NAME = System.getProperty("app.name", "Password Manager");
     public static final String APP_VERSION = System.getProperty("app.version", "3.1.1");
 
@@ -80,7 +82,6 @@ public class App extends Application {
         primaryStage.setResizable(false);
         primaryStage.setScene(new Scene(appScenePane, 900, 600));
 
-        IOManager.createInstance();
         startApp();
         primaryStage.show();
     }
@@ -88,7 +89,7 @@ public class App extends Application {
     private void startApp() {
         final IOManager IO_MANAGER = IOManager.getInstance();
 
-        final ObjectProperty<Locale> locale = IOManager.getInstance().getUserPreferences().localeProperty();
+        final ObjectProperty<Locale> locale = IO_MANAGER.getUserPreferences().localeProperty();
         ObservableResourceFactory.getInstance().resourcesProperty().bind(Bindings.createObjectBinding(
                 () -> ResourceBundle.getBundle("/bundles/Lang", locale.getValue()), locale));
 
@@ -132,7 +133,7 @@ public class App extends Application {
 
     @Override
     public void stop() {
-        IOManager.destroyInstance();
+        Singletons.shutdownAll();
     }
 
     static void main(String[] args) {

@@ -24,23 +24,15 @@ import java.lang.annotation.*;
  * Marker interface indicating a class follows the singleton pattern.
  * <p>
  * Implementing classes should provide:
- * <ul>
- *   <li><pre>
- *   public static synchronized void createInstance(...) throws IllegalStateException {
- *     Singletons.register(T.class, new T(...));
+ * <pre>
+ *   static  {
+ *       Singletons.register(T.class);
  *   }
- *   </pre></li>
- *   <li><pre>
+ * 
  *   public static T getInstance() throws IllegalStateException {
- *     return Singletons.get(T.class);
+ *       return Singletons.get(T.class);
  *   }
- *   </pre></li>
- *   <li><pre>
- *   public static synchronized void destroyInstance() throws IllegalStateException {
- *     Singletons.unregister(T.class);
- *   }
- *   </pre></li>
- * </ul>
+ *   </pre>
  * </p>
  */
 @Documented
