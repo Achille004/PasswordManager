@@ -392,7 +392,10 @@ public class ManagerController extends AbstractController {
 
             editorDeleteCounter = false;
             clearStyle(editorSoftware, editorUsername, editorPassword.getTextField(), editorDeleteBtn);
-            Platform.runLater(() -> editorSoftware.requestFocus());
+            Platform.runLater(() -> {
+                editorSoftware.requestFocus(); // Normally it would select the text, but that's ugly
+                editorSoftware.selectPositionCaret(editorSoftware.getText().length());
+            });
         }
 
         @FXML

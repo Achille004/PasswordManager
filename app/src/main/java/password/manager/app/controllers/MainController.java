@@ -51,6 +51,7 @@ import password.manager.app.App;
 import password.manager.app.controllers.extra.PopupContentController;
 import password.manager.app.controllers.main.ManagerController;
 import password.manager.app.controllers.main.SettingsController;
+import password.manager.app.singletons.AppConfig;
 import password.manager.app.singletons.IOManager;
 import password.manager.app.singletons.IOManager.SaveState;
 import password.manager.app.singletons.Logger;
@@ -142,7 +143,7 @@ public class MainController extends AbstractController {
     private void folderNavBarAction(ActionEvent event) {
         Thread.startVirtualThread(() -> {
             try {
-                Desktop.getDesktop().open(IOManager.FILE_PATH.toFile());
+                Desktop.getDesktop().open(AppConfig.getInstance().getBasePath().toFile());
             } catch (IOException e) {
                 Logger.getInstance().addError(e);
             }
@@ -236,8 +237,12 @@ public class MainController extends AbstractController {
         });
 
         IOManager.getInstance().savingProperty().addListener((_, _, newValue) -> {
-            // This happens on the closing save, so just return since we don't need the popup
-            if (!ObservableResourceFactory.hasInstance()) return;
+            try {
+                ObservableResourceFactory.getInstance();
+            } catch (IllegalStateException e) {
+                // This happens on the closing save, so just return since we don't need the popup
+                return;
+            }
 
             switch (newValue) {
                 case SAVING -> {

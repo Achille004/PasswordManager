@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Test;
 
 import password.manager.app.persistence.Transaction;
 import password.manager.app.persistence.TransactionManager;
-import password.manager.app.singletons.Logger;
+import password.manager.app.singletons.Singletons;
 
 public class TestTransactionManager {
 
@@ -51,12 +51,12 @@ public class TestTransactionManager {
         if (!manager.isShutdown()) {
             manager.shutdown();
         }
-        Logger.destroyInstance();
+        Singletons.shutdownAll();
     }
 
     @Test
     void testBeginTransaction() {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         Transaction transaction = manager.beginTransaction();
         assertNotNull(transaction, "Transaction should not be null");
@@ -66,7 +66,7 @@ public class TestTransactionManager {
 
     @Test
     void testExecuteInTransactionSuccess() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         AtomicInteger value = new AtomicInteger(0);
 
@@ -86,7 +86,7 @@ public class TestTransactionManager {
 
     @Test
     void testExecuteInTransactionFailure() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         AtomicBoolean rollbackExecuted = new AtomicBoolean(false);
 
@@ -102,7 +102,7 @@ public class TestTransactionManager {
 
     @Test
     void testExecuteInTransactionWithException() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         AtomicBoolean rollbackExecuted = new AtomicBoolean(false);
 
@@ -121,7 +121,7 @@ public class TestTransactionManager {
 
     @Test
     void testExecuteInTransactionShorthand() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         AtomicInteger value = new AtomicInteger(0);
 
@@ -137,7 +137,7 @@ public class TestTransactionManager {
 
     @Test
     void testExecuteInTransactionShorthandWithFailure() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         AtomicInteger value = new AtomicInteger(0);
 
@@ -153,7 +153,7 @@ public class TestTransactionManager {
 
     @Test
     void testMultipleTransactionsConcurrently() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         int transactionCount = 10;
         List<CompletableFuture<Integer>> futures = new ArrayList<>();
@@ -182,7 +182,7 @@ public class TestTransactionManager {
 
     @Test
     void testShutdown() {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         assertFalse(manager.isShutdown(), "Manager should not be shut down initially");
 
@@ -193,7 +193,7 @@ public class TestTransactionManager {
 
     @Test
     void testShutdownIdempotent() {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         manager.shutdown();
         manager.shutdown();
@@ -203,7 +203,7 @@ public class TestTransactionManager {
 
     @Test
     void testTransactionExecutionAfterShutdown() {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         manager.shutdown();
 
@@ -215,7 +215,7 @@ public class TestTransactionManager {
 
     @Test
     void testComplexTransactionWithMultipleOperations() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         AtomicInteger counter = new AtomicInteger(0);
         List<Integer> executionOrder = new ArrayList<>();
@@ -256,7 +256,7 @@ public class TestTransactionManager {
 
     @Test
     void testTransactionRollbackInComplexScenario() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         AtomicInteger counter = new AtomicInteger(0);
         List<Integer> rollbackOrder = new ArrayList<>();
@@ -308,7 +308,7 @@ public class TestTransactionManager {
 
     @Test
     void testTransactionWithDelayedOperations() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         AtomicBoolean operation1Complete = new AtomicBoolean(false);
         AtomicBoolean operation2Complete = new AtomicBoolean(false);
@@ -345,7 +345,7 @@ public class TestTransactionManager {
 
     @Test
     void testNestedTransactionExecution() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         AtomicInteger outerCounter = new AtomicInteger(0);
         AtomicInteger innerCounter = new AtomicInteger(0);
@@ -384,7 +384,7 @@ public class TestTransactionManager {
 
     @Test
     void testTransactionWithNullRollback() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         AtomicInteger value = new AtomicInteger(0);
 
@@ -403,7 +403,7 @@ public class TestTransactionManager {
 
     @Test
     void testMultipleSequentialTransactions() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         AtomicInteger counter = new AtomicInteger(0);
 

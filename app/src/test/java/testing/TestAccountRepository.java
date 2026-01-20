@@ -46,6 +46,7 @@ import password.manager.app.enums.SecurityVersion;
 import password.manager.app.security.Account;
 import password.manager.app.security.AccountRepository;
 import password.manager.app.singletons.Logger;
+import password.manager.app.singletons.Singletons;
 
 public class TestAccountRepository {
 
@@ -85,19 +86,19 @@ public class TestAccountRepository {
     @AfterEach
     void tearDown() {
         repository.close();
-        Logger.destroyInstance();
+        Singletons.shutdownAll();
     }
 
     @Test
     void testInitiallyEmpty() {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         assertTrue(repository.findAll().isEmpty(), "Repository should be empty on initialization");
     }
 
     @Test
     void testAdd() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         CompletableFuture<Account> future = repository.add("GitHub", "testuser", "testpass123");
         Account account = future.get(5, TimeUnit.SECONDS);
@@ -110,7 +111,7 @@ public class TestAccountRepository {
 
     @Test
     void testAddMultiple() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         int count = Math.min(10, accounts.size());
 
@@ -126,7 +127,7 @@ public class TestAccountRepository {
 
     @Test
     void testEdit() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         Account account = repository
                 .add("OldSoftware", "olduser", "oldpass")
@@ -144,7 +145,7 @@ public class TestAccountRepository {
 
     @Test
     void testEditNonExistentAccount() {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         Account account = accounts.getFirst();
 
@@ -157,7 +158,7 @@ public class TestAccountRepository {
 
     @Test
     void testRemove() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         Account account = repository
                 .add("TestSoftware", "testuser", "testpass")
@@ -171,7 +172,7 @@ public class TestAccountRepository {
 
     @Test
     void testRemoveNonExistentAccount() {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         Account account = accounts.getFirst();
 
@@ -184,7 +185,7 @@ public class TestAccountRepository {
 
     @Test
     void testGetPassword() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         String expectedPassword = "SecurePassword123!";
         Account account = repository
@@ -200,7 +201,7 @@ public class TestAccountRepository {
 
     @Test
     void testSetAll() {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         List<Account> testAccounts = accounts.subList(0, Math.min(5, accounts.size()));
 
@@ -211,7 +212,7 @@ public class TestAccountRepository {
 
     @Test
     void testNonEmptySetAll() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         repository
                 .add("InitialSoftware", "initialuser", "initialpass")
@@ -228,7 +229,7 @@ public class TestAccountRepository {
 
     @Test
     void testFindAllIsUnmodifiable() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         repository
                 .add("TestSoftware", "testuser", "testpass")
@@ -243,7 +244,7 @@ public class TestAccountRepository {
 
     @Test
     void testConcurrentOperations() throws ExecutionException, InterruptedException, TimeoutException {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         int operationCount = 10;
         CompletableFuture<?>[] futures = new CompletableFuture[operationCount];
@@ -261,7 +262,7 @@ public class TestAccountRepository {
 
     @Test
     void testChangeMasterPassword() throws Exception {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         // Add accounts
         int count = Math.min(5, accounts.size());
@@ -285,7 +286,7 @@ public class TestAccountRepository {
 
     @Test
     void testChangeMasterPasswordFromNull() throws Exception {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         // Set initial master password to null
         masterPasswordProperty.set(null);
@@ -312,7 +313,7 @@ public class TestAccountRepository {
 
     @Test
     void testUpdateToLatestSecurityVersion() throws Exception {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         // Set initial security version to PBKDF2, future execute on the empty repository (no changes affecting accounts)
         securityVersionProperty.set(SecurityVersion.PBKDF2);
@@ -355,7 +356,7 @@ public class TestAccountRepository {
 
     @Test
     void testUpdateToLatestSecurityVersionWithEmptyRepository() {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         securityVersionProperty.set(SecurityVersion.PBKDF2);
         securityVersionProperty.set(SecurityVersion.LATEST);
@@ -365,7 +366,7 @@ public class TestAccountRepository {
 
     @Test
     void testUpdateToLatestSecurityVersionThenChangeMasterPassword() throws Exception {
-        TestingUtils.initLogger();
+        TestingUtils.injectBasePath();
 
         securityVersionProperty.set(SecurityVersion.PBKDF2);
 

@@ -33,14 +33,23 @@ import javafx.beans.property.StringProperty;
 import javafx.scene.control.Labeled;
 import javafx.scene.control.TextInputControl;
 import javafx.stage.Stage;
+import lombok.Getter;
+import password.manager.app.interfaces.SingletonPattern;
 import password.manager.lib.PasswordInputControl;
 
+@SingletonPattern
 public final class ObservableResourceFactory implements AutoCloseable {
+
+    private static final String LANG_BUNDLE_RESOURCE = "/bundles/Lang";
+
     private final ObjectProperty<ResourceBundle> resources;
     private final List<StringProperty> emptyFieldPrompts;
     private final Random rand;
 
-    private ObservableResourceFactory(ResourceBundle resources) {
+    // Let only package classes instantiate this
+    ObservableResourceFactory() {
+        ResourceBundle resources = ResourceBundle.getBundle(LANG_BUNDLE_RESOURCE);
+
         this.resources = new SimpleObjectProperty<>();
         this.emptyFieldPrompts = new ArrayList<>();
         this.rand = new Random();
@@ -75,10 +84,6 @@ public final class ObservableResourceFactory implements AutoCloseable {
         });
 
         this.setResources(resources);
-    }
-
-    private ObservableResourceFactory(String bundleName) {
-        this(ResourceBundle.getBundle(bundleName));
     }
 
     public ObjectProperty<ResourceBundle> resourcesProperty() {
@@ -154,19 +159,11 @@ public final class ObservableResourceFactory implements AutoCloseable {
 
     // #region Singleton methods
     public static synchronized void createInstance(String bundleName) throws IllegalStateException {
-        Singletons.register(ObservableResourceFactory.class, new ObservableResourceFactory(bundleName));
+        Singletons.register(ObservableResourceFactory.class);
     }
 
     public static ObservableResourceFactory getInstance() throws IllegalStateException {
         return Singletons.get(ObservableResourceFactory.class);
-    }
-
-    public static boolean hasInstance() {
-        return Singletons.isRegistered(ObservableResourceFactory.class);
-    }
-
-    public static synchronized void destroyInstance() throws IllegalStateException {
-        Singletons.unregister(ObservableResourceFactory.class);
     }
     // #endregion
 }

@@ -42,30 +42,27 @@ import password.manager.app.interfaces.SingletonPattern;
 
 @SingletonPattern
 public final class Logger implements AutoCloseable {
-    public static final String FOLDER_PREFIX, LOG_FILE_NAME, STACKTRACE_FILE_NAME;
-    public static final int MAX_LOG_FILES;
+
+    private static final String FOLDER_PREFIX = "log_";
+    private static final String LOG_FILE_NAME = "report.log"; 
+    private static final String STACKTRACE_FILE_NAME = "stacktrace.log";
+    private static final int MAX_LOG_FILES = 5;
+    
+    private static final String INITIAL_MESSAGE = String.format("""
+            =========== %s %s by Francesco Marras ===========
+
+                                    %s
+
+                    --- Debug          >>> Info          !!! Error
+
+                    WARNING: Debug entries may contain sensitive data!
+
+            ==================================================================
+            """, App.APP_NAME, App.APP_VERSION, "%s");
 
     private static final DateTimeFormatter FILE_DTF, MSG_DTF;
 
-    private static final String INITIAL_MESSAGE = String.format("""
-    =========== %s %s by Francesco Marras ===========
-
-                            %s
-
-              --- Debug          >>> Info          !!! Error
-
-            WARNING: Debug entries may contain sensitive data!
-
-    ==================================================================
-
-    """, App.APP_NAME, App.APP_VERSION, "%s");
-
     static {
-        FOLDER_PREFIX = "log_";
-        LOG_FILE_NAME = "report.log";
-        STACKTRACE_FILE_NAME = "stacktrace.log";
-        MAX_LOG_FILES = 5;
-
         FILE_DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
         MSG_DTF = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.MEDIUM);
     }
@@ -73,7 +70,8 @@ public final class Logger implements AutoCloseable {
     private final Path currPath;
     private final FileWriter logWriter, stacktraceWriter;
 
-    private Logger(Path filePath) {
+    private Logger() {
+        Path filePath = AppConfig.getInstance().getBasePath().resolve("logs");
         rotateLogs(filePath);
 
         this.currPath = filePath.resolve(FOLDER_PREFIX + FILE_DTF.format(LocalDateTime.now()));
@@ -85,7 +83,7 @@ public final class Logger implements AutoCloseable {
         stacktraceWriter = getFileWriter(currPath.resolve(STACKTRACE_FILE_NAME), false);
         Objects.requireNonNull(stacktraceWriter, "stacktraceWriter must not be null");
 
-        String msg = String.format(INITIAL_MESSAGE, MSG_DTF.format(LocalDateTime.now()));
+        String msg = String.format(INITIAL_MESSAGE, MSG_DTF.format(LocalDateTime.now())) + "\n";
         write(logWriter, new StringBuilder(msg));
     }
 
@@ -155,20 +153,12 @@ public final class Logger implements AutoCloseable {
     }
 
     // #region Singleton methods
-    public static synchronized void createInstance(Path baseLogPath) throws IllegalStateException {
-        Singletons.register(Logger.class, new Logger(baseLogPath));
+    static {
+        Singletons.register(Logger.class);
     }
 
     public static @NotNull Logger getInstance() throws IllegalStateException {
         return Singletons.get(Logger.class);
-    }
-
-    public static boolean hasInstance() {
-        return Singletons.isRegistered(Logger.class);
-    }
-
-    public static synchronized void destroyInstance() throws IllegalStateException {
-        Singletons.unregister(Logger.class);
     }
     // #endregion
 

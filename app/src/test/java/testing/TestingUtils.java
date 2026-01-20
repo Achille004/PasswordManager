@@ -24,23 +24,23 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
-import password.manager.app.singletons.Logger;
+import password.manager.app.singletons.AppConfig;
 
 public class TestingUtils {
 
     // Define a common log path for all tests, starting from the project root
     // (Path is hardcoded, but I guess it's fine for testing purposes)
-    public static final Path LOG_PATH = Path.of("build/test-logs/");
+    public static final Path OUT_PATH = Path.of("build/test-output/");
 
     static {
         try {
-            Files.createDirectories(LOG_PATH);
+            Files.createDirectories(OUT_PATH);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to create test log directory", e);
+            throw new RuntimeException("Failed to create test output directory", e);
         }
     }
 
-    public static void initLogger() {
+    public static void injectBasePath() {
         Optional<StackWalker.StackFrame> method = StackWalker.getInstance()
                 .walk(frames -> frames.skip(1).findFirst());
 
@@ -52,7 +52,7 @@ public class TestingUtils {
             methodName = frame.getMethodName();
         }
 
-        Logger.createInstance(LOG_PATH.resolve(className).resolve(methodName));
+        System.setProperty(AppConfig.INJECTED_BASE_PATH_KEY, OUT_PATH.resolve(className).resolve(methodName).toString());
     }
 
     public static String readBlnsLine(BufferedReader reader) throws IOException {
