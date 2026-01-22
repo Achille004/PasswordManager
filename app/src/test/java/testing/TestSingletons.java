@@ -27,9 +27,12 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.Getter;
+
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import password.manager.app.base.Singleton;
 import password.manager.app.singletons.Singletons;
 
 @SuppressWarnings("unused")
@@ -237,7 +240,7 @@ public class TestSingletons {
 
     // Test resources to verify singleton behavior
     @Getter
-    static class TestResource implements AutoCloseable {
+    private static class TestResource extends Singleton {
         private boolean closed = false;
 
         @Override
@@ -247,7 +250,7 @@ public class TestSingletons {
     }
 
     @Getter
-    static class TestResource2 implements AutoCloseable {
+    private static class TestResource2 extends Singleton {
         private boolean closed = false;
 
         @Override
@@ -257,7 +260,7 @@ public class TestSingletons {
     }
 
     @Getter
-    static class TestResource3 implements AutoCloseable {
+    private static class TestResource3 extends Singleton {
         private boolean closed = false;
 
         @Override
@@ -267,7 +270,7 @@ public class TestSingletons {
     }
 
     // Test resources to verify shutdown order
-    static class OrderedResource implements AutoCloseable {
+    private static class OrderedResource extends Singleton {
         static final List<String> closeOrder = new ArrayList<>();
 
         @Override
@@ -276,14 +279,14 @@ public class TestSingletons {
         }
     }
 
-    static class OrderedResource2 implements AutoCloseable {
+    private static class OrderedResource2 extends Singleton {
         @Override
         public void close() {
             OrderedResource.closeOrder.add("OrderedResource2");
         }
     }
 
-    static class OrderedResource3 implements AutoCloseable {
+    private static class OrderedResource3 extends Singleton {
         @Override
         public void close() {
             OrderedResource.closeOrder.add("OrderedResource3");
@@ -291,7 +294,7 @@ public class TestSingletons {
     }
 
     // Test resource that truly has NO no-arg constructor (not even private)
-    static class NoNoArgConstructorResource implements AutoCloseable {
+    private static class NoNoArgConstructorResource extends Singleton {
         // Only parameterized constructor - no no-arg constructor at all
         public NoNoArgConstructorResource(int x) {}
 
@@ -300,30 +303,30 @@ public class TestSingletons {
     }
 
     // Test resources for concurrent access
-    static class ConcurrentResource1 implements AutoCloseable {
+    private static class ConcurrentResource1 extends Singleton {
         @Override
         public void close() {}
     }
 
-    static class ConcurrentResource2 implements AutoCloseable {
+    private static class ConcurrentResource2 extends Singleton {
         @Override
         public void close() {}
     }
 
-    static class ConcurrentResource3 implements AutoCloseable {
+    private static class ConcurrentResource3 extends Singleton {
         @Override
         public void close() {}
     }
 
     // Test resources for nested singleton creation
     @Getter
-    static class NestedDependencyResource implements AutoCloseable {
+    private static class NestedDependencyResource extends Singleton {
         @Override
         public void close() {}
     }
 
     @Getter
-    static class NestedDependentResource implements AutoCloseable {
+    private static class NestedDependentResource extends Singleton {
         private final NestedDependencyResource dependency;
 
         public NestedDependentResource() {

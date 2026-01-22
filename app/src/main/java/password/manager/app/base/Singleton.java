@@ -16,23 +16,20 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package password.manager.app.interfaces;
-
-import java.lang.annotation.*;
+package password.manager.app.base;
 
 /**
- * Marker interface indicating a class follows the singleton pattern.
- * <p>
- * Implementing classes should provide:
- * <pre>
- *&nbsp;&nbsp;public static T getInstance() throws IllegalStateException {
- *      return Singletons.get(T.class);
- *  }
- * </pre>
- * </p>
+ * Abstract base class for components that are intended to be used as singletons.
+ * Subclasses are expected to implement {@link #getInstance} method to expose a 
+ * single instance of the subclass.
  */
-@Documented
-@Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.TYPE)
-public @interface SingletonPattern {
+public abstract class Singleton implements AutoCloseable {
+    /**
+     * Returns the singleton instance of the class.
+     *
+     * @return the singleton instance
+     */    
+    public static Singleton getInstance() {
+        throw new UnsupportedOperationException("This method should be overridden in subclasses.");
+    }
 }

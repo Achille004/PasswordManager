@@ -43,6 +43,7 @@ module password.manager.app {
     exports password.manager.app.controllers.extra;
     exports password.manager.app.controllers.main;
     exports password.manager.app.enums;
+    exports password.manager.app.base;
     exports password.manager.app.security;
     exports password.manager.app.persistence;
     exports password.manager.app.singletons;

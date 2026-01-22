@@ -29,6 +29,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.jetbrains.annotations.NotNull;
 
+import password.manager.app.base.Singleton;
+
 /**
  * Very small singleton registry to centralize create/getInstance behaviour used
  * across the project. This keeps the repetitive createInstance/getInstance
@@ -42,7 +44,7 @@ import org.jetbrains.annotations.NotNull;
 public final class Singletons {
 
     // LinkedHashMap maintains insertion order for reverse-order shutdown
-    private static final Map<Class<? extends AutoCloseable>, AutoCloseable> INSTANCES = new LinkedHashMap<>();
+    private static final Map<Class<? extends Singleton>, Singleton> INSTANCES = new LinkedHashMap<>();
     private static final ReadWriteLock INSTANCES_LOCK = new ReentrantReadWriteLock();
 
     static {
@@ -66,11 +68,11 @@ public final class Singletons {
      * @throws RuntimeException if instantiation fails
      */
     @SuppressWarnings("unchecked")
-    public static @NotNull <T extends AutoCloseable> T get(@NotNull Class<T> cls) throws RuntimeException {
+    public static @NotNull <T extends Singleton> T get(@NotNull Class<T> cls) throws RuntimeException {
         // Fast path: read lock allows multiple concurrent reads
         INSTANCES_LOCK.readLock().lock();
         try {
-            AutoCloseable inst = INSTANCES.get(cls);
+            Singleton inst = INSTANCES.get(cls);
             if (inst != null) return (T) inst;
         } finally {
             INSTANCES_LOCK.readLock().unlock();
@@ -81,14 +83,14 @@ public final class Singletons {
             // Double-check with read lock: another thread might have created it
             INSTANCES_LOCK.readLock().lock();
             try {
-                AutoCloseable inst = INSTANCES.get(cls);
+                Singleton inst = INSTANCES.get(cls);
                 if (inst != null) return (T) inst;
             } finally {
                 INSTANCES_LOCK.readLock().unlock();
             }
 
             // Create the instance (outside of INSTANCES_LOCK to avoid holding lock during construction)
-            AutoCloseable inst;
+            Singleton inst;
             try {
                 Constructor<T> constr = cls.getDeclaredConstructor();
                 constr.setAccessible(true);
@@ -101,7 +103,7 @@ public final class Singletons {
             INSTANCES_LOCK.writeLock().lock();
             try {
                 // Triple-check: another thread might have stored it while we were constructing
-                AutoCloseable existing = INSTANCES.get(cls);
+                Singleton existing = INSTANCES.get(cls);
                 if (existing != null) {
                     // Another thread beat us to it, close ours and return the existing one
                     try {
@@ -133,13 +135,13 @@ public final class Singletons {
         INSTANCES_LOCK.writeLock().lock();
         try {
             // Get classes in reverse order of registration
-            List<Class<? extends AutoCloseable>> classes = new ArrayList<>(INSTANCES.keySet());
+            List<Class<? extends Singleton>> classes = new ArrayList<>(INSTANCES.keySet());
             Collections.reverse(classes);
 
             // Close each singleton in reverse order
-            for (Class<? extends AutoCloseable> cls : classes) {
+            for (Class<? extends Singleton> cls : classes) {
                 try {
-                    AutoCloseable inst = INSTANCES.get(cls);
+                    Singleton inst = INSTANCES.get(cls);
                     if (inst != null) {
                         inst.close();
                     }

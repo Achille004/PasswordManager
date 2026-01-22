@@ -33,12 +33,10 @@ import javafx.beans.property.StringProperty;
 import javafx.scene.control.Labeled;
 import javafx.scene.control.TextInputControl;
 import javafx.stage.Stage;
-import lombok.Getter;
-import password.manager.app.interfaces.SingletonPattern;
+import password.manager.app.base.Singleton;
 import password.manager.lib.PasswordInputControl;
 
-@SingletonPattern
-public final class ObservableResourceFactory implements AutoCloseable {
+public final class ObservableResourceFactory extends Singleton {
 
     private static final String LANG_BUNDLE_RESOURCE = "/bundles/Lang";
 
@@ -152,6 +150,7 @@ public final class ObservableResourceFactory implements AutoCloseable {
         }
     }
 
+    // #region Singleton methods
     @Override
     public void close() {
         // Nothing to close
@@ -160,4 +159,5 @@ public final class ObservableResourceFactory implements AutoCloseable {
     public static ObservableResourceFactory getInstance() {
         return Singletons.get(ObservableResourceFactory.class);
     }
+    // #endregion
 }

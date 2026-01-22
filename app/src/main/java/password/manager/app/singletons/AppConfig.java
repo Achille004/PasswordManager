@@ -4,10 +4,9 @@ import java.nio.file.Path;
 
 import lombok.Getter;
 import password.manager.app.App;
-import password.manager.app.interfaces.SingletonPattern;
+import password.manager.app.base.Singleton;
 
-@SingletonPattern
-public class AppConfig implements AutoCloseable {
+public class AppConfig extends Singleton {
 
     public static final String INJECTED_BASE_PATH_KEY = "app.config.basePath";
 
@@ -30,12 +29,14 @@ public class AppConfig implements AutoCloseable {
                 : Path.of(injectedBasePath);
     }
 
+    // #region Singleton methods
     @Override
     public void close() throws Exception {
         // Nothing to close
     }
-    
+
     public static AppConfig getInstance() {
         return Singletons.get(AppConfig.class);
     }
+    // #endregion
 }
