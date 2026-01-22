@@ -34,7 +34,7 @@ import org.bouncycastle.crypto.params.Argon2Parameters;
 import org.jetbrains.annotations.NotNull;
 
 import lombok.RequiredArgsConstructor;
-import password.manager.app.interfaces.TriFunction;
+import password.manager.app.base.TriFunction;
 import password.manager.app.singletons.Logger;
 
 /**

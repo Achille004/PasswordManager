@@ -55,16 +55,15 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import lombok.Getter;
-import password.manager.app.App;
-import password.manager.app.interfaces.SingletonPattern;
+import password.manager.app.base.Singleton;
 import password.manager.app.security.Account;
 import password.manager.app.security.AccountRepository;
 import password.manager.app.security.UserPreferences;
 import password.manager.lib.LoadingAnimation;
 import password.manager.lib.PasswordInputControl;
 
-@SingletonPattern
-public final class IOManager implements AutoCloseable {
+
+public final class IOManager extends Singleton {
 
     private static final String DATA_FILE_NAME = "data.json";
     private static final String BACKUP_FILE_NAME = "data.json.bak";
@@ -165,10 +164,10 @@ public final class IOManager implements AutoCloseable {
         getAccountList().addListener(listListener);
 
         USER_PREFERENCES.localeProperty().addListener((_, _, newValue) ->
-            Logger.getInstance().addInfo("Changed locale to: " + newValue.getDisplayLanguage(Locale.ENGLISH))
+            Logger.getInstance().addDebug("Changed locale to: " + newValue.getDisplayLanguage(Locale.ENGLISH))
         );
         USER_PREFERENCES.sortingOrderProperty().addListener((_, _, newValue) ->
-            Logger.getInstance().addInfo("Changed sorting order to: " + newValue)
+            Logger.getInstance().addDebug("Changed sorting order to: " + newValue)
         );
     }
 
@@ -347,6 +346,7 @@ public final class IOManager implements AutoCloseable {
     public @NotNull Boolean authenticate(String masterPassword) {
         // If already authenticated, no need to re-authenticate
         if (isAuthenticated()) return false;
+        Logger.getInstance().addInfo("Attempting user authentication...");
 
         isAuthenticated = USER_PREFERENCES.verifyPassword(masterPassword);
         if (!isAuthenticated) return false;
@@ -370,10 +370,7 @@ public final class IOManager implements AutoCloseable {
             USER_PREFERENCES.set(data.userPreferences());
             ACCOUNT_REPOSITORY.setAll(data.accountList());
             isFirstRun = false;
-            Logger.getInstance().addInfo(" => OK");
-        } catch (IOException e) {
-            Logger.getInstance().addInfo(" => Failed");
-            throw e;
+            Logger.getInstance().addInfo("Load OK");
         } finally {
             LOADING_LOCK.unlock();
         }
@@ -399,6 +396,7 @@ public final class IOManager implements AutoCloseable {
     // Wrapper class for application data
     private record AppData(UserPreferences userPreferences, List<Account> accountList) {}
 
+    // #region Singleton methods
     @Override
     public void close() {
         Logger.getInstance().addInfo("Shutdown requested");
@@ -414,4 +412,5 @@ public final class IOManager implements AutoCloseable {
     public static IOManager getInstance() {
         return Singletons.get(IOManager.class);
     }
+    // #endregion
 }

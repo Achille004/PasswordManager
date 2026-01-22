@@ -38,10 +38,9 @@ import java.util.stream.Stream;
 import org.jetbrains.annotations.NotNull;
 
 import password.manager.app.App;
-import password.manager.app.interfaces.SingletonPattern;
+import password.manager.app.base.Singleton;
 
-@SingletonPattern
-public final class Logger implements AutoCloseable {
+public final class Logger extends Singleton {
 
     private static final String FOLDER_PREFIX = "log_";
     private static final String LOG_FILE_NAME = "report.log";
@@ -148,6 +147,7 @@ public final class Logger implements AutoCloseable {
         write(stacktraceWriter, stacktraceStrBuilder);
     }
 
+    // #region Singleton methods
     @Override
     public void close() {
         try {
@@ -162,6 +162,7 @@ public final class Logger implements AutoCloseable {
     public static @NotNull Logger getInstance() {
         return Singletons.get(Logger.class);
     }
+    // #endregion
 
     // #region Private methods
     private synchronized void write(@NotNull FileWriter writer, @NotNull StringBuilder buffer) {
