@@ -119,42 +119,52 @@ public class ReadablePasswordFieldWithStr extends AnchorPane implements Initiali
 
     ///// PASSWORD INPUT CONTROL METHODS /////
 
+    @Override
     public BooleanProperty readableProperty() {
         return passwordField.readableProperty();
     }
 
+    @Override
     public void setReadable(boolean readable) {
         passwordField.setReadable(readable);
     }
 
+    @Override
     public void toggleReadable() {
         passwordField.toggleReadable();
     }
 
+    @Override
     public StringProperty textProperty() {
         return passwordField.textProperty();
     }
 
+    @Override
     public boolean isReadable() {
         return passwordField.isReadable();
     }
 
+    @Override
     public void setText(String text) {
         passwordField.setText(text);
     }
 
+    @Override
     public String getText() {
         return passwordField.getText();
     }
 
+    @Override
     public StringProperty promptTextProperty() {
         return passwordField.promptTextProperty();
     }
 
+    @Override
     public void setPromptText(String text) {
         passwordField.setPromptText(text);
     }
 
+    @Override
     public String getPromptText() {
         return passwordField.getPromptText();
     }
@@ -164,6 +174,7 @@ public class ReadablePasswordFieldWithStr extends AnchorPane implements Initiali
         passwordField.requestFocus();
     }
 
+    @Override
     public void setOnAction(EventHandler<ActionEvent> value) {
         passwordField.setOnAction(value);
     }

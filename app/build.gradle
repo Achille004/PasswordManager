@@ -32,6 +32,8 @@ plugins {
 
     // https://github.com/petr-panteleyev/jpackage-gradle-plugin
     id 'org.panteleyev.jpackageplugin'
+
+    id 'com.adarshr.test-logger' version '4.0.0'
 }
 
 repositories {

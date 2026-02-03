@@ -255,7 +255,7 @@ public final class AccountRepository implements AutoCloseable {
      * @return a CompletableFuture that completes with true if all futures completed successfully with true, false otherwise
     */
     private static CompletableFuture<Boolean> allSuccessful(Collection<CompletableFuture<Boolean>> futures) {
-        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+        return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new))
                 .thenApply(_ -> futures.stream().allMatch(
                     f -> (f.isDone() && !f.isCompletedExceptionally() && f.join())
                 ));

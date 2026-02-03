@@ -88,7 +88,7 @@ public class MainController extends AbstractController {
             currString.append(c);
         }
 
-        titleStages = stages.toArray(new String[0]);
+        titleStages = stages.toArray(String[]::new);
     }
 
     private final Image settingsImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/icons/navbar/settings.png")));
@@ -113,6 +113,7 @@ public class MainController extends AbstractController {
     private Pane managerPane, settingsPane;
     private AbstractController managerController, settingsController;
 
+    @Override
     public void initialize(URL location, ResourceBundle resources) {
         Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
 

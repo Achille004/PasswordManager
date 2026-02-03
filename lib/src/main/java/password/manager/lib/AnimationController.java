@@ -35,7 +35,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Control;
 import javafx.util.Duration;
 
-public class AnimationController<T> {
+public final class AnimationController<T> {
     // Number of keyframes for the animation (200ms at ~60fps)
     private static final int ANIM_DURATION_MS = 200;
     private static final int ANIM_FPS = 60;

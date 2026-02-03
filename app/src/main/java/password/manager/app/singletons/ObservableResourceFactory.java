@@ -21,10 +21,12 @@ package password.manager.app.singletons;
 import java.util.ResourceBundle;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 
 import org.jetbrains.annotations.NotNull;
 
+import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -46,12 +48,11 @@ public final class ObservableResourceFactory extends Singleton {
 
     // Let only package classes instantiate this
     ObservableResourceFactory() {
-        ResourceBundle resources = ResourceBundle.getBundle(LANG_BUNDLE_RESOURCE);
-
         this.resources = new SimpleObjectProperty<>();
         this.emptyFieldPrompts = new ArrayList<>();
         this.rand = new Random();
 
+        // Fill empty field prompts when resources change
         this.resources.addListener((_, _, newValue) -> {
             if (newValue == null) return;
 
@@ -81,7 +82,9 @@ public final class ObservableResourceFactory extends Singleton {
             }
         });
 
-        this.setResources(resources);
+        // This will be the "placeholder" ResourceBundle until a locale is set
+        ResourceBundle emptyResourceBundle = ResourceBundle.getBundle(LANG_BUNDLE_RESOURCE);
+        this.resources.set(emptyResourceBundle);
     }
 
     public ObjectProperty<ResourceBundle> resourcesProperty() {
@@ -92,13 +95,11 @@ public final class ObservableResourceFactory extends Singleton {
         return resources.get();
     }
 
-    public void setResources(ResourceBundle resources) {
-        if (resources == null) return;
-        this.resources.set(resources);
-    }
-
-    public void setResources(String bundleName) {
-        this.setResources(ResourceBundle.getBundle(bundleName));
+    public void bindLocaleProperty(ObjectProperty<Locale> localeProperty) {
+        this.resources.bind(Bindings.createObjectBinding(
+            () -> ResourceBundle.getBundle(LANG_BUNDLE_RESOURCE, localeProperty.get()),
+            localeProperty
+        ));
     }
 
     public StringBinding getStringBinding(String key) {
@@ -140,12 +141,16 @@ public final class ObservableResourceFactory extends Singleton {
         for (@NotNull Object field : fields) {
             int index = rand.nextInt(emptyFieldPrompts.size());
 
-            if (field instanceof TextInputControl tic) {
-                tic.promptTextProperty().unbind();
-                tic.promptTextProperty().bind(emptyFieldPrompts.get(index));
-            } else if (field instanceof PasswordInputControl pic) {
-                pic.promptTextProperty().unbind();
-                pic.promptTextProperty().bind(emptyFieldPrompts.get(index));
+            switch (field) {
+                case TextInputControl tic -> {
+                    tic.promptTextProperty().unbind();
+                    tic.promptTextProperty().bind(emptyFieldPrompts.get(index));
+                }
+                case PasswordInputControl pic -> {
+                    pic.promptTextProperty().unbind();
+                    pic.promptTextProperty().bind(emptyFieldPrompts.get(index));
+                }
+                default -> throw new IllegalArgumentException("Unsupported field type: " + field.getClass().getName());
             }
         }
     }

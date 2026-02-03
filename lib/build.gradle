@@ -26,6 +26,8 @@ plugins {
 
     // https://github.com/gradlex-org/java-module-dependencies
     id 'org.gradlex.java-module-dependencies' version '1.11'
+
+    id 'com.adarshr.test-logger' version '4.0.0'
 }
 
 repositories {

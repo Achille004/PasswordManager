@@ -29,13 +29,7 @@ import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import javafx.scene.layout.Pane;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -45,14 +39,19 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import password.manager.app.singletons.Logger;
-import password.manager.app.singletons.ObservableResourceFactory;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.DialogPane;
+import javafx.scene.layout.Pane;
+
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import password.manager.app.singletons.Logger;
+import password.manager.app.singletons.ObservableResourceFactory;
 
 public final class Utils {
-    private Utils() {} // Prevent instantiation
 
     public static final Locale[] SUPPORTED_LOCALE;
     public static final Locale DEFAULT_LOCALE;
@@ -69,12 +68,17 @@ public final class Utils {
     private static final Encoder BASE64ENC = Base64.getEncoder();
     private static final Decoder BASE64DEC = Base64.getDecoder();
 
-    private static final ReentrantReadWriteLock MEM_RW_LOCK = new ReentrantReadWriteLock(true); // fair mode
-    private static final Lock MEM_READ_LOCK = MEM_RW_LOCK.readLock();
-    private static final Lock MEM_WRITE_LOCK = MEM_RW_LOCK.writeLock();
     private static final float MEM_SAFETY_FACTOR = 0.8f;
-    private static long reservedMemory = 0;
+    private static final AtomicLong reservedMemory = new AtomicLong(0);
 
+    private Utils() {} // Prevent instantiation
+
+    /**
+     * Returns a SortedList containing the given items, sorted using the default comparator.
+     * @param <T> The type of the items.
+     * @param items The items to include in the SortedList.
+     * @return A SortedList containing the given items.
+     */
     @SafeVarargs
     public static <T> SortedList<T> getFXSortedList(@NotNull T... items) {
         return FXCollections.observableArrayList(items).sorted(null);
@@ -93,18 +97,39 @@ public final class Utils {
         return String.format("%0" + listDigits + "d", index);
     }
 
+    /**
+     * Encodes a byte array to a Base64 string.
+     * @param src The byte array to encode.
+     * @return The Base64 encoded string.
+     */
     public static String byteToBase64(byte[] src) {
         return BASE64ENC.encodeToString(src);
     }
-
+    
+    /**
+     * Decodes a Base64 string to a byte array.
+     * @param src The Base64 string to decode.
+     * @return The decoded byte array.
+     */
     public static byte[] base64ToByte(@NotNull String src) {
         return BASE64DEC.decode(src);
     }
 
+    /**
+     * Capitalizes the first letter of the given word and makes the rest lowercase.
+     * @param str The word to capitalize.
+     * @return The capitalized word.
+     */
     public static @NotNull String capitalizeWord(@NotNull String str) {
         return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
     }
 
+    /**
+     * Sets the default button for the given Alert dialog.
+     * @param alert  The Alert dialog to modify.
+     * @param defBtn The ButtonType to set as default.
+     * @return The modified Alert dialog.
+     */
     @Contract("_, _ -> param1")
     public static @NotNull Alert setDefaultButton(@NotNull Alert alert, ButtonType defBtn) {
         DialogPane pane = alert.getDialogPane();
@@ -113,10 +138,22 @@ public final class Utils {
         return alert;
     }
 
+    /**
+     * Gets a FileWriter for the specified path.
+     * @param path The path to the file.
+     * @param append Whether to append to the file.
+     * @return A FileWriter instance or null if an error occurs.
+     */
     public static @Nullable FileWriter getFileWriter(@NotNull Path path, @NotNull Boolean append) {
         return getFileWriter(path.toFile(), append);
     }
 
+    /**
+     * Gets a FileWriter for the specified file.
+     * @param file The file to write to.
+     * @param append Whether to append to the file.
+     * @return A FileWriter instance or null if an error occurs.
+     */
     public static @Nullable FileWriter getFileWriter(@NotNull File file, @NotNull Boolean append) {
         try {
             return new FileWriter(file, append);
@@ -125,6 +162,12 @@ public final class Utils {
         }
     }
 
+    /**
+     * Loads an FXML file and sets its controller.
+     * @param path The path to the FXML file.
+     * @param controller The controller to set for the FXML.
+     * @return The loaded Parent node.
+     */
     public static @NotNull Parent loadFxml(@NotNull String path, @NotNull Initializable controller) {
         final String uiElementPath = path.replace("/fxml/", "").replace(".fxml", "");
         Logger.getInstance().addDebug("Loading [" + uiElementPath + "] pane...");
@@ -158,8 +201,9 @@ public final class Utils {
                 }
             });
         }
+
         Platform.exit(); // Exit gracefully (saves data, etc.)
-        return new Pane(); // return dummy pane
+        return new Pane(); // return non-null dummy pane
     }
 
     /**
@@ -170,45 +214,36 @@ public final class Utils {
      * @throws RuntimeException if interrupted while waiting.
      */
     public static void reserveMemory(int requiredMemory) {
-        MEM_READ_LOCK.lock();
-        try {
-            Runtime runtime = Runtime.getRuntime();
-            int attempts = 0;
-            final int MAX_ATTEMPTS = 100;
+        Runtime runtime = Runtime.getRuntime();
+        int nextBackoff = 8; // Initial backoff: 8 ms
+        final int MAX_BACKOFF = 2000; // Maximum backoff: 2 s
 
-            while (attempts < MAX_ATTEMPTS) {
-                MEM_READ_LOCK.unlock();
-                MEM_WRITE_LOCK.lock();
+        while (nextBackoff < MAX_BACKOFF) {
+            long maxMemory = runtime.maxMemory();
+            long allocatedMemory = runtime.totalMemory();
+            long freeMemory = runtime.freeMemory();
+            long currentReserved = reservedMemory.get();
+            long availableMemory = (maxMemory - allocatedMemory) + freeMemory - currentReserved;
 
-                try {
-                    long maxMemory = runtime.maxMemory();
-                    long allocatedMemory = runtime.totalMemory();
-                    long freeMemory = runtime.freeMemory();
-                    long availableMemory = (maxMemory - allocatedMemory) + freeMemory - reservedMemory;
+            if (availableMemory * MEM_SAFETY_FACTOR > requiredMemory) {
+                // Try to atomically reserve the memory
+                if (reservedMemory.compareAndSet(currentReserved, currentReserved + requiredMemory)) return;
 
-                    if (availableMemory * MEM_SAFETY_FACTOR > requiredMemory) {
-                        reservedMemory += requiredMemory;
-                        return;
-                    }
-                } finally {
-                    MEM_WRITE_LOCK.unlock();
-                    MEM_READ_LOCK.lock();
-                }
-
-                try {
-                    System.gc();
-                    Thread.sleep(100);
-                    attempts++;
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw new RuntimeException("Interrupted while waiting for memory", e);
-                }
+                // CAS failed, another thread modified reservedMemory, retry
+                continue;
             }
 
-            throw new RuntimeException("Unable to allocate sufficient memory after " + MAX_ATTEMPTS + " attempts");
-        } finally {
-            MEM_READ_LOCK.unlock();
+            try {
+                System.gc();
+                Thread.sleep(nextBackoff);
+                nextBackoff *= 2; // Exponential backoff
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Interrupted while waiting for memory", e);
+            }
         }
+
+        throw new RuntimeException("Unable to allocate sufficient memory after exponential backoff (last attempted: " + nextBackoff + "ms).");
     }
 
     /**
@@ -218,12 +253,6 @@ public final class Utils {
      * @param requiredMemory The amount of memory to release in bytes.
      */
     public static void releaseMemory(int requiredMemory) {
-        MEM_WRITE_LOCK.lock();
-        try {
-            reservedMemory -= requiredMemory;
-            if (reservedMemory < 0) reservedMemory = 0;
-        } finally {
-            MEM_WRITE_LOCK.unlock();
-        }
+        reservedMemory.updateAndGet(current -> Math.max(0, current - requiredMemory));
     }
 }

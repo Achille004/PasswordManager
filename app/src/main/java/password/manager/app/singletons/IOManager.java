@@ -390,7 +390,7 @@ public final class IOManager extends Singleton {
         }
 
         AppData data = new AppData(prefsSnapshot, accountSnapshot);
-        OBJECT_MAPPER.writerWithDefaultPrettyPrinter().writeValue(DATA_FILE, data);
+        OBJECT_MAPPER.writerWithDefaultPrettyPrinter().writeValue(file, data);
     }
 
     // Wrapper class for application data

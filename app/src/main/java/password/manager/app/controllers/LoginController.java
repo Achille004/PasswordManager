@@ -59,6 +59,7 @@ public class LoginController extends AbstractController {
                 clearStyle(loginSubmitBtn);
             }));
 
+    @Override
     public void initialize(URL location, ResourceBundle resources) {
         Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
 
