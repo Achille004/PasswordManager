@@ -50,6 +50,7 @@ public class FirstRunController extends AbstractController {
     @FXML
     private Button firstRunSubmitBtn;
 
+    @Override
     public void initialize(URL location, ResourceBundle resources) {
         Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
 

@@ -140,44 +140,54 @@ public class ReadablePasswordField extends AnchorPane implements Initializable, 
 
     ///// PASSWORD INPUT CONTROL METHODS /////
 
+    @Override
     public BooleanProperty readableProperty() {
         return readable;
     }
 
+    @Override
     public void setReadable(boolean readable) {
         if (readable ^ isReadable()) {
             this.readable.set(readable);
         }
     }
 
+    @Override
     public boolean isReadable() {
         return readable.get();
     }
 
+    @Override
     public void toggleReadable() {
         setReadable(!isReadable());
     }
 
+    @Override
     public StringProperty textProperty() {
         return passwordField.textProperty();
     }
 
+    @Override
     public void setText(String text) {
         textField.setText(text);
     }
 
+    @Override
     public String getText() {
         return textField.getText();
     }
 
+    @Override
     public StringProperty promptTextProperty() {
         return textField.promptTextProperty();
     }
 
+    @Override
     public void setPromptText(String text) {
         textField.setPromptText(text);
     }
 
+    @Override
     public String getPromptText() {
         return textField.getPromptText();
     }
@@ -191,6 +201,7 @@ public class ReadablePasswordField extends AnchorPane implements Initializable, 
         }
     }
 
+    @Override
     public void setOnAction(EventHandler<ActionEvent> value) {
         passwordField.setOnAction(value);
         textField.setOnAction(value);

@@ -28,7 +28,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.Getter;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -150,6 +149,9 @@ public class TestSingletons {
 
         // Wait for all threads to complete
         latch.await();
+        for (Thread thread : threads) {
+            thread.join();
+        }
 
         // Verify all threads got the exact same instance
         assertEquals(threadCount, instances.size());
@@ -172,13 +174,10 @@ public class TestSingletons {
             new Thread(() -> {
                 try {
                     barrier.await(); // Sync all threads to start at the same time
-
-                    if (index % 3 == 0) {
-                        Singletons.get(ConcurrentResource1.class);
-                    } else if (index % 3 == 1) {
-                        Singletons.get(ConcurrentResource2.class);
-                    } else {
-                        Singletons.get(ConcurrentResource3.class);
+                    switch (index % 3) {
+                        case 0 -> Singletons.get(ConcurrentResource1.class);
+                        case 1 -> Singletons.get(ConcurrentResource2.class);
+                        default -> Singletons.get(ConcurrentResource3.class);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

@@ -42,6 +42,7 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 import password.manager.app.controllers.AbstractController;
 import password.manager.app.enums.SortingOrder;
+import password.manager.app.security.UserPreferences;
 import password.manager.app.singletons.IOManager;
 import password.manager.app.singletons.Logger;
 import password.manager.app.singletons.ObservableResourceFactory;
@@ -60,14 +61,13 @@ public class SettingsController extends AbstractController {
     @FXML
     private Label settingsLangLbl, settingsSortingOrderLbl, settingsMasterPasswordLbl, settingsMasterPasswordDesc, settingsDriveConnLbl, wip;
 
+    @Override
     public void initialize(URL location, ResourceBundle resources) {
         Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
 
         final IOManager ioManager = IOManager.getInstance();
-        final ObjectProperty<Locale> localeProperty = ioManager.getUserPreferences().localeProperty();
-        final ObjectProperty<SortingOrder> sortingOrderProperty = ioManager.getUserPreferences().sortingOrderProperty();
-
         final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
+
         langResources.bindTextProperty(settingsLangLbl, "settings.language");
         langResources.bindTextProperty(settingsSortingOrderLbl, "settings.sorting_ord");
         langResources.bindTextProperty(settingsMasterPasswordLbl, "settings.master_pas");
@@ -75,30 +75,12 @@ public class SettingsController extends AbstractController {
         langResources.bindTextProperty(settingsDriveConnLbl, "settings.drive_con");
         langResources.bindTextProperty(wip, "settings.wip");
 
-        // Language box
-
-        final SortedList<Locale> languages = getFXSortedList(SUPPORTED_LOCALE);
-
-        settingsLangCB.setItems(languages);
-        settingsLangCB.getSelectionModel().select(ioManager.getUserPreferences().getLocale());
-        bindValueConverter(settingsLangCB, localeProperty, SettingsController::localeStringConverter);
-        bindValueComparator(languages, localeProperty, settingsLangCB);
-
-        localeProperty.bind(notNullBinding(settingsLangCB.valueProperty()));
-
-        // Sorting order box
-
-        final SortedList<SortingOrder> sortingOrders = getFXSortedList(SortingOrder.class.getEnumConstants());
-
-        settingsOrderCB.setItems(sortingOrders);
-        settingsOrderCB.getSelectionModel().select(ioManager.getUserPreferences().getSortingOrder());
-        bindValueConverter(settingsOrderCB, localeProperty, SettingsController::sortingOrderStringConverter);
-        bindValueComparator(sortingOrders, localeProperty, settingsOrderCB);
-
-        sortingOrderProperty.bind(notNullBinding(settingsOrderCB.valueProperty()));
+        // Combo boxes
+        final UserPreferences userPreferences = ioManager.getUserPreferences();
+        setupLanguageCB(userPreferences);
+        setupSortingOrderCB(userPreferences);
 
         // Master password
-
         settingsMasterPassword.setOnAction(_ -> {
             if (checkTextFields(settingsMasterPassword.getTextField())) {
                 ioManager.changeMasterPassword(settingsMasterPassword.getText().strip());
@@ -118,17 +100,40 @@ public class SettingsController extends AbstractController {
         settingsMasterPassword.setReadable(false);
     }
 
+    private void setupLanguageCB(UserPreferences userPreferences) {
+        final ObjectProperty<Locale> localeProperty = userPreferences.localeProperty();
+
+        final SortedList<Locale> languages = getFXSortedList(SUPPORTED_LOCALE);
+        final StringConverter<Locale> localeStringConverter = toStringConverter(item -> 
+            item != null ? capitalizeWord(item.getDisplayLanguage(item)) : null
+        );
+
+        settingsLangCB.setItems(languages);
+        settingsLangCB.getSelectionModel().select(localeProperty.get());
+        bindValueConverter(settingsLangCB, localeProperty, _ -> localeStringConverter);
+        bindValueComparator(languages, localeProperty, settingsLangCB);
+
+        localeProperty.bind(notNullBinding(settingsLangCB.valueProperty()));
+    }
+
+    private void setupSortingOrderCB(UserPreferences userPreferences) {
+        final ObjectProperty<Locale> localeProperty = userPreferences.localeProperty();
+        final ObjectProperty<SortingOrder> sortingOrderProperty = userPreferences.sortingOrderProperty();
+
+        final SortedList<SortingOrder> sortingOrders = getFXSortedList(SortingOrder.class.getEnumConstants());
+        final StringConverter<SortingOrder> sortingOrderStringConverter = toStringConverter(item -> 
+            item != null ? ObservableResourceFactory.getInstance().getValue(item.getI18nKey()) : null
+        );
+
+        settingsOrderCB.setItems(sortingOrders);
+        settingsOrderCB.getSelectionModel().select(sortingOrderProperty.get());
+        bindValueConverter(settingsOrderCB, localeProperty, _ -> sortingOrderStringConverter);
+        bindValueComparator(sortingOrders, localeProperty, settingsOrderCB);
+
+        sortingOrderProperty.bind(notNullBinding(settingsOrderCB.valueProperty()));
+    }
+
     ///// Utility methods /////
-
-    @Contract(value = "_ -> new", pure = true)
-    private static @NotNull StringConverter<Locale> localeStringConverter(Locale locale) {
-        return toStringConverter(item -> item != null ? capitalizeWord(item.getDisplayLanguage(item)) : null);
-    }
-
-    @Contract(value = "_ -> new", pure = true)
-    private static @NotNull StringConverter<SortingOrder> sortingOrderStringConverter(Locale locale) {
-        return toStringConverter(item -> item != null ? ObservableResourceFactory.getInstance().getValue(item.getI18nKey()) : null);
-    }
 
     @Contract(value = "_ -> new", pure = true)
     private static <T> @NotNull StringConverter<T> toStringConverter(@NotNull Callback<? super T, String> converter) {

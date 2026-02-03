@@ -171,7 +171,7 @@ public class TestTransactionManager {
             futures.add(future);
         }
 
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get(5, TimeUnit.SECONDS);
+        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).get(5, TimeUnit.SECONDS);
 
         assertEquals(transactionCount, counter.get(), "All transactions should have executed");
 

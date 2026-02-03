@@ -98,6 +98,7 @@ public class ManagerController extends AbstractController {
     private List<String> possibleSoftwares, possibleUsernames;
     private final SimpleIntegerProperty suggestionsUpdateTrigger = new SimpleIntegerProperty(0);
 
+    @Override
     public void initialize(URL location, ResourceBundle resources) {
         Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
 
@@ -115,7 +116,7 @@ public class ManagerController extends AbstractController {
         setupSearchFunctionality(FILTERED_ACCOUNT_LIST);
         setupAccountListView(SORTING_ORDER_PROPERTY, SORTED_ACCOUNT_LIST, FILTERED_ACCOUNT_LIST, TAB_MANAGER);
         setupKeyboardShortcuts(TAB_MANAGER);
-        setupSpecialTabs(TAB_MANAGER);
+        setupSpecialTabs();
     }
 
     @Override
@@ -278,7 +279,7 @@ public class ManagerController extends AbstractController {
         accountTabPane.setOnKeyPressed(SHORTCUTS_HANDLER);
     }
 
-    private void setupSpecialTabs(TabManager tabManager) {
+    private void setupSpecialTabs() {
         TabManager.loadTab(homeTab, "/fxml/views/manager/home.fxml", new HomeController());
         TabManager.loadTab(addTab, "/fxml/views/manager/editor.fxml", new EditorController(null));
     }
@@ -287,6 +288,7 @@ public class ManagerController extends AbstractController {
         @FXML
         private Label homeDescTop, homeDescBtm;
 
+        @Override
         public void initialize(URL location, ResourceBundle resources) {
             Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
 
@@ -317,7 +319,7 @@ public class ManagerController extends AbstractController {
         private boolean editorDeleteCounter = false;
 
         @FXML
-        private Label editorAccSelLbl, editorSoftwareLbl, editorUsernameLbl, editorPasswordLbl;
+        private Label editorSoftwareLbl, editorUsernameLbl, editorPasswordLbl;
 
         private final @Getter Account account;
         private final @Getter boolean isAddEditor;
@@ -331,6 +333,7 @@ public class ManagerController extends AbstractController {
             this.isAddEditor = account == null;
         }
 
+        @Override
         public void initialize(URL location, ResourceBundle resources) {
             Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
 
