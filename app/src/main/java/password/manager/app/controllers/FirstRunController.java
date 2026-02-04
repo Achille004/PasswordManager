@@ -76,6 +76,14 @@ public class FirstRunController extends AbstractController {
         ObservableResourceFactory.getInstance().bindPromptTextProperty(firstRunPassword);
     }
 
+    @Override
+    public String getFxmlPath() {
+        return "/fxml/first_run.fxml";
+    }
+
+    @Override
+    public void reset() {} // Not needed, will never reset
+
     @FXML
     public void doFirstRun() {
         if (checkTextFields(firstRunPassword.getTextField()) && firstRunCheckBox.isSelected()) {

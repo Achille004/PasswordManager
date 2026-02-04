@@ -42,7 +42,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import password.manager.app.enums.SecurityVersion;
+import password.manager.app.base.SecurityVersion;
 import password.manager.app.security.Account;
 import password.manager.app.security.AccountRepository;
 import password.manager.app.singletons.Logger;

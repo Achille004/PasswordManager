@@ -32,7 +32,7 @@ import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import password.manager.app.enums.SecurityVersion;
+import password.manager.app.base.SecurityVersion;
 import password.manager.app.persistence.TransactionManager;
 import password.manager.app.singletons.Logger;
 

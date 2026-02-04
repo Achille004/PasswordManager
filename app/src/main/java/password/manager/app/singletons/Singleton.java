@@ -16,7 +16,7 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package password.manager.app.base;
+package password.manager.app.singletons;
 
 /**
  * Abstract base class for components that are intended to be used as singletons.

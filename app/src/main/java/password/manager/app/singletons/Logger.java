@@ -38,7 +38,6 @@ import java.util.stream.Stream;
 import org.jetbrains.annotations.NotNull;
 
 import password.manager.app.App;
-import password.manager.app.base.Singleton;
 
 public final class Logger extends Singleton {
 

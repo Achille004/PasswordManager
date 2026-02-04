@@ -4,7 +4,6 @@ import java.nio.file.Path;
 
 import lombok.Getter;
 import password.manager.app.App;
-import password.manager.app.base.Singleton;
 
 public class AppConfig extends Singleton {
 

@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
-import password.manager.app.base.Singleton;
+import password.manager.app.singletons.Singleton;
 import password.manager.app.singletons.Singletons;
 
 public class TestSingleton {

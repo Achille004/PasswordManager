@@ -77,6 +77,14 @@ public class LoginController extends AbstractController {
         });
     }
 
+    @Override
+    public String getFxmlPath() {
+        return "/fxml/login.fxml";
+    }
+
+    @Override
+    public void reset() {} // Not needed, will never reset
+
     @FXML
     public void doLogin() {
         if (checkTextFields(loginPassword.getTextField())) {

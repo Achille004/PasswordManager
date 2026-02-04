@@ -31,7 +31,7 @@ import lombok.Getter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import password.manager.app.base.Singleton;
+import password.manager.app.singletons.Singleton;
 import password.manager.app.singletons.Singletons;
 
 @SuppressWarnings("unused")

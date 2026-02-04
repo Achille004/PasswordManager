@@ -23,7 +23,6 @@ import static password.manager.app.Utils.*;
 import javafx.application.Application;
 import javafx.application.HostServices;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -44,7 +43,6 @@ import password.manager.app.singletons.Singletons;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.ResourceBundle;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -108,8 +106,8 @@ public class App extends Application {
         }
 
         final AnchorPane pane = IO_MANAGER.isFirstRun()
-            ? (AnchorPane) loadFxml("/fxml/first_run.fxml", new FirstRunController(switchToMain))
-            : (AnchorPane) loadFxml("/fxml/login.fxml", new LoginController(switchToMain));
+            ? (AnchorPane) loadFxml(new FirstRunController(switchToMain))
+            : (AnchorPane) loadFxml(new LoginController(switchToMain));
 
         appScenePane.getChildren().clear();
         appScenePane.getChildren().add(pane);
@@ -120,7 +118,7 @@ public class App extends Application {
         switchToMain.addListener((_, _, newValue) -> {
             if (newValue) {
                 final MainController mainController = new MainController();
-                final BorderPane mainPane = (BorderPane) loadFxml("/fxml/main.fxml", mainController);
+                final BorderPane mainPane = (BorderPane) loadFxml(mainController);
 
                 appScenePane.getChildren().clear();
                 appScenePane.getChildren().add(mainPane);

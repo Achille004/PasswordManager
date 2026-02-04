@@ -22,13 +22,13 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
+import password.manager.app.controllers.AbstractController;
 import password.manager.app.singletons.Logger;
 import password.manager.app.singletons.ObservableResourceFactory;
 
-public class PopupContentController implements Initializable {
+public class PopupContentController extends AbstractController {
     @FXML
     private Label label;
 
@@ -39,6 +39,14 @@ public class PopupContentController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
     }
+
+    @Override
+    public String getFxmlPath() {
+        return "/fxml/extra/popup_content.fxml";
+    }
+
+    @Override
+    public void reset() {}
 
     public void setState(String i18nKey, String bottomBarColor) {
         final ObservableResourceFactory resources = ObservableResourceFactory.getInstance();

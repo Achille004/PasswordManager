@@ -30,7 +30,7 @@ import java.security.SecureRandom;
 
 import org.junit.jupiter.api.Test;
 
-import password.manager.app.enums.SecurityVersion;
+import password.manager.app.base.SecurityVersion;
 import password.manager.app.security.AES;
 
 public class TestAES {

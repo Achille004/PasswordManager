@@ -35,7 +35,6 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -48,6 +47,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import password.manager.app.controllers.AbstractController;
 import password.manager.app.singletons.Logger;
 import password.manager.app.singletons.ObservableResourceFactory;
 
@@ -164,11 +164,12 @@ public final class Utils {
 
     /**
      * Loads an FXML file and sets its controller.
-     * @param path The path to the FXML file.
      * @param controller The controller to set for the FXML.
      * @return The loaded Parent node.
      */
-    public static @NotNull Parent loadFxml(@NotNull String path, @NotNull Initializable controller) {
+    public static <T extends AbstractController> @NotNull Parent loadFxml(@NotNull T controller) {
+        final String path = controller.getFxmlPath();
+
         final String uiElementPath = path.replace("/fxml/", "").replace(".fxml", "");
         Logger.getInstance().addDebug("Loading [" + uiElementPath + "] pane...");
 

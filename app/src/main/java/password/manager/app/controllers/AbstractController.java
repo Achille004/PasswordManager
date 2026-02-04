@@ -39,7 +39,9 @@ public abstract class AbstractController implements Initializable {
     // Store EULA stage as singleton to avoid multiple instances
     private static Stage eulaStage = null;
 
-    public void reset() { /* do nothing */ }
+    public abstract String getFxmlPath();
+
+    public abstract void reset();
 
     @FXML
     protected final void showEula(MouseEvent event) {
@@ -56,7 +58,7 @@ public abstract class AbstractController implements Initializable {
         eulaStage.getIcons().add(new Image(App.MAIN_ICON));
         eulaStage.setResizable(false);
 
-        AnchorPane eulaParent = (AnchorPane) loadFxml("/fxml/extra/eula.fxml", new EulaController());
+        AnchorPane eulaParent = (AnchorPane) loadFxml(new EulaController());
         eulaStage.setScene(new Scene(eulaParent, 900, 600));
     }
 

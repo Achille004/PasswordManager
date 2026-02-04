@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javafx.beans.property.ReadOnlyProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
-import password.manager.app.enums.SecurityVersion;
+import password.manager.app.base.SecurityVersion;
 
 public final class Account {
     private final transient ReadWriteLock lock = new ReentrantReadWriteLock();

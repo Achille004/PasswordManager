@@ -16,7 +16,7 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package password.manager.app.enums;
+package password.manager.app.base;
 
 import java.util.Comparator;
 import java.util.function.BinaryOperator;

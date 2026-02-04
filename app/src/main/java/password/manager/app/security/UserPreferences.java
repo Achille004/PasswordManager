@@ -38,8 +38,8 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import password.manager.app.Utils;
-import password.manager.app.enums.SecurityVersion;
-import password.manager.app.enums.SortingOrder;
+import password.manager.app.base.SecurityVersion;
+import password.manager.app.base.SortingOrder;
 
 @JsonDeserialize(using = UserPreferences.UserPreferencesDeserializer.class)
 public final class UserPreferences {

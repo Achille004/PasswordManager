@@ -18,13 +18,9 @@
 
 package password.manager.app.controllers.main;
 
-import static password.manager.app.Utils.*;
-import static password.manager.lib.Utils.*;
-
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.ResourceBundle;
@@ -34,7 +30,6 @@ import java.util.stream.Collectors;
 import org.controlsfx.control.textfield.AutoCompletionBinding;
 import org.controlsfx.control.textfield.AutoCompletionBinding.ISuggestionRequest;
 import org.controlsfx.control.textfield.TextFields;
-import org.jetbrains.annotations.NotNull;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -58,12 +53,12 @@ import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.Pane;
 import javafx.util.Callback;
 import javafx.util.Duration;
 import lombok.Getter;
+import password.manager.app.base.SortingOrder;
 import password.manager.app.controllers.AbstractController;
-import password.manager.app.enums.SortingOrder;
+import password.manager.app.controllers.TabManager;
 import password.manager.app.security.Account;
 import password.manager.app.singletons.IOManager;
 import password.manager.app.singletons.Logger;
@@ -110,13 +105,21 @@ public class ManagerController extends AbstractController {
         final FilteredList<Account> FILTERED_ACCOUNT_LIST = new FilteredList<>(SORTED_ACCOUNT_LIST);
 
         final ObjectProperty<SortingOrder> SORTING_ORDER_PROPERTY = IO_MANAGER.getUserPreferences().sortingOrderProperty();
-        final TabManager TAB_MANAGER = new TabManager(accountTabPane, homeTab);
+        final TabManager<Account, EditorController> TAB_MANAGER = new TabManager<>(
+            accountTabPane, EditorController::new,
+            (tab, account) -> tab.textProperty().bind(account.softwareProperty())
+        );
 
         setupAutoCompletion(ACCOUNT_LIST);
         setupSearchFunctionality(FILTERED_ACCOUNT_LIST);
         setupAccountListView(SORTING_ORDER_PROPERTY, SORTED_ACCOUNT_LIST, FILTERED_ACCOUNT_LIST, TAB_MANAGER);
         setupKeyboardShortcuts(TAB_MANAGER);
-        setupSpecialTabs();
+        setupSpecialTabs(accountTabPane, TAB_MANAGER);
+    }
+
+    @Override
+    public String getFxmlPath() {
+        return "/fxml/main/manager.fxml";
     }
 
     @Override
@@ -204,7 +207,7 @@ public class ManagerController extends AbstractController {
     }
 
     private void setupAccountListView(ObjectProperty<SortingOrder> sortingOrderProperty, SortedList<Account> sortedAccountList,
-                                      FilteredList<Account> filteredAccountList, TabManager tabManager) {
+                                      FilteredList<Account> filteredAccountList, TabManager<Account, EditorController> tabManager) {
         // #region Sorted Account List setup
         final ListChangeListener<Account> ACCOUNT_LIST_CHANGE_HANDLER = change -> {
             if (editOperationInProgress) return;
@@ -212,7 +215,7 @@ public class ManagerController extends AbstractController {
             while(change.next()) {
                 if (change.wasRemoved() && !change.wasAdded()) {
                     // This is a true removal
-                    change.getRemoved().forEach(tabManager::closeAccountTab);
+                    change.getRemoved().forEach(tabManager::closeTab);
                 }
             }
         };
@@ -233,7 +236,7 @@ public class ManagerController extends AbstractController {
 
         final ChangeListener<Account> LIST_VIEW_HANDLER = (_, _, newItem) -> {
             if (newItem != null && !editOperationInProgress) {
-                tabManager.openAccountTab(newItem);
+                tabManager.openTab(newItem);
                 Platform.runLater(accountListView.getSelectionModel()::clearSelection);
             }
         };
@@ -244,7 +247,7 @@ public class ManagerController extends AbstractController {
         // #endregion
     }
 
-    private void setupKeyboardShortcuts(TabManager tabManager) {
+    private void setupKeyboardShortcuts(TabManager<Account, EditorController> tabManager) {
         final EventHandler<KeyEvent> SHORTCUTS_HANDLER = keyEvent -> {
             final Tab selectedTab = accountTabPane.getSelectionModel().getSelectedItem();
             if (!keyEvent.isControlDown() || selectedTab == null) return;
@@ -279,9 +282,23 @@ public class ManagerController extends AbstractController {
         accountTabPane.setOnKeyPressed(SHORTCUTS_HANDLER);
     }
 
-    private void setupSpecialTabs() {
-        TabManager.loadTab(homeTab, "/fxml/views/manager/home.fxml", new HomeController());
-        TabManager.loadTab(addTab, "/fxml/views/manager/editor.fxml", new EditorController(null));
+    private void setupSpecialTabs(TabPane tabPane, TabManager<Account, EditorController> tabManager) {
+        TabManager.loadTab(homeTab, new HomeController());
+        TabManager.loadTab(addTab, new EditorController(null));
+
+        final ObservableList<Tab> TAB_PANE_CONTENT = tabPane.getTabs();
+        // It's better to just handle this manually
+        final ListChangeListener<Tab> HOME_TAB_HANDLER = change -> {
+            while(change.next()) {
+                if (change.wasAdded() && !change.getAddedSubList().contains(homeTab)) {
+                    Platform.runLater(() -> TAB_PANE_CONTENT.remove(homeTab));
+                } else if (change.wasRemoved() && TAB_PANE_CONTENT.size() <= 1) {
+                    TAB_PANE_CONTENT.addFirst(homeTab);
+                    tabManager.selectTab(homeTab);
+                }
+            }
+        };
+        TAB_PANE_CONTENT.addListener(HOME_TAB_HANDLER);
     }
 
     static class HomeController extends AbstractController {
@@ -295,6 +312,11 @@ public class ManagerController extends AbstractController {
             final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
             langResources.bindTextProperty(homeDescTop, "home_desc.top");
             langResources.bindTextProperty(homeDescBtm, "home_desc.btm");
+        }
+
+        @Override
+        public String getFxmlPath() {
+            return "/fxml/main/manager/home.fxml";
         }
 
         @Override
@@ -373,6 +395,11 @@ public class ManagerController extends AbstractController {
 
             // Disable the delete button if this is the add editor
             editorDeleteBtn.setVisible(!isAddEditor);
+        }
+
+        @Override
+        public String getFxmlPath() {
+            return "/fxml/main/manager/editor.fxml";
         }
 
         @Override
@@ -462,93 +489,6 @@ public class ManagerController extends AbstractController {
                         .filter(s -> s.toLowerCase().startsWith(lowerUserText))
                         .toList();
             };
-        }
-    }
-
-    // Helper class for better encapsulation
-    private class TabManager {
-        // Map for tabs associated with accounts for two-way association and caching
-        private static final IdentityHashMap<Account, Tab> TABS_MAP = new IdentityHashMap<>();
-
-        private final TabPane TAB_PANE;
-        private final ObservableList<Tab> TAB_PANE_CONTENT; // Convenience reference for better readability
-
-        public TabManager(@NotNull TabPane tabPane, @NotNull Tab homeTab) {
-            this.TAB_PANE = tabPane;
-            this.TAB_PANE_CONTENT = tabPane.getTabs();
-
-            final ChangeListener<Tab> TAB_FOCUS_HANDLER = (_, _, newTab) -> {
-                if (newTab != null) TabManager.getController(newTab).reset();
-            };
-            TAB_PANE.getSelectionModel().selectedItemProperty().addListener(TAB_FOCUS_HANDLER);
-
-            // It's better to just handle this manually
-            final ListChangeListener<Tab> HOME_TAB_HANDLER = change -> {
-                while(change.next()) {
-                    if (change.wasAdded() && !change.getAddedSubList().contains(homeTab)) {
-                        Platform.runLater(() -> TAB_PANE_CONTENT.remove(homeTab));
-                    } else if (change.wasRemoved() && TAB_PANE_CONTENT.size() <= 1) {
-                        TAB_PANE_CONTENT.addFirst(homeTab);
-                        selectTab(homeTab);
-                    }
-                }
-            };
-            this.TAB_PANE_CONTENT.addListener(HOME_TAB_HANDLER);
-        }
-
-        public void openAccountTab(@NotNull Account account) {
-            Tab tab = TABS_MAP.computeIfAbsent(account, this::createAccountTab);
-            selectTab(tab, true);
-        }
-
-        public Tab createAccountTab(@NotNull Account account) {
-            EditorController controller = new EditorController(account);
-            Tab tab = new Tab();
-
-            TabManager.loadTab(tab, "/fxml/views/manager/editor.fxml", controller);
-            tab.textProperty().bind(account.softwareProperty());
-
-            return tab;
-        }
-
-        public void selectTab(@NotNull Tab tab, boolean addIfMissing) {
-            Platform.runLater(() -> {
-                if (addIfMissing && !TAB_PANE.getTabs().contains(tab)) {
-                    TAB_PANE.getTabs().add(TAB_PANE.getTabs().size() - 1, tab);
-                }
-                TAB_PANE.getSelectionModel().select(tab);
-            });
-        }
-
-        public void selectTab(@NotNull Tab tab) {
-            selectTab(tab, false);
-        }
-
-        public void selectAdjacentTab(int direction) {
-            int currentIndex = TAB_PANE.getSelectionModel().getSelectedIndex();
-            int newIndex = intSquash(0, currentIndex + direction, TAB_PANE.getTabs().size() - 1);
-            TAB_PANE.getSelectionModel().select(newIndex);
-        }
-
-        public void closeTab(@NotNull Tab tab) {
-            Platform.runLater(() -> TAB_PANE.getTabs().remove(tab));
-        }
-
-        public void closeAccountTab(@NotNull Account account) {
-            Tab tab = TABS_MAP.remove(account);
-            if (tab != null) closeTab(tab);
-        }
-
-        // Static utility methods for tab management
-
-        public static <T extends AbstractController> void loadTab(@NotNull Tab tab, @NotNull  String fxmlPath, @NotNull T controller) {
-            Pane pane = (Pane) loadFxml(fxmlPath, controller);
-            tab.setContent(pane);
-            tab.getProperties().put("controller", controller);
-        }
-
-        public static AbstractController getController(@NotNull Tab tab) {
-            return (AbstractController) tab.getProperties().get("controller");
         }
     }
 }
