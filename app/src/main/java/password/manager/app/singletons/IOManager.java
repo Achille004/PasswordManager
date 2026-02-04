@@ -55,7 +55,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import lombok.Getter;
-import password.manager.app.base.Singleton;
 import password.manager.app.security.Account;
 import password.manager.app.security.AccountRepository;
 import password.manager.app.security.UserPreferences;

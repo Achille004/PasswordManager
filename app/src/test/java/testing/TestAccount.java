@@ -29,7 +29,7 @@ import java.security.GeneralSecurityException;
 
 import org.junit.jupiter.api.Test;
 
-import password.manager.app.enums.SecurityVersion;
+import password.manager.app.base.SecurityVersion;
 import password.manager.app.security.Account;
 
 public class TestAccount {

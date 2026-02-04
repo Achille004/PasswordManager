@@ -40,8 +40,8 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import password.manager.app.base.SortingOrder;
 import password.manager.app.controllers.AbstractController;
-import password.manager.app.enums.SortingOrder;
 import password.manager.app.security.UserPreferences;
 import password.manager.app.singletons.IOManager;
 import password.manager.app.singletons.Logger;
@@ -89,6 +89,11 @@ public class SettingsController extends AbstractController {
 
         // Force the correct size to prevent unwanted stretching
         settingsMasterPassword.setPrefSize(465.0, 40.0);
+    }
+
+    @Override
+    public String getFxmlPath() {
+        return "/fxml/main/settings.fxml";
     }
 
     @Override

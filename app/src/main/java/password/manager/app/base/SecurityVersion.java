@@ -16,7 +16,7 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package password.manager.app.enums;
+package password.manager.app.base;
 
 import static password.manager.app.Utils.*;
 
@@ -34,7 +34,6 @@ import org.bouncycastle.crypto.params.Argon2Parameters;
 import org.jetbrains.annotations.NotNull;
 
 import lombok.RequiredArgsConstructor;
-import password.manager.app.base.TriFunction;
 import password.manager.app.singletons.Logger;
 
 /**

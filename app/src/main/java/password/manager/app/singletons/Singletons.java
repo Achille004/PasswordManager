@@ -29,8 +29,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.jetbrains.annotations.NotNull;
 
-import password.manager.app.base.Singleton;
-
 /**
  * Very small singleton registry to centralize create/getInstance behaviour used
  * across the project. This keeps the repetitive createInstance/getInstance

@@ -129,11 +129,19 @@ public class MainController extends AbstractController {
         }
 
         managerController = new ManagerController();
-        managerPane = (Pane) loadFxml("/fxml/views/manager.fxml", managerController);
+        managerPane = (Pane) loadFxml(managerController);
 
         createAutosavePopup();
         swapOnMainPane(managerController, managerPane);
     }
+
+    @Override
+    public String getFxmlPath() {
+        return "/fxml/main.fxml";
+    }
+
+    @Override
+    public void reset() {} // Not needed, will never reset
 
     public void mainTitleAnimation() {
         psmgTitle.setText("");
@@ -156,7 +164,7 @@ public class MainController extends AbstractController {
         // Load lazily
         if(settingsPane == null || settingsController == null) {
             settingsController = new SettingsController();
-            settingsPane = (Pane) loadFxml("/fxml/views/settings.fxml", settingsController);
+            settingsPane = (Pane) loadFxml(settingsController);
         }
 
         isSettingsOpen = !isSettingsOpen;
@@ -179,7 +187,7 @@ public class MainController extends AbstractController {
         final int SPACING = 20;
 
         final PopupContentController popupController = new PopupContentController();
-        final AnchorPane popupContent = (AnchorPane) loadFxml("/fxml/extra/popup_content.fxml", popupController);
+        final AnchorPane popupContent = (AnchorPane) loadFxml(popupController);
         popupContent.setVisible(false);
 
         final Popup testPopup = new Popup();

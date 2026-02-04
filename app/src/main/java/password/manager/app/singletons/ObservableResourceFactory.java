@@ -35,7 +35,6 @@ import javafx.beans.property.StringProperty;
 import javafx.scene.control.Labeled;
 import javafx.scene.control.TextInputControl;
 import javafx.stage.Stage;
-import password.manager.app.base.Singleton;
 import password.manager.lib.PasswordInputControl;
 
 public final class ObservableResourceFactory extends Singleton {
