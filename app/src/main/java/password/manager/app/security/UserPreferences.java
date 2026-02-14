@@ -21,7 +21,6 @@ package password.manager.app.security;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.Optional;
 
 import org.jetbrains.annotations.Contract;
@@ -40,10 +39,11 @@ import javafx.beans.property.SimpleObjectProperty;
 import password.manager.app.Utils;
 import password.manager.app.base.SecurityVersion;
 import password.manager.app.base.SortingOrder;
+import password.manager.app.base.SupportedLocale;
 
 @JsonDeserialize(using = UserPreferences.UserPreferencesDeserializer.class)
 public final class UserPreferences {
-    private final transient ObjectProperty<Locale> localeProperty;
+    private final transient ObjectProperty<SupportedLocale> localeProperty;
     private final transient ObjectProperty<SortingOrder> sortingOrderProperty;
     private final transient ObjectProperty<SecurityVersion> securityVersionProperty;
 
@@ -52,7 +52,7 @@ public final class UserPreferences {
     private boolean isPasswordSet;
 
     public UserPreferences() {
-        this.localeProperty = new SimpleObjectProperty<>(Utils.DEFAULT_LOCALE);
+        this.localeProperty = new SimpleObjectProperty<>(SupportedLocale.getDefault());
         this.sortingOrderProperty = new SimpleObjectProperty<>(SortingOrder.SOFTWARE);
         this.securityVersionProperty = new SimpleObjectProperty<>(SecurityVersion.LATEST);
 
@@ -66,7 +66,7 @@ public final class UserPreferences {
         setPassword(password);
     }
 
-    private UserPreferences(Locale locale, SortingOrder sortingOrder, @NotNull SecurityVersion securityVersion, byte[] hashedPassword, byte[] salt) {
+    private UserPreferences(SupportedLocale locale, SortingOrder sortingOrder, @NotNull SecurityVersion securityVersion, byte[] hashedPassword, byte[] salt) {
         this();
 
         this.localeProperty.set(locale);
@@ -89,15 +89,15 @@ public final class UserPreferences {
         this.isPasswordSet = userPreferences.isPasswordSet;
     }
 
-    public ObjectProperty<Locale> localeProperty() {
+    public ObjectProperty<SupportedLocale> localeProperty() {
         return localeProperty;
     }
 
-    public Locale getLocale() {
+    public SupportedLocale getLocale() {
         return localeProperty.get();
     }
 
-    public void setLocale(@NotNull Locale locale) {
+    public void setLocale(@NotNull SupportedLocale locale) {
         localeProperty.set(locale);
     }
 
@@ -175,7 +175,9 @@ public final class UserPreferences {
         public UserPreferences deserialize(@NotNull JsonParser jp, DeserializationContext ctxt) throws IOException {
             final JsonNode node = jp.getCodec().readTree(jp);
 
-            final Locale locale = getAsOptional(node, "locale").map(Locale::forLanguageTag).orElseThrow(() -> new IOException("Missing locale field"));
+            final SupportedLocale locale = SupportedLocale.valueOf(
+                getAsOptional(node, "locale").orElseThrow(() -> new IOException("Missing locale field"))
+            );
             final SortingOrder sortingOrder = getAsOptional(node, "sortingOrder").map(SortingOrder::valueOf).orElseThrow(() -> new IOException("Missing sortingOrder field"));
             final byte[] hashedPassword = getAsOptional(node, "hashedPassword").map(Utils::base64ToByte).orElseThrow(() -> new IOException("Missing hashedPassword field"));
             final byte[] salt = getAsOptional(node, "salt").map(Utils::base64ToByte).orElseThrow(() -> new IOException("Missing salt field"));

@@ -1,7 +1,6 @@
 # Next up:
 - QoL:
   - Disable autosave (?)
-  - Add language flags to their selector => refactor ObsResFact for a mapped approach
   - Google drive linking
   - Password generator
 - Guide (github pages):

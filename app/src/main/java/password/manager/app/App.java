@@ -33,6 +33,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import lombok.Getter;
+import password.manager.app.base.SupportedLocale;
 import password.manager.app.controllers.FirstRunController;
 import password.manager.app.controllers.LoginController;
 import password.manager.app.controllers.MainController;
@@ -42,7 +43,6 @@ import password.manager.app.singletons.ObservableResourceFactory;
 import password.manager.app.singletons.Singletons;
 
 import java.util.List;
-import java.util.Locale;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -87,7 +87,7 @@ public class App extends Application {
     private void startApp() {
         final IOManager IO_MANAGER = IOManager.getInstance();
 
-        final ObjectProperty<Locale> locale = IO_MANAGER.getUserPreferences().localeProperty();
+        final ObjectProperty<SupportedLocale> locale = IO_MANAGER.getUserPreferences().localeProperty();
         ObservableResourceFactory.getInstance().bindLocaleProperty(locale);
 
         final BooleanProperty switchToMain = getBooleanProperty();

@@ -163,7 +163,7 @@ public final class IOManager extends Singleton {
         getAccountList().addListener(listListener);
 
         USER_PREFERENCES.localeProperty().addListener((_, _, newValue) ->
-            Logger.getInstance().addDebug("Changed locale to: " + newValue.getDisplayLanguage(Locale.ENGLISH))
+            Logger.getInstance().addDebug("Changed locale to: " + newValue.getLocale().getDisplayLanguage(Locale.ENGLISH))
         );
         USER_PREFERENCES.sortingOrderProperty().addListener((_, _, newValue) ->
             Logger.getInstance().addDebug("Changed sorting order to: " + newValue)

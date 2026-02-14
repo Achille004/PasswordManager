@@ -23,11 +23,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -52,18 +50,6 @@ import password.manager.app.singletons.Logger;
 import password.manager.app.singletons.ObservableResourceFactory;
 
 public final class Utils {
-
-    public static final Locale[] SUPPORTED_LOCALE;
-    public static final Locale DEFAULT_LOCALE;
-
-    static {
-        SUPPORTED_LOCALE = new Locale[] { Locale.ENGLISH, Locale.ITALIAN };
-
-        final Locale systemLang = Locale.forLanguageTag(Locale.getDefault().getLanguage());
-        DEFAULT_LOCALE = Arrays.asList(SUPPORTED_LOCALE).contains(systemLang)
-                ? systemLang
-                : Locale.ENGLISH;
-    }
 
     private static final Encoder BASE64ENC = Base64.getEncoder();
     private static final Decoder BASE64DEC = Base64.getDecoder();

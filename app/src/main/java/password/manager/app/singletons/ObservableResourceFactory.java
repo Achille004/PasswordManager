@@ -21,7 +21,6 @@ package password.manager.app.singletons;
 import java.util.ResourceBundle;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Random;
 
 import org.jetbrains.annotations.NotNull;
@@ -35,6 +34,7 @@ import javafx.beans.property.StringProperty;
 import javafx.scene.control.Labeled;
 import javafx.scene.control.TextInputControl;
 import javafx.stage.Stage;
+import password.manager.app.base.SupportedLocale;
 import password.manager.lib.PasswordInputControl;
 
 public final class ObservableResourceFactory extends Singleton {
@@ -94,9 +94,9 @@ public final class ObservableResourceFactory extends Singleton {
         return resources.get();
     }
 
-    public void bindLocaleProperty(ObjectProperty<Locale> localeProperty) {
+    public void bindLocaleProperty(ObjectProperty<SupportedLocale> localeProperty) {
         this.resources.bind(Bindings.createObjectBinding(
-            () -> ResourceBundle.getBundle(LANG_BUNDLE_RESOURCE, localeProperty.get()),
+            () -> ResourceBundle.getBundle(LANG_BUNDLE_RESOURCE, localeProperty.get().getLocale()),
             localeProperty
         ));
     }

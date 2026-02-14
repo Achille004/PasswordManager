@@ -38,9 +38,13 @@ import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import password.manager.app.base.SortingOrder;
+import password.manager.app.base.SupportedLocale;
 import password.manager.app.controllers.AbstractController;
 import password.manager.app.security.UserPreferences;
 import password.manager.app.singletons.IOManager;
@@ -51,7 +55,7 @@ import password.manager.lib.ReadablePasswordFieldWithStr;
 public class SettingsController extends AbstractController {
 
     @FXML
-    private ComboBox<Locale> settingsLangCB;
+    private ComboBox<SupportedLocale> settingsLangCB;
     @FXML
     private ComboBox<SortingOrder> settingsOrderCB;
 
@@ -106,12 +110,15 @@ public class SettingsController extends AbstractController {
     }
 
     private void setupLanguageCB(UserPreferences userPreferences) {
-        final ObjectProperty<Locale> localeProperty = userPreferences.localeProperty();
+        final ObjectProperty<SupportedLocale> localeProperty = userPreferences.localeProperty();
 
-        final SortedList<Locale> languages = getFXSortedList(SUPPORTED_LOCALE);
-        final StringConverter<Locale> localeStringConverter = toStringConverter(item -> 
-            item != null ? capitalizeWord(item.getDisplayLanguage(item)) : null
+        final SortedList<SupportedLocale> languages = getFXSortedList(SupportedLocale.values());
+        final StringConverter<SupportedLocale> localeStringConverter = toStringConverter(item -> 
+            item != null ? capitalizeWord(item.getLocale().getDisplayName()) : null
         );
+
+        settingsLangCB.setCellFactory(_ -> new FlagListCell());
+        settingsLangCB.setButtonCell(new FlagListCell());
 
         settingsLangCB.setItems(languages);
         settingsLangCB.getSelectionModel().select(localeProperty.get());
@@ -122,7 +129,7 @@ public class SettingsController extends AbstractController {
     }
 
     private void setupSortingOrderCB(UserPreferences userPreferences) {
-        final ObjectProperty<Locale> localeProperty = userPreferences.localeProperty();
+        final ObjectProperty<SupportedLocale> localeProperty = userPreferences.localeProperty();
         final ObjectProperty<SortingOrder> sortingOrderProperty = userPreferences.sortingOrderProperty();
 
         final SortedList<SortingOrder> sortingOrders = getFXSortedList(SortingOrder.class.getEnumConstants());
@@ -175,17 +182,51 @@ public class SettingsController extends AbstractController {
         };
     }
 
-    private static <T> @NotNull ObservableValue<Comparator<T>> comparatorBinding(@NotNull ObjectProperty<Locale> locale, @NotNull ObjectProperty<? extends StringConverter<T>> converter) {
+    private static <T> @NotNull ObservableValue<Comparator<T>> comparatorBinding(@NotNull ObjectProperty<SupportedLocale> locale, @NotNull ObjectProperty<? extends StringConverter<T>> converter) {
         return Bindings.createObjectBinding(
-                () -> Comparator.comparing(converter.getValue()::toString, Collator.getInstance(locale.getValue())),
+                () -> Comparator.comparing(converter.getValue()::toString, Collator.getInstance(locale.getValue().getLocale())),
                 locale, converter);
     }
 
-    private static <T> void bindValueConverter(@NotNull ComboBox<T> comboBox, @NotNull ObjectProperty<Locale> locale, @NotNull Function<Locale, StringConverter<T>> mapper) {
+    private static <T> void bindValueConverter(@NotNull ComboBox<T> comboBox, @NotNull ObjectProperty<SupportedLocale> locale, @NotNull Function<SupportedLocale, StringConverter<T>> mapper) {
         comboBox.converterProperty().bind(locale.map(mapper));
     }
 
-    private static <T> void bindValueComparator(@NotNull SortedList<T> sortedList, @NotNull ObjectProperty<Locale> locale, @NotNull ComboBox<T> comboBox) {
+    private static <T> void bindValueComparator(@NotNull SortedList<T> sortedList, @NotNull ObjectProperty<SupportedLocale> locale, @NotNull ComboBox<T> comboBox) {
         sortedList.comparatorProperty().bind(comparatorBinding(locale, comboBox.converterProperty()));
+    }
+
+    private static class FlagListCell extends ListCell<SupportedLocale> {
+        private static final double FLAG_SIZE = 20;
+        private final ImageView imageView = new ImageView();
+
+        FlagListCell() {
+            imageView.setFitHeight(FLAG_SIZE);
+            imageView.setFitWidth(FLAG_SIZE);
+            imageView.setPreserveRatio(true);
+        }
+
+        @Override
+        protected void updateItem(SupportedLocale item, boolean empty) {
+            super.updateItem(item, empty);
+
+            if (empty || item == null) {
+                setText(null);
+                setGraphic(null);
+                return;
+            }
+
+            Locale locale = item.getLocale();
+            String displayName = capitalizeWord(locale.getDisplayName(locale));
+            setText(displayName);
+
+            Image flag = item.getFlagImage();
+            if (flag != null) {
+                imageView.setImage(flag);
+                setGraphic(imageView);
+            } else {
+                setGraphic(null);
+            }
+        }
     }
 }
