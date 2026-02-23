@@ -203,34 +203,30 @@ public final class Utils {
     public static void reserveMemory(int requiredMemory) {
         Runtime runtime = Runtime.getRuntime();
         int nextBackoff = 8; // Initial backoff: 8 ms
-        final int MAX_BACKOFF = 8192; // Maximum backoff: 8 s
+        final int MAX_BACKOFF = 4096; // Maximum backoff: 4 s
 
-        while (nextBackoff < MAX_BACKOFF) {
+        while (true) {
             long maxMemory = runtime.maxMemory();
             long allocatedMemory = runtime.totalMemory();
             long freeMemory = runtime.freeMemory();
             long currentReserved = reservedMemory.get();
             long availableMemory = (maxMemory - allocatedMemory) + freeMemory - currentReserved;
 
+            // Try to reserve the memory, if there is enough available
             if (availableMemory * MEM_SAFETY_FACTOR > requiredMemory) {
-                // Try to atomically reserve the memory
                 if (reservedMemory.compareAndSet(currentReserved, currentReserved + requiredMemory)) return;
-
-                // CAS failed, another thread modified reservedMemory, retry
-                continue;
+                continue; // CAS failed, another thread modified reservedMemory, retry
             }
 
             try {
                 System.gc();
                 Thread.sleep(nextBackoff);
-                nextBackoff *= 2; // Exponential backoff
+                if (nextBackoff < MAX_BACKOFF) nextBackoff *= 2; // Exponential backoff with cap
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new RuntimeException("Interrupted while waiting for memory", e);
             }
         }
-
-        throw new RuntimeException("Unable to allocate sufficient memory after exponential backoff (last attempted: " + nextBackoff + "ms).");
     }
 
     /**
