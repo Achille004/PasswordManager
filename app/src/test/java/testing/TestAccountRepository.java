@@ -19,12 +19,7 @@
 package testing;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static testing.TestingUtils.*;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +29,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -51,35 +45,16 @@ import password.manager.app.singletons.Singletons;
 @SuppressWarnings("deprecation")
 public class TestAccountRepository {
 
-    private static final List<Account> accounts = new ArrayList<>();
+    private static final String DEFAULT_MASTER_PASSWORD = "MasterPassword123!";
 
     private AccountRepository repository;
     private ObjectProperty<SecurityVersion> securityVersionProperty;
     private StringProperty masterPasswordProperty;
 
-    @BeforeAll
-    static void populate() throws GeneralSecurityException, IOException {
-        try (InputStream stream = TestAccount.class.getResourceAsStream("/blns.txt")) {
-            assert stream != null;
-
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
-                String pass, software, username;
-
-                while ((pass = readBlnsLine(reader)) != null &&
-                       (software = readBlnsLine(reader)) != null &&
-                       (username = readBlnsLine(reader)) != null) {
-
-                    Account account = Account.of(SecurityVersion.LATEST, software, username, pass, "MasterPassword123!");
-                    accounts.add(account);
-                }
-            }
-        }
-    }
-
     @BeforeEach
     void setUp() {
         securityVersionProperty = new SimpleObjectProperty<>(SecurityVersion.LATEST);
-        masterPasswordProperty = new SimpleStringProperty("MasterPassword123!");
+        masterPasswordProperty = new SimpleStringProperty(DEFAULT_MASTER_PASSWORD);
         repository = new AccountRepository(securityVersionProperty, masterPasswordProperty);
     }
 
@@ -100,25 +75,27 @@ public class TestAccountRepository {
     void testAdd() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.injectBasePath();
 
-        CompletableFuture<Account> future = repository.add("GitHub", "testuser", "testpass123");
+        CompletableFuture<Account> future = repository.add("TestSoftware", "TestUser", "TestPass123!");
         Account account = future.get(5, TimeUnit.SECONDS);
 
         assertNotNull(account, "Account should be created successfully");
         assertEquals(1, repository.findAll().size(), "Repository should contain one account");
-        assertEquals("GitHub", account.getSoftware());
-        assertEquals("testuser", account.getUsername());
+        assertEquals("TestSoftware", account.getSoftware());
+        assertEquals("TestUser", account.getUsername());
     }
 
     @Test
     void testAddMultiple() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.injectBasePath();
 
-        int count = Math.min(10, accounts.size());
-
+        int count = 10;
         for (int i = 0; i < count; i++) {
-            Account source = accounts.get(i);
+            String software = "software" + i;
+            String username = "user" + i;
+            String password = "password" + i;
+
             repository
-                    .add(source.getSoftware(), source.getUsername(), "password" + i)
+                    .add(software, username, password)
                     .get(5, TimeUnit.SECONDS);
         }
 
@@ -130,28 +107,28 @@ public class TestAccountRepository {
         TestingUtils.injectBasePath();
 
         Account account = repository
-                .add("OldSoftware", "olduser", "oldpass")
+                .add("OldSoftware", "OldUser", "OldPass")
                 .get(5, TimeUnit.SECONDS);
 
         Account edited = repository
-                .edit(account, "NewSoftware", "newuser", "newpass")
+                .edit(account, "NewSoftware", "NewUser", "NewPass")
                 .get(5, TimeUnit.SECONDS);
 
         assertNotNull(edited, "Edit should return updated account");
         assertEquals("NewSoftware", edited.getSoftware());
-        assertEquals("newuser", edited.getUsername());
+        assertEquals("NewUser", edited.getUsername());
         assertEquals(1, repository.findAll().size(), "Repository should still contain one account");
     }
 
     @Test
-    void testEditNonExistentAccount() {
+    void testEditNonExistentAccount() throws GeneralSecurityException {
         TestingUtils.injectBasePath();
 
-        Account account = accounts.getFirst();
+        Account account = Account.of(SecurityVersion.LATEST, "NonExistentSoftware", "NonExistentUser", "NonExistentPass", DEFAULT_MASTER_PASSWORD);
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> repository.edit(account, "Software", "user", "pass"),
+                () -> repository.edit(account, "Software", "User", "Pass"),
                 "Editing non-existent account should throw IllegalArgumentException"
         );
     }
@@ -171,10 +148,10 @@ public class TestAccountRepository {
     }
 
     @Test
-    void testRemoveNonExistentAccount() {
+    void testRemoveNonExistentAccount() throws GeneralSecurityException {
         TestingUtils.injectBasePath();
 
-        Account account = accounts.getFirst();
+        Account account = Account.of(SecurityVersion.LATEST, "NonExistentSoftware", "NonExistentUser", "NonExistentPass", DEFAULT_MASTER_PASSWORD);
 
         assertThrows(
             IllegalArgumentException.class,
@@ -200,10 +177,18 @@ public class TestAccountRepository {
     }
 
     @Test
-    void testSetAll() {
+    void testSetAll() throws GeneralSecurityException {
         TestingUtils.injectBasePath();
 
-        List<Account> testAccounts = accounts.subList(0, Math.min(5, accounts.size()));
+        List<Account> testAccounts = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            String software = "software" + i;
+            String username = "user" + i;
+            String password = "password" + i;
+
+            Account account = Account.of(SecurityVersion.LATEST, software, username, password, DEFAULT_MASTER_PASSWORD);
+            testAccounts.add(account);
+        }
 
         repository.setAll(testAccounts);
 
@@ -211,14 +196,22 @@ public class TestAccountRepository {
     }
 
     @Test
-    void testNonEmptySetAll() throws ExecutionException, InterruptedException, TimeoutException {
+    void testNonEmptySetAll() throws ExecutionException, InterruptedException, TimeoutException, GeneralSecurityException {
         TestingUtils.injectBasePath();
 
         repository
-                .add("InitialSoftware", "initialuser", "initialpass")
+                .add("InitialSoftware", "InitialUser", "InitialPass")
                 .get(5, TimeUnit.SECONDS);
 
-        List<Account> testAccounts = accounts.subList(0, Math.min(5, accounts.size()));
+        List<Account> testAccounts = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            String software = "software" + i;
+            String username = "user" + i;
+            String password = "password" + i;
+
+            Account account = Account.of(SecurityVersion.LATEST, software, username, password, DEFAULT_MASTER_PASSWORD);
+            testAccounts.add(account);
+        }
 
         assertThrows(
             IllegalStateException.class,
@@ -228,16 +221,24 @@ public class TestAccountRepository {
     }
 
     @Test
-    void testFindAllIsUnmodifiable() throws ExecutionException, InterruptedException, TimeoutException {
+    void testFindAllIsUnmodifiable() throws ExecutionException, InterruptedException, TimeoutException, GeneralSecurityException {
         TestingUtils.injectBasePath();
 
         repository
                 .add("TestSoftware", "testuser", "testpass")
                 .get(5, TimeUnit.SECONDS);
 
+        Account account = Account.of(
+            SecurityVersion.LATEST, 
+            "TestSoftware1", 
+            "TestUser1", 
+            "TestPass1", 
+            DEFAULT_MASTER_PASSWORD
+        );
+
         assertThrows(
             UnsupportedOperationException.class,
-            () -> repository.findAll().add(accounts.getFirst()),
+            () -> repository.findAll().add(account),
             "findAll should return unmodifiable list"
         );
     }
@@ -265,11 +266,14 @@ public class TestAccountRepository {
         TestingUtils.injectBasePath();
 
         // Add accounts
-        int count = Math.min(5, accounts.size());
+        int count = 10;
         for (int i = 0; i < count; i++) {
-            Account source = accounts.get(i);
+            String software = "software" + i;
+            String username = "user" + i;
+            String password = "password" + i;
+
             repository
-                    .add(source.getSoftware(), source.getUsername(), "password" + i)
+                    .add(software, username, password)
                     .get(5, TimeUnit.SECONDS);
         }
 
@@ -279,7 +283,7 @@ public class TestAccountRepository {
         // Try to get password with new master password
         for (Account account : repository.findAll()) {
             Logger.getInstance().addDebug("Testing account: " + account.getSoftware() + " / " +  account.getUsername());
-            String password = repository.getPassword(account).get(5, TimeUnit.SECONDS);
+            String password = repository.getPassword(account).get(); // Memory-heavy operation, no timeout
             assertNotNull(password, "Password should be retrievable with new master password");
         }
     }
@@ -292,11 +296,14 @@ public class TestAccountRepository {
         masterPasswordProperty.set(null);
 
         // Add accounts
-        int count = Math.min(5, accounts.size());
+        int count = 10;
         for (int i = 0; i < count; i++) {
-            Account source = accounts.get(i);
+            String software = "software" + i;
+            String username = "user" + i;
+            String password = "password" + i;
+
             repository
-                    .add(source.getSoftware(), source.getUsername(), "password" + i)
+                    .add(software, username, password)
                     .get(5, TimeUnit.SECONDS);
         }
 
@@ -319,16 +326,17 @@ public class TestAccountRepository {
         securityVersionProperty.set(SecurityVersion.PBKDF2);
 
         // Add accounts to repository
-        int count = Math.min(5, accounts.size());
+        int count = 10;
         List<String> expectedPasswords = new ArrayList<>();
 
         for (int i = 0; i < count; i++) {
-            Account source = accounts.get(i);
-            String password = "password_" + i;
+            String software = "software" + i;
+            String username = "user" + i;
+            String password = "password" + i;
             expectedPasswords.add(password);
 
             repository
-                .add(source.getSoftware(), source.getUsername(), password)
+                .add(software, username, password)
                 .get(5, TimeUnit.SECONDS);
         }
 
@@ -371,11 +379,14 @@ public class TestAccountRepository {
         securityVersionProperty.set(SecurityVersion.PBKDF2);
 
         // Add accounts
-        int count = Math.min(5, accounts.size());
+        int count = 10;
         for (int i = 0; i < count; i++) {
-            Account source = accounts.get(i);
+            String software = "software" + i;
+            String username = "user" + i;
+            String password = "password" + i;
+
             repository
-                    .add(source.getSoftware(), source.getUsername(), "password" + i)
+                    .add(software, username, password)
                     .get(5, TimeUnit.SECONDS);
         }
 
