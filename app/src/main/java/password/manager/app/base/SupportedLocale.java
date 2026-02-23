@@ -19,9 +19,12 @@
 package password.manager.app.base;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Locale;
 
 import org.jetbrains.annotations.NotNull;
+
+import com.fasterxml.jackson.annotation.JsonValue;
 
 import javafx.scene.image.Image;
 import lombok.Getter;
@@ -30,6 +33,10 @@ import lombok.RequiredArgsConstructor;
 /**
  * Enumerates the supported locales for the application, each associated with
  * a {@link Locale} and a flag image resource path.
+ * <p>
+ * The serializaion of this enum is "transparent", as the actual locale
+ * is annotated as json value, so when deserializing from JSON it will 
+ * automatically convert the locale tag to the corresponding enum constant.
  */
 @Getter
 @RequiredArgsConstructor
@@ -37,7 +44,14 @@ public enum SupportedLocale {
     ENGLISH(Locale.ENGLISH, "/images/flags/en.png"),
     ITALIAN(Locale.ITALIAN, "/images/flags/it.png");
 
-    private final Locale locale;
+    private static final Comparator<Locale> LOCALE_COMPARATOR = Comparator.comparing(Locale::getLanguage);
+
+    public static final SupportedLocale DEFAULT = Arrays.stream(values())
+            .filter(sl -> LOCALE_COMPARATOR.compare(sl.locale, Locale.getDefault()) == 0)
+            .findFirst()
+            .orElse(ENGLISH);
+
+    private final @JsonValue Locale locale;
     private final transient Image flagImage;
 
     private SupportedLocale(Locale locale, String flagResourcePath) {
@@ -47,28 +61,26 @@ public enum SupportedLocale {
 
     /**
      * Finds the {@link SupportedLocale} matching the given {@link Locale} by language.
-     * Falls back to {@link #ENGLISH} if no match is found.
+     * @return the matching {@link SupportedLocale}, or {@link #DEFAULT} if no match is found
      */
-    public static @NotNull SupportedLocale fromLocale(@NotNull Locale locale) {
+    public static @NotNull SupportedLocale forLocale(@NotNull Locale locale) {
         return Arrays.stream(values())
-                .filter(sl -> sl.locale.getLanguage().equals(locale.getLanguage()))
+                .filter(sl -> LOCALE_COMPARATOR.compare(sl.locale, locale) == 0)
                 .findFirst()
-                .orElse(ENGLISH);
+                .orElse(DEFAULT);
     }
 
     /**
-     * Returns the default {@link SupportedLocale} based on the system language,
-     * falling back to {@link #ENGLISH}.
+     * Shorthand for {@link #forLocale}, which accepts a language tag string instead of a {@link Locale} object.
+     * @return the matching {@link SupportedLocale}, or {@link #DEFAULT} if no match is found or if the input is invalid
      */
-    public static @NotNull SupportedLocale getDefault() {
-        Locale systemLang = Locale.forLanguageTag(Locale.getDefault().getLanguage());
-        return fromLocale(systemLang);
-    }
-
-    /**
-     * Returns an array of all supported {@link Locale}s.
-     */
-    public static @NotNull Locale[] getLocales() {
-        return Arrays.stream(values()).map(SupportedLocale::getLocale).toArray(Locale[]::new);
+    public static @NotNull SupportedLocale forLanguageTag(@NotNull String languageTag) {
+        try {
+            Locale l = Locale.forLanguageTag(languageTag);
+            return forLocale(l);
+        } catch (IllegalArgumentException e) {
+            // If the locale string is invalid, return the default locale
+            return DEFAULT;
+        }
     }
 }

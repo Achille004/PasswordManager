@@ -52,6 +52,7 @@ module password.manager.app {
     opens password.manager.app.controllers.extra to javafx.fxml;
     opens password.manager.app.controllers.main to javafx.fxml;
 
+    opens password.manager.app.base to com.fasterxml.jackson.databind;
     opens password.manager.app.security to com.fasterxml.jackson.databind;
     opens password.manager.app.singletons to com.fasterxml.jackson.databind;
 }
