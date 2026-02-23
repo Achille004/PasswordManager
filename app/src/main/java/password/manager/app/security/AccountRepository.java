@@ -21,7 +21,6 @@ package password.manager.app.security;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -78,7 +77,9 @@ public final class AccountRepository implements AutoCloseable {
      * and a transaction manager for asynchronous operations.
      */
     public AccountRepository(ObjectProperty<SecurityVersion> securityVersionProperty, StringProperty masterPasswordProperty) {
-        this.accounts = FXCollections.observableList(Collections.synchronizedList(new ArrayList<>()));
+        // The synchronized wrapper was removed since the ListChangeBuilder of the wrapping ObservableList
+        // was suffering from broken internal state due to concurrent modifications
+        this.accounts = FXCollections.observableList(new ArrayList<>());
         this.transactionManager = new TransactionManager();
 
         this.securityVersionProperty = securityVersionProperty;
@@ -94,7 +95,9 @@ public final class AccountRepository implements AutoCloseable {
      * @return an unmodifiable observable list of all accounts
      */
     public ObservableList<Account> findAll() {
-        return FXCollections.unmodifiableObservableList(accounts);
+        synchronized (accounts) {
+            return FXCollections.unmodifiableObservableList(accounts);
+        }
     }
 
     /**
@@ -103,8 +106,10 @@ public final class AccountRepository implements AutoCloseable {
      * @param newAccounts the new list of accounts to set
      */
     public void setAll(@NotNull List<Account> newAccounts) {
-        if (!accounts.isEmpty()) throw new IllegalStateException("Accounts list is not empty.");
-        accounts.addAll(newAccounts);
+        synchronized (accounts) {
+            if (!accounts.isEmpty()) throw new IllegalStateException("Accounts list is not empty.");
+            accounts.addAll(newAccounts);
+        }
     }
 
     /**
@@ -128,7 +133,11 @@ public final class AccountRepository implements AutoCloseable {
                 try {
                     Logger.getInstance().addDebug("Creating new account for security version: " + securityVersionProperty.get().name());
                     accountHolder[0] = Account.of(securityVersionProperty.get(), software, username, password, masterPasswordProperty.get());
-                    accounts.add(accountHolder[0]);
+                    
+                    synchronized (accounts) {
+                        accounts.add(accountHolder[0]);
+                    }
+                    
                     return accountHolder[0];
                 } catch (GeneralSecurityException e) {
                     Logger.getInstance().addError(e);
@@ -136,7 +145,11 @@ public final class AccountRepository implements AutoCloseable {
                 }
             },
             () -> {
-                if (accountHolder[0] != null) accounts.remove(accountHolder[0]);
+                if (accountHolder[0] != null) {
+                    synchronized (accounts) {
+                        accounts.remove(accountHolder[0]);
+                    }
+                } 
             }
         );
     }
@@ -156,10 +169,13 @@ public final class AccountRepository implements AutoCloseable {
      * @throws IllegalArgumentException if the account is not found in the repository
      */
     public @NotNull CompletableFuture<Account> edit(@NotNull Account account, @NotNull String software, @NotNull String username, @NotNull String password) {
-        if (!accounts.contains(account)) throw new IllegalArgumentException("Account not found in list");
+        final Account.AccountMemento originalState;
+        synchronized (accounts) {
+            if (!accounts.contains(account)) throw new IllegalArgumentException("Account not found in list");
 
-        // Capture complete original state for rollback using Account's memento pattern
-        final Account.AccountMemento originalState = account.captureState();
+            // Capture complete original state for rollback using Account's memento pattern
+            originalState = account.captureState();
+        }
 
         return transactionManager.executeInTransaction(
             () -> {
@@ -167,8 +183,7 @@ public final class AccountRepository implements AutoCloseable {
                     account.setSoftware(software);
                     account.setUsername(username);
                     account.setPassword(securityVersionProperty.get(), password, masterPasswordProperty.get());
-                    // Trigger ObservableList change notification
-                    accounts.set(accounts.indexOf(account), account);
+                    triggerUpdateNotification(account);
                     return account;
                 } catch (GeneralSecurityException e) {
                     Logger.getInstance().addError(e);
@@ -178,8 +193,7 @@ public final class AccountRepository implements AutoCloseable {
             () -> {
                 // Rollback all changes using captured state
                 account.restoreState(originalState);
-                // Trigger ObservableList change notification
-                accounts.set(accounts.indexOf(account), account);
+                triggerUpdateNotification(account);
             }
         );
     }
@@ -196,14 +210,26 @@ public final class AccountRepository implements AutoCloseable {
      * @throws IllegalArgumentException if the account is not found in the repository
      */
     public @NotNull CompletableFuture<Boolean> remove(@NotNull Account account) {
-        if (!accounts.contains(account)) throw new IllegalArgumentException("Account not found in list");
+        final int originalIndex;
+        synchronized (accounts) {
+            if (!accounts.contains(account)) throw new IllegalArgumentException("Account not found in list");
 
-        // Capture index before transaction starts
-        final int originalIndex = accounts.indexOf(account);
+            // Capture index before transaction starts
+            originalIndex = accounts.indexOf(account);
+        }
 
         return transactionManager.executeInTransaction(
-            () -> accounts.remove(account),
-            () -> accounts.add(originalIndex, account) // Rollback: restore at original position
+            () -> {
+                synchronized (accounts) {
+                    return accounts.remove(account);
+                }
+            },
+            () -> {
+                synchronized (accounts) {
+                    // Rollback: restore at original position
+                    accounts.add(originalIndex, account);
+                }
+            }
         );
     }
 
@@ -297,8 +323,7 @@ public final class AccountRepository implements AutoCloseable {
                         () -> {
                             try {
                                 account.updateSecurityVersion(oldVersion, newVersion, currentMasterPassword);
-                                // Trigger ObservableList change notification
-                                accounts.set(accounts.indexOf(account), account);
+                                triggerUpdateNotification(account);
                                 return true;
                             } catch (GeneralSecurityException e) {
                                 Logger.getInstance().addError(e);
@@ -308,8 +333,7 @@ public final class AccountRepository implements AutoCloseable {
                         () -> {
                             // Rollback using captured state
                             account.restoreState(originalState);
-                            // Trigger ObservableList change notification
-                            accounts.set(accounts.indexOf(account), account);
+                            triggerUpdateNotification(account);
                         }
                     );
 
@@ -372,8 +396,7 @@ public final class AccountRepository implements AutoCloseable {
                                 String password = account.getPassword(securityVersion, oldMasterPassword);
                                 // Re-encrypt with new master password
                                 account.setPassword(securityVersion, password, newMasterPassword);
-                                // Trigger ObservableList change notification
-                                accounts.set(accounts.indexOf(account), account);
+                                triggerUpdateNotification(account);
                                 return true;
                             } catch (GeneralSecurityException e) {
                                 Logger.getInstance().addError(e);
@@ -383,8 +406,7 @@ public final class AccountRepository implements AutoCloseable {
                         () -> {
                             // Rollback using captured state
                             account.restoreState(originalState);
-                            // Trigger ObservableList change notification
-                            accounts.set(accounts.indexOf(account), account);
+                            triggerUpdateNotification(account);
                         }
                     );
 
@@ -404,5 +426,15 @@ public final class AccountRepository implements AutoCloseable {
                     Logger.getInstance().addError(e);
                     return null;
                 });
+    }
+
+    private void triggerUpdateNotification(Account account) {
+        // Trigger ObservableList change notification
+        synchronized (accounts) {
+            int index = accounts.indexOf(account);
+            // Account was removed during transaction, just give up on notification as not needed anymore
+            if (index < 0) return; 
+            accounts.set(index, account);
+        }
     }
 }

@@ -203,7 +203,7 @@ public final class Utils {
     public static void reserveMemory(int requiredMemory) {
         Runtime runtime = Runtime.getRuntime();
         int nextBackoff = 8; // Initial backoff: 8 ms
-        final int MAX_BACKOFF = 2000; // Maximum backoff: 2 s
+        final int MAX_BACKOFF = 8192; // Maximum backoff: 8 s
 
         while (nextBackoff < MAX_BACKOFF) {
             long maxMemory = runtime.maxMemory();
