@@ -52,7 +52,7 @@ public final class UserPreferences {
     private boolean isPasswordSet;
 
     public UserPreferences() {
-        this.localeProperty = new SimpleObjectProperty<>(SupportedLocale.getDefault());
+        this.localeProperty = new SimpleObjectProperty<>(SupportedLocale.DEFAULT);
         this.sortingOrderProperty = new SimpleObjectProperty<>(SortingOrder.SOFTWARE);
         this.securityVersionProperty = new SimpleObjectProperty<>(SecurityVersion.LATEST);
 
@@ -175,15 +175,28 @@ public final class UserPreferences {
         public UserPreferences deserialize(@NotNull JsonParser jp, DeserializationContext ctxt) throws IOException {
             final JsonNode node = jp.getCodec().readTree(jp);
 
-            final SupportedLocale locale = SupportedLocale.valueOf(
-                getAsOptional(node, "locale").orElseThrow(() -> new IOException("Missing locale field"))
-            );
-            final SortingOrder sortingOrder = getAsOptional(node, "sortingOrder").map(SortingOrder::valueOf).orElseThrow(() -> new IOException("Missing sortingOrder field"));
-            final byte[] hashedPassword = getAsOptional(node, "hashedPassword").map(Utils::base64ToByte).orElseThrow(() -> new IOException("Missing hashedPassword field"));
-            final byte[] salt = getAsOptional(node, "salt").map(Utils::base64ToByte).orElseThrow(() -> new IOException("Missing salt field"));
+            final SupportedLocale locale = getAsOptional(node, "locale")
+                    .map(SupportedLocale::forLanguageTag)
+                    .orElse(SupportedLocale.DEFAULT);
+
+            final SortingOrder sortingOrder = getAsOptional(node, "sortingOrder")
+                    .map(SortingOrder::valueOf)
+                    .orElse(SortingOrder.SOFTWARE);
+
+            // If the password fields are missing, throw an IOException, as it is critical data
+
+            final byte[] hashedPassword = getAsOptional(node, "hashedPassword")
+                    .map(Utils::base64ToByte)
+                    .orElseThrow(() -> new IOException("Missing hashedPassword field"));
+
+            final byte[] salt = getAsOptional(node, "salt")
+                    .map(Utils::base64ToByte)
+                    .orElseThrow(() -> new IOException("Missing salt field"));
 
             // This field has been added since Argon2 was implemented, so if it isn't present we'll assume it's older than that
-            final SecurityVersion securityVersion = getAsOptional(node, "securityVersion").map(SecurityVersion::fromString).orElse(SecurityVersion.PBKDF2);
+            final SecurityVersion securityVersion = getAsOptional(node, "securityVersion")
+                    .map(SecurityVersion::fromString)
+                    .orElse(SecurityVersion.PBKDF2);
 
             return new UserPreferences(locale, sortingOrder, securityVersion, hashedPassword, salt);
         }
