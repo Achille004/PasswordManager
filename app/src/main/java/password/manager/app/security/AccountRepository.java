@@ -300,6 +300,8 @@ public final class AccountRepository implements AutoCloseable {
      * @param newVersion the new security version
      */
     private void securityVersionListener(ObservableValue<? extends SecurityVersion> observable, SecurityVersion oldVersion, SecurityVersion newVersion) {
+        if (newVersion == null) throw new IllegalArgumentException("New security version cannot be null");
+
         // Capture master password at the time of listener invocation
         final String currentMasterPassword = masterPasswordProperty.get();
 
@@ -368,6 +370,8 @@ public final class AccountRepository implements AutoCloseable {
      * @param newMasterPassword the new master password
      */
     private void masterPasswordListener(ObservableValue<? extends String> observable, String oldMasterPassword, String newMasterPassword) {
+        if (newMasterPassword == null || newMasterPassword.isEmpty()) throw new IllegalArgumentException("New master password cannot be null or empty");
+
         // Initial set, no need to re-encrypt existing accounts
         if (oldMasterPassword == null || oldMasterPassword.isEmpty()) return;
 
