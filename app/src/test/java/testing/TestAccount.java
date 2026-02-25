@@ -94,6 +94,18 @@ public class TestAccount {
     // as it has been moved to the AccountRepository class
 
     @Test
+    void testNullValues() {
+        assertThrows(NullPointerException.class, () -> Account.of(null, "software", "user", "pass", "master"));
+
+        for(SecurityVersion version : SecurityVersion.values()) {
+            assertThrows(NullPointerException.class, () -> Account.of(version, null, "user", "pass", "master"));
+            assertThrows(NullPointerException.class, () -> Account.of(version, "software", null, "pass", "master"));
+            assertThrows(NullPointerException.class, () -> Account.of(version, "software", "user", null, "master"));
+            assertThrows(NullPointerException.class, () -> Account.of(version, "software", "user", "pass", null));
+        }
+    }
+
+    @Test
     void testEmptyStrings() throws GeneralSecurityException {
         String software = "App";
         String username = "user";

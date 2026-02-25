@@ -54,6 +54,11 @@ public final class Account {
             @JsonProperty("salt") byte[] salt,
             @JsonProperty("iv") byte[] iv) {
 
+        if (software == null) throw new NullPointerException("Software cannot be null");
+        if (username == null) throw new NullPointerException("Username cannot be null");
+        if (encryptedPassword == null) throw new NullPointerException("Encrypted password cannot be null");
+        if (iv == null) throw new NullPointerException("Salt and IV cannot both be null");
+
         this.softwareProperty.set(software);
         this.usernameProperty.set(username);
 
@@ -65,6 +70,12 @@ public final class Account {
     }
 
     public Account(@NotNull SecurityVersion securityVersion, @NotNull String software, @NotNull String username, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
+        if (securityVersion == null) throw new NullPointerException("Security version cannot be null");
+        if (software == null) throw new NullPointerException("Software cannot be null");
+        if (username == null) throw new NullPointerException("Username cannot be null");
+        if (password == null) throw new NullPointerException("Password cannot be null");
+        if (masterPassword == null) throw new NullPointerException("Master password cannot be null");
+        
         this.softwareProperty.set(software);
         this.usernameProperty.set(username);
 
@@ -102,6 +113,9 @@ public final class Account {
     }
 
     public String getPassword(@NotNull SecurityVersion securityVersion, @NotNull String masterPassword) throws GeneralSecurityException {
+        if (securityVersion == null) throw new NullPointerException("Security version cannot be null");
+        if (masterPassword == null) throw new NullPointerException("Master password cannot be null");
+
         readLock.lock();
         try {
             byte[] key = securityVersion.getKey(masterPassword, salt);
@@ -114,12 +128,20 @@ public final class Account {
     @Contract(value = "_, _, _, _, _ -> new", pure = true)
     public static @NotNull Account of(@NotNull SecurityVersion securityVersion, @NotNull String software, @NotNull String username,
                                       @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
+        if (securityVersion == null) throw new NullPointerException("Security version cannot be null");
+        if (software == null) throw new NullPointerException("Software cannot be null");
+        if (username == null) throw new NullPointerException("Username cannot be null");
+        if (password == null) throw new NullPointerException("Password cannot be null");
+        if (masterPassword == null) throw new NullPointerException("Master password cannot be null");
+
         // creates the account, adding its attributes by constructor
         return new Account(securityVersion, software, username, password, masterPassword);
     }
 
     // #region Package-private methods (exposed to AccountRepository)
     void setSoftware(@NotNull String software) {
+        if (software == null) throw new NullPointerException("Software cannot be null");
+
         writeLock.lock();
         try {
             softwareProperty.set(software);
@@ -129,6 +151,8 @@ public final class Account {
     }
 
     void setUsername(@NotNull String username) {
+        if (username == null) throw new NullPointerException("Username cannot be null");
+
         writeLock.lock();
         try {
             usernameProperty.set(username);
@@ -138,6 +162,10 @@ public final class Account {
     }
 
     void setPassword(@NotNull SecurityVersion securityVersion, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
+        if (securityVersion == null) throw new NullPointerException("Security version cannot be null");
+        if (password == null) throw new NullPointerException("Password cannot be null");
+        if (masterPassword == null) throw new NullPointerException("Master password cannot be null");
+
         writeLock.lock();
         try {
             // Generate salt and IV
@@ -153,6 +181,10 @@ public final class Account {
     }
 
     void updateSecurityVersion(@NotNull SecurityVersion oldSecurityVersion, @NotNull SecurityVersion newSecurityVersion, @NotNull String masterPassword) throws GeneralSecurityException {
+        if (oldSecurityVersion == null) throw new NullPointerException("Old security version cannot be null");
+        if (newSecurityVersion == null) throw new NullPointerException("New security version cannot be null");
+        if (masterPassword == null) throw new NullPointerException("Master password cannot be null");
+
         writeLock.lock();
         try {
             // Get old salt based on version
@@ -203,6 +235,8 @@ public final class Account {
      * @param memento the memento containing the state to restore
      */
     void restoreState(@NotNull AccountMemento memento) {
+        if (memento == null) throw new NullPointerException("Memento cannot be null");
+
         writeLock.lock();
         try {
             this.softwareProperty.set(memento.software());

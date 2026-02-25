@@ -116,6 +116,7 @@ public enum SecurityVersion {
      * @return The hashed password.
      */
     public byte[] hash(@NotNull String password, byte[] salt) {
+        if (password == null) throw new NullPointerException("Password cannot be null");
         return keyDerivationFunction.apply(HASH_BITS, password, salt);
     }
 
@@ -127,6 +128,7 @@ public enum SecurityVersion {
      * @return The derived AES key.
      */
     public byte[] getKey(@NotNull String masterPassword, byte[] salt) {
+        if (masterPassword == null) throw new NullPointerException("Master password cannot be null");
         final byte[] keyBytes = keyDerivationFunction.apply(AES_BITS, masterPassword, salt);
         final SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
         return secretKeySpec.getEncoded();

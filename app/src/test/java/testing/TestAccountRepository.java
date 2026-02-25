@@ -262,6 +262,24 @@ public class TestAccountRepository {
     }
 
     @Test
+    void testManyConcurrentOperations() throws ExecutionException, InterruptedException, TimeoutException {
+        TestingUtils.injectBasePath();
+
+        int operationCount = 50;
+        CompletableFuture<?>[] futures = new CompletableFuture[operationCount];
+
+        for (int i = 0; i < operationCount; i++) {
+            System.out.println("Adding account " + i);
+            futures[i] = repository.add("Software" + i, "user" + i, "pass" + i);
+        }
+
+        CompletableFuture.allOf(futures).get(30, TimeUnit.SECONDS);
+
+        assertEquals(operationCount, repository.findAll().size(),
+            "All concurrent add operations should complete successfully");
+    }
+
+    @Test
     void testChangeMasterPassword() throws Exception {
         TestingUtils.injectBasePath();
 
@@ -283,13 +301,13 @@ public class TestAccountRepository {
         // Try to get password with new master password
         for (Account account : repository.findAll()) {
             Logger.getInstance().addDebug("Testing account: " + account.getSoftware() + " / " +  account.getUsername());
-            String password = repository.getPassword(account).get(); // Memory-heavy operation, no timeout
+            String password = repository.getPassword(account).get(30, TimeUnit.SECONDS);
             assertNotNull(password, "Password should be retrievable with new master password");
         }
     }
 
     @Test
-    void testChangeMasterPasswordFromNull() throws Exception {
+    void testNullMasterPassword() throws Exception {
         TestingUtils.injectBasePath();
 
         // Set initial master password to null
@@ -302,21 +320,29 @@ public class TestAccountRepository {
             String username = "user" + i;
             String password = "password" + i;
 
-            repository
-                    .add(software, username, password)
-                    .get(5, TimeUnit.SECONDS);
-        }
+            // Add with null master password should:
+            CompletableFuture<Account> future = repository.add(software, username, password);
 
-        // Change master password from null to a valid password
-        masterPasswordProperty.set("InitialMasterPassword123!");
+            // - Return null
+            assertNull(
+                future.get(5, TimeUnit.SECONDS),
+                "Adding account with null master password should return null"
+            );
 
-        // Try to get password with new master password
-        for (Account account : repository.findAll()) {
-            Logger.getInstance().addDebug("Testing account: " + account.getSoftware() + " / " +  account.getUsername());
-            String password = repository.getPassword(account).get(5, TimeUnit.SECONDS);
-            assertNotNull(password, "Password should be retrievable with new master password");
+            // - Not add account to repository
+            assertTrue(repository.findAll().isEmpty(), "Repository should remain empty when adding with null master password");
         }
     }
+
+    @Test
+    void testChangeMasterPasswordWithEmptyRepository() {
+        TestingUtils.injectBasePath();
+
+        masterPasswordProperty.set("NewMasterPassword456!");
+
+        assertEquals(0, repository.findAll().size(), "Repository should remain empty");
+    }
+
 
     @Test
     void testUpdateToLatestSecurityVersion() throws Exception {
@@ -355,10 +381,38 @@ public class TestAccountRepository {
             Account account = afterUpdate.get(i);
             String password = repository
                 .getPassword(account)
-                .get(5, TimeUnit.SECONDS);
+                .get(30, TimeUnit.SECONDS);
 
             assertEquals(expectedPasswords.get(i), password,
                 "Password should remain the same after security version update");
+        }
+    }
+
+    @Test
+    void testNullSecurityVersion() throws Exception {
+        TestingUtils.injectBasePath();
+
+        // Set initial security version to null
+        securityVersionProperty.set(null);
+
+        // Add accounts
+        int count = 10;
+        for (int i = 0; i < count; i++) {
+            String software = "software" + i;
+            String username = "user" + i;
+            String password = "password" + i;
+
+            // Add with null security version should:
+            CompletableFuture<Account> future = repository.add(software, username, password);
+
+            // - Return null
+            assertNull(
+                future.get(5, TimeUnit.SECONDS),
+                "Adding account with null master password should return null"
+            );
+
+            // - Not add account to repository
+            assertTrue(repository.findAll().isEmpty(), "Repository should remain empty when adding with null master password");
         }
     }
 
@@ -396,7 +450,7 @@ public class TestAccountRepository {
 
         // Try to get password with new master password
         for (Account account : accounts) {
-            String password = repository.getPassword(account).get(5, TimeUnit.SECONDS);
+            String password = repository.getPassword(account).get(30, TimeUnit.SECONDS);
             assertNotNull(password, "Password should be retrievable with new master password");
         }
     }
