@@ -18,8 +18,6 @@
 
 package password.manager.app.base;
 
-import static password.manager.app.Utils.*;
-
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
@@ -75,20 +73,23 @@ public enum SecurityVersion {
     }),
     ARGON2((bits, password, salt) -> {
         final Argon2Parameters params = new Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
-                    .withParallelism(Parameters.ARGON2_PARALLELISM)
-                    .withMemoryAsKB(Parameters.ARGON2_MEMORY_KIB)
-                    .withIterations(Parameters.ARGON2_ITERATIONS)
-                    .withSalt(salt)
-                    .build();
-
-        // Ask utility to consider this memory as reserved
-        reserveMemory(Parameters.ARGON2_MEMORY_KIB * 1024);
+                .withParallelism(Parameters.ARGON2_PARALLELISM)
+                .withMemoryAsKB(Parameters.ARGON2_MEMORY_KIB)
+                .withIterations(Parameters.ARGON2_ITERATIONS)
+                .withSalt(salt)
+                .build();
 
         final Argon2BytesGenerator generator = new Argon2BytesGenerator();
-        generator.init(params);
 
-        // Release the reserved memory after initialization (it has been allocated)
-        releaseMemory(Parameters.ARGON2_MEMORY_KIB * 1024);
+        /*
+         * From empirical testing, about 69.47 MB of memory is allocated during Argon2 initialization with the above parameters.
+         * This translates to about 67.84 MiB, which is slightly above the 64 MiB specified in Parameters.ARGON2_MEMORY_KIB due to overhead.
+         * To ensure we reserve enough memory for the entire operation, we add 76 B to each KiB to account for overhead.
+         * This brings the total reservation to exactly 68.75 MiB, which provides about 1 MiB of headroom for potential fluctuations
+         */
+
+        // Reserve memory for the duration of Argon2 initialization
+        MemoryReserver.execute(Parameters.ARGON2_MEMORY_KIB * 1100, () -> generator.init(params));
 
         final byte[] result = new byte[bits / 8];
         generator.generateBytes(password.toCharArray(), result);

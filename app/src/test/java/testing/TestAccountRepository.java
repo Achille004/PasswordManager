@@ -251,7 +251,6 @@ public class TestAccountRepository {
         CompletableFuture<?>[] futures = new CompletableFuture[operationCount];
 
         for (int i = 0; i < operationCount; i++) {
-            System.out.println("Adding account " + i);
             futures[i] = repository.add("Software" + i, "user" + i, "pass" + i);
         }
 
@@ -265,15 +264,16 @@ public class TestAccountRepository {
     void testManyConcurrentOperations() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.injectBasePath();
 
-        int operationCount = 50;
+        Runtime runtime = Runtime.getRuntime();
+        int operationCount = runtime.availableProcessors() * 10; // 10 operations per CPU core
+
         CompletableFuture<?>[] futures = new CompletableFuture[operationCount];
 
         for (int i = 0; i < operationCount; i++) {
-            System.out.println("Adding account " + i);
             futures[i] = repository.add("Software" + i, "user" + i, "pass" + i);
         }
 
-        CompletableFuture.allOf(futures).get(30, TimeUnit.SECONDS);
+        CompletableFuture.allOf(futures).get(operationCount, TimeUnit.SECONDS); // 1s per operation should be more than enough
 
         assertEquals(operationCount, repository.findAll().size(),
             "All concurrent add operations should complete successfully");

@@ -27,7 +27,6 @@ import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicLong;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -53,9 +52,6 @@ public final class Utils {
 
     private static final Encoder BASE64ENC = Base64.getEncoder();
     private static final Decoder BASE64DEC = Base64.getDecoder();
-
-    private static final float MEM_SAFETY_FACTOR = 0.8f;
-    private static final AtomicLong reservedMemory = new AtomicLong(0);
 
     private Utils() {} // Prevent instantiation
 
@@ -191,51 +187,5 @@ public final class Utils {
 
         Platform.exit(); // Exit gracefully (saves data, etc.)
         return new Pane(); // return non-null dummy pane
-    }
-
-    /**
-     * Waits until sufficient memory is available for an operation.
-     * Checks free memory and suggests garbage collection if needed.
-     *
-     * @param requiredMemory The amount of memory required in bytes.
-     * @throws RuntimeException if interrupted while waiting.
-     */
-    public static void reserveMemory(int requiredMemory) {
-        Runtime runtime = Runtime.getRuntime();
-        int nextBackoff = 8; // Initial backoff: 8 ms
-        final int MAX_BACKOFF = 4096; // Maximum backoff: 4 s
-
-        while (true) {
-            long maxMemory = runtime.maxMemory();
-            long allocatedMemory = runtime.totalMemory();
-            long freeMemory = runtime.freeMemory();
-            long currentReserved = reservedMemory.get();
-            long availableMemory = (maxMemory - allocatedMemory) + freeMemory - currentReserved;
-
-            // Try to reserve the memory, if there is enough available
-            if (availableMemory * MEM_SAFETY_FACTOR > requiredMemory) {
-                if (reservedMemory.compareAndSet(currentReserved, currentReserved + requiredMemory)) return;
-                continue; // CAS failed, another thread modified reservedMemory, retry
-            }
-
-            try {
-                System.gc();
-                Thread.sleep(nextBackoff);
-                if (nextBackoff < MAX_BACKOFF) nextBackoff *= 2; // Exponential backoff with cap
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeException("Interrupted while waiting for memory", e);
-            }
-        }
-    }
-
-    /**
-     * Releases reserved memory after an Argon2 operation completes.
-     * Must be called after the operation that reserved memory via waitForSufficientMemory.
-     *
-     * @param requiredMemory The amount of memory to release in bytes.
-     */
-    public static void releaseMemory(int requiredMemory) {
-        reservedMemory.updateAndGet(current -> Math.max(0, current - requiredMemory));
     }
 }
