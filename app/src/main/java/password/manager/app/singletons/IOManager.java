@@ -41,7 +41,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.jetbrains.annotations.NotNull;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectProperty;

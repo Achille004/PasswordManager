@@ -35,6 +35,7 @@ import password.manager.app.security.AES;
 
 public class TestAES {
 
+    // Use same salt and IV sizes as the app
     static final byte[] salt = new byte[16], iv = new byte[16];
     static final SecureRandom random = new SecureRandom();
 

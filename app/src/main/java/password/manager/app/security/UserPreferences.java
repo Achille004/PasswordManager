@@ -18,36 +18,31 @@
 
 package password.manager.app.security;
 
-import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.Optional;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import password.manager.app.Utils;
 import password.manager.app.base.SecurityVersion;
 import password.manager.app.base.SortingOrder;
 import password.manager.app.base.SupportedLocale;
 
-@JsonDeserialize(using = UserPreferences.UserPreferencesDeserializer.class)
 public final class UserPreferences {
+
+    private static final int SALT_LENGTH = 16;
+
     private final transient ObjectProperty<SupportedLocale> localeProperty;
     private final transient ObjectProperty<SortingOrder> sortingOrderProperty;
     private final transient ObjectProperty<SecurityVersion> securityVersionProperty;
 
-    private final @JsonProperty byte[] hashedPassword, salt;
+    private final @JsonProperty("hashedPassword") byte[] hashedPassword;
+    private final @JsonProperty("salt") byte[] salt;
 
     private boolean isPasswordSet;
 
@@ -56,7 +51,7 @@ public final class UserPreferences {
         this.sortingOrderProperty = new SimpleObjectProperty<>(SortingOrder.SOFTWARE);
         this.securityVersionProperty = new SimpleObjectProperty<>(SecurityVersion.LATEST);
 
-        this.salt = new byte[16];
+        this.salt = new byte[SALT_LENGTH];
         this.hashedPassword = new byte[SecurityVersion.HASH_BITS / 8];
         isPasswordSet = false;
     }
@@ -66,12 +61,20 @@ public final class UserPreferences {
         setPassword(password);
     }
 
-    private UserPreferences(SupportedLocale locale, SortingOrder sortingOrder, @NotNull SecurityVersion securityVersion, byte[] hashedPassword, byte[] salt) {
+    @SuppressWarnings("unused") // Used by Jackson for deserialization
+    private UserPreferences(
+            @JsonProperty(value = "locale", required = false) @Nullable SupportedLocale locale, 
+            @JsonProperty(value = "sortingOrder", required = false) @Nullable SortingOrder sortingOrder, 
+            @JsonProperty(value = "securityVersion", required = false) @Nullable SecurityVersion securityVersion, 
+            @JsonProperty(value = "hashedPassword", required = true) @NotNull byte[] hashedPassword, 
+            @JsonProperty(value = "salt", required = true) @NotNull byte[] salt) {
+
         this();
 
-        this.localeProperty.set(locale);
-        this.sortingOrderProperty.set(sortingOrder);
-        this.securityVersionProperty.set(securityVersion);
+        this.localeProperty.set(locale == null ? SupportedLocale.DEFAULT : locale);
+        this.sortingOrderProperty.set(sortingOrder == null ? SortingOrder.SOFTWARE : sortingOrder);
+        // This field has been added since Argon2 was implemented, so if it isn't present we'll assume it's older than that
+        this.securityVersionProperty.set(securityVersion == null ? SecurityVersion.PBKDF2 : securityVersion);
 
         System.arraycopy(hashedPassword, 0, this.hashedPassword, 0, this.hashedPassword.length);
         System.arraycopy(salt, 0, this.salt, 0, this.salt.length);
@@ -93,6 +96,7 @@ public final class UserPreferences {
         return localeProperty;
     }
 
+    @JsonProperty("locale")
     public SupportedLocale getLocale() {
         return localeProperty.get();
     }
@@ -105,6 +109,7 @@ public final class UserPreferences {
         return sortingOrderProperty;
     }
 
+    @JsonProperty("sortingOrder")
     public SortingOrder getSortingOrder() {
         return sortingOrderProperty.get();
     }
@@ -117,6 +122,7 @@ public final class UserPreferences {
         return securityVersionProperty;
     }
 
+    @JsonProperty("securityVersion")
     public SecurityVersion getSecurityVersion() {
         return securityVersionProperty.get();
     }
@@ -163,48 +169,5 @@ public final class UserPreferences {
     @Contract("-> new")
     public static @NotNull UserPreferences empty() {
         return new UserPreferences();
-    }
-
-    static class UserPreferencesDeserializer extends StdDeserializer<UserPreferences> {
-        public UserPreferencesDeserializer() {
-            super(UserPreferences.class);
-        }
-
-        @Override
-        @SuppressWarnings("deprecation")
-        public UserPreferences deserialize(@NotNull JsonParser jp, DeserializationContext ctxt) throws IOException {
-            final JsonNode node = jp.getCodec().readTree(jp);
-
-            final SupportedLocale locale = getAsOptional(node, "locale")
-                    .map(SupportedLocale::forLanguageTag)
-                    .orElse(SupportedLocale.DEFAULT);
-
-            final SortingOrder sortingOrder = getAsOptional(node, "sortingOrder")
-                    .map(SortingOrder::valueOf)
-                    .orElse(SortingOrder.SOFTWARE);
-
-            // If the password fields are missing, throw an IOException, as it is critical data
-
-            final byte[] hashedPassword = getAsOptional(node, "hashedPassword")
-                    .map(Utils::base64ToByte)
-                    .orElseThrow(() -> new IOException("Missing hashedPassword field"));
-
-            final byte[] salt = getAsOptional(node, "salt")
-                    .map(Utils::base64ToByte)
-                    .orElseThrow(() -> new IOException("Missing salt field"));
-
-            // This field has been added since Argon2 was implemented, so if it isn't present we'll assume it's older than that
-            final SecurityVersion securityVersion = getAsOptional(node, "securityVersion")
-                    .map(SecurityVersion::fromString)
-                    .orElse(SecurityVersion.PBKDF2);
-
-            return new UserPreferences(locale, sortingOrder, securityVersion, hashedPassword, salt);
-        }
-
-        private static @NotNull Optional<String> getAsOptional(@NotNull JsonNode node, @NotNull String fieldName) {
-            return node.has(fieldName)
-                    ? Optional.of(node.get(fieldName).asText())
-                    : Optional.empty();
-        }
     }
 }
