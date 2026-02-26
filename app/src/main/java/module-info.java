@@ -17,6 +17,8 @@
  */
 
 module password.manager.app {
+    ///// REQUIRES /////
+
     requires java.desktop;
 
     requires javafx.base;
@@ -27,8 +29,9 @@ module password.manager.app {
 
     requires org.controlsfx.controls;
 
-    requires com.fasterxml.jackson.databind;
-    // requires org.json;
+    requires com.fasterxml.jackson.annotation;
+    requires tools.jackson.core;
+    requires tools.jackson.databind;
 
     requires static lombok;
 
@@ -38,6 +41,8 @@ module password.manager.app {
 
     requires password.manager.lib;
 
+    ///// EXPORTS /////
+
     exports password.manager.app.base;
     exports password.manager.app.controllers;
     exports password.manager.app.controllers.extra;
@@ -46,13 +51,15 @@ module password.manager.app {
     exports password.manager.app.security;
     exports password.manager.app.singletons;
     exports password.manager.app;
+
+    ///// OPENS /////
     
     opens password.manager.app to javafx.fxml;
     opens password.manager.app.controllers to javafx.fxml;
     opens password.manager.app.controllers.extra to javafx.fxml;
     opens password.manager.app.controllers.main to javafx.fxml;
 
-    opens password.manager.app.base to com.fasterxml.jackson.databind;
-    opens password.manager.app.security to com.fasterxml.jackson.databind;
-    opens password.manager.app.singletons to com.fasterxml.jackson.databind;
+    opens password.manager.app.base to tools.jackson.databind;
+    opens password.manager.app.security to tools.jackson.databind;
+    opens password.manager.app.singletons to tools.jackson.databind;
 }

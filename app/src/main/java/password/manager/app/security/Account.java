@@ -26,6 +26,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -34,7 +35,11 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import password.manager.app.base.SecurityVersion;
 
 public final class Account {
-    private final transient ReadWriteLock lock = new ReentrantReadWriteLock();
+
+    private static final int SALT_LENGTH = 16;
+    private static final int IV_LENGTH = 16;
+
+    private final transient ReadWriteLock lock = new ReentrantReadWriteLock(false);
     private final transient Lock readLock = lock.readLock();
     private final transient Lock writeLock = lock.writeLock();
 
@@ -42,31 +47,14 @@ public final class Account {
     private final transient ReadOnlyStringWrapper softwareProperty = new ReadOnlyStringWrapper(),
                                                   usernameProperty = new ReadOnlyStringWrapper();
 
-    private @JsonProperty byte[] encryptedPassword;
-    private final @JsonProperty byte[] salt, iv;
+    private @JsonProperty("encryptedPassword") byte[] encryptedPassword;
+    private @JsonProperty("salt") byte[] salt;
+    private final @JsonProperty("iv") byte[] iv;
 
-    private final boolean isDerivedSaltVersion;
-
-    public Account(
-            @JsonProperty("software") String software,
-            @JsonProperty("username") String username,
-            @JsonProperty("encryptedPassword") byte[] encryptedPassword,
-            @JsonProperty("salt") byte[] salt,
-            @JsonProperty("iv") byte[] iv) {
-
-        if (software == null) throw new NullPointerException("Software cannot be null");
-        if (username == null) throw new NullPointerException("Username cannot be null");
-        if (encryptedPassword == null) throw new NullPointerException("Encrypted password cannot be null");
-        if (iv == null) throw new NullPointerException("Salt and IV cannot both be null");
-
-        this.softwareProperty.set(software);
-        this.usernameProperty.set(username);
-
-        this.isDerivedSaltVersion = (salt == null);
-
-        this.salt = isDerivedSaltVersion ? new byte[16] : salt;
-        this.iv = iv;
-        this.encryptedPassword = encryptedPassword;
+    public Account() {
+        this.encryptedPassword = null;
+        this.salt = new byte[SALT_LENGTH];
+        this.iv = new byte[IV_LENGTH];
     }
 
     public Account(@NotNull SecurityVersion securityVersion, @NotNull String software, @NotNull String username, @NotNull String password, @NotNull String masterPassword) throws GeneralSecurityException {
@@ -75,21 +63,48 @@ public final class Account {
         if (username == null) throw new NullPointerException("Username cannot be null");
         if (password == null) throw new NullPointerException("Password cannot be null");
         if (masterPassword == null) throw new NullPointerException("Master password cannot be null");
-        
+
+        this();
+
         this.softwareProperty.set(software);
         this.usernameProperty.set(username);
 
-        this.isDerivedSaltVersion = false;
-
-        this.salt = new byte[16];
-        this.iv = new byte[16];
         this.setPassword(securityVersion, password, masterPassword);
+    }
+
+    @SuppressWarnings("unused") // Used by Jackson for deserialization
+    private Account(
+            @JsonProperty(value = "software", required = true) @NotNull String software,
+            @JsonProperty(value = "username", required = true) @NotNull  String username,
+            @JsonProperty(value = "encryptedPassword", required = true) @NotNull byte[] encryptedPassword,
+            @JsonProperty(value = "salt", required = false) @Nullable byte[] salt,
+            @JsonProperty(value = "iv", required = true) @NotNull byte[] iv) {
+
+        if (software == null) throw new NullPointerException("Software cannot be null");
+        if (username == null) throw new NullPointerException("Username cannot be null");
+        if (encryptedPassword == null) throw new NullPointerException("Encrypted password cannot be null");
+        if (iv == null || iv.length != IV_LENGTH) throw new NullPointerException("IV cannot be null or not " + IV_LENGTH + " bytes long");
+
+        this();
+
+        this.softwareProperty.set(software);
+        this.usernameProperty.set(username);
+
+        // If salt is not provided, derive it from software and username (backward compatibility:
+        // older versions didn't store salt and used software+username bytes as salt instead).
+        // IMPORTANT: the derived value is written back into this.salt so it is persisted on the
+        // next save, at which point the account behaves identically to a modern one.
+        this.salt = (salt != null && salt.length == SALT_LENGTH) ? salt.clone() : (software + username).getBytes();
+        System.arraycopy(iv, 0, this.iv, 0, this.iv.length);
+
+        this.encryptedPassword = encryptedPassword;
     }
 
     public ReadOnlyProperty<String> softwareProperty() {
         return softwareProperty.getReadOnlyProperty();
     }
 
+    @JsonProperty("software")
     public String getSoftware() {
         readLock.lock();
         try {
@@ -103,6 +118,7 @@ public final class Account {
         return usernameProperty.getReadOnlyProperty();
     }
 
+    @JsonProperty("username")
     public String getUsername() {
         readLock.lock();
         try {
@@ -118,6 +134,7 @@ public final class Account {
 
         readLock.lock();
         try {
+            // Get key and decrypt password
             byte[] key = securityVersion.getKey(masterPassword, salt);
             return AES.decryptAES(encryptedPassword, key, iv);
         } finally {
@@ -139,6 +156,7 @@ public final class Account {
     }
 
     // #region Package-private methods (exposed to AccountRepository)
+
     void setSoftware(@NotNull String software) {
         if (software == null) throw new NullPointerException("Software cannot be null");
 
@@ -170,9 +188,11 @@ public final class Account {
         try {
             // Generate salt and IV
             final SecureRandom random = new SecureRandom();
-            random.nextBytes(salt);
+            if (salt.length != SALT_LENGTH) salt = new byte[SALT_LENGTH]; // Avoid reallocating if not necessary
+            random.nextBytes(this.salt);
             random.nextBytes(iv);
 
+            // Derive key and encrypt password
             final byte[] key = securityVersion.getKey(masterPassword, salt);
             this.encryptedPassword = AES.encryptAES(password, key, iv);
         } finally {
@@ -187,23 +207,8 @@ public final class Account {
 
         writeLock.lock();
         try {
-            // Get old salt based on version
-            byte[] oldSalt = isDerivedSaltVersion
-                ? (softwareProperty.get() + usernameProperty.get()).getBytes()
-                : this.salt;
-
-            // Decrypt with old key
-            final byte[] oldKey = oldSecurityVersion.getKey(masterPassword, oldSalt);
-            final String oldPassword = AES.decryptAES(encryptedPassword, oldKey, iv);
-
-            // Generate new salt and IV
-            final SecureRandom random = new SecureRandom();
-            random.nextBytes(this.salt);
-            random.nextBytes(this.iv);
-
-            // Encrypt with new key using the new salt
-            final byte[] newKey = newSecurityVersion.getKey(masterPassword, this.salt);
-            this.encryptedPassword = AES.encryptAES(oldPassword, newKey, this.iv);
+            final String password = getPassword(oldSecurityVersion, masterPassword);
+            setPassword(newSecurityVersion, password, masterPassword);
         } finally {
             writeLock.unlock();
         }
@@ -243,7 +248,7 @@ public final class Account {
             this.usernameProperty.set(memento.username());
 
             this.encryptedPassword = memento.encryptedPassword().clone();
-            System.arraycopy(memento.salt(), 0, this.salt, 0, this.salt.length);
+            this.salt = memento.salt().clone();
             System.arraycopy(memento.iv(), 0, this.iv, 0, this.iv.length);
         } finally {
             writeLock.unlock();
@@ -257,9 +262,10 @@ public final class Account {
     public record AccountMemento(
         @NotNull String software,
         @NotNull String username,
-        byte[] encryptedPassword,
-        byte[] salt,
-        byte[] iv
+        @NotNull byte[] encryptedPassword,
+        @NotNull byte[] salt,
+        @NotNull byte[] iv
     ) {}
+
     // #endregion
 }
