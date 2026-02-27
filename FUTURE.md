@@ -10,7 +10,6 @@
   - Better code comments and documentation
   - code flow analysis (especially for null values)
   - deeper logging
-  - tests, a lot of them
 
 # Future:
 - Resizable window
