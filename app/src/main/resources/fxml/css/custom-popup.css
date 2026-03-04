@@ -1,17 +1,17 @@
-AnchorPane {
+.custom-popup {
     -fx-background-color: -fx-color-background;
     -fx-background-radius: 5deg;
 
     -fx-border-width: 2px;
     -fx-border-color: -fx-color-grey;
     -fx-border-radius: 5deg;
+
+    -fx-font-family: "Roboto";
+    -fx-font-size: 14px;
+    -fx-text-fill: -fx-color-text;
 }
 
-AnchorPane #bottomBar {
+.custom-popup #bottomBar {
     -fx-border-width: 0px;
     -fx-background-color: -fx-color-element-bg;
-}
-
-Label {
-    -fx-text-fill: -fx-color-text;
 }

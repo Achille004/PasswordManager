@@ -53,7 +53,7 @@ module password.manager.app {
     exports password.manager.app;
 
     ///// OPENS /////
-    
+
     opens password.manager.app to javafx.fxml;
     opens password.manager.app.controllers to javafx.fxml;
     opens password.manager.app.controllers.extra to javafx.fxml;

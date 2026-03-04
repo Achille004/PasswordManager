@@ -32,6 +32,7 @@ public class Main extends Application {
 
         AnchorPane root = new AnchorPane();
         root.getChildren().addAll(custom1, custom2);
+
         AnchorPane.setTopAnchor(custom1, 0.0);
         AnchorPane.setTopAnchor(custom2, 200.0);
 
@@ -40,6 +41,26 @@ public class Main extends Application {
         stage.setWidth(900);
         stage.setHeight(600);
         stage.show();
+
+        CustomPopup popup1 = CustomPopup.Builder
+                .create(
+                    root.getScene().getWindow(),
+                    CustomPopup.Alignment.BOTTOM_RIGHT,
+                    10
+                )
+                .build();
+
+        popup1.visible();
+
+        CustomPopup popup2 = CustomPopup.Builder
+                .create(
+                    root.getScene().getWindow(),
+                    CustomPopup.Alignment.TOP_RIGHT,
+                    20
+                )
+                .build();
+
+        popup2.visible();
     }
 
     static void main(String[] args) {

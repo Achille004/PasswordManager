@@ -49,7 +49,6 @@ import javafx.stage.Popup;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import password.manager.app.App;
-import password.manager.app.controllers.extra.PopupContentController;
 import password.manager.app.controllers.main.ManagerController;
 import password.manager.app.controllers.main.SettingsController;
 import password.manager.app.singletons.AppConfig;
@@ -57,6 +56,8 @@ import password.manager.app.singletons.IOManager;
 import password.manager.app.singletons.IOManager.SaveState;
 import password.manager.app.singletons.Logger;
 import password.manager.app.singletons.ObservableResourceFactory;
+import password.manager.lib.CustomPopup;
+
 
 public class MainController extends AbstractController {
     private static final Duration TITLE_ANIM_TIME_UNIT = Duration.millis(8);
@@ -185,66 +186,19 @@ public class MainController extends AbstractController {
     }
 
     private void createAutosavePopup() {
-        final int SPACING = 20;
+        final int SPACING = 20; // px
 
-        final PopupContentController popupController = new PopupContentController();
-        final AnchorPane popupContent = (AnchorPane) loadFxml(popupController);
-        popupContent.setVisible(false);
+        final CustomPopup popup = CustomPopup.Builder
+                .create(
+                    App.getAppScenePane().getScene().getWindow(),
+                    CustomPopup.Alignment.BOTTOM_LEFT,
+                    SPACING
+                )
+                .withStylesheets(App.ROOT_STYLESHEET, App.CUSTOMPOPUP_STYLESHEET)
+                .withFadingAnimation(Duration.seconds(3))
+                .build();
 
-        final Popup testPopup = new Popup();
-        testPopup.getContent().add(popupContent);
-        // testPopup.setAutoFix(true); TODO test if useful
-        // DONT EVEN TRY REMOVING THESE PROPERTIES, TWO HOURS OF MY LIFE WASTED!!
-        testPopup.setAutoHide(false);
-        testPopup.setHideOnEscape(false);
-
-        // Bind position to bottom-left of window //
-
-        final Window window = App.getAppScenePane().getScene().getWindow();
-
-        // Set position when height is first computed
-        popupContent.heightProperty().addListener((_, oldValue, newValue) -> {
-            // Only listen when height is first set
-            if(oldValue.doubleValue() != 0 || newValue.doubleValue() <= 0) return;
-            final double HEIGHT = newValue.doubleValue();
-
-            testPopup.setX(window.getX() + SPACING);
-            testPopup.setY(window.getY() + window.getHeight() - HEIGHT - SPACING);
-
-            window.xProperty().addListener((_, _, newX) -> testPopup.setX(newX.doubleValue() + SPACING));
-            window.yProperty().addListener((_, _, newY) -> testPopup.setY(newY.doubleValue() + window.getHeight() - HEIGHT - SPACING));
-            window.heightProperty().addListener((_, _, newHeight) -> testPopup.setY(window.getY() + newHeight.doubleValue() - HEIGHT - SPACING));
-        });
-
-        // This ensures that everything is actually computed
-        Platform.runLater(() ->{
-            popupContent.applyCss();
-            popupContent.layout();
-            testPopup.show(window);
-        });
-
-        // Animation and styling //
-
-        final ReadOnlyBooleanProperty focusedProperty = App.getAppScenePane().getScene().getWindow().focusedProperty();
-
-        final FadeTransition disappearTransition = new FadeTransition(Duration.seconds(3), popupContent);
-        disappearTransition.setFromValue(1.0);
-        disappearTransition.setToValue(0.0);
-        disappearTransition.setCycleCount(1);
-        disappearTransition.setOnFinished(_ -> popupContent.setVisible(false));
-
-        // Track focused state to prevent unwanted popup visibility changes
-        focusedProperty.addListener((_, _, isFocused) -> {
-            boolean isVisible = popupContent.isVisible();
-
-            if (!isFocused && isVisible) {
-                // Window lost focus while popup is visible - hide it
-                popupContent.setVisible(false);
-            } else if (isFocused && !isVisible && disappearTransition.getStatus() == Status.RUNNING) {
-                // Window gained focus while popup is hidden - show it
-                popupContent.setVisible(true);
-            }
-        });
+        popup.hidden(false); // Start hidden without animation
 
         IOManager.getInstance().savingProperty().addListener((_, _, newValue) -> {
             final ObservableResourceFactory resources;
@@ -267,19 +221,18 @@ public class MainController extends AbstractController {
 
             switch (newValue) {
                 case SAVING -> {
-                    disappearTransition.stop();
-                    popupController.setState(getString.apply("saving"), "-fx-color-element-bg");
-                    popupContent.setVisible(focusedProperty.get());
-                    popupContent.setOpacity(1.0);
+                    popup.setState(getString.apply("saving"), "-fx-color-element-bg");
+                    popup.visible();
                 }
 
-                case SUCCESS, ERROR -> {
-                    if(newValue == SaveState.SUCCESS) {
-                        popupController.setState(getString.apply("success"), "-fx-color-green");
-                    } else {
-                        popupController.setState(getString.apply("error"), "-fx-color-red");
-                    }
-                    disappearTransition.playFromStart();
+                case SUCCESS -> {
+                    popup.setState(getString.apply("success"), "-fx-color-green");
+                    popup.hidden();
+                }
+
+                case ERROR -> {
+                    popup.setState(getString.apply("error"), "-fx-color-red");
+                    popup.hidden();
                 }
             }
         });

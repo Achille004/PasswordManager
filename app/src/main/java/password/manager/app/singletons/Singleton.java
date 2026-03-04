@@ -20,7 +20,7 @@ package password.manager.app.singletons;
 
 /**
  * Abstract base class for components that are intended to be used as singletons.
- * Subclasses are expected to implement {@link #getInstance} method to expose a 
+ * Subclasses are expected to implement {@link #getInstance} method to expose a
  * single instance of the subclass.
  */
 public abstract class Singleton implements AutoCloseable {
@@ -28,7 +28,7 @@ public abstract class Singleton implements AutoCloseable {
      * Returns the singleton instance of the class.
      *
      * @return the singleton instance
-     */    
+     */
     public static Singleton getInstance() {
         throw new UnsupportedOperationException("This method should be overridden in subclasses.");
     }

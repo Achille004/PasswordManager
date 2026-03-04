@@ -113,7 +113,7 @@ public class SettingsController extends AbstractController {
         final ObjectProperty<SupportedLocale> localeProperty = userPreferences.localeProperty();
 
         final SortedList<SupportedLocale> languages = getFXSortedList(SupportedLocale.values());
-        final StringConverter<SupportedLocale> localeStringConverter = toStringConverter(item -> 
+        final StringConverter<SupportedLocale> localeStringConverter = toStringConverter(item ->
             item != null ? capitalizeWord(item.getLocale().getDisplayName()) : null
         );
 
@@ -133,7 +133,7 @@ public class SettingsController extends AbstractController {
         final ObjectProperty<SortingOrder> sortingOrderProperty = userPreferences.sortingOrderProperty();
 
         final SortedList<SortingOrder> sortingOrders = getFXSortedList(SortingOrder.class.getEnumConstants());
-        final StringConverter<SortingOrder> sortingOrderStringConverter = toStringConverter(item -> 
+        final StringConverter<SortingOrder> sortingOrderStringConverter = toStringConverter(item ->
             item != null ? ObservableResourceFactory.getInstance().getValue(item.getI18nKey()) : null
         );
 

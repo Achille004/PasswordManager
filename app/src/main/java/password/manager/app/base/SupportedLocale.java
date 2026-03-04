@@ -35,7 +35,7 @@ import lombok.RequiredArgsConstructor;
  * a {@link Locale} and a flag image resource path.
  * <p>
  * The serializaion of this enum is "transparent", as the actual locale
- * is annotated as json value, so when deserializing from JSON it will 
+ * is annotated as json value, so when deserializing from JSON it will
  * automatically convert the locale tag to the corresponding enum constant.
  */
 @Getter

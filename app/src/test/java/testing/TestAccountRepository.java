@@ -229,10 +229,10 @@ public class TestAccountRepository {
                 .get(5, TimeUnit.SECONDS);
 
         Account account = Account.of(
-            SecurityVersion.LATEST, 
-            "TestSoftware1", 
-            "TestUser1", 
-            "TestPass1", 
+            SecurityVersion.LATEST,
+            "TestSoftware1",
+            "TestUser1",
+            "TestPass1",
             DEFAULT_MASTER_PASSWORD
         );
 
