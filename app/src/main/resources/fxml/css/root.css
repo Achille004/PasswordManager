@@ -1,4 +1,30 @@
 /* ROOT VARIABLES */
+
+@font-face {
+  font-family: "Roboto Regular";
+  src: url("../../font/Roboto-Regular.ttf");
+}
+
+@font-face {
+  font-family: "Roboto Bold";
+  src: url("../../font/Roboto-Bold.ttf");
+}
+
+@font-face {
+  font-family: "Roboto Bold Italic";
+  src: url("../../font/Roboto-BoldItalic.ttf");
+}
+
+@font-face {
+  font-family: "Roboto Italic";
+  src: url("../../font/Roboto-Italic.ttf");
+}
+
+@font-face {
+  font-family: "Charm Bold";
+  src: url("../../font/Charm-Bold.ttf");
+}
+
 * {
   /* Colors */
   -fx-color-background: #202428;
@@ -15,4 +41,62 @@
   -fx-font-size-medium: 24px;
   -fx-font-size-large: 36px;
   -fx-font-size-title: 48px;
+}
+
+/* Default font and colors */
+
+.root {
+  -fx-font-family: "Roboto Regular";
+  -fx-font-size: 18px;
+}
+
+.label,
+.text-area,
+.text-field,
+.button,
+.check-box {
+  -fx-text-fill: -fx-color-text;
+  -fx-text-inner-color: -fx-color-text;
+}
+
+/* Generic styling classes */
+
+.bold {
+  -fx-font-family: "Roboto Bold";
+  -fx-font-size: 18px;
+}
+
+.bold-italic {
+  -fx-font-family: "Roboto Bold Italic";
+  -fx-font-size: 18px;
+}
+
+.italic {
+  -fx-font-family: "Roboto Italic";
+  -fx-font-size: 18px;
+}
+
+.title {
+  -fx-font-family: "Charm Bold";
+  -fx-font-size: 48px;
+}
+
+.regular-small {
+  -fx-font-size: 14px;
+}
+
+.regular-medium {
+  -fx-font-size: 24px;
+}
+
+.regular-large {
+  -fx-font-size: 36px;
+}
+
+.green-text {
+  -fx-text-fill: -fx-color-green;
+}
+
+.light-grey-text {
+  -fx-text-fill: -fx-color-grey;
 }

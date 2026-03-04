@@ -32,15 +32,29 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefHeight="513.0" prefWidth="648.0" stylesheets="@../../css/style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
-    <ImageView fitHeight="457.0" fitWidth="457.0" layoutX="96.0" layoutY="14.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true">
-        <Image url="@../../../images/background.png" />
-    </ImageView>
-    <Label fx:id="homeDescTop" alignment="CENTER" layoutY="455.0" prefHeight="40.0" prefWidth="598.0" styleClass="bold-italic, sz24, green-text" text="Your Accounts." AnchorPane.bottomAnchor="49.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="454.0" />
-    <Label fx:id="homeDescBtm" alignment="CENTER" contentDisplay="CENTER" layoutY="475.0" prefHeight="40.0" prefWidth="598.0" styleClass="bold-italic, sz24, green-text" text="In a Safe Place." textAlignment="CENTER" AnchorPane.bottomAnchor="25.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="472.0" />
-</AnchorPane>
+<StackPane minHeight="513.0" minWidth="642.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <VBox alignment="CENTER" minHeight="503.0" minWidth="632.0">
+      <children>
+          <ImageView fitHeight="445.0" fitWidth="445.0" pickOnBounds="true" preserveRatio="true" VBox.vgrow="ALWAYS">
+              <Image url="@../../../images/background.png" />
+          </ImageView>
+          <Label fx:id="homeDescTop" alignment="CENTER" contentDisplay="CENTER" minHeight="29.0" styleClass="bold-italic, regular-medium, green-text" text="Your Accounts." />
+          <Label fx:id="homeDescBtm" alignment="CENTER" contentDisplay="CENTER" minHeight="29.0" styleClass="bold-italic, regular-medium, green-text" text="In a Safe Place." />
+      </children>
+   </VBox>
+   <stylesheets>
+      <URL value="@../../css/root.css" />
+      <URL value="@../../css/style.css" />
+   </stylesheets>
+   <padding>
+      <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+   </padding>
+</StackPane>

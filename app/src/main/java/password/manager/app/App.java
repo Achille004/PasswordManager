@@ -26,11 +26,11 @@ import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.text.Font;
+import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import lombok.Getter;
 import password.manager.app.base.SupportedLocale;
@@ -56,8 +56,10 @@ public class App extends Application {
     // Keep as String to prevent crashing when JavaFX is not available (e.g., during build processes)
     public static final String MAIN_ICON = App.class.getResource("/icon.png").toExternalForm();
 
+    private static final int MIN_WIDTH = 900, MIN_HEIGHT = 600;
+
     private static @Getter HostServices appHostServices;
-    private static @Getter AnchorPane appScenePane;
+    private static @Getter Pane appScenePane;
     private static @Getter Parameters appParameters;
 
     @Override
@@ -68,23 +70,22 @@ public class App extends Application {
 
         appScenePane.getStylesheets().addAll(ROOT_STYLESHEET, AUTOCOMPLETION_STYLESHEET);
 
-        Font.loadFont(getClass().getResourceAsStream("/font/Roboto-Bold.ttf"), 14);
-        Font.loadFont(getClass().getResourceAsStream("/font/Roboto-BoldItalic.ttf"), 14);
-        Font.loadFont(getClass().getResourceAsStream("/font/Roboto-Italic.ttf"), 14);
-        Font.loadFont(getClass().getResourceAsStream("/font/Roboto-Regular.ttf"), 14);
-        Font.loadFont(getClass().getResourceAsStream("/font/Charm-Bold.ttf"), 14);
-
         primaryStage.setTitle(APP_NAME);
         primaryStage.getIcons().add(new Image(MAIN_ICON));
         primaryStage.setOnCloseRequest(_ -> Platform.exit());
-        primaryStage.setResizable(false);
-        primaryStage.setScene(new Scene(appScenePane, 900, 600));
+        primaryStage.setScene(new Scene(appScenePane, MIN_WIDTH, MIN_HEIGHT));
 
         startApp();
         primaryStage.show();
+
+        // Set actual 900x600 as stage sizes contain also window decorations
+        primaryStage.setMinWidth(primaryStage.getWidth());
+        primaryStage.setMinHeight(primaryStage.getHeight());
+        primaryStage.setResizable(true);
     }
 
     private void startApp() {
+        // Start up background services
         final IOManager IO_MANAGER = IOManager.getInstance();
 
         final ObjectProperty<SupportedLocale> locale = IO_MANAGER.getUserPreferences().localeProperty();
@@ -105,9 +106,12 @@ public class App extends Application {
             }
         }
 
-        final AnchorPane pane = IO_MANAGER.isFirstRun()
-            ? (AnchorPane) loadFxml(new FirstRunController(switchToMain))
-            : (AnchorPane) loadFxml(new LoginController(switchToMain));
+        final Pane pane = (Pane) loadFxml(IO_MANAGER.isFirstRun()
+            ?  new FirstRunController(switchToMain)
+            :  new LoginController(switchToMain)
+        );
+
+        setFullyResizable(pane);
 
         appScenePane.getChildren().clear();
         appScenePane.getChildren().add(pane);
@@ -118,7 +122,9 @@ public class App extends Application {
         switchToMain.addListener((_, _, newValue) -> {
             if (newValue) {
                 final MainController mainController = new MainController();
-                final BorderPane mainPane = (BorderPane) loadFxml(mainController);
+                final Pane mainPane = (Pane) loadFxml(mainController);
+
+                setFullyResizable(mainPane);
 
                 appScenePane.getChildren().clear();
                 appScenePane.getChildren().add(mainPane);
@@ -126,6 +132,13 @@ public class App extends Application {
             }
         });
         return switchToMain;
+    }
+
+    private static void setFullyResizable(Node child) {
+        AnchorPane.setTopAnchor(child, 0.0);
+        AnchorPane.setBottomAnchor(child, 0.0);
+        AnchorPane.setLeftAnchor(child, 0.0);
+        AnchorPane.setRightAnchor(child, 0.0);
     }
 
     @Override

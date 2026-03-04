@@ -25,12 +25,12 @@ TabPane .tab .tab-label {
   -fx-max-width: 80px;
 }
 
-TabPane #homeTab .tab-label,
-TabPane #addTab .tab-label {
-  -fx-padding: 0; /* No padding for home and add tabs */
+TabPane #homeTab .tab-label {
+  -fx-padding: 0 .9em 0 0; /* right padding since the text isnt rendered properly */
 }
 
 TabPane #addTab .tab-label {
+  -fx-padding: 0;
   -fx-pref-width: 30px;
 }
 
@@ -59,7 +59,7 @@ TabPane .tab:selected .tab-close-button:hover {
 
 TabPane:top *.tab-header-area {
   -fx-background-insets: 0, 0 0 1 0;
-  -fx-padding: .75em .75em 0 .75em;
+  -fx-padding: .5em .5 0 .5em;
   -fx-spacing: 8px;
 }
 
