@@ -26,7 +26,6 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import password.manager.app.controllers.AbstractController;
 import password.manager.app.singletons.Logger;
-import password.manager.app.singletons.ObservableResourceFactory;
 
 public class PopupContentController extends AbstractController {
     @FXML
@@ -49,8 +48,7 @@ public class PopupContentController extends AbstractController {
     public void reset() {}
 
     public void setState(String i18nKey, String bottomBarColor) {
-        final ObservableResourceFactory resources = ObservableResourceFactory.getInstance();
-        label.setText(resources.getValue("popup." + i18nKey));
+        label.setText(i18nKey);
         bottomBar.setStyle("-fx-background-color: " + bottomBarColor + ";");
     }
 }
