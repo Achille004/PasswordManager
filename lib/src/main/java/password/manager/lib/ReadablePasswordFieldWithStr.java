@@ -63,6 +63,7 @@ public class ReadablePasswordFieldWithStr extends AnchorPane implements Initiali
 
     public ReadablePasswordFieldWithStr() {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/readablePasswordFieldWithStr/index.fxml"));
+        fxmlLoader.setClassLoader(getClass().getClassLoader());
         fxmlLoader.setRoot(this);
         fxmlLoader.setController(this);
 
