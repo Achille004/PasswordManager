@@ -1,0 +1,17 @@
+.custom-popup {
+    -fx-background-color: white;
+    -fx-background-radius: 5deg;
+
+    -fx-border-width: 2px;
+    -fx-border-color: black;
+    -fx-border-radius: 5deg;
+
+    -fx-font-family: sans-serif;
+    -fx-font-size: 14px;
+    -fx-text-fill: black;
+}
+
+.custom-popup #bottomBar {
+    -fx-border-width: 0px;
+    -fx-background-color: gray;
+}

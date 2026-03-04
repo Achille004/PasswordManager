@@ -133,11 +133,11 @@ public final class AccountRepository implements AutoCloseable {
                 try {
                     Logger.getInstance().addDebug("Creating new account for security version: " + securityVersionProperty.get().name());
                     accountHolder[0] = Account.of(securityVersionProperty.get(), software, username, password, masterPasswordProperty.get());
-                    
+
                     synchronized (accounts) {
                         accounts.add(accountHolder[0]);
                     }
-                    
+
                     return accountHolder[0];
                 } catch (GeneralSecurityException e) {
                     Logger.getInstance().addError(e);
@@ -149,7 +149,7 @@ public final class AccountRepository implements AutoCloseable {
                     synchronized (accounts) {
                         accounts.remove(accountHolder[0]);
                     }
-                } 
+                }
             }
         );
     }
@@ -437,7 +437,7 @@ public final class AccountRepository implements AutoCloseable {
         synchronized (accounts) {
             int index = accounts.indexOf(account);
             // Account was removed during transaction, just give up on notification as not needed anymore
-            if (index < 0) return; 
+            if (index < 0) return;
             accounts.set(index, account);
         }
     }

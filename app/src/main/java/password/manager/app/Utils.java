@@ -87,7 +87,7 @@ public final class Utils {
     public static String byteToBase64(byte[] src) {
         return BASE64ENC.encodeToString(src);
     }
-    
+
     /**
      * Decodes a Base64 string to a byte array.
      * @param src The Base64 string to decode.

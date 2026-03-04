@@ -52,7 +52,8 @@ public class App extends Application {
     public static final String APP_VERSION = System.getProperty("app.version", "3.1.1");
 
     public static final String ROOT_STYLESHEET = App.class.getResource("/fxml/css/root.css").toExternalForm();
-    public static final String AUTOCOMPLETION_STYLESHEET = App.class.getResource("/fxml/css/autocompletion.css").toExternalForm();
+    public static final String AUTOCOMPLETION_STYLESHEET = App.class.getResource("/fxml/css/auto-completion.css").toExternalForm();
+    public static final String CUSTOMPOPUP_STYLESHEET = App.class.getResource("/fxml/css/custom-popup.css").toExternalForm();
     // Keep as String to prevent crashing when JavaFX is not available (e.g., during build processes)
     public static final String MAIN_ICON = App.class.getResource("/icon.png").toExternalForm();
 

@@ -63,10 +63,10 @@ public final class UserPreferences {
 
     @SuppressWarnings("unused") // Used by Jackson for deserialization
     private UserPreferences(
-            @JsonProperty(value = "locale", required = false) @Nullable SupportedLocale locale, 
-            @JsonProperty(value = "sortingOrder", required = false) @Nullable SortingOrder sortingOrder, 
-            @JsonProperty(value = "securityVersion", required = false) @Nullable SecurityVersion securityVersion, 
-            @JsonProperty(value = "hashedPassword", required = true) @NotNull byte[] hashedPassword, 
+            @JsonProperty(value = "locale", required = false) @Nullable SupportedLocale locale,
+            @JsonProperty(value = "sortingOrder", required = false) @Nullable SortingOrder sortingOrder,
+            @JsonProperty(value = "securityVersion", required = false) @Nullable SecurityVersion securityVersion,
+            @JsonProperty(value = "hashedPassword", required = true) @NotNull byte[] hashedPassword,
             @JsonProperty(value = "salt", required = true) @NotNull byte[] salt) {
 
         this();
