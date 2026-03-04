@@ -26,6 +26,7 @@ import java.net.URL;
 import java.util.LinkedList;
 import java.util.Objects;
 import java.util.ResourceBundle;
+import java.util.function.UnaryOperator;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -246,26 +247,37 @@ public class MainController extends AbstractController {
         });
 
         IOManager.getInstance().savingProperty().addListener((_, _, newValue) -> {
+            final ObservableResourceFactory resources;
             try {
-                ObservableResourceFactory.getInstance();
+                resources = ObservableResourceFactory.getInstance();
             } catch (IllegalStateException e) {
                 // This happens on the closing save, so just return since we don't need the popup
                 return;
             }
 
+            UnaryOperator<String> getString = i18nKey -> {
+                String key = "popup." + i18nKey;
+                try {
+                    return resources.getResources().getString(key);
+                } catch (Exception e) {
+                    // Key missing: return key itself
+                    return key;
+                }
+            };
+
             switch (newValue) {
                 case SAVING -> {
                     disappearTransition.stop();
-                    popupController.setState("saving", "-fx-color-element-bg");
+                    popupController.setState(getString.apply("saving"), "-fx-color-element-bg");
                     popupContent.setVisible(focusedProperty.get());
                     popupContent.setOpacity(1.0);
                 }
 
                 case SUCCESS, ERROR -> {
                     if(newValue == SaveState.SUCCESS) {
-                        popupController.setState("success", "-fx-color-green");
+                        popupController.setState(getString.apply("success"), "-fx-color-green");
                     } else {
-                        popupController.setState("error", "-fx-color-red");
+                        popupController.setState(getString.apply("error"), "-fx-color-red");
                     }
                     disappearTransition.playFromStart();
                 }

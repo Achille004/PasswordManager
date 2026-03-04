@@ -39,7 +39,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import password.manager.lib.ReadablePasswordFieldWithStr?>
 
-<AnchorPane prefHeight="600.0" prefWidth="900.0" stylesheets="@css/style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane prefHeight="600.0" prefWidth="900.0" stylesheets="@css/style.css" xmlns="http://javafx.com/javafx/5" xmlns:fx="http://javafx.com/fxml/1">
    <Label fx:id="firstRunTitle" alignment="CENTER" layoutX="170.0" layoutY="155.0" prefHeight="58.0" prefWidth="560.0" styleClass="title, green-text" text="Hi!" />
    <Label fx:id="firstRunDescBtm" alignment="CENTER" layoutX="170.0" layoutY="289.0" prefHeight="27.0" prefWidth="560.0" styleClass="italic, light-grey-text" text="PasswordManager will NEVER collect your data *" textAlignment="CENTER" wrapText="true" />
    <Label fx:id="firstRunDescTop" alignment="CENTER" layoutX="170.0" layoutY="230.0" prefHeight="58.0" prefWidth="560.0" styleClass="italic, light-grey-text" text="Before getting started with PasswordManager, I need you to insert a strong password in order to protect your accounts&#10;" textAlignment="CENTER" wrapText="true" />

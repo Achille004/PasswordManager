@@ -5,7 +5,8 @@ TabPane:focused {
 TabPane .tab {
   -fx-background-insets: 0 1 0 1,0,0;
   -fx-pref-height: 42.5px;
-  -fx-pref-width: 90px;
+  -fx-pref-width: 100px;
+  -fx-padding: 10px;
 
   -fx-background-color: -fx-color-background;
   -fx-border-color: -fx-color-element-bg;
@@ -14,24 +15,24 @@ TabPane .tab {
 }
 
 TabPane #addTab {
-  -fx-pref-width: 42.5px;
+  -fx-pref-width: 50px;
 }
 
 TabPane .tab .tab-label {
+  -fx-alignment: CENTER;
   -fx-font-size: 14px;
   -fx-text-fill: -fx-color-text;
-  -fx-padding: 0 1.5em 0 0; /* right padding for the close button */
-  -fx-pref-width: 80px;
-  -fx-max-width: 80px;
+  -fx-padding: 0 1.33em 0 0; /* right padding for the close button */
+  -fx-pref-width: 80px; /* pref-width minus the left-right padding */
 }
 
+TabPane #addTab .tab-label,
 TabPane #homeTab .tab-label {
-  -fx-padding: 0 .9em 0 0; /* right padding since the text isnt rendered properly */
+  -fx-padding: 0;
 }
 
 TabPane #addTab .tab-label {
-  -fx-padding: 0;
-  -fx-pref-width: 30px;
+  -fx-pref-width: 30px; /* pref-width minus the left-right padding */
 }
 
 TabPane .tab:selected {

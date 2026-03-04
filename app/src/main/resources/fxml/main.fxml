@@ -42,7 +42,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 
-<BorderPane fx:id="mainPane" minHeight="600.0" minWidth="900.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<BorderPane fx:id="mainPane" minHeight="600.0" minWidth="900.0" xmlns="http://javafx.com/javafx/5" xmlns:fx="http://javafx.com/fxml/1">
     <top>
         <HBox alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" prefHeight="35.0" styleClass="titlebar" BorderPane.alignment="CENTER">
             <Label fx:id="psmgTitle" layoutX="6.0" maxWidth="1.7976931348623157E308" minHeight="35.0" styleClass="bold-italic, regular-medium" text="Password Manager" HBox.hgrow="ALWAYS">
