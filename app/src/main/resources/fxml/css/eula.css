@@ -41,3 +41,7 @@ TextArea .scroll-bar .track {
   -fx-background-color: transparent;
   -fx-background-radius: 50%;
 }
+
+.eula-text:hover {
+  -fx-underline: true;
+}

@@ -1,4 +1,5 @@
 ComboBox {
+  -fx-font-size: 14px;
   -fx-background-color: -fx-color-element-bg;
   -fx-border-color: -fx-color-grey;
   -fx-border-radius: 3deg;

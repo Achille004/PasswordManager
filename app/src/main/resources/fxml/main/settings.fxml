@@ -42,49 +42,49 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import password.manager.lib.ReadablePasswordFieldWithStr?>
 
-<GridPane prefHeight="557.0" prefWidth="835.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<GridPane alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="565.0" minWidth="900.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
    <columnConstraints>
-      <ColumnConstraints hgrow="SOMETIMES" maxWidth="748.0" minWidth="10.0" prefWidth="266.40001220703124" />
-      <ColumnConstraints hgrow="SOMETIMES" maxWidth="748.0" minWidth="10.0" prefWidth="462.39998779296883" />
-      <ColumnConstraints hgrow="SOMETIMES" maxWidth="184.0" minWidth="0.0" prefWidth="0.0" />
+      <ColumnConstraints hgrow="SOMETIMES" prefWidth="266.40001220703124" />
+      <ColumnConstraints hgrow="SOMETIMES" prefWidth="462.39998779296883" />
    </columnConstraints>
    <rowConstraints>
-      <RowConstraints maxHeight="146.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-      <RowConstraints maxHeight="121.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-      <RowConstraints maxHeight="121.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-      <RowConstraints maxHeight="142.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
-      <RowConstraints maxHeight="142.0" minHeight="10.0" prefHeight="80.75" vgrow="SOMETIMES" />
+      <RowConstraints prefHeight="113.0" vgrow="SOMETIMES" />
+      <RowConstraints prefHeight="113.0" vgrow="SOMETIMES" />
+      <RowConstraints prefHeight="113.0" vgrow="SOMETIMES" />
+      <RowConstraints prefHeight="113.0" vgrow="SOMETIMES" />
+      <RowConstraints prefHeight="113.0" vgrow="SOMETIMES" />
    </rowConstraints>
    <padding>
-      <Insets bottom="50.0" left="50.0" right="50.0" top="50.0" />
+      <Insets bottom="50.0" left="100.0" right="100.0" top="50.0" />
    </padding>
    <AnchorPane>
-      <Label fx:id="settingsLangLbl" alignment="CENTER_RIGHT" contentDisplay="CENTER" layoutY="17.0" prefHeight="35.0" prefWidth="260.0" styleClass="bold-italic, regular-medium" text="Language:" />
+      <Label fx:id="settingsLangLbl" alignment="CENTER_RIGHT" contentDisplay="CENTER" layoutY="17.0" prefHeight="35.0" prefWidth="260.0" styleClass="bold-italic, regular-medium" text="Language:" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="30.399999999999977" />
    </AnchorPane>
    <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
       <ComboBox fx:id="settingsLangCB" layoutY="20.0" prefHeight="30.0" prefWidth="465.0" />
    </AnchorPane>
    <AnchorPane GridPane.rowIndex="1">
-      <Label fx:id="settingsSortingOrderLbl" alignment="CENTER_RIGHT" layoutY="17.0" prefHeight="35.0" prefWidth="260.0" styleClass="bold-italic, regular-medium" text="Order by:" />
+      <Label fx:id="settingsSortingOrderLbl" alignment="CENTER_RIGHT" layoutY="17.0" prefHeight="35.0" prefWidth="260.0" styleClass="bold-italic, regular-medium" text="Order by:" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="30.399999999999977" />
    </AnchorPane>
-   <AnchorPane prefHeight="123.0" prefWidth="738.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-      <ComboBox fx:id="settingsOrderCB" layoutY="23.0" prefHeight="30.0" prefWidth="465.0" />
+   <AnchorPane prefHeight="123.0" prefWidth="484.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+      <ComboBox fx:id="settingsOrderCB" layoutY="20.0" prefHeight="30.0" prefWidth="465.0" />
    </AnchorPane>
    <AnchorPane GridPane.rowIndex="2">
-      <Label fx:id="settingsMasterPasswordLbl" alignment="CENTER_RIGHT" layoutY="17.0" prefHeight="35.0" prefWidth="260.0" styleClass="bold-italic, regular-medium" text="Master Password:" />
+      <Label fx:id="settingsMasterPasswordLbl" alignment="CENTER_RIGHT" layoutY="17.0" prefHeight="35.0" prefWidth="260.0" styleClass="bold-italic, regular-medium" text="Master Password:" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="30.399999999999977" />
    </AnchorPane>
    <AnchorPane prefHeight="0.0" prefWidth="502.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
       <Label fx:id="settingsMasterPasswordDesc" alignment="CENTER_RIGHT" prefHeight="20.0" prefWidth="465.0" styleClass="italic, regular-small" text="Press ENTER to confirm." />
       <ReadablePasswordFieldWithStr fx:id="settingsMasterPassword" layoutY="20.0" prefHeight="40.0" prefWidth="465.0" />
    </AnchorPane>
    <AnchorPane GridPane.rowIndex="3">
-      <Label fx:id="settingsDriveConnLbl" alignment="CENTER_RIGHT" layoutY="17.0" prefHeight="35.0" prefWidth="260.0" styleClass="bold-italic, regular-medium" text="Drive Connection:" />
+      <Label fx:id="settingsDriveConnLbl" alignment="CENTER_RIGHT" layoutY="17.0" prefHeight="35.0" prefWidth="260.0" styleClass="bold-italic, regular-medium" text="Drive Connection:" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="30.399999999999977" />
    </AnchorPane>
    <AnchorPane prefHeight="0.0" prefWidth="730.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
       <Label fx:id="wip" layoutY="17.0" prefHeight="35.0" prefWidth="465.0" styleClass="italic, regular-medium" text="Work in progress..." />
    </AnchorPane>
 
    <stylesheets>
+      <URL value="@../css/root.css" />
       <URL value="@../css/style.css" />
       <URL value="@../css/components/ComboBox.css" />
    </stylesheets>
