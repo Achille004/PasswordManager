@@ -66,18 +66,14 @@ public class ReadablePasswordField extends AnchorPane implements Initializable, 
         textField.styleProperty().bindBidirectional(passwordField.styleProperty());
         textField.promptTextProperty().bindBidirectional(passwordField.promptTextProperty());
 
-        this.prefWidthProperty().addListener((_, _, newValue) -> {
+        this.widthProperty().addListener((_, _, newValue) -> {
             double width = newValue.doubleValue(), height = this.getPrefHeight();
-            setPrefSize(width, height);
-            setMinSize(width, height);
-            setMaxSize(width, height);
+            setSize(width, height);
         });
 
-        this.prefHeightProperty().addListener((_, _, newValue) -> {
+        this.heightProperty().addListener((_, _, newValue) -> {
             double width = this.getPrefWidth(), height = newValue.doubleValue();
-            setPrefSize(width, height);
-            setMinSize(width, height);
-            setMaxSize(width, height);
+            setSize(width, height);
         });
 
         readable.addListener((_, _, newValue) -> {
@@ -92,6 +88,7 @@ public class ReadablePasswordField extends AnchorPane implements Initializable, 
             }
         });
 
+        AnchorPane.setTopAnchor(imageView, 0.0);
         imageView.addEventFilter(MouseEvent.MOUSE_PRESSED, _ -> toggleReadable());
         imageView.setImage(hiddenImage);
     }
@@ -108,9 +105,7 @@ public class ReadablePasswordField extends AnchorPane implements Initializable, 
         }
     }
 
-    @Override
-    public void setPrefSize(double width, double height) {
-        super.setPrefSize(width, height);
+    private void setSize(double width, double height) {
         passwordField.setPrefSize(width, height);
         textField.setPrefSize(width, height);
 
@@ -121,21 +116,6 @@ public class ReadablePasswordField extends AnchorPane implements Initializable, 
         imageView.setY(0);
 
         AnchorPane.setLeftAnchor(imageView, width - height * 1.1);
-        AnchorPane.setTopAnchor(imageView, 0.0);
-    }
-
-    @Override
-    public void setMinSize(double width, double height) {
-        super.setMinSize(width, height);
-        passwordField.setMinSize(width, height);
-        textField.setMaxSize(width, height);
-    }
-
-    @Override
-    public void setMaxSize(double width, double height) {
-        super.setMaxSize(width, height);
-        passwordField.setMaxSize(width, height);
-        textField.setMaxSize(width, height);
     }
 
     ///// PASSWORD INPUT CONTROL METHODS /////

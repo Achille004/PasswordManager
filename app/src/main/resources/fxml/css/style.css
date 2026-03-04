@@ -1,73 +1,17 @@
 /* https://gist.github.com/maxd/63691840fc372f22f470 */
 
-/* FONT */
-
-.label,
-.text-area,
-.text-field,
-.button,
-.check-box {
-  -fx-font-family: "Roboto Regular";
-  -fx-text-fill: -fx-color-text;
-  -fx-text-inner-color: -fx-color-text;
-}
-
-.label,
-.text-area,
-.button {
-  -fx-font-size: 18px;
-}
-
-.title {
-  -fx-font-family: "Charm Bold";
-  -fx-font-size: 48px;
-}
-
-.bold {
-  -fx-font-family: "Roboto Bold";
-  -fx-font-size: 18px;
-}
-
-.bold-italic {
-  -fx-font-family: "Roboto Bold Italic";
-  -fx-font-size: 18px;
-}
-
-.italic {
-  -fx-font-family: "Roboto Italic";
-  -fx-font-size: 18px;
-}
-
-.sz14 {
-  -fx-font-size: 14px;
-}
-
-.sz24 {
-  -fx-font-size: 24px;
-}
-
-.sz36 {
-  -fx-font-size: 36px;
-}
-
-.green-text {
-  -fx-text-fill: -fx-color-green;
-}
-
-.light-grey-text {
-  -fx-text-fill: -fx-color-grey;
-}
-
 /* COMPONENTS */
 
 AnchorPane,
 BorderPane,
+StackPane,
 GridPane {
   -fx-background-color: -fx-color-background;
 }
 
 TextField,
 PasswordField {
+  -fx-font-size: 14px;
   -fx-background-color: -fx-color-element-bg;
   -fx-border-color: -fx-color-grey;
   -fx-border-radius: 3deg;

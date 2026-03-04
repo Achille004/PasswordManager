@@ -8,6 +8,7 @@ ListView .scroll-bar {
   -fx-background-radius: 5deg;
   -fx-border-width: 2px;
   -fx-border-color: transparent;
+  -fx-font-size: 11px; /* Scroll bar: width + 1 */
 }
 
 ListView .scroll-bar:horizontal {

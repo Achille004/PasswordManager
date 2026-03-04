@@ -32,7 +32,7 @@ public class AppConfig extends Singleton {
 
     private final @Getter String operatingSystem, userHome;
     private final @Getter Path basePath;
-    
+
     // Let only package classes instantiate this
     AppConfig() {
         // gets system properties

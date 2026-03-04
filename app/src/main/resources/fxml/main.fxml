@@ -32,20 +32,24 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
+<?import java.net.URL?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
 
-<BorderPane fx:id="mainPane" prefHeight="600.0" prefWidth="900.0" stylesheets="@css/style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<BorderPane fx:id="mainPane" minHeight="600.0" minWidth="900.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
     <top>
-        <AnchorPane minHeight="-Infinity" prefHeight="35.0" prefWidth="900.0" styleClass="titlebar" BorderPane.alignment="CENTER">
-            <Label fx:id="psmgTitle" layoutX="6.0" minWidth="60.0" prefHeight="35.0" prefWidth="208.0" styleClass="bold-italic, sz24" text="Password Manager" />
-            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="795.0" mnemonicParsing="false" onAction="#settingsNavBarAction" prefHeight="35.0" prefWidth="35.0" text="S">
+        <HBox alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" prefHeight="35.0" styleClass="titlebar" BorderPane.alignment="CENTER">
+            <Label fx:id="psmgTitle" layoutX="6.0" maxWidth="1.7976931348623157E308" minHeight="35.0" styleClass="bold-italic, regular-medium" text="Password Manager" HBox.hgrow="ALWAYS">
+            <padding>
+               <Insets left="8.0" />
+            </padding></Label>
+            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="795.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#settingsNavBarAction" prefHeight="35.0" prefWidth="35.0" text="S" HBox.hgrow="NEVER">
                 <graphic>
                     <ImageView fx:id="settingsButtonImageView" fitHeight="33.0" fitWidth="33.0" pickOnBounds="true" preserveRatio="true">
                         <Image url="@../images/icons/navbar/settings.png" />
@@ -58,7 +62,7 @@
                     <Cursor fx:constant="HAND" />
                 </cursor>
             </Button>
-            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="830.0" mnemonicParsing="false" onMouseClicked="#showEula" prefHeight="35.0" prefWidth="35.0" text="E">
+            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="830.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onMouseClicked="#showEula" prefHeight="35.0" prefWidth="35.0" text="E" HBox.hgrow="NEVER">
                 <graphic>
                    <ImageView fitHeight="33.0" fitWidth="33.0" pickOnBounds="true" preserveRatio="true">
                       <Image url="@../images/icons/navbar/info.png" />
@@ -71,7 +75,7 @@
                   <Cursor fx:constant="HAND" />
                 </cursor>
             </Button>
-            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="865.0" mnemonicParsing="false" onAction="#folderNavBarAction" prefHeight="35.0" prefWidth="35.0" text="F">
+            <Button contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="865.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#folderNavBarAction" prefHeight="35.0" prefWidth="35.0" text="F" HBox.hgrow="NEVER">
                 <graphic>
                   <ImageView fitHeight="33.0" fitWidth="33.0" pickOnBounds="true" preserveRatio="true">
                     <Image url="@../images/icons/navbar/folder.png" />
@@ -84,6 +88,10 @@
                   <Cursor fx:constant="HAND" />
                 </cursor>
             </Button>
-        </AnchorPane>
+        </HBox>
     </top>
+   <stylesheets>
+      <URL value="@css/root.css" />
+      <URL value="@css/style.css" />
+   </stylesheets>
 </BorderPane>
