@@ -374,9 +374,6 @@ public class ManagerController extends AbstractController {
             );
             editorSaveTimeline.setCycleCount(1);
 
-            // Force the correct size to prevent unwanted stretching
-            editorPassword.setPrefSize(548.0, 40.0);
-
             // Setup auto-completion for software and username fields
             softwareAutoCompletion = TextFields.bindAutoCompletion(editorSoftware, getSuggestionProvider(possibleSoftwares));
             usernameAutoCompletion = TextFields.bindAutoCompletion(editorUsername, getSuggestionProvider(possibleUsernames));

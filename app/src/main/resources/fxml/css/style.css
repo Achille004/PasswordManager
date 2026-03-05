@@ -27,13 +27,16 @@ Button:focused {
 }
 
 CheckBox .box {
-  /* background color of unselected checkbox */
   -fx-background-color: -fx-color-element-bg;
   -fx-border-color: -fx-color-grey;
   -fx-border-radius: 4deg;
 }
+CheckBox .box .mark {
+  /* color of unselected mark */
+  -fx-background-color: -fx-color-element-bg;
+}
 CheckBox:selected .box .mark {
-  /* modify mark color */
+  /* color of selected mark */
   -fx-background-color: -fx-color-grey;
 }
 
@@ -65,4 +68,8 @@ Separator .line {
 .editor-button {
   -fx-background-color: -fx-color-grey;
   -fx-background-radius: 8deg;
+}
+
+.firstrun-link:hover {
+  -fx-underline: true;
 }

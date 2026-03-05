@@ -172,7 +172,7 @@ public final class IOManager extends Singleton {
 
     private void loadData() {
         if (!(DATA_FILE.exists() || BACKUP_FILE.exists())) {
-            Logger.getInstance().addInfo("Neither DATA_FILE nor BACKUP_FILE exists, skipping data loading");
+            Logger.getInstance().addInfo("Neither DATA_FILE nor BACKUP_FILE exist, skipping data loading");
             return;
         }
 

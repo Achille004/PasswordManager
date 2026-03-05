@@ -33,6 +33,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Bounds;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -66,14 +67,42 @@ public class ReadablePasswordField extends AnchorPane implements Initializable, 
         textField.styleProperty().bindBidirectional(passwordField.styleProperty());
         textField.promptTextProperty().bindBidirectional(passwordField.promptTextProperty());
 
-        this.widthProperty().addListener((_, _, newValue) -> {
-            double width = newValue.doubleValue(), height = this.getPrefHeight();
-            setSize(width, height);
+        this.layoutBoundsProperty().addListener((_, _, newValue) -> setImageSize(newValue));
+
+        this.minWidthProperty().addListener((_, _, newValue) -> {
+            double v = newValue.doubleValue();
+            passwordField.setMinWidth(v);
+            textField.setMinWidth(v);
         });
 
-        this.heightProperty().addListener((_, _, newValue) -> {
-            double width = this.getPrefWidth(), height = newValue.doubleValue();
-            setSize(width, height);
+        this.minHeightProperty().addListener((_, _, newValue) -> {
+            double v = newValue.doubleValue();
+            passwordField.setMinHeight(v);
+            textField.setMinHeight(v);
+        });
+
+        this.prefWidthProperty().addListener((_, _, newValue) -> {
+            double v = newValue.doubleValue();
+            passwordField.setPrefWidth(v);
+            textField.setPrefWidth(v);
+        });
+
+        this.prefHeightProperty().addListener((_, _, newValue) -> {
+            double v = newValue.doubleValue();
+            passwordField.setPrefHeight(v);
+            textField.setPrefHeight(v);
+        });
+
+        this.maxWidthProperty().addListener((_, _, newValue) -> {
+            double v = newValue.doubleValue();
+            passwordField.setMaxWidth(v);
+            textField.setMaxWidth(v);
+        });
+
+        this.maxHeightProperty().addListener((_, _, newValue) -> {
+            double v = newValue.doubleValue();
+            passwordField.setMaxHeight(v);
+            textField.setMaxHeight(v);
         });
 
         readable.addListener((_, _, newValue) -> {
@@ -106,17 +135,15 @@ public class ReadablePasswordField extends AnchorPane implements Initializable, 
         }
     }
 
-    private void setSize(double width, double height) {
-        passwordField.setPrefSize(width, height);
-        textField.setPrefSize(width, height);
+    private void setImageSize(Bounds bounds) {
+        double width = bounds.getWidth(), height = bounds.getHeight();
+        if (width <= 0 || height <= 0) return;
 
         imageView.setFitWidth(height);
         imageView.setFitHeight(height);
 
-        imageView.setX(width - height * 1.1);
-        imageView.setY(0);
-
-        AnchorPane.setLeftAnchor(imageView, width - height * 1.1);
+        // Leave a tiny gap between the image and the right edge of the control
+        AnchorPane.setRightAnchor(imageView, height * 0.1);
     }
 
     ///// PASSWORD INPUT CONTROL METHODS /////
@@ -128,6 +155,7 @@ public class ReadablePasswordField extends AnchorPane implements Initializable, 
 
     @Override
     public void setReadable(boolean readable) {
+        // Use XOR to avoid unnecessary updates
         if (readable ^ isReadable()) {
             this.readable.set(readable);
         }

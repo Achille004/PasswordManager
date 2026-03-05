@@ -28,7 +28,7 @@ public class Main extends Application {
     public void start(Stage stage) {
         ReadablePasswordField custom1 = new ReadablePasswordField();
         ReadablePasswordFieldWithStr custom2 = new ReadablePasswordFieldWithStr();
-        custom2.setPrefSize(548.0, 70.0);
+        custom2.setPrefSize(542.0, 70.0);
 
         AnchorPane root = new AnchorPane();
         root.getChildren().addAll(custom1, custom2);

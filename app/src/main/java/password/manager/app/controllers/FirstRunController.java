@@ -70,9 +70,6 @@ public class FirstRunController extends AbstractController {
             }
         });
 
-        // Force the correct size to prevent unwanted stretching
-        firstRunPassword.setPrefSize(560.0, 40.0);
-
         ObservableResourceFactory.getInstance().bindPromptTextProperty(firstRunPassword);
     }
 
