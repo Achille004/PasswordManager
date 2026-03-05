@@ -33,6 +33,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
@@ -59,6 +60,44 @@ public class ReadablePasswordFieldWithStr extends AnchorPane implements Initiali
     public void initialize(URL location, ResourceBundle resources) {
         assert (passwordField != null) : "fx:id=\"passwordField\" was not injected.";
         assert (passwordStrengthBar != null) : "fx:id=\"passwordStrengthBar\" was not injected.";
+
+        this.layoutBoundsProperty().addListener((_, _, newValue) -> setPassStrSize(newValue));
+
+        this.minWidthProperty().addListener((_, _, newValue) -> {
+            double v = newValue.doubleValue();
+            passwordField.setMinWidth(v);
+            passwordStrengthBar.setMinWidth(v);
+        });
+
+        this.minHeightProperty().addListener((_, _, newValue) -> {
+            double v = Math.max(10, newValue.doubleValue());
+            passwordField.setMinHeight(v - 10);
+            passwordStrengthBar.setMinHeight(10);
+        });
+
+        this.prefWidthProperty().addListener((_, _, newValue) -> {
+            double v = newValue.doubleValue();
+            passwordField.setPrefWidth(v);
+            passwordStrengthBar.setPrefWidth(v);
+        });
+
+        this.prefHeightProperty().addListener((_, _, newValue) -> {
+            double v = Math.max(10, newValue.doubleValue());
+            passwordField.setPrefHeight(v - 10);
+            passwordStrengthBar.setPrefHeight(10);
+        });
+
+        this.maxWidthProperty().addListener((_, _, newValue) -> {
+            double v = newValue.doubleValue();
+            passwordField.setMaxWidth(v);
+            passwordStrengthBar.setMaxWidth(v);
+        });
+
+        this.maxHeightProperty().addListener((_, _, newValue) -> {
+            double v = Math.max(10, newValue.doubleValue());
+            passwordField.setMaxHeight(v - 10);
+            passwordStrengthBar.setMaxHeight(10);
+        });
     }
 
     public ReadablePasswordFieldWithStr() {
@@ -83,39 +122,19 @@ public class ReadablePasswordFieldWithStr extends AnchorPane implements Initiali
         }
     }
 
-    public TextField getTextField() {
-        return passwordField.getTextField();
-    }
-
     // Adjust height to account for the ProgressBar
     // TODO also scale the ProgressBar
 
-    @Override
-    public void setPrefSize(double width, double height) {
-        super.setPrefSize(width, height);
-        if(height > 10) {
-            passwordField.setPrefSize(width, height - 10);
-            passwordStrengthBar.layoutYProperty().set(height - 10);
-            passwordStrengthBar.setPrefSize(width, 10);
-        }
+    private void setPassStrSize(Bounds bounds) {
+        double width = bounds.getWidth(), height = bounds.getHeight();
+        if(height < 10) height = 10;
+
+        passwordStrengthBar.setLayoutY(height - 10);
+        passwordStrengthBar.setPrefSize(width, 10);
     }
 
-    @Override
-    public void setMinSize(double width, double height) {
-        super.setMinSize(width, height);
-        if(height > 10) {
-            passwordField.setMinSize(width, height - 10);
-            passwordStrengthBar.setMinSize(width, 10);
-        }
-    }
-
-    @Override
-    public void setMaxSize(double width, double height) {
-        super.setMaxSize(width, height);
-        if(height > 10) {
-            passwordField.setMaxSize(width, height - 10);
-            passwordStrengthBar.setMaxSize(width, 10);
-        }
+    public TextField getTextField() {
+        return passwordField.getTextField();
     }
 
     ///// PASSWORD INPUT CONTROL METHODS /////

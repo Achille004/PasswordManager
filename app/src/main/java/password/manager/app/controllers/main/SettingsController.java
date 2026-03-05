@@ -90,9 +90,6 @@ public class SettingsController extends AbstractController {
                 ioManager.changeMasterPassword(settingsMasterPassword.getText().strip());
             }
         });
-
-        // Force the correct size to prevent unwanted stretching
-        settingsMasterPassword.setPrefSize(465.0, 40.0);
     }
 
     @Override

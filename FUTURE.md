@@ -12,7 +12,7 @@
   - deeper logging
 
 # Future:
-- Resizable window
+- Resizable EULA and better scaling with resize
 
 # Ideas:
 - msix packaging -> microsoft store
