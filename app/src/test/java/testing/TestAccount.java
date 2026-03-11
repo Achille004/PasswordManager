@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 
 import password.manager.app.base.SecurityVersion;
 import password.manager.app.security.Account;
+import password.manager.app.security.Account.AccountData;
 
 public class TestAccount {
 
@@ -42,11 +43,13 @@ public class TestAccount {
         String masterPassword = "masterPass456";
 
         for (SecurityVersion version : SecurityVersion.values()) {
-            Account account = Account.of(version, software, username, password, masterPassword);
+            AccountData expectedData = new AccountData(software, username, password);
+            Account account = Account.of(version, expectedData, masterPassword);
 
-            assertEquals(software, account.getSoftware());
-            assertEquals(username, account.getUsername());
-            assertEquals(password, account.getPassword(version, masterPassword));
+            AccountData actualData = account.getData(version, masterPassword);
+            assertEquals(expectedData.software(), actualData.software());
+            assertEquals(expectedData.username(), actualData.username());
+            assertEquals(expectedData.password(), actualData.password());
         }
     }
 
@@ -56,16 +59,21 @@ public class TestAccount {
             assert stream != null;
 
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
-                String masterPass, pass, software, username;
+                String masterPass, password, software, username;
 
                 while ((masterPass = readBlnsLine(reader)) != null &&
-                       (pass = readBlnsLine(reader)) != null &&
+                       (password = readBlnsLine(reader)) != null &&
                        (software = readBlnsLine(reader)) != null &&
                        (username = readBlnsLine(reader)) != null) {
 
                     for (SecurityVersion version : SecurityVersion.values()) {
-                        Account account = Account.of(version, software, username, pass, masterPass);
-                        assertEquals(pass, account.getPassword(version, masterPass));
+                        AccountData data = new AccountData(software, username, password);
+                        Account account = Account.of(version, data, masterPass);
+
+                        AccountData actualData = account.getData(version, masterPass);
+                        assertEquals(data.software(), actualData.software());
+                        assertEquals(data.username(), actualData.username());
+                        assertEquals(data.password(), actualData.password());
                     }
                 }
             }
@@ -81,11 +89,12 @@ public class TestAccount {
         String wrongMasterPassword = "wrongMaster";
 
         for (SecurityVersion version : SecurityVersion.values()) {
-            Account account = Account.of(version, software, username, password, correctMasterPassword);
+            AccountData data = new AccountData(software, username, password);
+            Account account = Account.of(version, data, correctMasterPassword);
 
             assertThrows(
                 GeneralSecurityException.class,
-                () -> account.getPassword(version, wrongMasterPassword)
+                () -> account.getData(version, wrongMasterPassword)
             );
         }
     }
@@ -95,13 +104,12 @@ public class TestAccount {
 
     @Test
     void testNullValues() {
-        assertThrows(NullPointerException.class, () -> Account.of(null, "software", "user", "pass", "master"));
+        AccountData data = new AccountData("software", "user", "password");
+        assertThrows(NullPointerException.class, () -> Account.of(null, data, "master"));
 
         for(SecurityVersion version : SecurityVersion.values()) {
-            assertThrows(NullPointerException.class, () -> Account.of(version, null, "user", "pass", "master"));
-            assertThrows(NullPointerException.class, () -> Account.of(version, "software", null, "pass", "master"));
-            assertThrows(NullPointerException.class, () -> Account.of(version, "software", "user", null, "master"));
-            assertThrows(NullPointerException.class, () -> Account.of(version, "software", "user", "pass", null));
+            assertThrows(NullPointerException.class, () -> Account.of(version, null, "master"));
+            assertThrows(NullPointerException.class, () -> Account.of(version, data, null));
         }
     }
 
@@ -113,8 +121,13 @@ public class TestAccount {
         String masterPassword = "master";
 
         for (SecurityVersion version : SecurityVersion.values()) {
-            Account account = Account.of(version, software, username, emptyPassword, masterPassword);
-            assertEquals(emptyPassword, account.getPassword(version, masterPassword));
+            AccountData expectedData = new AccountData(software, username, emptyPassword);
+            Account account = Account.of(version, expectedData, masterPassword);
+
+            AccountData actualData = account.getData(version, masterPassword);
+            assertEquals(expectedData.software(), actualData.software());
+            assertEquals(expectedData.username(), actualData.username());
+            assertEquals(expectedData.password(), actualData.password());
         }
     }
 
@@ -131,8 +144,13 @@ public class TestAccount {
         String largePassword = sb.toString();
 
         for (SecurityVersion version : SecurityVersion.values()) {
-            Account account = Account.of(version, software, username, largePassword, masterPassword);
-            assertEquals(largePassword, account.getPassword(version, masterPassword));
+            AccountData expectedData = new AccountData(software, username, largePassword);
+            Account account = Account.of(version, expectedData, masterPassword);
+
+            AccountData actualData = account.getData(version, masterPassword);
+            assertEquals(expectedData.software(), actualData.software());
+            assertEquals(expectedData.username(), actualData.username());
+            assertEquals(expectedData.password(), actualData.password());
         }
     }
 
@@ -144,11 +162,13 @@ public class TestAccount {
         String masterPassword = "master🔒🔑";
 
         for (SecurityVersion version : SecurityVersion.values()) {
-            Account account = Account.of(version, software, username, password, masterPassword);
+            AccountData expectedData = new AccountData(software, username, password);
+            Account account = Account.of(version, expectedData, masterPassword);
 
-            assertEquals(software, account.getSoftware());
-            assertEquals(username, account.getUsername());
-            assertEquals(password, account.getPassword(version, masterPassword));
+            AccountData actualData = account.getData(version, masterPassword);
+            assertEquals(expectedData.software(), actualData.software());
+            assertEquals(expectedData.username(), actualData.username());
+            assertEquals(expectedData.password(), actualData.password());
         }
     }
 }

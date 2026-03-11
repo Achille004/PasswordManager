@@ -33,6 +33,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import password.manager.app.base.SecurityVersion;
 import password.manager.app.persistence.TransactionManager;
+import password.manager.app.security.Account.AccountData;
 import password.manager.app.singletons.Logger;
 
 /**
@@ -119,12 +120,10 @@ public final class AccountRepository implements AutoCloseable {
      * If encryption fails, the transaction is rolled back and no account is added.
      * </p>
      *
-     * @param software the name of the software/service for this account
-     * @param username the username for this account
-     * @param password the password to encrypt and store
+     * @param data the data for the new account to create
      * @return a CompletableFuture that completes with the created Account, or null if the transaction fails
      */
-    public @NotNull CompletableFuture<Account> add(@NotNull String software, @NotNull String username, @NotNull String password) {
+    public @NotNull CompletableFuture<Account> add(@NotNull AccountData data) {
         // Use a holder to capture the account reference for rollback
         final Account[] accountHolder = new Account[1];
 
@@ -132,7 +131,8 @@ public final class AccountRepository implements AutoCloseable {
             () -> {
                 try {
                     Logger.getInstance().addDebug("Creating new account for security version: " + securityVersionProperty.get().name());
-                    accountHolder[0] = Account.of(securityVersionProperty.get(), software, username, password, masterPasswordProperty.get());
+
+                    accountHolder[0] = Account.of(securityVersionProperty.get(), data, masterPasswordProperty.get());
 
                     synchronized (accounts) {
                         accounts.add(accountHolder[0]);
@@ -162,13 +162,11 @@ public final class AccountRepository implements AutoCloseable {
      * </p>
      *
      * @param account the account to update (must exist in the repository)
-     * @param software the new name of the software/service
-     * @param username the new username
-     * @param password the new password to encrypt and store
+     * @param data the new data to set on the account
      * @return a CompletableFuture that completes with the updated Account, or null if the transaction fails
      * @throws IllegalArgumentException if the account is not found in the repository
      */
-    public @NotNull CompletableFuture<Account> edit(@NotNull Account account, @NotNull String software, @NotNull String username, @NotNull String password) {
+    public @NotNull CompletableFuture<Account> edit(@NotNull Account account, @NotNull AccountData data) {
         final Account.AccountMemento originalState;
         synchronized (accounts) {
             if (!accounts.contains(account)) throw new IllegalArgumentException("Account not found in list");
@@ -180,9 +178,7 @@ public final class AccountRepository implements AutoCloseable {
         return transactionManager.executeInTransaction(
             () -> {
                 try {
-                    account.setSoftware(software);
-                    account.setUsername(username);
-                    account.setPassword(securityVersionProperty.get(), password, masterPasswordProperty.get());
+                    account.setData(securityVersionProperty.get(), data, masterPasswordProperty.get());
                     triggerUpdateNotification(account);
                     return account;
                 } catch (GeneralSecurityException e) {
@@ -248,12 +244,12 @@ public final class AccountRepository implements AutoCloseable {
      * @param account the account whose password to retrieve
      * @return a CompletableFuture that completes with the decrypted password, or null if decryption fails
      */
-    public @NotNull CompletableFuture<String> getPassword(@NotNull Account account) {
+    public @NotNull CompletableFuture<AccountData> getData(@NotNull Account account) {
         // Wait for any ongoing master password or security version changes to complete
         return CompletableFuture.allOf(masterPasswordChangeFuture, securityVersionChangeFuture)
                 .thenCompose(_ -> CompletableFuture.supplyAsync(() -> {
                     try {
-                        return account.getPassword(securityVersionProperty.get(), masterPasswordProperty.get());
+                        return account.getData(securityVersionProperty.get(), masterPasswordProperty.get());
                     } catch (GeneralSecurityException e) {
                         Logger.getInstance().addError(e);
                         return null;
@@ -397,9 +393,9 @@ public final class AccountRepository implements AutoCloseable {
                         () -> {
                             try {
                                 // Decrypt with old master password
-                                String password = account.getPassword(securityVersion, oldMasterPassword);
+                                AccountData data = account.getData(securityVersion, oldMasterPassword);
                                 // Re-encrypt with new master password
-                                account.setPassword(securityVersion, password, newMasterPassword);
+                                account.setData(securityVersion, data, newMasterPassword);
                                 triggerUpdateNotification(account);
                                 return true;
                             } catch (GeneralSecurityException e) {
