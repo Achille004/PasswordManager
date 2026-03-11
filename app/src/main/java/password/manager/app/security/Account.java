@@ -18,6 +18,8 @@
 
 package password.manager.app.security;
 
+import static password.manager.app.Utils.runOnFx;
+
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
@@ -32,10 +34,17 @@ import org.jetbrains.annotations.Nullable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.node.ObjectNode;
 import javafx.beans.property.ReadOnlyProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import password.manager.app.base.SecurityVersion;
 
+@JsonDeserialize(using = Account.Deserializer.class)
 public final class Account {
 
     private static final int SALT_LENGTH = 16;
@@ -50,7 +59,7 @@ public final class Account {
                                                   usernameProperty = new ReadOnlyStringWrapper();
 
     // Salt for deriving source key
-    private @JsonProperty("salt") byte[] salt;
+    private @JsonProperty("keySalt") byte[] keySalt;
 
     // Encrypted fields and their salts used for key derivation
     private @JsonProperty("software") byte[] software;
@@ -64,10 +73,14 @@ public final class Account {
     private @JsonProperty("password") byte[] password;
     private @JsonProperty("pSalt") byte[] pSalt;
     private final @JsonProperty("pIv") byte[] pIv;
+    
+    // This flag is used to determine if this account was created with an older security version where software and username were not encrypted.
+    // It is set in the constructor and never updated, as it is only used to determine how to read existing data, while all new data is always fully encrypted.
+    private transient boolean isFullyEncrypted; 
 
     public Account() {
-        this.salt = new byte[SALT_LENGTH];
-        
+        this.keySalt = new byte[SALT_LENGTH];
+
         this.software = null;
         this.sSalt = new byte[SALT_LENGTH];
         this.sIv = new byte[IV_LENGTH];
@@ -79,6 +92,9 @@ public final class Account {
         this.password = null;
         this.pSalt = new byte[SALT_LENGTH];
         this.pIv = new byte[IV_LENGTH];
+
+        // By default, we assume the account is not fully encrypted until proven otherwise (i.e. when reading data, if software and username salts are present, we set this flag to true)
+        this.isFullyEncrypted = false;
     }
 
     public Account(@NotNull SecurityVersion securityVersion, @NotNull AccountData data, @NotNull String masterPassword) throws GeneralSecurityException {
@@ -87,77 +103,91 @@ public final class Account {
         if (masterPassword == null) throw new NullPointerException("Master password cannot be null");
 
         this();
+
+        // If this constructor is used, it means that the account is being created with the latest security version, so we can safely set this flag to true
+        this.isFullyEncrypted = true; 
         this.setData(securityVersion, data, masterPassword);
     }
 
-    @SuppressWarnings("unused") // Used by Jackson for deserialization
     private Account(
-            @JsonProperty(value = "salt", required = true) @Nullable byte[] salt,
-            @JsonProperty(value = "software", required = true) @NotNull byte[] software,
-            @JsonProperty(value = "sSalt", required = true) @Nullable byte[] sSalt,
-            @JsonProperty(value = "sIv", required = true) @NotNull byte[] sIv,
-            @JsonProperty(value = "username", required = true) @NotNull  byte[] username,
-            @JsonProperty(value = "uSalt", required = true) @NotNull byte[] uSalt,
-            @JsonProperty(value = "uIv", required = true) @NotNull byte[] uIv,
-            @JsonProperty(value = "password", required = true) @NotNull byte[] password,
-            @JsonProperty(value = "pSalt", required = true) @Nullable byte[] pSalt,
-            @JsonProperty(value = "pIv", required = true) @NotNull byte[] pIv,
-            @JsonProperty(value = "injectedMasterPassword", required = true) @Nullable String injectedMasterPassword) throws GeneralSecurityException {
-
-        this();
+            @NotNull byte[] keySalt,
+            @NotNull byte[] software, @NotNull byte[] sSalt, @NotNull byte[] sIv,
+            @NotNull byte[] username, @NotNull byte[] uSalt, @NotNull byte[] uIv,
+            @NotNull byte[] password, @NotNull byte[] pSalt, @NotNull byte[] pIv) throws GeneralSecurityException {
 
         // Here we consider salt as present as this constructor is used only for latest security versions where salt is mandatory
-        if (salt.length != SALT_LENGTH) throw new IllegalArgumentException("Salt should be " + SALT_LENGTH + " bytes long");
-        if (sSalt.length != SALT_LENGTH) throw new IllegalArgumentException("Software salt should be " + SALT_LENGTH + " bytes long");
-        if (sIv.length != IV_LENGTH) throw new IllegalArgumentException("Software IV should be " + IV_LENGTH + " bytes long");
-        if (uSalt.length != SALT_LENGTH) throw new IllegalArgumentException("Username salt should be " + SALT_LENGTH + " bytes long");
-        if (uIv.length != IV_LENGTH) throw new IllegalArgumentException("Username IV should be " + IV_LENGTH + " bytes long");
-        if (pSalt.length != SALT_LENGTH) throw new IllegalArgumentException("Password salt should be " + SALT_LENGTH + " bytes long");
-        if (pIv.length != IV_LENGTH) throw new IllegalArgumentException("Password IV should be " + IV_LENGTH + " bytes long");
+        if (keySalt == null || keySalt.length != SALT_LENGTH) throw new IllegalArgumentException("Key salt should be not null and " + SALT_LENGTH + " bytes long");
+        if (software == null || software.length == 0) throw new IllegalArgumentException("Software cannot be null or empty");
+        if (sSalt == null || sSalt.length != SALT_LENGTH) throw new IllegalArgumentException("Software salt should be not null and " + SALT_LENGTH + " bytes long");
+        if (sIv == null || sIv.length != IV_LENGTH) throw new IllegalArgumentException("Software IV should be not null and " + IV_LENGTH + " bytes long");
+        if (username == null || username.length == 0) throw new IllegalArgumentException("Username cannot be null or empty");
+        if (uSalt == null || uSalt.length != SALT_LENGTH) throw new IllegalArgumentException("Username salt should be not null and " + SALT_LENGTH + " bytes long");
+        if (uIv == null || uIv.length != IV_LENGTH) throw new IllegalArgumentException("Username IV should be not null and " + IV_LENGTH + " bytes long");
+        if (password == null || password.length == 0) throw new IllegalArgumentException("Password cannot be null or empty");
+        if (pSalt == null || pSalt.length != SALT_LENGTH) throw new IllegalArgumentException("Password salt should be not null and " + SALT_LENGTH + " bytes long");
+        if (pIv == null || pIv.length != IV_LENGTH) throw new IllegalArgumentException("Password IV should be not null and " + IV_LENGTH + " bytes long");
+                
+        this();
 
         // Wrap the provided values into a memento and copy them to this account, centralizing the logic in copyMemento to avoid code duplication
-        AccountMemento memento = new AccountMemento(salt, software, sSalt, sIv, username, uSalt, uIv, password, pSalt, pIv);
+        AccountMemento memento = new AccountMemento(keySalt, software, sSalt, sIv, username, uSalt, uIv, password, pSalt, pIv);
         copyMemento(memento);
+
+        // If this constructor is used, it means that software and username are encrypted, as the presence of their salts is mandatory, so we can safely set this flag to true
+        this.isFullyEncrypted = true;
     }
 
     @Deprecated // This constructor is used only for backward compatibility
-    @SuppressWarnings("unused") // Used by Jackson for deserialization
-    private Account(
-            @JsonProperty(value = "software", required = true) @NotNull String software,
-            @JsonProperty(value = "username", required = true) @NotNull  String username,
-            @JsonProperty(value = "encryptedPassword", required = true) @NotNull byte[] encryptedPassword,
-            @JsonProperty(value = "salt", required = false) @Nullable byte[] salt,
-            @JsonProperty(value = "iv", required = true) @NotNull byte[] iv) {
+    private Account(@NotNull String software, @NotNull  String username, @NotNull byte[] encryptedPassword, @Nullable byte[] keySalt, @NotNull byte[] iv) {
 
-        if (iv.length != IV_LENGTH) throw new IllegalArgumentException("IV should be " + IV_LENGTH + " bytes long");
+        if (software == null || software.isEmpty()) throw new NullPointerException("Software cannot be null or empty");
+        if (username == null || username.isEmpty()) throw new NullPointerException("Username cannot be null or empty");
+        if (encryptedPassword == null || encryptedPassword.length == 0) throw new NullPointerException("Encrypted password cannot be null or empty");
+        if (keySalt != null && keySalt.length != SALT_LENGTH) throw new IllegalArgumentException("Key salt should be " + SALT_LENGTH + " bytes long, if provided");
+        if (iv == null || iv.length != IV_LENGTH) throw new IllegalArgumentException("IV should be not null and " + IV_LENGTH + " bytes long");
 
         this();
 
         this.software = software.getBytes(StandardCharsets.UTF_8);
-        this.softwareProperty.set(software);
-
         this.username = username.getBytes(StandardCharsets.UTF_8);
-        this.usernameProperty.set(username);
 
-        // If salt is not provided, derive it from software and username (backward compatibility:
-        // older versions didn't store salt and used software+username bytes as salt instead).
-        // IMPORTANT: the derived value is written back into this.pSalt so it is persisted on the
+        runOnFx(() -> {
+            this.softwareProperty.set(software);
+            this.usernameProperty.set(username);
+        });
+        
+        // If keySalt is not provided, derive it from software and username (backward compatibility:
+        // older versions didn't store keySalt and used software+username bytes as keySalt instead).
+        // IMPORTANT: the derived value is written back into this.keySalt so it is persisted on the
         // next save, at which point the account behaves identically to a modern one.
-        this.salt = (salt != null && salt.length == SALT_LENGTH) ? salt.clone() : (software + username).getBytes(StandardCharsets.UTF_8);
+        this.keySalt = (keySalt != null && keySalt.length == SALT_LENGTH) ? keySalt.clone() : (software + username).getBytes(StandardCharsets.UTF_8);
         System.arraycopy(iv, 0, this.pIv, 0, this.pIv.length);
 
         this.password = encryptedPassword;
     }
 
+    /**
+     * Unlocks this account by decrypting its data with the provided master password and security version.
+     * If the account was created with an older security version where software and username were not encrypted, this method also upgrades the account to the latest standard by encrypting all fields with the current security version.
+     * @param securityVersion the security version to use for decryption and potential upgrade
+     * @param masterPassword the master password to use for decryption
+     * @throws GeneralSecurityException if decryption fails (e.g. due to wrong master password or corrupted data)
+     */
     public void unlock(@NotNull SecurityVersion securityVersion, @NotNull String masterPassword) throws GeneralSecurityException {
         if (securityVersion == null) throw new NullPointerException("Security version cannot be null");
         if (masterPassword == null) throw new NullPointerException("Master password cannot be null");
 
         final AccountData data = getData(securityVersion, masterPassword);
 
+        // If the account is not fully encrypted, it means that it was created with an older security version where software and username were not encrypted.
+        // In this case, we encrypt all fields with the current security version to upgrade the account to the latest standard.
+        if (!isFullyEncrypted) setData(securityVersion, data, masterPassword);
+
         // Update properties for UI
-        softwareProperty.set(data.software());
-        usernameProperty.set(data.username());
+        runOnFx(() -> {
+            softwareProperty.set(data.software());
+            usernameProperty.set(data.username());
+        });
     }
 
     /**
@@ -193,6 +223,7 @@ public final class Account {
      * This is a UI-facing property and therefore its updates should are considered low-priority.
      * @return the username
      */
+    @JsonIgnore
     public String getUsername() {
         return usernameProperty.get();
     }
@@ -206,11 +237,11 @@ public final class Account {
 
         readLock.lock();
         try {
-            byte[] key = securityVersion.getKey(masterPassword, salt);
+            byte[] key = securityVersion.getKey(masterPassword, keySalt);
 
             // If software or username salt are null, it means that this account was created with
             // an older security version where these fields were not encrypted.
-            if(sSalt != null || uSalt != null) {
+            if (isFullyEncrypted) {
                 // Decrypt all fields
                 byte[] sKey = AES.derivateKey(key, sSalt, "software");
                 plainSoftware = AES.decryptAES(software, sKey, sIv);
@@ -243,6 +274,16 @@ public final class Account {
         return new Account(securityVersion, data, masterPassword);
     }
 
+    /**
+     * Wrapper record used for moving data in-and-out of this account.
+     * This holds sensitive data and should not be passed around.
+     */
+    public record AccountData(
+        @NotNull String software,
+        @NotNull String username,
+        @NotNull String password
+    ) {}
+
     // #region Package-private methods (exposed to AccountRepository)
     void setData(@NotNull SecurityVersion securityVersion, @NotNull AccountData data, @NotNull String masterPassword) throws GeneralSecurityException {
         if (securityVersion == null) throw new NullPointerException("Security version cannot be null");
@@ -254,15 +295,17 @@ public final class Account {
             if (pSalt.length != SALT_LENGTH) pSalt = new byte[SALT_LENGTH]; // Avoid reallocating if not necessary
 
             // Derive key
-            final byte[] key = securityVersion.getKey(masterPassword, salt);
+            final byte[] key = securityVersion.getKey(masterPassword, keySalt);
             
             software = encryptData(securityVersion, data.software(), key, sSalt, sIv, "software");
             username = encryptData(securityVersion, data.username(), key, uSalt, uIv, "username");
             password = encryptData(securityVersion, data.password(), key, pSalt, pIv, "password");
 
             // Update properties for UI
-            softwareProperty.set(data.software());
-            usernameProperty.set(data.username());
+            runOnFx(() -> {
+                softwareProperty.set(data.software());
+                usernameProperty.set(data.username());
+            });
         } finally {
             writeLock.unlock();
         }
@@ -295,14 +338,13 @@ public final class Account {
 
     /**
      * Captures the current state of this account for rollback purposes.
-     *
      * @return a memento object containing the account's current state
      */
     @NotNull AccountMemento captureState() {
         readLock.lock();
         try {
             return new AccountMemento(
-                this.salt.clone(),
+                this.keySalt.clone(),
                 this.software.clone(),
                 this.sSalt.clone(),
                 this.sIv.clone(),
@@ -334,10 +376,13 @@ public final class Account {
     }
 
     private void copyMemento(AccountMemento memento) {
-        this.softwareProperty.set("unavailable while locked"); // Invalidate properties to prevent reading inconsistent data during the copy
-        this.usernameProperty.set("unavailable while locked"); // Invalidate properties to prevent reading inconsistent data during the copy
+        runOnFx(() -> {
+            // Invalidate properties to prevent reading inconsistent data during the copy
+            this.softwareProperty.set("unavailable while locked");
+            this.usernameProperty.set("unavailable while locked");
+        });
 
-        this.salt = memento.salt().clone();
+        this.keySalt = memento.keySalt().clone();
         this.software = memento.software().clone();
         System.arraycopy(memento.sSalt(), 0, this.sSalt, 0, this.sSalt.length);
         System.arraycopy(memento.sIv(), 0, this.sIv, 0, this.sIv.length);
@@ -350,25 +395,54 @@ public final class Account {
     }
 
     /**
-     * Wrapper record used for moving data in-and-out of this account.
-     * This holds sensitive data and should not be passed around.
-     */
-    public record AccountData(
-        @NotNull String software,
-        @NotNull String username,
-        @NotNull String password
-    ) {}
-
-    /**
      * Memento record that captures the state of an Account for rollback purposes.
      * This implements the Memento pattern for transactional support.
      */
     public record AccountMemento(
-        @NotNull byte[] salt,
+        @NotNull byte[] keySalt,
         @NotNull byte[] software, @NotNull byte[] sSalt, @NotNull byte[] sIv,
         @NotNull byte[] username, @NotNull byte[] uSalt, @NotNull byte[] uIv,
         @NotNull byte[] password, @NotNull byte[] pSalt, @NotNull byte[] pIv
     ) {}
-
     // #endregion
+
+    /**
+     * Custom Jackson deserializer that distinguishes between the legacy (v1) format,
+     * where {@code software} and {@code username} were plain strings and only the password
+     * was encrypted, and the modern format where all three fields are encrypted byte arrays.
+     * The discriminator is the presence of the {@code encryptedPassword} property.
+     */
+    public static final class Deserializer extends ValueDeserializer<Account> {
+        @Override
+        public Account deserialize(JsonParser p, DeserializationContext ctxt) throws JacksonException {
+            ObjectNode node = p.readValueAsTree();
+
+            try {
+                if (node.has("encryptedPassword")) {
+                    // Legacy format: software/username are plain strings, only password is encrypted
+                    String software = node.get("software").asString();
+                    String username = node.get("username").asString();
+                    byte[] encryptedPassword = node.get("encryptedPassword").binaryValue();
+                    byte[] salt = node.has("salt") ? node.get("salt").binaryValue() : null;
+                    byte[] iv = node.get("iv").binaryValue();
+                    return new Account(software, username, encryptedPassword, salt, iv);
+                } else {
+                    // Modern format: all fields are encrypted byte arrays
+                    byte[] keySalt = node.get("keySalt").binaryValue();
+                    byte[] software = node.get("software").binaryValue();
+                    byte[] sSalt = node.get("sSalt").binaryValue();
+                    byte[] sIv = node.get("sIv").binaryValue();
+                    byte[] username = node.get("username").binaryValue();
+                    byte[] uSalt = node.get("uSalt").binaryValue();
+                    byte[] uIv = node.get("uIv").binaryValue();
+                    byte[] password = node.get("password").binaryValue();
+                    byte[] pSalt = node.get("pSalt").binaryValue();
+                    byte[] pIv = node.get("pIv").binaryValue();
+                    return new Account(keySalt, software, sSalt, sIv, username, uSalt, uIv, password, pSalt, pIv);
+                }
+            } catch (GeneralSecurityException e) {
+                throw ctxt.instantiationException(Account.class, e);
+            }
+        }
+    }
 }

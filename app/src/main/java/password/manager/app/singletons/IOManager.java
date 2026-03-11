@@ -259,17 +259,17 @@ public final class IOManager extends Singleton {
         return ACCOUNT_REPOSITORY.add(data)
                 .thenCompose(account -> {
                     if (account == null) throw new RuntimeException("Failed to create account");
+
                     final CompletableFuture<Void> uiUpdate = new CompletableFuture<>();
-                    Platform.runLater(() -> {
-                        try {
-                            HAS_CHANGED.set(true);
-                            Logger.getInstance().addInfo("Account added");
-                            uiUpdate.complete(null);
-                        } catch (Exception e) {
-                            Logger.getInstance().addError(e);
-                            uiUpdate.completeExceptionally(e);
-                        }
-                    });
+                    try {
+                        HAS_CHANGED.set(true);
+                        Logger.getInstance().addInfo("Account added");
+                        uiUpdate.complete(null);
+                    } catch (Exception e) {
+                        Logger.getInstance().addError(e);
+                        uiUpdate.completeExceptionally(e);
+                    }
+
                     return uiUpdate;
                 });
     }
@@ -281,11 +281,11 @@ public final class IOManager extends Singleton {
                 .thenCompose(editedAcc -> {
                     if(editedAcc == null) throw new RuntimeException("Failed to edit account");
                     final CompletableFuture<Void> uiUpdate = new CompletableFuture<>();
-                    Platform.runLater(() -> {
-                        HAS_CHANGED.set(true);
-                        Logger.getInstance().addInfo("Account edited");
-                        uiUpdate.complete(null);
-                    });
+
+                    HAS_CHANGED.set(true);
+                    Logger.getInstance().addInfo("Account edited");
+                    uiUpdate.complete(null);
+
                     return uiUpdate;
                 });
     }
@@ -311,13 +311,14 @@ public final class IOManager extends Singleton {
                 .thenAccept(data -> {
                     LoadingAnimation.stop(element);
                     if (data == null) throw new RuntimeException("Failed to retrieve account data");
+                    // Ensure the UI update happens on the JavaFX Application Thread
                     Platform.runLater(() -> element.setText(data.password()));
                 });
     }
     // #endregion
 
     // #region UserPreferences methods
-    public @NotNull Boolean changeMasterPassword(String newMasterPassword) {
+    public boolean changeMasterPassword(String newMasterPassword) {
         String oldMasterPassword = this.MASTER_PASSWORD_PROPERTY.get();
         if (!(oldMasterPassword == null || isAuthenticated())) return false;
 
@@ -343,7 +344,7 @@ public final class IOManager extends Singleton {
         Platform.runLater(() -> element.setText(MASTER_PASSWORD_PROPERTY.get()));
     }
 
-    public @NotNull Boolean authenticate(String masterPassword) {
+    public boolean authenticate(String masterPassword) {
         // If already authenticated, no need to re-authenticate
         if (isAuthenticated()) return false;
         Logger.getInstance().addInfo("Attempting user authentication...");
@@ -353,7 +354,24 @@ public final class IOManager extends Singleton {
 
         this.MASTER_PASSWORD_PROPERTY.set(masterPassword);
         Logger.getInstance().addInfo("User authenticated");
-        return true;
+
+        CompletableFuture<Void> unlockFuture = ACCOUNT_REPOSITORY.unlockAll(masterPassword)
+                .thenAccept(unlocked -> {
+                    if (unlocked) {
+                        Logger.getInstance().addInfo("All accounts unlocked");
+                    } else {
+                        Logger.getInstance().addError(new RuntimeException("Failed to unlock all accounts"));
+                    }
+                });
+
+        try {
+            // Wait for all accounts to be unlocked before allowing access to the UI
+            unlockFuture.get();
+            return true;
+        } catch (Exception e) {
+            Logger.getInstance().addError(e);
+            return false;
+        }
     }
     // #endregion
 

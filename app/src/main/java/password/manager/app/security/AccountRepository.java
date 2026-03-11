@@ -18,6 +18,8 @@
 
 package password.manager.app.security;
 
+import static password.manager.app.Utils.runOnFx;
+
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -134,9 +136,11 @@ public final class AccountRepository implements AutoCloseable {
 
                     accountHolder[0] = Account.of(securityVersionProperty.get(), data, masterPasswordProperty.get());
 
-                    synchronized (accounts) {
-                        accounts.add(accountHolder[0]);
-                    }
+                    runOnFx(() -> {
+                        synchronized (accounts) {
+                            accounts.add(accountHolder[0]);
+                        }
+                    }).join();
 
                     return accountHolder[0];
                 } catch (GeneralSecurityException e) {
@@ -146,9 +150,11 @@ public final class AccountRepository implements AutoCloseable {
             },
             () -> {
                 if (accountHolder[0] != null) {
-                    synchronized (accounts) {
-                        accounts.remove(accountHolder[0]);
-                    }
+                    runOnFx(() -> {
+                        synchronized (accounts) {
+                            accounts.remove(accountHolder[0]);
+                        }
+                    }).join();
                 }
             }
         );
@@ -216,17 +222,63 @@ public final class AccountRepository implements AutoCloseable {
 
         return transactionManager.executeInTransaction(
             () -> {
-                synchronized (accounts) {
-                    return accounts.remove(account);
-                }
+                runOnFx(() -> {
+                    synchronized (accounts) {
+                        accounts.remove(account);
+                    }
+                }).join();
+                return true;
             },
             () -> {
-                synchronized (accounts) {
-                    // Rollback: restore at original position
-                    accounts.add(originalIndex, account);
-                }
+                runOnFx(() -> {
+                    synchronized (accounts) {
+                        // Rollback: restore at original position
+                        accounts.add(originalIndex, account);
+                    }
+                }).join();
             }
         );
+    }
+
+    public @NotNull CompletableFuture<Boolean> unlockAll(@NotNull String masterPassword) {
+        List<Account> accountList;
+        List<Account.AccountMemento> originalStates;
+        synchronized (accounts) {
+            accountList = new ArrayList<>(accounts);
+            originalStates = accounts.stream().map(Account::captureState).toList();
+        }
+
+        SecurityVersion securityVersion = securityVersionProperty.get();
+
+        return transactionManager.executeInTransaction(transaction -> {
+            List<CompletableFuture<Boolean>> updateFutures = new ArrayList<>(accountList.size());
+
+            for (int i = 0; i < accountList.size(); i++) {
+                Account account = accountList.get(i);
+                Account.AccountMemento originalState = originalStates.get(i);
+
+                CompletableFuture<Boolean> updateFuture = transaction.addOperation(
+                    () -> {
+                        try {
+                            account.unlock(securityVersion, masterPassword);
+                            return true;
+                        } catch (GeneralSecurityException e) {
+                            Logger.getInstance().addError(e);
+                            return false;
+                        }
+                    },
+                    () -> {
+                        // Rollback using captured state
+                        account.restoreState(originalState);
+                        triggerUpdateNotification(account);
+                    }
+                );
+
+                updateFutures.add(updateFuture);
+            }
+
+            return allSuccessful(updateFutures);
+        });
     }
 
     /**
@@ -271,6 +323,7 @@ public final class AccountRepository implements AutoCloseable {
         transactionManager.shutdown();
     }
 
+    // #region Private methods
     /**
      * Helper method to check if all CompletableFutures in a collection completed successfully with true.
      * @param futures the collection of CompletableFutures to check
@@ -429,12 +482,15 @@ public final class AccountRepository implements AutoCloseable {
     }
 
     private void triggerUpdateNotification(Account account) {
-        // Trigger ObservableList change notification
-        synchronized (accounts) {
-            int index = accounts.indexOf(account);
-            // Account was removed during transaction, just give up on notification as not needed anymore
-            if (index < 0) return;
-            accounts.set(index, account);
-        }
+        // Trigger ObservableList change notification on FX thread
+        runOnFx(() -> {
+            synchronized (accounts) {
+                int index = accounts.indexOf(account);
+                // Account was removed during transaction, just give up on notification as not needed anymore
+                if (index < 0) return;
+                accounts.set(index, account);
+            }
+        }).join();
     }
+    // #endregion
 }

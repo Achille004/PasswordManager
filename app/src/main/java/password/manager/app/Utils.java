@@ -27,6 +27,7 @@ import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -126,7 +127,7 @@ public final class Utils {
      * @param append Whether to append to the file.
      * @return A FileWriter instance or null if an error occurs.
      */
-    public static @Nullable FileWriter getFileWriter(@NotNull Path path, @NotNull Boolean append) {
+    public static @Nullable FileWriter getFileWriter(@NotNull Path path, boolean append) {
         return getFileWriter(path.toFile(), append);
     }
 
@@ -136,7 +137,7 @@ public final class Utils {
      * @param append Whether to append to the file.
      * @return A FileWriter instance or null if an error occurs.
      */
-    public static @Nullable FileWriter getFileWriter(@NotNull File file, @NotNull Boolean append) {
+    public static @Nullable FileWriter getFileWriter(@NotNull File file, boolean append) {
         try {
             return new FileWriter(file, append);
         } catch (IOException e) {
@@ -187,5 +188,38 @@ public final class Utils {
 
         Platform.exit(); // Exit gracefully (saves data, etc.)
         return new Pane(); // return non-null dummy pane
+    }
+    
+    /**
+     * Schedules {@code action} on the JavaFX Application Thread when the toolkit is running,
+     * or executes it synchronously when it is not (e.g. in unit-test environments).
+     * <p>
+     * Returns a {@link CompletableFuture} that completes once the action has run, so callers
+     * can detect (and propagate) any exception thrown by the action.
+     * </p>
+     */
+    public static CompletableFuture<Void> runOnFx(Runnable action) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        Runnable wrappedAction = () -> {
+            try {
+                action.run();
+                future.complete(null);
+            } catch (Throwable t) {
+                future.completeExceptionally(t);
+            }
+        };
+
+        if (Platform.isFxApplicationThread()) {
+            wrappedAction.run();
+        } else {
+            try {
+                Platform.runLater(wrappedAction);
+            } catch (IllegalStateException ignored) {
+                // JavaFX toolkit not initialised (test environment) — run synchronously
+                wrappedAction.run();
+            }
+        }
+
+        return future;
     }
 }

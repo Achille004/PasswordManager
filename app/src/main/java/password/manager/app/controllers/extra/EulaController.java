@@ -21,7 +21,6 @@ package password.manager.app.controllers.extra;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import password.manager.app.App;
@@ -55,6 +54,6 @@ public class EulaController extends AbstractController {
     }
 
     private void browse(String uri) {
-        Platform.runLater(() -> App.getAppHostServices().showDocument(uri));
+        App.getAppHostServices().showDocument(uri);
     }
 }

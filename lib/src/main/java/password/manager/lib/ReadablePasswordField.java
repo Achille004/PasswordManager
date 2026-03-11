@@ -26,6 +26,7 @@ import java.util.ResourceBundle;
 import lombok.Getter;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
@@ -66,6 +67,10 @@ public class ReadablePasswordField extends AnchorPane implements Initializable, 
         textField.textProperty().bindBidirectional(passwordField.textProperty());
         textField.styleProperty().bindBidirectional(passwordField.styleProperty());
         textField.promptTextProperty().bindBidirectional(passwordField.promptTextProperty());
+
+        // Create a "manual" bidirectional binding for the caret position, since the property itself is read-only
+        textField.caretPositionProperty().addListener((_, _, newPos) -> passwordField.positionCaret(newPos.intValue()));
+        passwordField.caretPositionProperty().addListener((_, _, newPos) -> textField.positionCaret(newPos.intValue()));
 
         this.layoutBoundsProperty().addListener((_, _, newValue) -> setImageSize(newValue));
 
@@ -199,6 +204,21 @@ public class ReadablePasswordField extends AnchorPane implements Initializable, 
     @Override
     public String getPromptText() {
         return textField.getPromptText();
+    }
+
+    @Override
+    public ReadOnlyIntegerProperty caretPositionProperty() {
+        return textField.caretPositionProperty();
+    }
+
+    @Override
+    public void positionCaret(int pos) {
+        textField.positionCaret(pos);
+    }
+
+    @Override
+    public int getCaretPosition() {
+        return textField.getCaretPosition();
     }
 
     @Override

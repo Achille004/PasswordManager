@@ -19,6 +19,7 @@
 package password.manager.lib;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -36,6 +37,10 @@ public interface PasswordInputControl {
     StringProperty promptTextProperty();
     void setPromptText(String text);
     String getPromptText();
+
+    ReadOnlyIntegerProperty caretPositionProperty();
+    void positionCaret(int pos);
+    int getCaretPosition();
 
     void requestFocus();
     void setOnAction(EventHandler<ActionEvent> value);
