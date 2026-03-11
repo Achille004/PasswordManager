@@ -58,6 +58,7 @@ import lombok.Getter;
 import password.manager.app.security.Account;
 import password.manager.app.security.AccountRepository;
 import password.manager.app.security.UserPreferences;
+import password.manager.app.security.Account.AccountData;
 import password.manager.lib.LoadingAnimation;
 import password.manager.lib.PasswordInputControl;
 
@@ -252,10 +253,10 @@ public final class IOManager extends Singleton {
     // #endregion
 
     // #region Account methods
-    public @NotNull CompletableFuture<Void> addAccount(@NotNull String software, @NotNull String username, @NotNull String password) throws IllegalStateException {
+    public @NotNull CompletableFuture<Void> addAccount(@NotNull AccountData data) throws IllegalStateException {
         if (!isAuthenticated()) throw new IllegalStateException("User is not authenticated [addAccount]");
 
-        return ACCOUNT_REPOSITORY.add(software, username, password)
+        return ACCOUNT_REPOSITORY.add(data)
                 .thenCompose(account -> {
                     if (account == null) throw new RuntimeException("Failed to create account");
                     final CompletableFuture<Void> uiUpdate = new CompletableFuture<>();
@@ -273,10 +274,10 @@ public final class IOManager extends Singleton {
                 });
     }
 
-    public @NotNull CompletableFuture<Void> editAccount(@NotNull Account account, @NotNull String software, @NotNull String username, @NotNull String password) throws IllegalStateException  {
+    public @NotNull CompletableFuture<Void> editAccount(@NotNull Account account, @NotNull AccountData data) throws IllegalStateException  {
         if (!isAuthenticated()) throw new IllegalStateException("User is not authenticated [editAccount]");
 
-        return ACCOUNT_REPOSITORY.edit(account, software, username, password)
+        return ACCOUNT_REPOSITORY.edit(account, data)
                 .thenCompose(editedAcc -> {
                     if(editedAcc == null) throw new RuntimeException("Failed to edit account");
                     final CompletableFuture<Void> uiUpdate = new CompletableFuture<>();
@@ -306,11 +307,11 @@ public final class IOManager extends Singleton {
         if (!isAuthenticated()) throw new IllegalStateException("User is not authenticated [getAccountPassword]");
 
         LoadingAnimation.start(element);
-        return ACCOUNT_REPOSITORY.getPassword(account)
-                .thenAccept(password -> {
+        return ACCOUNT_REPOSITORY.getData(account)
+                .thenAccept(data -> {
                     LoadingAnimation.stop(element);
-                    if (password == null) throw new RuntimeException("Failed to retrieve password for account: " + account.getSoftware());
-                    Platform.runLater(() -> element.setText(password));
+                    if (data == null) throw new RuntimeException("Failed to retrieve account data");
+                    Platform.runLater(() -> element.setText(data.password()));
                 });
     }
     // #endregion

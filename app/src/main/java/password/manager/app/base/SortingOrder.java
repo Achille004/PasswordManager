@@ -47,8 +47,8 @@ public enum SortingOrder {
         return converter.apply(software, username);
     }
 
-    public String convert(@NotNull Account account) {
-        return convert(account.getSoftware(), account.getUsername());
+    public String convert(@NotNull Account data) {
+        return convert(data.getSoftware(), data.getUsername());
     }
 
     /**

@@ -60,6 +60,7 @@ import password.manager.app.base.SortingOrder;
 import password.manager.app.controllers.AbstractController;
 import password.manager.app.controllers.TabManager;
 import password.manager.app.security.Account;
+import password.manager.app.security.Account.AccountData;
 import password.manager.app.singletons.IOManager;
 import password.manager.app.singletons.Logger;
 import password.manager.app.singletons.ObservableResourceFactory;
@@ -434,6 +435,7 @@ public class ManagerController extends AbstractController {
                 final String software = editorSoftware.getText().strip();
                 final String username = editorUsername.getText().strip();
                 final String password = editorPassword.getText().strip();
+                final AccountData data = new AccountData(software, username, password);
 
                 // save the new attributes of the account
                 /*
@@ -446,11 +448,11 @@ public class ManagerController extends AbstractController {
                   behavior when editing.
                 */
                 if(isAddEditor) {
-                    IOManager.getInstance().addAccount(software, username, password);
+                    IOManager.getInstance().addAccount(data);
                     reset();
                 } else {
                     editOperationInProgress = true;
-                    IOManager.getInstance().editAccount(account, software, username, password)
+                    IOManager.getInstance().editAccount(account, data)
                             .thenAccept(_ -> editOperationInProgress = false)
                             .exceptionally(e -> {
                                 Logger.getInstance().addError(e);

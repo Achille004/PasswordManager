@@ -32,6 +32,7 @@ import org.bouncycastle.crypto.params.Argon2Parameters;
 import org.jetbrains.annotations.NotNull;
 
 import lombok.RequiredArgsConstructor;
+import password.manager.app.security.AES;
 import password.manager.app.singletons.Logger;
 
 /**
@@ -68,7 +69,7 @@ public enum SecurityVersion {
             return secretKey.getEncoded();
         } catch (InvalidKeySpecException e) {
             Logger.getInstance().addError(e);
-            return null;
+            throw new RuntimeException(e);
         }
     }),
     ARGON2((bits, password, salt) -> {
@@ -99,9 +100,9 @@ public enum SecurityVersion {
     // Latest security version
     public static final SecurityVersion LATEST = ARGON2;
 
-    // Hash and AES key sizes
+    // Hash and key sizes
     public static final int HASH_BITS = 512;
-    public static final int AES_BITS = 256;
+    public static final int KEY_BITS = AES.AES_BITS;
 
     private final TriFunction<Integer, String, byte[], byte[]> keyDerivationFunction;
 
@@ -130,7 +131,7 @@ public enum SecurityVersion {
      */
     public byte[] getKey(@NotNull String masterPassword, byte[] salt) {
         if (masterPassword == null) throw new NullPointerException("Master password cannot be null");
-        final byte[] keyBytes = keyDerivationFunction.apply(AES_BITS, masterPassword, salt);
+        final byte[] keyBytes = keyDerivationFunction.apply(KEY_BITS, masterPassword, salt);
         final SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
         return secretKeySpec.getEncoded();
     }

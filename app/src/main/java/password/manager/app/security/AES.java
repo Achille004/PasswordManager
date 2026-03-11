@@ -18,13 +18,22 @@
 
 package password.manager.app.security;
 
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.security.Key;
 import java.security.Security;
 
 import javax.crypto.Cipher;
+import java.security.spec.AlgorithmParameterSpec;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.bouncycastle.crypto.Digest;
+import org.bouncycastle.crypto.CryptoServicePurpose;
+import org.bouncycastle.crypto.DerivationParameters;
+import org.bouncycastle.crypto.digests.SHA256Digest;
+import org.bouncycastle.crypto.generators.HKDFBytesGenerator;
+import org.bouncycastle.crypto.params.HKDFParameters;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jetbrains.annotations.NotNull;
 
@@ -38,42 +47,68 @@ public final class AES {
         Security.setProperty("crypto.policy", "unlimited");
     }
 
-    /**
-     * Uses AES to encrypt a password.
-     *
-     * @param password The password to encrypt.
-     * @param key      The AES key.
-     * @param iv       The initialization vector.
-     * @return         The encrypted password.
-     * @throws GeneralSecurityException
-     */
-    public static byte[] encryptAES(@NotNull String password, byte[] key, byte[] iv) throws GeneralSecurityException {
-        // Create Cipher object to encrypt
-        final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
-        cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(128, iv));
+    public static final int AES_BITS = 256;
+    public static final int GCM_IV_BITS = 128; // 12 bytes for GCM IV
 
-        // Encrypt the password
-        return cipher.doFinal(password.getBytes());
+    public static byte[] derivateKey(@NotNull byte[] sourceKey, @NotNull byte[] salt, @NotNull String info) {
+        Digest digest = SHA256Digest.newInstance(CryptoServicePurpose.KEYGEN);
+        DerivationParameters params = new HKDFParameters(sourceKey, salt, info.getBytes(StandardCharsets.UTF_8));
+
+        HKDFBytesGenerator generator = new HKDFBytesGenerator(digest);
+        generator.init(params);
+
+        byte[] derivedKey = new byte[AES_BITS / 8];
+        generator.generateBytes(derivedKey, 0, derivedKey.length);
+        return derivedKey;
     }
 
     /**
-     * Decrypts an AES-encrypted password.
+     * Uses AES to encrypt a value.
      *
-     * @param encryptedPassword The encrypted password to decrypt.
-     * @param key               The AES key.
-     * @param iv                The initialization vector.
-     * @return                  The decrypted password.
+     * @param value    The value to encrypt.
+     * @param key      The AES key.
+     * @param iv       The initialization vector.
+     * @return         The encrypted value.
      * @throws GeneralSecurityException
      */
-    public static @NotNull String decryptAES(byte[] encryptedPassword, byte[] key, byte[] iv) throws GeneralSecurityException {
+    public static byte[] encryptAES(@NotNull String value, byte[] key, byte[] iv) throws GeneralSecurityException {
+        // Create Key and AlgorithmParameterSpec objects
+        Key secretKey = new SecretKeySpec(key, "AES");
+        AlgorithmParameterSpec gcmSpec = new GCMParameterSpec(GCM_IV_BITS, iv);
+
+        // Create Cipher object to encrypt
+        final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey, gcmSpec);
+
+        // Get the password bytes
+        byte[] passwordBytes = value.getBytes(StandardCharsets.UTF_8);
+
+        // Encrypt them
+        return cipher.doFinal(passwordBytes);
+    }
+
+    /**
+     * Decrypts an AES-encrypted value.
+     *
+     * @param encryptedValue    The encrypted value to decrypt.
+     * @param key               The AES key.
+     * @param iv                The initialization vector.
+     * @return                  The decrypted value.
+     * @throws GeneralSecurityException
+     */
+    public static @NotNull String decryptAES(byte[] encryptedValue, byte[] key, byte[] iv) throws GeneralSecurityException {
+        // Create Key and AlgorithmParameterSpec objects
+        Key secretKey = new SecretKeySpec(key, "AES");
+        AlgorithmParameterSpec gcmSpec = new GCMParameterSpec(GCM_IV_BITS, iv);
+
         // Create Cipher object to decrypt
         final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
-        cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(128, iv));
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, gcmSpec);
 
-        // Decrypt the password
-        final byte[] password = cipher.doFinal(encryptedPassword);
+        // Decrypt the value
+        final byte[] password = cipher.doFinal(encryptedValue);
 
         // Convert it to String
-        return new String(password);
+        return new String(password, StandardCharsets.UTF_8);
     }
 }

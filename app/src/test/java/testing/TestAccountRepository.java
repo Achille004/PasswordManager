@@ -38,6 +38,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import password.manager.app.base.SecurityVersion;
 import password.manager.app.security.Account;
+import password.manager.app.security.Account.AccountData;
 import password.manager.app.security.AccountRepository;
 import password.manager.app.singletons.Logger;
 import password.manager.app.singletons.Singletons;
@@ -75,7 +76,8 @@ public class TestAccountRepository {
     void testAdd() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.injectBasePath();
 
-        CompletableFuture<Account> future = repository.add("TestSoftware", "TestUser", "TestPass123!");
+        AccountData data = new AccountData("TestSoftware", "TestUser", "TestPass123!");
+        CompletableFuture<Account> future = repository.add(data);
         Account account = future.get(5, TimeUnit.SECONDS);
 
         assertNotNull(account, "Account should be created successfully");
@@ -94,8 +96,9 @@ public class TestAccountRepository {
             String username = "user" + i;
             String password = "password" + i;
 
+            AccountData data = new AccountData(software, username, password);
             repository
-                    .add(software, username, password)
+                    .add(data)
                     .get(5, TimeUnit.SECONDS);
         }
 
@@ -106,12 +109,14 @@ public class TestAccountRepository {
     void testEdit() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.injectBasePath();
 
+        AccountData oldData = new AccountData("OldSoftware", "OldUser", "OldPass");
         Account account = repository
-                .add("OldSoftware", "OldUser", "OldPass")
+                .add(oldData)
                 .get(5, TimeUnit.SECONDS);
 
+        AccountData newData = new AccountData("NewSoftware", "NewUser", "NewPass");
         Account edited = repository
-                .edit(account, "NewSoftware", "NewUser", "NewPass")
+                .edit(account, newData)
                 .get(5, TimeUnit.SECONDS);
 
         assertNotNull(edited, "Edit should return updated account");
@@ -124,11 +129,13 @@ public class TestAccountRepository {
     void testEditNonExistentAccount() throws GeneralSecurityException {
         TestingUtils.injectBasePath();
 
-        Account account = Account.of(SecurityVersion.LATEST, "NonExistentSoftware", "NonExistentUser", "NonExistentPass", DEFAULT_MASTER_PASSWORD);
+        AccountData data = new AccountData("NonExistentSoftware", "NonExistentUser", "NonExistentPass");
+        Account account = Account.of(SecurityVersion.LATEST, data, DEFAULT_MASTER_PASSWORD);
 
+        AccountData newData = new AccountData("NewSoftware", "NewUser", "NewPass");
         assertThrows(
                 IllegalArgumentException.class,
-                () -> repository.edit(account, "Software", "User", "Pass"),
+                () -> repository.edit(account, newData),
                 "Editing non-existent account should throw IllegalArgumentException"
         );
     }
@@ -137,8 +144,9 @@ public class TestAccountRepository {
     void testRemove() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.injectBasePath();
 
+        AccountData data = new AccountData("TestSoftware", "TestUser", "TestPass");
         Account account = repository
-                .add("TestSoftware", "testuser", "testpass")
+                .add(data)
                 .get(5, TimeUnit.SECONDS);
 
         Boolean removed = repository.remove(account).get(5, TimeUnit.SECONDS);
@@ -151,7 +159,8 @@ public class TestAccountRepository {
     void testRemoveNonExistentAccount() throws GeneralSecurityException {
         TestingUtils.injectBasePath();
 
-        Account account = Account.of(SecurityVersion.LATEST, "NonExistentSoftware", "NonExistentUser", "NonExistentPass", DEFAULT_MASTER_PASSWORD);
+        AccountData data = new AccountData("NonExistentSoftware", "NonExistentUser", "NonExistentPass");
+        Account account = Account.of(SecurityVersion.LATEST, data, DEFAULT_MASTER_PASSWORD);
 
         assertThrows(
             IllegalArgumentException.class,
@@ -161,19 +170,21 @@ public class TestAccountRepository {
     }
 
     @Test
-    void testGetPassword() throws ExecutionException, InterruptedException, TimeoutException {
+    void testGetData() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.injectBasePath();
 
         String expectedPassword = "SecurePassword123!";
+        AccountData data = new AccountData("TestSoftware", "TestUser", expectedPassword);
+
         Account account = repository
-                .add("TestSoftware", "testuser", expectedPassword)
+                .add(data)
                 .get(5, TimeUnit.SECONDS);
 
-        String decryptedPassword = repository
-                .getPassword(account)
+        AccountData decryptedData = repository
+                .getData(account)
                 .get(5, TimeUnit.SECONDS);
 
-        assertEquals(expectedPassword, decryptedPassword, "Decrypted password should match original");
+        assertEquals(data.password(), decryptedData.password(), "Decrypted password should match original");
     }
 
     @Test
@@ -186,7 +197,9 @@ public class TestAccountRepository {
             String username = "user" + i;
             String password = "password" + i;
 
-            Account account = Account.of(SecurityVersion.LATEST, software, username, password, DEFAULT_MASTER_PASSWORD);
+            AccountData testData = new AccountData(software, username, password);
+            Account account = Account.of(SecurityVersion.LATEST, testData, DEFAULT_MASTER_PASSWORD);
+
             testAccounts.add(account);
         }
 
@@ -199,17 +212,20 @@ public class TestAccountRepository {
     void testNonEmptySetAll() throws ExecutionException, InterruptedException, TimeoutException, GeneralSecurityException {
         TestingUtils.injectBasePath();
 
+        AccountData data = new AccountData("InitialSoftware", "InitialUser", "InitialPass");
         repository
-                .add("InitialSoftware", "InitialUser", "InitialPass")
+                .add(data)
                 .get(5, TimeUnit.SECONDS);
 
         List<Account> testAccounts = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
-            String software = "software" + i;
-            String username = "user" + i;
-            String password = "password" + i;
+            String software = "Soft" + i;
+            String username = "User" + i;
+            String password = "Pass" + i;
 
-            Account account = Account.of(SecurityVersion.LATEST, software, username, password, DEFAULT_MASTER_PASSWORD);
+            AccountData testData = new AccountData(software, username, password);
+            Account account = Account.of(SecurityVersion.LATEST, testData, DEFAULT_MASTER_PASSWORD);
+
             testAccounts.add(account);
         }
 
@@ -224,17 +240,13 @@ public class TestAccountRepository {
     void testFindAllIsUnmodifiable() throws ExecutionException, InterruptedException, TimeoutException, GeneralSecurityException {
         TestingUtils.injectBasePath();
 
+        AccountData data = new AccountData("TestSoftware", "TestUser", "TestPass");
         repository
-                .add("TestSoftware", "testuser", "testpass")
+                .add(data)
                 .get(5, TimeUnit.SECONDS);
 
-        Account account = Account.of(
-            SecurityVersion.LATEST,
-            "TestSoftware1",
-            "TestUser1",
-            "TestPass1",
-            DEFAULT_MASTER_PASSWORD
-        );
+        AccountData anotherData = new AccountData("AnotherSoftware", "AnotherUser", "AnotherPass");
+        Account account = Account.of(SecurityVersion.LATEST, anotherData, DEFAULT_MASTER_PASSWORD);
 
         assertThrows(
             UnsupportedOperationException.class,
@@ -251,7 +263,8 @@ public class TestAccountRepository {
         CompletableFuture<?>[] futures = new CompletableFuture[operationCount];
 
         for (int i = 0; i < operationCount; i++) {
-            futures[i] = repository.add("Software" + i, "user" + i, "pass" + i);
+            AccountData data = new AccountData("Soft" + i, "User" + i, "Pass" + i);
+            futures[i] = repository.add(data);
         }
 
         CompletableFuture.allOf(futures).get(10, TimeUnit.SECONDS);
@@ -270,7 +283,8 @@ public class TestAccountRepository {
         CompletableFuture<?>[] futures = new CompletableFuture[operationCount];
 
         for (int i = 0; i < operationCount; i++) {
-            futures[i] = repository.add("Software" + i, "user" + i, "pass" + i);
+            AccountData data = new AccountData("Soft" + i, "User" + i, "Pass" + i);
+            futures[i] = repository.add(data);
         }
 
         CompletableFuture.allOf(futures).get(operationCount, TimeUnit.SECONDS); // 1s per operation should be more than enough
@@ -290,8 +304,9 @@ public class TestAccountRepository {
             String username = "user" + i;
             String password = "password" + i;
 
+            AccountData data = new AccountData(software, username, password);
             repository
-                    .add(software, username, password)
+                    .add(data)
                     .get(5, TimeUnit.SECONDS);
         }
 
@@ -301,8 +316,10 @@ public class TestAccountRepository {
         // Try to get password with new master password
         for (Account account : repository.findAll()) {
             Logger.getInstance().addDebug("Testing account: " + account.getSoftware() + " / " +  account.getUsername());
-            String password = repository.getPassword(account).get(30, TimeUnit.SECONDS);
-            assertNotNull(password, "Password should be retrievable with new master password");
+            AccountData data = repository.getData(account).get(30, TimeUnit.SECONDS);
+            assertNotNull(data.software(), "Software should be retrievable with new master password");
+            assertNotNull(data.username(), "Username should be retrievable with new master password");
+            assertNotNull(data.password(), "Password should be retrievable with new master password");
         }
     }
 
@@ -321,7 +338,8 @@ public class TestAccountRepository {
             String password = "password" + i;
 
             // Add with null master password should:
-            CompletableFuture<Account> future = repository.add(software, username, password);
+            AccountData data = new AccountData(software, username, password);
+            CompletableFuture<Account> future = repository.add(data);
 
             // - Return null
             assertNull(
@@ -353,16 +371,18 @@ public class TestAccountRepository {
 
         // Add accounts to repository
         int count = 10;
-        List<String> expectedPasswords = new ArrayList<>();
+        List<AccountData> expectedData = new ArrayList<>();
 
         for (int i = 0; i < count; i++) {
             String software = "software" + i;
             String username = "user" + i;
             String password = "password" + i;
-            expectedPasswords.add(password);
+
+            AccountData data = new AccountData(software, username, password);
+            expectedData.add(data);
 
             repository
-                .add(software, username, password)
+                .add(data)
                 .get(5, TimeUnit.SECONDS);
         }
 
@@ -379,11 +399,11 @@ public class TestAccountRepository {
 
         for (int i = 0; i < afterUpdate.size(); i++) {
             Account account = afterUpdate.get(i);
-            String password = repository
-                .getPassword(account)
+            AccountData data = repository
+                .getData(account)
                 .get(30, TimeUnit.SECONDS);
 
-            assertEquals(expectedPasswords.get(i), password,
+            assertEquals(expectedData.get(i).password(), data.password(),
                 "Password should remain the same after security version update");
         }
     }
@@ -403,7 +423,8 @@ public class TestAccountRepository {
             String password = "password" + i;
 
             // Add with null security version should:
-            CompletableFuture<Account> future = repository.add(software, username, password);
+            AccountData data = new AccountData(software, username, password);
+            CompletableFuture<Account> future = repository.add(data);
 
             // - Return null
             assertNull(
@@ -439,8 +460,9 @@ public class TestAccountRepository {
             String username = "user" + i;
             String password = "password" + i;
 
+            AccountData data = new AccountData(software, username, password);
             repository
-                    .add(software, username, password)
+                    .add(data)
                     .get(5, TimeUnit.SECONDS);
         }
 
@@ -450,8 +472,10 @@ public class TestAccountRepository {
 
         // Try to get password with new master password
         for (Account account : accounts) {
-            String password = repository.getPassword(account).get(30, TimeUnit.SECONDS);
-            assertNotNull(password, "Password should be retrievable with new master password");
+            AccountData data = repository.getData(account).get(30, TimeUnit.SECONDS);
+            assertNotNull(data.software(), "Software should be retrievable with new master password");
+            assertNotNull(data.username(), "Username should be retrievable with new master password");
+            assertNotNull(data.password(), "Password should be retrievable with new master password");
         }
     }
 }
