@@ -26,7 +26,6 @@ import java.util.function.BiConsumer;
 
 import org.jetbrains.annotations.NotNull;
 
-import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -74,12 +73,10 @@ public class TabManager<T, U extends AbstractController> {
     }
 
     public void selectTab(@NotNull Tab tab, boolean addIfMissing) {
-        Platform.runLater(() -> {
-            if (addIfMissing && !TAB_PANE.getTabs().contains(tab)) {
-                TAB_PANE.getTabs().add(TAB_PANE.getTabs().size() - 1, tab);
-            }
-            TAB_PANE.getSelectionModel().select(tab);
-        });
+        if (addIfMissing && !TAB_PANE.getTabs().contains(tab)) {
+            TAB_PANE.getTabs().add(TAB_PANE.getTabs().size() - 1, tab);
+        }
+        TAB_PANE.getSelectionModel().select(tab);
     }
 
     public void selectTab(@NotNull Tab tab) {
@@ -93,10 +90,15 @@ public class TabManager<T, U extends AbstractController> {
     }
 
     public void closeTab(@NotNull Tab tab) {
-        Platform.runLater(() -> TAB_PANE.getTabs().remove(tab));
+        TAB_PANE.getTabs().remove(tab);
     }
 
     public void closeTab(@NotNull T item) {
+        Tab tab = TABS_MAP.get(item);
+        if (tab != null) closeTab(tab);
+    }
+
+    public void removeTab(@NotNull T item) {
         Tab tab = TABS_MAP.remove(item);
         if (tab != null) closeTab(tab);
     }

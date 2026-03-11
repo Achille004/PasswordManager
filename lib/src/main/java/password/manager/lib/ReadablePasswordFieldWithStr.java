@@ -27,6 +27,7 @@ import java.util.function.Function;
 
 import javafx.animation.KeyValue;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -187,6 +188,21 @@ public class ReadablePasswordFieldWithStr extends AnchorPane implements Initiali
     @Override
     public String getPromptText() {
         return passwordField.getPromptText();
+    }
+
+    @Override
+    public ReadOnlyIntegerProperty caretPositionProperty() {
+        return passwordField.caretPositionProperty();
+    }
+
+    @Override
+    public void positionCaret(int pos) {
+        passwordField.positionCaret(pos);
+    }
+
+    @Override
+    public int getCaretPosition() {
+        return passwordField.getCaretPosition();
     }
 
     @Override

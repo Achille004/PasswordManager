@@ -149,7 +149,7 @@ public class TestAccountRepository {
                 .add(data)
                 .get(5, TimeUnit.SECONDS);
 
-        Boolean removed = repository.remove(account).get(5, TimeUnit.SECONDS);
+        boolean removed = repository.remove(account).get(5, TimeUnit.SECONDS);
 
         assertTrue(removed, "Remove should return true");
         assertTrue(repository.findAll().isEmpty(), "Repository should be empty after removal");
