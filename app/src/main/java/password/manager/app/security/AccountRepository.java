@@ -29,6 +29,7 @@ import java.util.concurrent.CompletableFuture;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javafx.beans.Observable;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import password.manager.app.base.SecurityVersion;
@@ -75,7 +76,11 @@ public final class AccountRepository implements AutoCloseable {
     public AccountRepository() {
         // The synchronized wrapper was removed since the ListChangeBuilder of the wrapping ObservableList was
         // suffering from broken internal state due to concurrent modifications, now synchronization is manual.
-        this.accounts = FXCollections.observableList(new ArrayList<>());
+        this.accounts = FXCollections.observableList(
+            new ArrayList<>(),
+            // This makes so that UPDATED events are fired when one of the observables in the extracted array changes
+            account -> new Observable[] { account.softwareProperty(), account.usernameProperty() }
+        );
         this.transactionManager = new TransactionManager();
 
         this.DEK = null;
@@ -186,7 +191,6 @@ public final class AccountRepository implements AutoCloseable {
             () -> {
                 try {
                     account.setData(data, DEK);
-                    triggerUpdateNotification(account);
                     return account;
                 } catch (GeneralSecurityException e) {
                     Logger.getInstance().addError(e);
@@ -196,7 +200,6 @@ public final class AccountRepository implements AutoCloseable {
             () -> {
                 // Rollback all changes using captured state
                 account.restoreState(originalState);
-                triggerUpdateNotification(account);
             },
             "Editing Account"
         );
@@ -288,7 +291,6 @@ public final class AccountRepository implements AutoCloseable {
                     () -> {
                         // Rollback using captured state
                         account.restoreState(originalState);
-                        triggerUpdateNotification(account);
                     }
                 );
 
@@ -340,7 +342,6 @@ public final class AccountRepository implements AutoCloseable {
         transactionManager.shutdown();
     }
 
-    // #region Private methods
     /**
      * Helper method to check if all CompletableFutures in a collection completed successfully with true.
      * @param futures the collection of CompletableFutures to check
@@ -352,17 +353,4 @@ public final class AccountRepository implements AutoCloseable {
                     f -> (f.isDone() && !f.isCompletedExceptionally() && f.join())
                 ));
     }
-
-    private void triggerUpdateNotification(Account account) {
-        // Trigger ObservableList change notification on FX thread
-        runOnFx(() -> {
-            synchronized (accounts) {
-                int index = accounts.indexOf(account);
-                // Account was removed during transaction, just give up on notification as not needed anymore
-                if (index < 0) return;
-                accounts.set(index, account);
-            }
-        }).join();
-    }
-    // #endregion
 }
