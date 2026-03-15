@@ -130,8 +130,6 @@ public final class AccountRepository implements AutoCloseable {
         return transactionManager.executeInTransaction(
             () -> {
                 try {
-                    Logger.getInstance().addDebug("Adding account");
-
                     accountHolder[0] = Account.of(data, DEK);
 
                     runOnFx(() -> {
@@ -154,7 +152,8 @@ public final class AccountRepository implements AutoCloseable {
                         }
                     }).join();
                 }
-            }
+            },
+            "Adding Account"
         );
     }
 
@@ -186,8 +185,6 @@ public final class AccountRepository implements AutoCloseable {
         return transactionManager.executeInTransaction(
             () -> {
                 try {
-                    Logger.getInstance().addDebug("Updating account");
-
                     account.setData(data, DEK);
                     triggerUpdateNotification(account);
                     return account;
@@ -200,7 +197,8 @@ public final class AccountRepository implements AutoCloseable {
                 // Rollback all changes using captured state
                 account.restoreState(originalState);
                 triggerUpdateNotification(account);
-            }
+            },
+            "Editing Account"
         );
     }
 
@@ -230,8 +228,6 @@ public final class AccountRepository implements AutoCloseable {
 
         return transactionManager.executeInTransaction(
             () -> {
-                Logger.getInstance().addDebug("Removing account");
-
                 runOnFx(() -> {
                     synchronized (accounts) {
                         accounts.remove(account);
@@ -246,7 +242,8 @@ public final class AccountRepository implements AutoCloseable {
                         accounts.add(originalIndex, account);
                     }
                 }).join();
-            }
+            },
+            "Removing Account"
         );
     }
 
@@ -299,7 +296,7 @@ public final class AccountRepository implements AutoCloseable {
             }
 
             return allSuccessful(updateFutures);
-        });
+        }, "Unlocking All Accounts");
     }
 
     /**

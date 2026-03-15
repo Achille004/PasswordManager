@@ -97,7 +97,7 @@ public class ManagerController extends AbstractController {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
+        Logger.getInstance().addDebug("Initializing %s", getClass().getSimpleName());
 
         final IOManager IO_MANAGER = IOManager.getInstance();
 
@@ -324,7 +324,7 @@ public class ManagerController extends AbstractController {
 
         @Override
         public void initialize(URL location, ResourceBundle resources) {
-            Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
+            Logger.getInstance().addDebug("Initializing %s", getClass().getSimpleName());
 
             final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
             langResources.bindTextProperty(homeDescTop, "home_desc.top");
@@ -374,7 +374,7 @@ public class ManagerController extends AbstractController {
 
         @Override
         public void initialize(URL location, ResourceBundle resources) {
-            Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
+            Logger.getInstance().addDebug("Initializing %s", getClass().getSimpleName());
 
             final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
             langResources.bindTextProperty(editorSoftwareLbl, "software");

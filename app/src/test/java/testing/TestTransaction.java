@@ -46,7 +46,7 @@ public class TestTransaction {
     @BeforeEach
     void setUp() {
         executor = Executors.newVirtualThreadPerTaskExecutor();
-        transaction = new Transaction(executor, transactionProgressiveId.incrementAndGet());
+        transaction = new Transaction(executor, transactionProgressiveId.incrementAndGet(), "Test Transaction");
     }
 
     @AfterEach

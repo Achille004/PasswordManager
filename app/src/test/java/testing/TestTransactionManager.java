@@ -58,7 +58,7 @@ public class TestTransactionManager {
     void testBeginTransaction() {
         TestingUtils.injectBasePath();
 
-        Transaction transaction = manager.beginTransaction();
+        Transaction transaction = manager.beginTransaction("Test Transaction");
         assertNotNull(transaction, "Transaction should not be null");
         assertFalse(transaction.isCommitted(), "New transaction should not be committed");
         assertFalse(transaction.isRolledBack(), "New transaction should not be rolled back");
@@ -77,7 +77,7 @@ public class TestTransactionManager {
             }, null);
 
             return CompletableFuture.completedFuture(42);
-        });
+        }, "Test Transaction");
 
         Integer resultValue = result.get(5, TimeUnit.SECONDS);
         assertEquals(42, resultValue, "Transaction should return correct value");
@@ -93,7 +93,7 @@ public class TestTransactionManager {
         CompletableFuture<String> result = manager.executeInTransaction(transaction -> {
             transaction.addOperation(() -> null, () -> rollbackExecuted.set(true)); // Force failure
             return CompletableFuture.completedFuture("test");
-        });
+        }, "Test Transaction");
 
         String resultValue = result.get(5, TimeUnit.SECONDS);
         assertNull(resultValue, "Failed transaction should return null");
@@ -112,7 +112,7 @@ public class TestTransactionManager {
             }, () -> rollbackExecuted.set(true));
 
             return CompletableFuture.completedFuture("test");
-        });
+        }, "Test Transaction");
 
         String resultValue = result.get(5, TimeUnit.SECONDS);
         assertNull(resultValue, "Failed transaction should return null");
@@ -128,7 +128,7 @@ public class TestTransactionManager {
         CompletableFuture<Boolean> result = manager.executeInTransaction(() -> {
             value.incrementAndGet();
             return true;
-        }, value::decrementAndGet);
+        }, value::decrementAndGet, "Test Transaction");
 
         Boolean resultValue = result.get(5, TimeUnit.SECONDS);
         assertTrue(resultValue, "Transaction should succeed");
@@ -144,7 +144,7 @@ public class TestTransactionManager {
         CompletableFuture<Boolean> result = manager.executeInTransaction(() -> {
             value.incrementAndGet();
             return null; // Force failure
-        }, value::decrementAndGet);
+        }, value::decrementAndGet, "Test Transaction");
 
         Boolean resultValue = result.get(5, TimeUnit.SECONDS);
         assertNull(resultValue, "Failed transaction should return null");
@@ -166,7 +166,8 @@ public class TestTransactionManager {
                     counter.incrementAndGet();
                     return value;
                 },
-                null
+                null,
+                "Test Transaction " + i
             );
             futures.add(future);
         }
@@ -209,7 +210,7 @@ public class TestTransactionManager {
 
         // This test verifies that transactions can still be created after shutdown,
         // but they may not execute properly due to the executor being shut down
-        assertDoesNotThrow(() -> manager.beginTransaction(),
+        assertDoesNotThrow(() -> manager.beginTransaction("Test Transaction"),
             "Should be able to create transaction even after shutdown");
     }
 
@@ -246,7 +247,7 @@ public class TestTransactionManager {
             }, counter::decrementAndGet);
 
             return CompletableFuture.completedFuture("success");
-        });
+        }, "Test Transaction");
 
         String resultValue = result.get(5, TimeUnit.SECONDS);
         assertEquals("success", resultValue, "Transaction should succeed");
@@ -293,7 +294,7 @@ public class TestTransactionManager {
             });
 
             return CompletableFuture.completedFuture("success");
-        });
+        }, "Test Transaction");
 
         String resultValue = result.get(5, TimeUnit.SECONDS);
         assertNull(resultValue, "Transaction should fail");
@@ -335,7 +336,7 @@ public class TestTransactionManager {
             }, null);
 
             return CompletableFuture.completedFuture("delayed");
-        });
+        }, "Test Transaction");
 
         String resultValue = result.get(5, TimeUnit.SECONDS);
         assertEquals("delayed", resultValue, "Transaction should complete");
@@ -362,7 +363,7 @@ public class TestTransactionManager {
                     }, null);
 
                     return CompletableFuture.completedFuture(innerCounter.get());
-                });
+                }, "Inner Transaction");
 
                 try {
                     innerResult.get(5, TimeUnit.SECONDS);
@@ -374,7 +375,7 @@ public class TestTransactionManager {
             }, null);
 
             return CompletableFuture.completedFuture("nested");
-        });
+        }, "Outer Transaction");
 
         String resultValue = result.get(5, TimeUnit.SECONDS);
         assertEquals("nested", resultValue, "Outer transaction should succeed");
@@ -393,7 +394,8 @@ public class TestTransactionManager {
                 value.incrementAndGet();
                 return value.get();
             },
-            null // No rollback action
+            null, // No rollback action
+            "Test Transaction"
         );
 
         Integer resultValue = result.get(5, TimeUnit.SECONDS);
@@ -413,7 +415,8 @@ public class TestTransactionManager {
                     counter.incrementAndGet();
                     return true;
                 },
-                null
+                null,
+                "Test Transaction " + i
             );
             assertTrue(result.get(5, TimeUnit.SECONDS), "Each transaction should succeed");
         }
