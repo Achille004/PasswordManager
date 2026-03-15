@@ -1,4 +1,8 @@
 # Next up:
+- UI:
+  - Replace settings view for right sidebar
+    - Language, master password and GD linking goes into it
+    - Sorting goes into left sidebar
 - QoL:
   - Disable autosave (?)
   - Google drive linking

@@ -27,10 +27,8 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.StringProperty;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import password.manager.app.base.SecurityVersion;
@@ -68,28 +66,25 @@ public final class AccountRepository implements AutoCloseable {
     private final ObservableList<Account> accounts;
     private final TransactionManager transactionManager;
 
-    private final ObjectProperty<SecurityVersion> securityVersionProperty;
-    private final StringProperty masterPasswordProperty;
-
-    // Tracks ongoing master password change operations
-    private volatile CompletableFuture<Boolean> masterPasswordChangeFuture = CompletableFuture.completedFuture(true);
-    private volatile CompletableFuture<Boolean> securityVersionChangeFuture = CompletableFuture.completedFuture(true);
+    private transient byte[] DEK;
 
     /**
      * Constructs a new AccountRepository with an empty synchronized observable list
      * and a transaction manager for asynchronous operations.
      */
-    public AccountRepository(ObjectProperty<SecurityVersion> securityVersionProperty, StringProperty masterPasswordProperty) {
-        // The synchronized wrapper was removed since the ListChangeBuilder of the wrapping ObservableList
-        // was suffering from broken internal state due to concurrent modifications
+    public AccountRepository() {
+        // The synchronized wrapper was removed since the ListChangeBuilder of the wrapping ObservableList was
+        // suffering from broken internal state due to concurrent modifications, now synchronization is manual.
         this.accounts = FXCollections.observableList(new ArrayList<>());
         this.transactionManager = new TransactionManager();
 
-        this.securityVersionProperty = securityVersionProperty;
-        this.securityVersionProperty.addListener(this::securityVersionListener);
+        this.DEK = null;
+    }
 
-        this.masterPasswordProperty = masterPasswordProperty;
-        this.masterPasswordProperty.addListener(this::masterPasswordListener);
+    public void setDEK(@NotNull byte[] DEK) {
+        if (DEK == null) throw new IllegalArgumentException("Data encryption key cannot be null");
+        if (this.DEK != null) throw new IllegalStateException("Data encryption key is already set.");
+        this.DEK = DEK.clone(); // Defensive copy to prevent external modification
     }
 
     /**
@@ -126,15 +121,18 @@ public final class AccountRepository implements AutoCloseable {
      * @return a CompletableFuture that completes with the created Account, or null if the transaction fails
      */
     public @NotNull CompletableFuture<Account> add(@NotNull AccountData data) {
+        if (DEK == null) throw new IllegalStateException("Data encryption key is not set. Master password may not have been verified yet.");
+        if (data == null) throw new NullPointerException("Account data cannot be null");
+
         // Use a holder to capture the account reference for rollback
         final Account[] accountHolder = new Account[1];
 
         return transactionManager.executeInTransaction(
             () -> {
                 try {
-                    Logger.getInstance().addDebug("Creating new account for security version: " + securityVersionProperty.get().name());
+                    Logger.getInstance().addDebug("Creating new account");
 
-                    accountHolder[0] = Account.of(securityVersionProperty.get(), data, masterPasswordProperty.get());
+                    accountHolder[0] = Account.of(data, DEK);
 
                     runOnFx(() -> {
                         synchronized (accounts) {
@@ -173,6 +171,10 @@ public final class AccountRepository implements AutoCloseable {
      * @throws IllegalArgumentException if the account is not found in the repository
      */
     public @NotNull CompletableFuture<Account> edit(@NotNull Account account, @NotNull AccountData data) {
+        if (DEK == null) throw new IllegalStateException("Data encryption key is not set. Master password may not have been verified yet.");
+        if (account == null) throw new NullPointerException("Account cannot be null");
+        if (data == null) throw new NullPointerException("Account data cannot be null");
+
         final Account.AccountMemento originalState;
         synchronized (accounts) {
             if (!accounts.contains(account)) throw new IllegalArgumentException("Account not found in list");
@@ -184,7 +186,7 @@ public final class AccountRepository implements AutoCloseable {
         return transactionManager.executeInTransaction(
             () -> {
                 try {
-                    account.setData(securityVersionProperty.get(), data, masterPasswordProperty.get());
+                    account.setData(data, DEK);
                     triggerUpdateNotification(account);
                     return account;
                 } catch (GeneralSecurityException e) {
@@ -212,6 +214,10 @@ public final class AccountRepository implements AutoCloseable {
      * @throws IllegalArgumentException if the account is not found in the repository
      */
     public @NotNull CompletableFuture<Boolean> remove(@NotNull Account account) {
+        // Although DEK is not used in this method, we check it to ensure that the master password has been verified before allowing any modifications to the accounts list.
+        if (DEK == null) throw new IllegalStateException("Data encryption key is not set. Master password may not have been verified yet.");
+        if (account == null) throw new NullPointerException("Account cannot be null");
+
         final int originalIndex;
         synchronized (accounts) {
             if (!accounts.contains(account)) throw new IllegalArgumentException("Account not found in list");
@@ -240,15 +246,26 @@ public final class AccountRepository implements AutoCloseable {
         );
     }
 
-    public @NotNull CompletableFuture<Boolean> unlockAll(@NotNull String masterPassword) {
+    /**
+     * Unlocks all accounts in the repository, using the provided legacy master password for upgrading accounts to DEK-based encryption if needed.
+     * <p>
+     * This method is intended to be called after successful master password verification to ensure all accounts are decrypted and ready for use.
+     * The operation is performed as a single transaction that attempts to unlock each account. If any account fails to unlock, all accounts are rolled back to their original locked state.
+     * </p>
+     * 
+     * @param legacyMasterPassword the master password for legacy accounts, can be null if not in legacy mode.
+     * @param legacyVersion the security version of the legacy accounts, can be null if not in legacy mode.
+     * @return a CompletableFuture that completes with true if all accounts were successfully unlocked, false if any account failed to unlock
+     */
+    public @NotNull CompletableFuture<Boolean> unlockAll(@Nullable String legacyMasterPassword, @Nullable SecurityVersion legacyVersion) {
+        if (DEK == null) throw new IllegalStateException("Data encryption key is not set. Master password may not have been verified yet.");
+
         List<Account> accountList;
         List<Account.AccountMemento> originalStates;
         synchronized (accounts) {
             accountList = new ArrayList<>(accounts);
             originalStates = accounts.stream().map(Account::captureState).toList();
         }
-
-        SecurityVersion securityVersion = securityVersionProperty.get();
 
         return transactionManager.executeInTransaction(transaction -> {
             List<CompletableFuture<Boolean>> updateFutures = new ArrayList<>(accountList.size());
@@ -260,7 +277,7 @@ public final class AccountRepository implements AutoCloseable {
                 CompletableFuture<Boolean> updateFuture = transaction.addOperation(
                     () -> {
                         try {
-                            account.unlock(securityVersion, masterPassword);
+                            account.unlock(DEK, legacyVersion, legacyMasterPassword);
                             return true;
                         } catch (GeneralSecurityException e) {
                             Logger.getInstance().addError(e);
@@ -298,15 +315,14 @@ public final class AccountRepository implements AutoCloseable {
      */
     public @NotNull CompletableFuture<AccountData> getData(@NotNull Account account) {
         // Wait for any ongoing master password or security version changes to complete
-        return CompletableFuture.allOf(masterPasswordChangeFuture, securityVersionChangeFuture)
-                .thenCompose(_ -> CompletableFuture.supplyAsync(() -> {
+        return CompletableFuture.supplyAsync(() -> {
                     try {
-                        return account.getData(securityVersionProperty.get(), masterPasswordProperty.get());
+                        return account.getData(DEK);
                     } catch (GeneralSecurityException e) {
                         Logger.getInstance().addError(e);
                         return null;
                     }
-                }));
+                });
     }
 
     /**
@@ -334,151 +350,6 @@ public final class AccountRepository implements AutoCloseable {
                 .thenApply(_ -> futures.stream().allMatch(
                     f -> (f.isDone() && !f.isCompletedExceptionally() && f.join())
                 ));
-    }
-
-    /**
-     * Listener for changes in the security version property.
-     * <p>
-     * When the security version changes, this listener updates all
-     * accounts to use the new security version within a single transaction.
-     * If any update fails, all changes are rolled back to the original states.
-     * </p>
-     *
-     * @param observable the observable value that changed
-     * @param oldVersion the old security version
-     * @param newVersion the new security version
-     */
-    private void securityVersionListener(ObservableValue<? extends SecurityVersion> observable, SecurityVersion oldVersion, SecurityVersion newVersion) {
-        if (newVersion == null) throw new IllegalArgumentException("New security version cannot be null");
-
-        // Capture master password at the time of listener invocation
-        final String currentMasterPassword = masterPasswordProperty.get();
-
-        // Wait for any ongoing master password change to complete first
-        securityVersionChangeFuture = masterPasswordChangeFuture.thenCompose(_ -> {
-            List<Account> accountList;
-            List<Account.AccountMemento> originalStates;
-            synchronized (accounts) {
-                accountList = new ArrayList<>(accounts);
-                originalStates = accounts.stream().map(Account::captureState).toList();
-            }
-
-            return transactionManager.executeInTransaction(transaction -> {
-                List<CompletableFuture<Boolean>> updateFutures = new ArrayList<>(accountList.size());
-
-                for (int i = 0; i < accountList.size(); i++) {
-                    Account account = accountList.get(i);
-                    Account.AccountMemento originalState = originalStates.get(i);
-
-                    CompletableFuture<Boolean> updateFuture = transaction.addOperation(
-                        () -> {
-                            try {
-                                account.updateSecurityVersion(oldVersion, newVersion, currentMasterPassword);
-                                triggerUpdateNotification(account);
-                                return true;
-                            } catch (GeneralSecurityException e) {
-                                Logger.getInstance().addError(e);
-                                return false;
-                            }
-                        },
-                        () -> {
-                            // Rollback using captured state
-                            account.restoreState(originalState);
-                            triggerUpdateNotification(account);
-                        }
-                    );
-
-                    updateFutures.add(updateFuture);
-                }
-
-                return allSuccessful(updateFutures);
-            });
-        });
-
-        securityVersionChangeFuture
-                .thenAccept(success -> {
-                    if (success) Logger.getInstance().addInfo("Updated all accounts to latest security version");
-                    else Logger.getInstance().addError(new RuntimeException("Failed to update some accounts to latest security version"));
-                })
-                .exceptionally(e -> {
-                    Logger.getInstance().addError(e);
-                    return null;
-                });
-    }
-
-    /**
-     * Listener for changes in the master password property.
-     * <p>
-     * When the master password changes, this listener updates all accounts
-     * to use the new password within a single transaction. If any update fails,
-     * all changes are rolled back to the original states.
-     * </p>
-     *
-     * @param observable the observable value that changed
-     * @param oldMasterPassword the old master password
-     * @param newMasterPassword the new master password
-     */
-    private void masterPasswordListener(ObservableValue<? extends String> observable, String oldMasterPassword, String newMasterPassword) {
-        if (newMasterPassword == null || newMasterPassword.isEmpty()) throw new IllegalArgumentException("New master password cannot be null or empty");
-
-        // Initial set, no need to re-encrypt existing accounts
-        if (oldMasterPassword == null || oldMasterPassword.isEmpty()) return;
-
-        // Wait for any ongoing security version change to complete first
-        masterPasswordChangeFuture = securityVersionChangeFuture.thenCompose(_ -> {
-            // Capture all accounts and their states before starting transaction
-            List<Account> accountList;
-            List<Account.AccountMemento> originalStates;
-            synchronized (accounts) {
-                accountList = new ArrayList<>(accounts);
-                originalStates = accounts.stream().map(Account::captureState).toList();
-            }
-
-            return transactionManager.executeInTransaction(transaction -> {
-                List<CompletableFuture<Boolean>> changeFutures = new ArrayList<>(accountList.size());
-                SecurityVersion securityVersion = securityVersionProperty.get();
-
-                for (int i = 0; i < accountList.size(); i++) {
-                    Account account = accountList.get(i);
-                    Account.AccountMemento originalState = originalStates.get(i);
-
-                    CompletableFuture<Boolean> changeFuture = transaction.addOperation(
-                        () -> {
-                            try {
-                                // Decrypt with old master password
-                                AccountData data = account.getData(securityVersion, oldMasterPassword);
-                                // Re-encrypt with new master password
-                                account.setData(securityVersion, data, newMasterPassword);
-                                triggerUpdateNotification(account);
-                                return true;
-                            } catch (GeneralSecurityException e) {
-                                Logger.getInstance().addError(e);
-                                return false;
-                            }
-                        },
-                        () -> {
-                            // Rollback using captured state
-                            account.restoreState(originalState);
-                            triggerUpdateNotification(account);
-                        }
-                    );
-
-                    changeFutures.add(changeFuture);
-                }
-
-                return allSuccessful(changeFutures);
-            });
-        });
-
-        masterPasswordChangeFuture
-                .thenAccept(success -> {
-                    if (success) Logger.getInstance().addInfo("All account passwords re-encrypted successfully");
-                    else Logger.getInstance().addError(new RuntimeException("Failed to re-encrypt some account passwords"));
-                })
-                .exceptionally(e -> {
-                    Logger.getInstance().addError(e);
-                    return null;
-                });
     }
 
     private void triggerUpdateNotification(Account account) {

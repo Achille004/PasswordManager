@@ -69,6 +69,7 @@ public class App extends Application {
         appScenePane = new AnchorPane();
         appParameters = getParameters();
 
+        appScenePane.setMinSize(MIN_WIDTH, MIN_HEIGHT);
         appScenePane.getStylesheets().addAll(ROOT_STYLESHEET, AUTOCOMPLETION_STYLESHEET);
 
         primaryStage.setTitle(APP_NAME);

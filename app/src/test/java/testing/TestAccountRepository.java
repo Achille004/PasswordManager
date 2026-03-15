@@ -20,6 +20,7 @@ package testing;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +48,7 @@ import password.manager.app.singletons.Singletons;
 public class TestAccountRepository {
 
     private static final String DEFAULT_MASTER_PASSWORD = "MasterPassword123!";
+    private static final byte[] DEFAULT_DEK = DEFAULT_MASTER_PASSWORD.getBytes(StandardCharsets.UTF_8);
 
     private AccountRepository repository;
     private ObjectProperty<SecurityVersion> securityVersionProperty;
@@ -56,7 +58,7 @@ public class TestAccountRepository {
     void setUp() {
         securityVersionProperty = new SimpleObjectProperty<>(SecurityVersion.LATEST);
         masterPasswordProperty = new SimpleStringProperty(DEFAULT_MASTER_PASSWORD);
-        repository = new AccountRepository(securityVersionProperty, masterPasswordProperty);
+        repository = new AccountRepository();
     }
 
     @AfterEach
@@ -130,7 +132,7 @@ public class TestAccountRepository {
         TestingUtils.injectBasePath();
 
         AccountData data = new AccountData("NonExistentSoftware", "NonExistentUser", "NonExistentPass");
-        Account account = Account.of(SecurityVersion.LATEST, data, DEFAULT_MASTER_PASSWORD);
+        Account account = Account.of(data, DEFAULT_DEK);
 
         AccountData newData = new AccountData("NewSoftware", "NewUser", "NewPass");
         assertThrows(
@@ -160,7 +162,7 @@ public class TestAccountRepository {
         TestingUtils.injectBasePath();
 
         AccountData data = new AccountData("NonExistentSoftware", "NonExistentUser", "NonExistentPass");
-        Account account = Account.of(SecurityVersion.LATEST, data, DEFAULT_MASTER_PASSWORD);
+        Account account = Account.of(data, DEFAULT_DEK);
 
         assertThrows(
             IllegalArgumentException.class,
@@ -198,7 +200,7 @@ public class TestAccountRepository {
             String password = "password" + i;
 
             AccountData testData = new AccountData(software, username, password);
-            Account account = Account.of(SecurityVersion.LATEST, testData, DEFAULT_MASTER_PASSWORD);
+            Account account = Account.of(testData, DEFAULT_DEK);
 
             testAccounts.add(account);
         }
@@ -224,7 +226,7 @@ public class TestAccountRepository {
             String password = "Pass" + i;
 
             AccountData testData = new AccountData(software, username, password);
-            Account account = Account.of(SecurityVersion.LATEST, testData, DEFAULT_MASTER_PASSWORD);
+            Account account = Account.of(testData, DEFAULT_DEK);
 
             testAccounts.add(account);
         }
@@ -246,7 +248,7 @@ public class TestAccountRepository {
                 .get(5, TimeUnit.SECONDS);
 
         AccountData anotherData = new AccountData("AnotherSoftware", "AnotherUser", "AnotherPass");
-        Account account = Account.of(SecurityVersion.LATEST, anotherData, DEFAULT_MASTER_PASSWORD);
+        Account account = Account.of(anotherData, DEFAULT_DEK);
 
         assertThrows(
             UnsupportedOperationException.class,

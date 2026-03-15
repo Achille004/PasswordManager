@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,15 @@ public class TestAES {
 
     // Use same salt and IV sizes as the app
     static final byte[] salt = new byte[16], iv = new byte[16];
-    static final SecureRandom random = new SecureRandom();
+    static SecureRandom random;
+
+    static {
+        try {
+            random = SecureRandom.getInstanceStrong();
+        } catch (NoSuchAlgorithmException e) {
+            random = new SecureRandom();
+        }
+    }
 
     @Test
     void testBLNS() throws GeneralSecurityException, IOException {
@@ -53,8 +62,8 @@ public class TestAES {
 
                     for (SecurityVersion version : SecurityVersion.values()) {
                         byte[] key = version.getKey(masterPass, salt);
-                        byte[] e = AES.encryptAES(pass, key, iv);
-                        String d = AES.decryptAES(e, key, iv);
+                        byte[] e = AES.encryptStringAES(pass, key, iv);
+                        String d = AES.decryptStringAES(e, key, iv);
                         assertEquals(d, pass);
                     }
                 }
@@ -72,8 +81,8 @@ public class TestAES {
 
         for (SecurityVersion version : SecurityVersion.values()) {
             byte[] key = version.getKey(password, salt);
-            byte[] encrypted = AES.encryptAES(empty, key, iv);
-            String decrypted = AES.decryptAES(encrypted, key, iv);
+            byte[] encrypted = AES.encryptStringAES(empty, key, iv);
+            String decrypted = AES.decryptStringAES(encrypted, key, iv);
             assertEquals(empty, decrypted);
         }
     }
@@ -89,11 +98,11 @@ public class TestAES {
 
             byte[] iv1 = new byte[16];
             random.nextBytes(iv1);
-            byte[] encrypted1 = AES.encryptAES(plaintext, key, iv1);
+            byte[] encrypted1 = AES.encryptStringAES(plaintext, key, iv1);
 
             byte[] iv2 = new byte[16];
             random.nextBytes(iv2);
-            byte[] encrypted2 = AES.encryptAES(plaintext, key, iv2);
+            byte[] encrypted2 = AES.encryptStringAES(plaintext, key, iv2);
 
             // Different IVs should produce different ciphertexts
             assertNotEquals(encrypted1, encrypted2);
@@ -113,11 +122,11 @@ public class TestAES {
             byte[] key1 = version.getKey(password1, salt);
             byte[] key2 = version.getKey(password2, salt);
 
-            byte[] encrypted = AES.encryptAES(plaintext, key1, iv);
+            byte[] encrypted = AES.encryptStringAES(plaintext, key1, iv);
 
             // Decrypting with wrong key should either throw exception or return garbage
             assertThrows(GeneralSecurityException.class, () -> {
-                String decrypted = AES.decryptAES(encrypted, key2, iv);
+                String decrypted = AES.decryptStringAES(encrypted, key2, iv);
                 // If no exception, decrypted text should not match original
                 assertNotEquals(plaintext, decrypted);
             });
@@ -134,14 +143,14 @@ public class TestAES {
 
         for (SecurityVersion version : SecurityVersion.values()) {
             byte[] key = version.getKey(password, salt);
-            byte[] encrypted = AES.encryptAES(plaintext, key, iv);
+            byte[] encrypted = AES.encryptStringAES(plaintext, key, iv);
 
             // Corrupt the ciphertext
             encrypted[encrypted.length / 2] ^= 0xFF;
 
             assertThrows(
                 GeneralSecurityException.class,
-                () -> AES.decryptAES(encrypted, key, iv)
+                () -> AES.decryptStringAES(encrypted, key, iv)
             );
         }
     }
@@ -161,8 +170,8 @@ public class TestAES {
 
         for (SecurityVersion version : SecurityVersion.values()) {
             byte[] key = version.getKey(password, salt);
-            byte[] encrypted = AES.encryptAES(largeText, key, iv);
-            String decrypted = AES.decryptAES(encrypted, key, iv);
+            byte[] encrypted = AES.encryptStringAES(largeText, key, iv);
+            String decrypted = AES.decryptStringAES(encrypted, key, iv);
             assertEquals(largeText, decrypted);
         }
     }
@@ -179,12 +188,12 @@ public class TestAES {
 
             assertThrows(
                 Exception.class,
-                () -> AES.encryptAES(null, key, iv)
+                () -> AES.encryptStringAES(null, key, iv)
             );
 
             assertThrows(
                 Exception.class,
-                () -> AES.decryptAES(null, key, iv)
+                () -> AES.decryptStringAES(null, key, iv)
             );
         }
     }
