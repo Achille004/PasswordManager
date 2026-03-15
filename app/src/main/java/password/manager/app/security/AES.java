@@ -48,7 +48,7 @@ public final class AES {
     }
 
     public static final int AES_BITS = 256;
-    public static final int GCM_IV_BITS = 128; // 12 bytes for GCM IV
+    public static final int GCM_TAG_BITS = 128; // 16 bytes for GCM TAG
 
     public static byte[] derivateKey(@NotNull byte[] sourceKey, @NotNull byte[] salt, @NotNull String info) {
         Digest digest = SHA256Digest.newInstance(CryptoServicePurpose.KEYGEN);
@@ -71,20 +71,17 @@ public final class AES {
      * @return         The encrypted value.
      * @throws GeneralSecurityException
      */
-    public static byte[] encryptAES(@NotNull String value, byte[] key, byte[] iv) throws GeneralSecurityException {
+    public static byte[] encryptAES(@NotNull byte[] value, byte[] key, byte[] iv) throws GeneralSecurityException {
         // Create Key and AlgorithmParameterSpec objects
-        Key secretKey = new SecretKeySpec(key, "AES");
-        AlgorithmParameterSpec gcmSpec = new GCMParameterSpec(GCM_IV_BITS, iv);
+        final Key secretKey = new SecretKeySpec(key, "AES");
+        final AlgorithmParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_BITS, iv);
 
         // Create Cipher object to encrypt
         final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, gcmSpec);
 
-        // Get the password bytes
-        byte[] passwordBytes = value.getBytes(StandardCharsets.UTF_8);
-
         // Encrypt them
-        return cipher.doFinal(passwordBytes);
+        return cipher.doFinal(value);
     }
 
     /**
@@ -96,19 +93,32 @@ public final class AES {
      * @return                  The decrypted value.
      * @throws GeneralSecurityException
      */
-    public static @NotNull String decryptAES(byte[] encryptedValue, byte[] key, byte[] iv) throws GeneralSecurityException {
+    public static @NotNull byte[] decryptAES(byte[] encryptedValue, byte[] key, byte[] iv) throws GeneralSecurityException {
         // Create Key and AlgorithmParameterSpec objects
-        Key secretKey = new SecretKeySpec(key, "AES");
-        AlgorithmParameterSpec gcmSpec = new GCMParameterSpec(GCM_IV_BITS, iv);
+        final Key secretKey = new SecretKeySpec(key, "AES");
+        final AlgorithmParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_BITS, iv);
 
         // Create Cipher object to decrypt
         final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
         cipher.init(Cipher.DECRYPT_MODE, secretKey, gcmSpec);
 
         // Decrypt the value
-        final byte[] password = cipher.doFinal(encryptedValue);
+        return cipher.doFinal(encryptedValue);
+    }
 
-        // Convert it to String
-        return new String(password, StandardCharsets.UTF_8);
+    /**
+     * Shorthand method to encrypt a string using AES, see {@link #encryptAES}.
+     */
+    public static @NotNull byte[] encryptStringAES(String value, byte[] key, byte[] iv) throws GeneralSecurityException {
+        final byte[] valueBytes = value.getBytes(StandardCharsets.UTF_8);
+        return encryptAES(valueBytes, key, iv);
+    }
+
+    /**
+     * Shorthand method to decrypt a string using AES, see {@link #decryptAES}.
+     */
+    public static @NotNull String decryptStringAES(byte[] encryptedValue, byte[] key, byte[] iv) throws GeneralSecurityException {
+        final byte[] decryptedBytes = decryptAES(encryptedValue, key, iv);
+        return new String(decryptedBytes, StandardCharsets.UTF_8);
     }
 }

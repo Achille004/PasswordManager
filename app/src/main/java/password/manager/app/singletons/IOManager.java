@@ -62,7 +62,6 @@ import password.manager.app.security.Account.AccountData;
 import password.manager.lib.LoadingAnimation;
 import password.manager.lib.PasswordInputControl;
 
-
 public final class IOManager extends Singleton {
 
     private static final String DATA_FILE_NAME = "data.json";
@@ -83,7 +82,7 @@ public final class IOManager extends Singleton {
     private final UserPreferences USER_PREFERENCES;
     private final AccountRepository ACCOUNT_REPOSITORY;
 
-    private final StringProperty MASTER_PASSWORD_PROPERTY;
+    private volatile String masterPassword;
     private @Getter boolean isFirstRun, isAuthenticated;
 
     private final AtomicBoolean HAS_CHANGED;
@@ -101,10 +100,10 @@ public final class IOManager extends Singleton {
         Logger.getInstance().addDebug("BACKUP_FILE: '" + BACKUP_FILE + "'");
         Logger.getInstance().addDebug("PRESERVED_PATH: '" + PRESERVED_PATH + "'");
 
-        MASTER_PASSWORD_PROPERTY = new SimpleStringProperty(null);
+        masterPassword = null;
 
         USER_PREFERENCES = UserPreferences.empty();
-        ACCOUNT_REPOSITORY = new AccountRepository(USER_PREFERENCES.securityVersionProperty(), MASTER_PASSWORD_PROPERTY);
+        ACCOUNT_REPOSITORY = new AccountRepository();
 
         isFirstRun = true; // Assume first run until data is loaded
         isAuthenticated = false;
@@ -185,6 +184,8 @@ public final class IOManager extends Singleton {
             Logger.getInstance().addInfo("Copied valid DATA_FILE to BACKUP_FILE");
 
             return;
+        } catch (FileNotFoundException e) {
+            // This is handled below
         } catch (IOException e) {
             Logger.getInstance().addError(e);
         }
@@ -205,6 +206,8 @@ public final class IOManager extends Singleton {
 
             HAS_CHANGED.set(true); // Force save to recreate DATA_FILE from backup
             return;
+        } catch (FileNotFoundException e) {
+            // This is handled below
         } catch (IOException e) {
             Logger.getInstance().addError(e);
         }
@@ -319,17 +322,17 @@ public final class IOManager extends Singleton {
 
     // #region UserPreferences methods
     public boolean changeMasterPassword(String newMasterPassword) {
-        String oldMasterPassword = this.MASTER_PASSWORD_PROPERTY.get();
+        String oldMasterPassword = this.masterPassword; // Keep old password reference for later
         if (!(oldMasterPassword == null || isAuthenticated())) return false;
 
         boolean res = USER_PREFERENCES.setPasswordVerified(oldMasterPassword, newMasterPassword);
         if (!res) return false;
 
-        this.MASTER_PASSWORD_PROPERTY.set(newMasterPassword);
+        this.masterPassword = newMasterPassword;
 
         if (oldMasterPassword != null) {
             Logger.getInstance().addInfo("Master password changed");
-            HAS_CHANGED.set(true);
+            HAS_CHANGED.set(true); // Force future save
         } else {
             Logger.getInstance().addInfo("Master password set");
             isAuthenticated = true;
@@ -341,7 +344,7 @@ public final class IOManager extends Singleton {
     public void displayMasterPassword(PasswordInputControl element) {
         // Use Platform.runLater to queue the update after the field is ready
         // (it also ensures that it gets called on the JavaFX Application Thread)
-        Platform.runLater(() -> element.setText(MASTER_PASSWORD_PROPERTY.get()));
+        Platform.runLater(() -> element.setText(this.masterPassword));
     }
 
     public boolean authenticate(String masterPassword) {
@@ -352,10 +355,12 @@ public final class IOManager extends Singleton {
         isAuthenticated = USER_PREFERENCES.verifyPassword(masterPassword);
         if (!isAuthenticated) return false;
 
-        this.MASTER_PASSWORD_PROPERTY.set(masterPassword);
+        this.masterPassword = masterPassword;
         Logger.getInstance().addInfo("User authenticated");
 
-        CompletableFuture<Void> unlockFuture = ACCOUNT_REPOSITORY.unlockAll(masterPassword)
+        this.ACCOUNT_REPOSITORY.setDEK(USER_PREFERENCES.getDEK());
+
+        CompletableFuture<Void> unlockFuture = ACCOUNT_REPOSITORY.unlockAll(masterPassword, USER_PREFERENCES.getLegacyVersion())
                 .thenAccept(unlocked -> {
                     if (unlocked) {
                         Logger.getInstance().addInfo("All accounts unlocked");
@@ -378,7 +383,10 @@ public final class IOManager extends Singleton {
     private synchronized void loadDataFile(File file, String fileVarName) throws IOException {
         Logger.getInstance().addInfo("Attempting to load " + fileVarName + "...");
 
-        if (!file.exists()) throw new FileNotFoundException("File not found: " + file.getAbsolutePath());
+        if (!file.exists()) {
+            Logger.getInstance().addInfo("Load failed, file not found: " + fileVarName);
+            throw new FileNotFoundException("File not found: " + fileVarName);
+        }
 
         LOADING_LOCK.lock();
 

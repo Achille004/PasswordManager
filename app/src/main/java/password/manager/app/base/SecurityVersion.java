@@ -54,7 +54,7 @@ import password.manager.app.singletons.Logger;
 @RequiredArgsConstructor
 public enum SecurityVersion {
     @Deprecated
-    PBKDF2((bits, password, salt) -> {
+    PBKDF2((bits, field, salt) -> {
         SecretKeyFactory keyFactory;
         try {
             keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
@@ -63,7 +63,7 @@ public enum SecurityVersion {
             throw new RuntimeException(e);
         }
 
-        final KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, Parameters.PBKDF2_ITERATIONS, bits);
+        final KeySpec spec = new PBEKeySpec(field.toCharArray(), salt, Parameters.PBKDF2_ITERATIONS, bits);
         try {
             SecretKey secretKey = keyFactory.generateSecret(spec);
             return secretKey.getEncoded();
@@ -72,7 +72,7 @@ public enum SecurityVersion {
             throw new RuntimeException(e);
         }
     }),
-    ARGON2((bits, password, salt) -> {
+    ARGON2((bits, field, salt) -> {
         final Argon2Parameters params = new Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
                 .withParallelism(Parameters.ARGON2_PARALLELISM)
                 .withMemoryAsKB(Parameters.ARGON2_MEMORY_KIB)
@@ -93,7 +93,7 @@ public enum SecurityVersion {
         MemoryReserver.execute(Parameters.ARGON2_MEMORY_KIB * 1100, () -> generator.init(params));
 
         final byte[] result = new byte[bits / 8];
-        generator.generateBytes(password.toCharArray(), result);
+        generator.generateBytes(field.toCharArray(), result);
         return result;
     });
 
@@ -113,20 +113,20 @@ public enum SecurityVersion {
     /**
      * Hashes the given password using the embedded key derivation function.
      *
-     * @param password The password to hash.
-     * @param salt     The salt used for hashing.
-     * @return The hashed password.
+     * @param masterPassword The master password to hash.
+     * @param salt  The salt used for hashing.
+     * @return The hashed master password.
      */
-    public byte[] hash(@NotNull String password, byte[] salt) {
-        if (password == null) throw new NullPointerException("Password cannot be null");
-        return keyDerivationFunction.apply(HASH_BITS, password, salt);
+    public byte[] hash(@NotNull String masterPassword, byte[] salt) {
+        if (masterPassword == null) throw new NullPointerException("Master password cannot be null");
+        return keyDerivationFunction.apply(HASH_BITS, masterPassword, salt);
     }
 
     /**
      * Derives an AES key from the master password using the embedded key derivation function.
      *
-     * @param masterPassword The master password to generate the key from.
-     * @param salt           The salt used for key derivation.
+     * @param masterPassword The master password to derive the key from.
+     * @param salt  The salt used for key derivation.
      * @return The derived AES key.
      */
     public byte[] getKey(@NotNull String masterPassword, byte[] salt) {

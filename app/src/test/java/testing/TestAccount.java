@@ -25,11 +25,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 
 import org.junit.jupiter.api.Test;
 
-import password.manager.app.base.SecurityVersion;
 import password.manager.app.security.Account;
 import password.manager.app.security.Account.AccountData;
 
@@ -40,17 +40,15 @@ public class TestAccount {
         String software = "GitHub";
         String username = "testUser";
         String password = "testPassword123";
-        String masterPassword = "masterPass456";
+        byte[] DEK = "masterPass456".getBytes(StandardCharsets.UTF_8);
 
-        for (SecurityVersion version : SecurityVersion.values()) {
-            AccountData expectedData = new AccountData(software, username, password);
-            Account account = Account.of(version, expectedData, masterPassword);
+        AccountData expectedData = new AccountData(software, username, password);
+        Account account = Account.of(expectedData, DEK);
 
-            AccountData actualData = account.getData(version, masterPassword);
-            assertEquals(expectedData.software(), actualData.software());
-            assertEquals(expectedData.username(), actualData.username());
-            assertEquals(expectedData.password(), actualData.password());
-        }
+        AccountData actualData = account.getData(DEK);
+        assertEquals(expectedData.software(), actualData.software());
+        assertEquals(expectedData.username(), actualData.username());
+        assertEquals(expectedData.password(), actualData.password());
     }
 
     @Test
@@ -65,16 +63,15 @@ public class TestAccount {
                        (password = readBlnsLine(reader)) != null &&
                        (software = readBlnsLine(reader)) != null &&
                        (username = readBlnsLine(reader)) != null) {
+                    byte[] DEK = masterPass.getBytes(StandardCharsets.UTF_8);
 
-                    for (SecurityVersion version : SecurityVersion.values()) {
-                        AccountData data = new AccountData(software, username, password);
-                        Account account = Account.of(version, data, masterPass);
+                    AccountData data = new AccountData(software, username, password);
+                    Account account = Account.of(data, DEK);
 
-                        AccountData actualData = account.getData(version, masterPass);
-                        assertEquals(data.software(), actualData.software());
-                        assertEquals(data.username(), actualData.username());
-                        assertEquals(data.password(), actualData.password());
-                    }
+                    AccountData actualData = account.getData(DEK);
+                    assertEquals(data.software(), actualData.software());
+                    assertEquals(data.username(), actualData.username());
+                    assertEquals(data.password(), actualData.password());
                 }
             }
         }
@@ -85,18 +82,16 @@ public class TestAccount {
         String software = "TestApp";
         String username = "user123";
         String password = "secretPass";
-        String correctMasterPassword = "correctMaster";
-        String wrongMasterPassword = "wrongMaster";
+        byte[] correctDEK = "correctMaster".getBytes(StandardCharsets.UTF_8);
+        byte[] wrongDEK = "wrongMaster".getBytes(StandardCharsets.UTF_8);
 
-        for (SecurityVersion version : SecurityVersion.values()) {
-            AccountData data = new AccountData(software, username, password);
-            Account account = Account.of(version, data, correctMasterPassword);
+        AccountData data = new AccountData(software, username, password);
+        Account account = Account.of(data, correctDEK);
 
-            assertThrows(
-                GeneralSecurityException.class,
-                () -> account.getData(version, wrongMasterPassword)
-            );
-        }
+        assertThrows(
+            GeneralSecurityException.class,
+            () -> account.getData(wrongDEK)
+        );
     }
 
     // Note: changeMasterPassword is now tested in TestAccountRepository
@@ -104,13 +99,11 @@ public class TestAccount {
 
     @Test
     void testNullValues() {
-        AccountData data = new AccountData("software", "user", "password");
-        assertThrows(NullPointerException.class, () -> Account.of(null, data, "master"));
+        byte[] DEK = "masterPass".getBytes(StandardCharsets.UTF_8);
+        assertThrows(NullPointerException.class, () -> Account.of(null, DEK));
 
-        for(SecurityVersion version : SecurityVersion.values()) {
-            assertThrows(NullPointerException.class, () -> Account.of(version, null, "master"));
-            assertThrows(NullPointerException.class, () -> Account.of(version, data, null));
-        }
+        AccountData data = new AccountData("software", "user", "password");
+        assertThrows(NullPointerException.class, () -> Account.of(data, null));
     }
 
     @Test
@@ -118,24 +111,22 @@ public class TestAccount {
         String software = "App";
         String username = "user";
         String emptyPassword = "";
-        String masterPassword = "master";
+        byte[] DEK = "master".getBytes(StandardCharsets.UTF_8);
 
-        for (SecurityVersion version : SecurityVersion.values()) {
-            AccountData expectedData = new AccountData(software, username, emptyPassword);
-            Account account = Account.of(version, expectedData, masterPassword);
+        AccountData expectedData = new AccountData(software, username, emptyPassword);
+        Account account = Account.of(expectedData, DEK);
 
-            AccountData actualData = account.getData(version, masterPassword);
-            assertEquals(expectedData.software(), actualData.software());
-            assertEquals(expectedData.username(), actualData.username());
-            assertEquals(expectedData.password(), actualData.password());
-        }
+        AccountData actualData = account.getData(DEK);
+        assertEquals(expectedData.software(), actualData.software());
+        assertEquals(expectedData.username(), actualData.username());
+        assertEquals(expectedData.password(), actualData.password());
     }
 
     @Test
     void testLargePassword() throws GeneralSecurityException {
         String software = "TestApp";
         String username = "testUser";
-        String masterPassword = "master";
+        byte[] DEK = "master".getBytes(StandardCharsets.UTF_8);
 
         // Create a 1MiB password
         int MiB = 1024 * 1024;
@@ -143,15 +134,13 @@ public class TestAccount {
         for (int i = 0; i < MiB; i++) sb.append((char) ('a' + (i % 26)));
         String largePassword = sb.toString();
 
-        for (SecurityVersion version : SecurityVersion.values()) {
-            AccountData expectedData = new AccountData(software, username, largePassword);
-            Account account = Account.of(version, expectedData, masterPassword);
+        AccountData expectedData = new AccountData(software, username, largePassword);
+        Account account = Account.of(expectedData, DEK);
 
-            AccountData actualData = account.getData(version, masterPassword);
-            assertEquals(expectedData.software(), actualData.software());
-            assertEquals(expectedData.username(), actualData.username());
-            assertEquals(expectedData.password(), actualData.password());
-        }
+        AccountData actualData = account.getData(DEK);
+        assertEquals(expectedData.software(), actualData.software());
+        assertEquals(expectedData.username(), actualData.username());
+        assertEquals(expectedData.password(), actualData.password());
     }
 
     @Test
@@ -159,16 +148,14 @@ public class TestAccount {
         String software = "Test!@#$%^&*()";
         String username = "user<>?:\"{}|";
         String password = "pass\n\r\t\0";
-        String masterPassword = "master🔒🔑";
+        byte[] DEK = "master🔒🔑".getBytes(StandardCharsets.UTF_8);
 
-        for (SecurityVersion version : SecurityVersion.values()) {
-            AccountData expectedData = new AccountData(software, username, password);
-            Account account = Account.of(version, expectedData, masterPassword);
+        AccountData expectedData = new AccountData(software, username, password);
+        Account account = Account.of(expectedData, DEK);
 
-            AccountData actualData = account.getData(version, masterPassword);
-            assertEquals(expectedData.software(), actualData.software());
-            assertEquals(expectedData.username(), actualData.username());
-            assertEquals(expectedData.password(), actualData.password());
-        }
+        AccountData actualData = account.getData(DEK);
+        assertEquals(expectedData.software(), actualData.software());
+        assertEquals(expectedData.username(), actualData.username());
+        assertEquals(expectedData.password(), actualData.password());
     }
 }

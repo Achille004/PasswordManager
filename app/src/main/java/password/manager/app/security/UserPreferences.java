@@ -18,31 +18,55 @@
 
 package password.manager.app.security;
 
+import java.security.GeneralSecurityException;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+
+import javax.crypto.AEADBadTagException;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.node.ObjectNode;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import password.manager.app.base.SecurityVersion;
 import password.manager.app.base.SortingOrder;
 import password.manager.app.base.SupportedLocale;
+import password.manager.app.singletons.Logger;
 
+@JsonDeserialize(using = UserPreferences.Deserializer.class)
 public final class UserPreferences {
 
+    private static final int DEK_LENGTH = (AES.AES_BITS + AES.GCM_TAG_BITS) / 8; // 48 bytes
     private static final int SALT_LENGTH = 16;
+    private static final int IV_LENGTH = 16;
 
     private final transient ObjectProperty<SupportedLocale> localeProperty;
     private final transient ObjectProperty<SortingOrder> sortingOrderProperty;
     private final transient ObjectProperty<SecurityVersion> securityVersionProperty;
 
-    private final @JsonProperty("hashedPassword") byte[] hashedPassword;
-    private final @JsonProperty("salt") byte[] salt;
+    // Serialized fields
+    private @JsonProperty("pwEncDek") byte[] pwEncDek;
+    private @JsonProperty("pwSalt") byte[] pwSalt;
+    private @JsonProperty("pwIv") byte[] pwIv;
+
+    // In-memory only — never serialized
+    private transient byte[] dek;
+    private transient byte[] legacyHashedPassword;
+    private transient byte[] legacySalt;
+    private transient SecurityVersion legacySecurityVersion;
 
     private boolean isPasswordSet;
 
@@ -50,10 +74,17 @@ public final class UserPreferences {
         this.localeProperty = new SimpleObjectProperty<>(SupportedLocale.DEFAULT);
         this.sortingOrderProperty = new SimpleObjectProperty<>(SortingOrder.SOFTWARE);
         this.securityVersionProperty = new SimpleObjectProperty<>(SecurityVersion.LATEST);
+        
+        this.pwEncDek = new byte[DEK_LENGTH];
+        this.pwSalt = new byte[SALT_LENGTH];
+        this.pwIv = new byte[IV_LENGTH];
 
-        this.salt = new byte[SALT_LENGTH];
-        this.hashedPassword = new byte[SecurityVersion.HASH_BITS / 8];
-        isPasswordSet = false;
+        this.dek = null;
+        this.legacyHashedPassword = null;
+        this.legacySalt = null;
+        this.legacySecurityVersion = null;
+
+        this.isPasswordSet = false;
     }
 
     public UserPreferences(@NotNull String password) {
@@ -61,36 +92,86 @@ public final class UserPreferences {
         setPassword(password);
     }
 
-    @SuppressWarnings("unused") // Used by Jackson for deserialization
+    /** New DEK-based format — called by {@link Deserializer}. */
     private UserPreferences(
-            @JsonProperty(value = "locale", required = false) @Nullable SupportedLocale locale,
-            @JsonProperty(value = "sortingOrder", required = false) @Nullable SortingOrder sortingOrder,
-            @JsonProperty(value = "securityVersion", required = false) @Nullable SecurityVersion securityVersion,
-            @JsonProperty(value = "hashedPassword", required = true) @NotNull byte[] hashedPassword,
-            @JsonProperty(value = "salt", required = true) @NotNull byte[] salt) {
+            @NotNull SupportedLocale locale,
+            @NotNull SortingOrder sortingOrder,
+            @Nullable SecurityVersion securityVersion,
+            @NotNull byte[] pwEncDek,
+            @NotNull byte[] pwSalt,
+            @NotNull byte[] pwIv) {
+
+        if (locale == null) throw new IllegalArgumentException("Locale cannot be null");
+        if (sortingOrder == null) throw new IllegalArgumentException("Sorting order cannot be null");
+        if (pwEncDek == null || pwEncDek.length != DEK_LENGTH) throw new IllegalArgumentException("Encrypted DEK must be exactly " + DEK_LENGTH + " bytes");
+        if (pwSalt == null || pwSalt.length != SALT_LENGTH) throw new IllegalArgumentException("Salt must be exactly " + SALT_LENGTH + " bytes");
+        if (pwIv == null || pwIv.length != IV_LENGTH) throw new IllegalArgumentException("IV must be exactly " + IV_LENGTH + " bytes");
 
         this();
 
-        this.localeProperty.set(locale == null ? SupportedLocale.DEFAULT : locale);
-        this.sortingOrderProperty.set(sortingOrder == null ? SortingOrder.SOFTWARE : sortingOrder);
-        // This field has been added since Argon2 was implemented, so if it isn't present we'll assume it's older than that
-        this.securityVersionProperty.set(securityVersion == null ? SecurityVersion.PBKDF2 : securityVersion);
+        this.localeProperty.set(locale);
+        this.sortingOrderProperty.set(sortingOrder);
+        // Default to ARGON2 since this constructor was created for the new format (should never be PBKDF2), but allow possible new versions
+        this.securityVersionProperty.set(securityVersion == null ? SecurityVersion.ARGON2 : securityVersion);
 
-        System.arraycopy(hashedPassword, 0, this.hashedPassword, 0, this.hashedPassword.length);
-        System.arraycopy(salt, 0, this.salt, 0, this.salt.length);
+        this.pwSalt = pwSalt;
+        this.pwEncDek = pwEncDek;
+        this.pwIv = pwIv;
+
         isPasswordSet = true;
     }
 
-    public synchronized void set(@NotNull UserPreferences userPreferences) {
-        setLocale(userPreferences.getLocale());
-        setSortingOrder(userPreferences.getSortingOrder());
-        setSecurityVersion(userPreferences.getSecurityVersion());
+    /**
+     * Legacy hash-based format — called by {@link Deserializer} when {@code hashedPassword}
+     * is present in JSON instead of {@code pwEncDek}.
+     * The instance stays in legacy mode until {@link #verifyPassword} is called
+     * with the correct password, at which point it is transparently upgraded.
+     */
+    @SuppressWarnings("deprecation")
+    private UserPreferences(
+            @NotNull SupportedLocale locale,
+            @NotNull SortingOrder sortingOrder,
+            @Nullable SecurityVersion securityVersion,
+            @NotNull byte[] hashedPassword,
+            @NotNull byte[] salt) {
 
-        System.arraycopy(userPreferences.hashedPassword, 0, this.hashedPassword, 0, this.hashedPassword.length);
-        System.arraycopy(userPreferences.salt, 0, this.salt, 0, this.salt.length);
+        if (locale == null) throw new IllegalArgumentException("Locale cannot be null");
+        if (sortingOrder == null) throw new IllegalArgumentException("Sorting order cannot be null");
+        if (hashedPassword == null || hashedPassword.length == 0) throw new IllegalArgumentException("Hashed password cannot be null or empty");
+        if (salt == null || salt.length == 0) throw new IllegalArgumentException("Salt cannot be null or empty");
 
-        this.isPasswordSet = userPreferences.isPasswordSet;
+        this();
+
+        this.localeProperty.set(locale);
+        this.sortingOrderProperty.set(sortingOrder);
+        // securityVersion may be absent in very old files — fall back to PBKDF2
+        this.securityVersionProperty.set(securityVersion == null ? SecurityVersion.PBKDF2 : securityVersion);
+
+        this.legacyHashedPassword = hashedPassword;
+        this.legacySalt = salt;
+        this.legacySecurityVersion = securityVersion;
+
+        isPasswordSet = true;
     }
+
+    public synchronized void set(@NotNull UserPreferences other) {
+        setLocale(other.getLocale());
+        setSortingOrder(other.getSortingOrder());
+        setSecurityVersion(other.getSecurityVersion());
+
+        this.pwSalt = other.pwSalt.clone();
+        this.pwEncDek = other.pwEncDek.clone();
+        this.pwIv = other.pwIv.clone();
+
+        this.dek = (other.dek != null) ? other.dek.clone() : null;
+        this.legacyHashedPassword = (other.legacyHashedPassword != null) ? other.legacyHashedPassword.clone() : null;
+        this.legacySalt = (other.legacySalt != null) ? other.legacySalt.clone() : null;
+        this.legacySecurityVersion = other.legacySecurityVersion;
+
+        this.isPasswordSet = other.isPasswordSet;
+    }
+
+    // #region Properties
 
     public ObjectProperty<SupportedLocale> localeProperty() {
         return localeProperty;
@@ -131,35 +212,137 @@ public final class UserPreferences {
         securityVersionProperty.set(securityVersion);
     }
 
-    public synchronized @NotNull Boolean verifyPassword(@Nullable String passwordToVerify) {
-        if (!isPasswordSet) return true; // No password set, so any password is valid
-        if (passwordToVerify == null) return false;
-
-        byte[] hashedPasswordToVerify = getSecurityVersion().hash(passwordToVerify, salt);
-        final boolean res = Arrays.equals(hashedPassword, hashedPasswordToVerify);
-
-        if (res && !SecurityVersion.LATEST.equals(getSecurityVersion())) {
-            setSecurityVersion(SecurityVersion.LATEST);
-            setPassword(passwordToVerify);
-        }
-
-        return res;
+    /**
+     * Returns a defensive copy of the in-memory DEK.
+     * @return a copy of the DEK, or {@code null} if the password has not been verified yet.
+     */
+    @Nullable @JsonIgnore
+    public synchronized byte[] getDEK() {
+        return dek != null ? Arrays.copyOf(dek, dek.length) : null;
     }
 
-    public synchronized @NotNull Boolean setPasswordVerified(@Nullable String oldPassword, @NotNull String newPassword) {
+    /**
+     * Return the legacy security version used for hashing the password in the old format;
+     * @return the legacy security version, or {@code null} if this instance was not loaded from a legacy file.
+     */
+    @Nullable @JsonIgnore
+    public synchronized SecurityVersion getLegacyVersion() {
+        return legacySecurityVersion;
+    }
+
+    // #endregion
+
+    // #region Password management
+
+    /**
+     * Verifies the given password against the stored credential.
+     * <p>
+     * For instances loaded from the legacy hash-based format, the password is checked
+     * against the stored hash; on success the instance is transparently upgraded to the
+     * DEK-based format with a freshly generated salt (keeping the same master password).
+     * </p>
+     * <p>
+     * For instances in the current DEK-based format, AES-GCM authentication serves as
+     * the implicit password check: if decryption succeeds the DEK is retained in memory
+     * and can be retrieved via {@link #getDEK()}.
+     * </p>
+     *
+     * @return {@code true} if the password is correct (or no password has been set),
+     *         {@code false} otherwise.
+     */
+    public synchronized boolean verifyPassword(@Nullable String passwordToVerify) {
+        if (!isPasswordSet) return true;
+        if (passwordToVerify == null) return false;
+
+        // Since the legacy hashed password is not nullified after upgrade, we can detect legacy mode by also checking that the DEK is still null.
+        if (dek == null && legacyHashedPassword != null) {
+            // Legacy mode: verify by comparing hashes
+            final byte[] hashedInput = getSecurityVersion().hash(passwordToVerify, legacySalt);
+            final boolean match = Arrays.equals(legacyHashedPassword, hashedInput);
+            if (match) {
+                // Upgrade to DEK format; setPassword generates a new random salt
+                setSecurityVersion(SecurityVersion.LATEST);
+                setPassword(passwordToVerify);
+            }
+            return match;
+        }
+
+        // DEK-based mode: AES-GCM decryption failure = wrong password
+        try {
+            this.dek = decryptDEK(getSecurityVersion(), passwordToVerify, pwEncDek, pwSalt, pwIv);
+            return true;
+        } catch (AEADBadTagException e) {
+            return false;
+        } catch (GeneralSecurityException e) {
+            Logger.getInstance().addError(e);
+            throw new RuntimeException("Failed to decrypt DEK", e);
+        }
+    }
+
+    public synchronized boolean setPasswordVerified(@Nullable String oldPassword, @NotNull String newPassword) {
         final boolean res = verifyPassword(oldPassword);
         if (res) setPassword(newPassword);
         return res;
     }
 
+    /**
+     * Sets (or changes) the master password.
+     * <ul>
+     *   <li>If no DEK exists yet (first-time setup), a new random DEK is generated.</li>
+     *   <li>Otherwise the existing DEK is re-encrypted under the new password,
+     *       so already-encrypted account data remains intact.</li>
+     * </ul>
+     * A fresh random salt and IV are always generated so the derived key changes
+     * even when the same password is reused (important for the legacy → DEK upgrade path).
+     */
     private synchronized void setPassword(@NotNull String password) {
-        final SecureRandom random = new SecureRandom();
-        random.nextBytes(salt);
+        SecureRandom random;
+        try {
+            random = SecureRandom.getInstanceStrong();
+        } catch (NoSuchAlgorithmException e) {
+            random = new SecureRandom();
+        }
 
-        final byte[] hashedPassword = getSecurityVersion().hash(password, salt);
-        System.arraycopy(hashedPassword, 0, this.hashedPassword, 0, this.hashedPassword.length);
-        isPasswordSet = true;
+        random.nextBytes(this.pwSalt);
+        random.nextBytes(this.pwIv);
+
+        // Reuse existing DEK when changing the password; generate a new one on first setup.
+        if (this.dek == null) {
+            this.dek = new byte[DEK_LENGTH];
+            random.nextBytes(this.dek);
+        }
+
+        setSecurityVersion(SecurityVersion.LATEST);
+
+        try {
+            this.pwEncDek = encryptDEK(SecurityVersion.LATEST, password, this.dek, this.pwSalt, this.pwIv);
+            this.isPasswordSet = true;
+        } catch (GeneralSecurityException e) {
+            Logger.getInstance().addError(e);
+            throw new RuntimeException("Failed to encrypt DEK", e);
+        }
     }
+
+    // #endregion
+
+    // #region Crypto helpers
+
+    /** Encrypt {@code dek} bytes using AES-GCM with a KEK derived from {@code password} + {@code salt}. */
+    private static byte[] encryptDEK(SecurityVersion version, String password, byte[] dek, byte[] salt, byte[] iv) throws GeneralSecurityException {
+        final byte[] kekBytes = version.getKey(password, salt);
+        return AES.encryptAES(dek, kekBytes, iv);
+    }
+
+    /**
+     * Decrypt the wrapped DEK.  AES-GCM tag verification provides implicit password
+     * authentication — a wrong password produces a {@link GeneralSecurityException}.
+     */
+    private static byte[] decryptDEK(SecurityVersion version, String password, byte[] pwEncDek, byte[] salt, byte[] pwIv) throws GeneralSecurityException {
+        final byte[] kekBytes = version.getKey(password, salt);
+        return AES.decryptAES(pwEncDek, kekBytes, pwIv);
+    }
+
+    // #endregion
 
     @Contract("_ -> new")
     public static @NotNull UserPreferences of(String password) {
@@ -169,5 +352,41 @@ public final class UserPreferences {
     @Contract("-> new")
     public static @NotNull UserPreferences empty() {
         return new UserPreferences();
+    }
+
+    /**
+     * Custom Jackson deserializer that handles both the legacy hash-based format
+     * (JSON field {@code hashedPassword}) and the current DEK-based format
+     * (JSON field {@code pwEncDek}), allowing existing data files to be loaded
+     * and transparently upgraded on first authenticated access.
+     */
+    public static final class Deserializer extends ValueDeserializer<UserPreferences> {
+        @Override
+        public UserPreferences deserialize(JsonParser p, DeserializationContext ctxt) throws JacksonException {
+            final ObjectNode node = p.readValueAsTree();
+
+            final SupportedLocale locale = node.has("locale")
+                    ? SupportedLocale.forLanguageTag(node.get("locale").asString())
+                    : SupportedLocale.DEFAULT;
+
+            final SortingOrder sortingOrder = node.has("sortingOrder")
+                    ? SortingOrder.valueOf(node.get("sortingOrder").asString())
+                    : SortingOrder.SOFTWARE;
+
+            final SecurityVersion securityVersion = node.has("securityVersion")
+                    ? SecurityVersion.fromString(node.get("securityVersion").asString())
+                    : null;
+
+            if (node.has("hashedPassword")) {
+                final byte[] hashedPassword = node.get("hashedPassword").binaryValue();
+                final byte[] salt = node.get("salt").binaryValue();
+                return new UserPreferences(locale, sortingOrder, securityVersion, hashedPassword, salt);
+            } else {
+                final byte[] pwEncDek = node.get("pwEncDek").binaryValue();
+                final byte[] pwSalt = node.get("pwSalt").binaryValue();
+                final byte[] pwIv = node.get("pwIv").binaryValue();
+                return new UserPreferences(locale, sortingOrder, securityVersion, pwEncDek, pwSalt, pwIv);
+            }
+        }
     }
 }
