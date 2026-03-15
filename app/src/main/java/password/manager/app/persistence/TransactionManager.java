@@ -19,11 +19,13 @@
 package password.manager.app.persistence;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -41,6 +43,7 @@ import password.manager.app.singletons.Logger;
  */
 public class TransactionManager {
 
+    private final AtomicInteger transactionProgressiveId = new AtomicInteger(0);
     private final ExecutorService executor;
 
     /**
@@ -56,7 +59,7 @@ public class TransactionManager {
      * @return a new Transaction instance
      */
     public @NotNull Transaction beginTransaction() {
-        return new Transaction(executor);
+        return new Transaction(executor, transactionProgressiveId.incrementAndGet());
     }
 
     /**
@@ -90,10 +93,10 @@ public class TransactionManager {
      *
      * @param <T> the return type of the operation
      * @param operation the operation to execute within the transaction
-     * @param rollback the rollback action to perform if the transaction fails
+     * @param rollback the rollback action to perform if the transaction fails (can be null)
      * @return a CompletableFuture that completes with the result of the operation, or null if the transaction failed
      */
-    public <T> @NotNull CompletableFuture<T> executeInTransaction(@NotNull Supplier<T> operation, Runnable rollback) {
+    public <T> @NotNull CompletableFuture<T> executeInTransaction(@NotNull Supplier<T> operation, @Nullable Runnable rollback) {
         return executeInTransaction(t -> t.addOperation(operation, rollback));
     }
 

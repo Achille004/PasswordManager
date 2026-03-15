@@ -49,18 +49,20 @@ import password.manager.app.singletons.Logger;
 @JsonDeserialize(using = UserPreferences.Deserializer.class)
 public final class UserPreferences {
 
-    private static final int DEK_LENGTH = (AES.AES_BITS + AES.GCM_TAG_BITS) / 8; // 48 bytes
+    private static final int DEK_LENGTH = AES.AES_BITS / 8; // 32 bytes
     private static final int SALT_LENGTH = 16;
     private static final int IV_LENGTH = 16;
+
+    private static final int ENC_DEK_LENGTH = DEK_LENGTH + (AES.GCM_TAG_BITS / 8); // 48 bytes
 
     private final transient ObjectProperty<SupportedLocale> localeProperty;
     private final transient ObjectProperty<SortingOrder> sortingOrderProperty;
     private final transient ObjectProperty<SecurityVersion> securityVersionProperty;
 
     // Serialized fields
-    private @JsonProperty("pwEncDek") byte[] pwEncDek;
-    private @JsonProperty("pwSalt") byte[] pwSalt;
-    private @JsonProperty("pwIv") byte[] pwIv;
+    private final @JsonProperty("pwEncDek") byte[] pwEncDek;
+    private final @JsonProperty("pwSalt") byte[] pwSalt;
+    private final @JsonProperty("pwIv") byte[] pwIv;
 
     // In-memory only — never serialized
     private transient byte[] dek;
@@ -74,8 +76,8 @@ public final class UserPreferences {
         this.localeProperty = new SimpleObjectProperty<>(SupportedLocale.DEFAULT);
         this.sortingOrderProperty = new SimpleObjectProperty<>(SortingOrder.SOFTWARE);
         this.securityVersionProperty = new SimpleObjectProperty<>(SecurityVersion.LATEST);
-        
-        this.pwEncDek = new byte[DEK_LENGTH];
+
+        this.pwEncDek = new byte[ENC_DEK_LENGTH];
         this.pwSalt = new byte[SALT_LENGTH];
         this.pwIv = new byte[IV_LENGTH];
 
@@ -103,7 +105,7 @@ public final class UserPreferences {
 
         if (locale == null) throw new IllegalArgumentException("Locale cannot be null");
         if (sortingOrder == null) throw new IllegalArgumentException("Sorting order cannot be null");
-        if (pwEncDek == null || pwEncDek.length != DEK_LENGTH) throw new IllegalArgumentException("Encrypted DEK must be exactly " + DEK_LENGTH + " bytes");
+        if (pwEncDek == null || pwEncDek.length != ENC_DEK_LENGTH) throw new IllegalArgumentException("Encrypted DEK must be exactly " + ENC_DEK_LENGTH + " bytes");
         if (pwSalt == null || pwSalt.length != SALT_LENGTH) throw new IllegalArgumentException("Salt must be exactly " + SALT_LENGTH + " bytes");
         if (pwIv == null || pwIv.length != IV_LENGTH) throw new IllegalArgumentException("IV must be exactly " + IV_LENGTH + " bytes");
 
@@ -114,9 +116,9 @@ public final class UserPreferences {
         // Default to ARGON2 since this constructor was created for the new format (should never be PBKDF2), but allow possible new versions
         this.securityVersionProperty.set(securityVersion == null ? SecurityVersion.ARGON2 : securityVersion);
 
-        this.pwSalt = pwSalt;
-        this.pwEncDek = pwEncDek;
-        this.pwIv = pwIv;
+        System.arraycopy(pwEncDek, 0, this.pwEncDek, 0, ENC_DEK_LENGTH);
+        System.arraycopy(pwSalt, 0, this.pwSalt, 0, SALT_LENGTH);
+        System.arraycopy(pwIv, 0, this.pwIv, 0, IV_LENGTH);
 
         isPasswordSet = true;
     }
@@ -159,9 +161,9 @@ public final class UserPreferences {
         setSortingOrder(other.getSortingOrder());
         setSecurityVersion(other.getSecurityVersion());
 
-        this.pwSalt = other.pwSalt.clone();
-        this.pwEncDek = other.pwEncDek.clone();
-        this.pwIv = other.pwIv.clone();
+        System.arraycopy(other.pwEncDek, 0, this.pwEncDek, 0, ENC_DEK_LENGTH);
+        System.arraycopy(other.pwSalt, 0, this.pwSalt, 0, SALT_LENGTH);
+        System.arraycopy(other.pwIv, 0, this.pwIv, 0, IV_LENGTH);
 
         this.dek = (other.dek != null) ? other.dek.clone() : null;
         this.legacyHashedPassword = (other.legacyHashedPassword != null) ? other.legacyHashedPassword.clone() : null;
@@ -315,7 +317,8 @@ public final class UserPreferences {
         setSecurityVersion(SecurityVersion.LATEST);
 
         try {
-            this.pwEncDek = encryptDEK(SecurityVersion.LATEST, password, this.dek, this.pwSalt, this.pwIv);
+            byte[] pwEncDek = encryptDEK(SecurityVersion.LATEST, password, this.dek, this.pwSalt, this.pwIv);
+            System.arraycopy(pwEncDek, 0, this.pwEncDek, 0, ENC_DEK_LENGTH);
             this.isPasswordSet = true;
         } catch (GeneralSecurityException e) {
             Logger.getInstance().addError(e);

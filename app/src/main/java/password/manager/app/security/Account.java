@@ -73,7 +73,7 @@ public final class Account {
 
     // This flag is used to determine if this account was created with an older version where software and username were not encrypted.
     // It is set in the constructor and never updated, as it is only used to determine how to read existing data, while all new data is always fully encrypted.
-    private transient boolean isFullyEncrypted; 
+    private transient boolean isFullyEncrypted;
 
     public Account() {
         this.salt = new byte[SALT_LENGTH];
@@ -98,7 +98,7 @@ public final class Account {
         this();
 
         // If this constructor is used, it means that the account is being created with the latest version, so we can safely set this flag to true
-        this.isFullyEncrypted = true; 
+        this.isFullyEncrypted = true;
         this.setData(data, DEK);
     }
 
@@ -116,7 +116,7 @@ public final class Account {
         if (uIv == null || uIv.length != IV_LENGTH) throw new IllegalArgumentException("Username IV should be not null and " + IV_LENGTH + " bytes long");
         if (password == null || password.length == 0) throw new IllegalArgumentException("Password cannot be null or empty");
         if (pIv == null || pIv.length != IV_LENGTH) throw new IllegalArgumentException("Password IV should be not null and " + IV_LENGTH + " bytes long");
-                
+
         this();
 
         // Wrap the provided values into a memento and copy them to this account, centralizing the logic in copyMemento to avoid code duplication
@@ -145,7 +145,7 @@ public final class Account {
             this.softwareProperty.set(software);
             this.usernameProperty.set(username);
         });
-        
+
         // If salt is not provided, derive it from software and username (backward compatibility:
         // older versions didn't store salt and used software+username bytes as salt instead).
         // IMPORTANT: the derived value is written back into this.salt so it is persisted on the
