@@ -33,32 +33,22 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import password.manager.app.base.SecurityVersion;
 import password.manager.app.security.Account;
 import password.manager.app.security.Account.AccountData;
 import password.manager.app.security.AccountRepository;
-import password.manager.app.singletons.Logger;
 import password.manager.app.singletons.Singletons;
 
-@SuppressWarnings("deprecation")
 public class TestAccountRepository {
 
     private static final String DEFAULT_MASTER_PASSWORD = "MasterPassword123!";
     private static final byte[] DEFAULT_DEK = DEFAULT_MASTER_PASSWORD.getBytes(StandardCharsets.UTF_8);
 
     private AccountRepository repository;
-    private ObjectProperty<SecurityVersion> securityVersionProperty;
-    private StringProperty masterPasswordProperty;
 
     @BeforeEach
     void setUp() {
-        securityVersionProperty = new SimpleObjectProperty<>(SecurityVersion.LATEST);
-        masterPasswordProperty = new SimpleStringProperty(DEFAULT_MASTER_PASSWORD);
         repository = new AccountRepository();
+        repository.setDEK(DEFAULT_DEK);
     }
 
     @AfterEach
@@ -69,8 +59,6 @@ public class TestAccountRepository {
 
     @Test
     void testInitiallyEmpty() {
-        TestingUtils.injectBasePath();
-
         assertTrue(repository.findAll().isEmpty(), "Repository should be empty on initialization");
     }
 
@@ -191,8 +179,6 @@ public class TestAccountRepository {
 
     @Test
     void testSetAll() throws GeneralSecurityException {
-        TestingUtils.injectBasePath();
-
         List<Account> testAccounts = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
             String software = "software" + i;
@@ -240,8 +226,6 @@ public class TestAccountRepository {
 
     @Test
     void testFindAllIsUnmodifiable() throws ExecutionException, InterruptedException, TimeoutException, GeneralSecurityException {
-        TestingUtils.injectBasePath();
-
         AccountData data = new AccountData("TestSoftware", "TestUser", "TestPass");
         repository
                 .add(data)
@@ -296,188 +280,21 @@ public class TestAccountRepository {
     }
 
     @Test
-    void testChangeMasterPassword() throws Exception {
-        TestingUtils.injectBasePath();
-
-        // Add accounts
-        int count = 10;
-        for (int i = 0; i < count; i++) {
-            String software = "software" + i;
-            String username = "user" + i;
-            String password = "password" + i;
-
-            AccountData data = new AccountData(software, username, password);
-            repository
-                    .add(data)
-                    .get(5, TimeUnit.SECONDS);
-        }
-
-        // Change master password
-        masterPasswordProperty.set("NewMasterPassword456!");
-
-        // Try to get password with new master password
-        for (Account account : repository.findAll()) {
-            Logger.getInstance().addDebug("Testing account: " + account.getSoftware() + " / " +  account.getUsername());
-            AccountData data = repository.getData(account).get(30, TimeUnit.SECONDS);
-            assertNotNull(data.software(), "Software should be retrievable with new master password");
-            assertNotNull(data.username(), "Username should be retrievable with new master password");
-            assertNotNull(data.password(), "Password should be retrievable with new master password");
-        }
+    void testSetNullDEK() throws Exception {
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> repository.setDEK(null),
+            "Setting null master password should throw IllegalArgumentException"
+        );
     }
 
     @Test
-    void testNullMasterPassword() throws Exception {
-        TestingUtils.injectBasePath();
-
-        // Set initial master password to null
-        masterPasswordProperty.set(null);
-
-        // Add accounts
-        int count = 10;
-        for (int i = 0; i < count; i++) {
-            String software = "software" + i;
-            String username = "user" + i;
-            String password = "password" + i;
-
-            // Add with null master password should:
-            AccountData data = new AccountData(software, username, password);
-            CompletableFuture<Account> future = repository.add(data);
-
-            // - Return null
-            assertNull(
-                future.get(5, TimeUnit.SECONDS),
-                "Adding account with null master password should return null"
-            );
-
-            // - Not add account to repository
-            assertTrue(repository.findAll().isEmpty(), "Repository should remain empty when adding with null master password");
-        }
-    }
-
-    @Test
-    void testChangeMasterPasswordWithEmptyRepository() {
-        TestingUtils.injectBasePath();
-
-        masterPasswordProperty.set("NewMasterPassword456!");
-
-        assertEquals(0, repository.findAll().size(), "Repository should remain empty");
-    }
-
-
-    @Test
-    void testUpdateToLatestSecurityVersion() throws Exception {
-        TestingUtils.injectBasePath();
-
-        // Set initial security version to PBKDF2, future execute on the empty repository (no changes affecting accounts)
-        securityVersionProperty.set(SecurityVersion.PBKDF2);
-
-        // Add accounts to repository
-        int count = 10;
-        List<AccountData> expectedData = new ArrayList<>();
-
-        for (int i = 0; i < count; i++) {
-            String software = "software" + i;
-            String username = "user" + i;
-            String password = "password" + i;
-
-            AccountData data = new AccountData(software, username, password);
-            expectedData.add(data);
-
-            repository
-                .add(data)
-                .get(5, TimeUnit.SECONDS);
-        }
-
-        Logger.getInstance().addDebug("Accounts added with security version: " + securityVersionProperty.get().name());
-        List<Account> beforeUpdate = new ArrayList<>(repository.findAll());
-
-        // Update all accounts to latest security version
-        securityVersionProperty.set(SecurityVersion.LATEST);
-        Logger.getInstance().addDebug("Security version updated to: " + securityVersionProperty.get().name());
-
-        // Verify all passwords are still accessible and correct
-        List<Account> afterUpdate = repository.findAll();
-        assertEquals(beforeUpdate.size(), afterUpdate.size(), "Account count should remain the same");
-
-        for (int i = 0; i < afterUpdate.size(); i++) {
-            Account account = afterUpdate.get(i);
-            AccountData data = repository
-                .getData(account)
-                .get(30, TimeUnit.SECONDS);
-
-            assertEquals(expectedData.get(i).password(), data.password(),
-                "Password should remain the same after security version update");
-        }
-    }
-
-    @Test
-    void testNullSecurityVersion() throws Exception {
-        TestingUtils.injectBasePath();
-
-        // Set initial security version to null
-        securityVersionProperty.set(null);
-
-        // Add accounts
-        int count = 10;
-        for (int i = 0; i < count; i++) {
-            String software = "software" + i;
-            String username = "user" + i;
-            String password = "password" + i;
-
-            // Add with null security version should:
-            AccountData data = new AccountData(software, username, password);
-            CompletableFuture<Account> future = repository.add(data);
-
-            // - Return null
-            assertNull(
-                future.get(5, TimeUnit.SECONDS),
-                "Adding account with null master password should return null"
-            );
-
-            // - Not add account to repository
-            assertTrue(repository.findAll().isEmpty(), "Repository should remain empty when adding with null master password");
-        }
-    }
-
-    @Test
-    void testUpdateToLatestSecurityVersionWithEmptyRepository() {
-        TestingUtils.injectBasePath();
-
-        securityVersionProperty.set(SecurityVersion.PBKDF2);
-        securityVersionProperty.set(SecurityVersion.LATEST);
-
-        assertEquals(0, repository.findAll().size(), "Repository should remain empty");
-    }
-
-    @Test
-    void testUpdateToLatestSecurityVersionThenChangeMasterPassword() throws Exception {
-        TestingUtils.injectBasePath();
-
-        securityVersionProperty.set(SecurityVersion.PBKDF2);
-
-        // Add accounts
-        int count = 10;
-        for (int i = 0; i < count; i++) {
-            String software = "software" + i;
-            String username = "user" + i;
-            String password = "password" + i;
-
-            AccountData data = new AccountData(software, username, password);
-            repository
-                    .add(data)
-                    .get(5, TimeUnit.SECONDS);
-        }
-
-        List<Account> accounts = repository.findAll();
-        securityVersionProperty.set(SecurityVersion.LATEST);
-        masterPasswordProperty.set("NewMasterPassword456!");
-
-        // Try to get password with new master password
-        for (Account account : accounts) {
-            AccountData data = repository.getData(account).get(30, TimeUnit.SECONDS);
-            assertNotNull(data.software(), "Software should be retrievable with new master password");
-            assertNotNull(data.username(), "Username should be retrievable with new master password");
-            assertNotNull(data.password(), "Password should be retrievable with new master password");
-        }
+    void testChangeDEK() throws Exception {
+        byte[] newDEK = "NewMasterPassword456!".getBytes(StandardCharsets.UTF_8);
+        assertThrows(
+            IllegalStateException.class,
+            () -> repository.setDEK(newDEK),
+            "Setting null DEK should throw IllegalStateException"
+        );
     }
 }

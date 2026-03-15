@@ -189,7 +189,7 @@ public final class Utils {
         Platform.exit(); // Exit gracefully (saves data, etc.)
         return new Pane(); // return non-null dummy pane
     }
-    
+
     /**
      * Schedules {@code action} on the JavaFX Application Thread when the toolkit is running,
      * or executes it synchronously when it is not (e.g. in unit-test environments).

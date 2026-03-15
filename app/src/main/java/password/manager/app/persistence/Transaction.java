@@ -26,6 +26,7 @@ import java.util.function.Supplier;
 
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import password.manager.app.singletons.Logger;
 
@@ -45,7 +46,9 @@ public class Transaction {
 
     private final List<CompletableFuture<?>> operations = new ArrayList<>();
     private final List<Runnable> rollbackActions = new ArrayList<>();
+
     private final ExecutorService executor;
+    private final int transactionId;
 
     /**
      * -- GETTER --
@@ -69,9 +72,11 @@ public class Transaction {
      * Constructs a new Transaction with the specified executor service.
      *
      * @param executor the executor service to use for async operations
+     * @param transactionId the ID of the transaction (for logging purposes)
      */
-    public Transaction(@NotNull ExecutorService executor) {
+    public Transaction(@NotNull ExecutorService executor, int transactionId) {
         this.executor = executor;
+        this.transactionId = transactionId;
     }
 
     /**
@@ -83,7 +88,7 @@ public class Transaction {
      * @return a CompletableFuture representing the operation
      * @throws IllegalStateException if the transaction has already been committed or rolled back
      */
-    public <T> CompletableFuture<T> addOperation(@NotNull Supplier<T> operation, Runnable rollback) {
+    public <T> CompletableFuture<T> addOperation(@NotNull Supplier<T> operation, @Nullable Runnable rollback) {
         if (committed) throw new IllegalStateException("Transaction has already been committed");
         if (rolledBack) throw new IllegalStateException("Transaction has already been rolled back");
 
@@ -105,6 +110,7 @@ public class Transaction {
     public @NotNull CompletableFuture<Boolean> commit() {
         if (committed || rolledBack) return CompletableFuture.completedFuture(false);
 
+        Logger.getInstance().addDebug("Attempting to commit transaction " + transactionId);
         return CompletableFuture.allOf(operations.toArray(new CompletableFuture[0]))
                 .thenApply(v -> {
                     // Check if any operation failed
@@ -113,14 +119,17 @@ public class Transaction {
                     );
 
                     if (anyFailed) {
+                        Logger.getInstance().addDebug("Some operation failed during commit, rolling back transaction " + transactionId);
                         rollback();
                         return false;
                     }
 
+                    Logger.getInstance().addDebug("Transaction " + transactionId + " committed successfully");
                     committed = true;
                     return true;
                 })
                 .exceptionally(ex -> {
+                    Logger.getInstance().addDebug("Exception occurred during commit, rolling back transaction " + transactionId);
                     rollback();
                     return false;
                 });

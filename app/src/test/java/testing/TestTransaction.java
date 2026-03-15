@@ -38,13 +38,15 @@ import password.manager.app.singletons.Singletons;
 
 public class TestTransaction {
 
+    private static final AtomicInteger transactionProgressiveId = new AtomicInteger(0);
+
     private ExecutorService executor;
     private Transaction transaction;
 
     @BeforeEach
     void setUp() {
         executor = Executors.newVirtualThreadPerTaskExecutor();
-        transaction = new Transaction(executor);
+        transaction = new Transaction(executor, transactionProgressiveId.incrementAndGet());
     }
 
     @AfterEach

@@ -130,7 +130,7 @@ public final class AccountRepository implements AutoCloseable {
         return transactionManager.executeInTransaction(
             () -> {
                 try {
-                    Logger.getInstance().addDebug("Creating new account");
+                    Logger.getInstance().addDebug("Adding account");
 
                     accountHolder[0] = Account.of(data, DEK);
 
@@ -186,6 +186,8 @@ public final class AccountRepository implements AutoCloseable {
         return transactionManager.executeInTransaction(
             () -> {
                 try {
+                    Logger.getInstance().addDebug("Updating account");
+
                     account.setData(data, DEK);
                     triggerUpdateNotification(account);
                     return account;
@@ -228,6 +230,8 @@ public final class AccountRepository implements AutoCloseable {
 
         return transactionManager.executeInTransaction(
             () -> {
+                Logger.getInstance().addDebug("Removing account");
+
                 runOnFx(() -> {
                     synchronized (accounts) {
                         accounts.remove(account);
@@ -252,7 +256,7 @@ public final class AccountRepository implements AutoCloseable {
      * This method is intended to be called after successful master password verification to ensure all accounts are decrypted and ready for use.
      * The operation is performed as a single transaction that attempts to unlock each account. If any account fails to unlock, all accounts are rolled back to their original locked state.
      * </p>
-     * 
+     *
      * @param legacyMasterPassword the master password for legacy accounts, can be null if not in legacy mode.
      * @param legacyVersion the security version of the legacy accounts, can be null if not in legacy mode.
      * @return a CompletableFuture that completes with true if all accounts were successfully unlocked, false if any account failed to unlock

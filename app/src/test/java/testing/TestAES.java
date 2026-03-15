@@ -28,7 +28,15 @@ import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import password.manager.app.base.SecurityVersion;
@@ -36,9 +44,9 @@ import password.manager.app.security.AES;
 
 public class TestAES {
 
-    // Use same salt and IV sizes as the app
-    static final byte[] salt = new byte[16], iv = new byte[16];
     static SecureRandom random;
+
+    private byte[] salt, iv;
 
     static {
         try {
@@ -48,8 +56,18 @@ public class TestAES {
         }
     }
 
+    @BeforeEach
+    void setUp() {
+        salt = newRandom16();
+        iv = newRandom16();
+    }
+
     @Test
     void testBLNS() throws GeneralSecurityException, IOException {
+        int threads = Math.max(1, Runtime.getRuntime().availableProcessors());
+        ExecutorService executor = Executors.newFixedThreadPool(threads);
+        List<Callable<Void>> tasks = new ArrayList<>();
+
         try (InputStream stream = TestAES.class.getResourceAsStream("/blns.txt")) {
             assert stream != null;
 
@@ -57,51 +75,60 @@ public class TestAES {
                 String masterPass, pass;
 
                 while ((masterPass = readBlnsLine(reader)) != null && (pass = readBlnsLine(reader)) != null) {
-                    random.nextBytes(salt);
-                    random.nextBytes(iv);
-
-                    for (SecurityVersion version : SecurityVersion.values()) {
-                        byte[] key = version.getKey(masterPass, salt);
-                        byte[] e = AES.encryptStringAES(pass, key, iv);
-                        String d = AES.decryptStringAES(e, key, iv);
-                        assertEquals(d, pass);
-                    }
+                    String currentMasterPass = masterPass;
+                    String currentPass = pass;
+                    tasks.add(() -> {
+                        testEncryptionDecryption(currentPass, currentMasterPass);
+                        return null;
+                    });
                 }
             }
+
+            List<Future<Void>> results = executor.invokeAll(tasks);
+            for (Future<Void> result : results) {
+                try {
+                    result.get();
+                } catch (ExecutionException e) {
+                    Throwable cause = e.getCause();
+                    if (cause instanceof GeneralSecurityException securityException) {
+                        throw securityException;
+                    }
+                    if (cause instanceof RuntimeException runtimeException) {
+                        throw runtimeException;
+                    }
+                    throw new RuntimeException(cause);
+                }
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("BLNS parallel execution interrupted", e);
+        } finally {
+            executor.shutdownNow();
         }
     }
 
     @Test
     void testEmptyString() throws GeneralSecurityException {
-        random.nextBytes(salt);
-        random.nextBytes(iv);
-
         String empty = "";
         String password = "testPassword123";
 
-        for (SecurityVersion version : SecurityVersion.values()) {
-            byte[] key = version.getKey(password, salt);
-            byte[] encrypted = AES.encryptStringAES(empty, key, iv);
-            String decrypted = AES.decryptStringAES(encrypted, key, iv);
-            assertEquals(empty, decrypted);
-        }
+        testEncryptionDecryption(empty, password);
     }
 
     @Test
     void testIVUniqueness() throws GeneralSecurityException {
-        random.nextBytes(salt);
+        byte[] localSalt = newRandom16();
+
         String plaintext = "Test message";
         String password = "testPassword123";
 
         for (SecurityVersion version : SecurityVersion.values()) {
-            byte[] key = version.getKey(password, salt);
+            byte[] key = version.getKey(password, localSalt);
 
-            byte[] iv1 = new byte[16];
-            random.nextBytes(iv1);
+            byte[] iv1 = newRandom16();
             byte[] encrypted1 = AES.encryptStringAES(plaintext, key, iv1);
 
-            byte[] iv2 = new byte[16];
-            random.nextBytes(iv2);
+            byte[] iv2 = newRandom16();
             byte[] encrypted2 = AES.encryptStringAES(plaintext, key, iv2);
 
             // Different IVs should produce different ciphertexts
@@ -111,9 +138,6 @@ public class TestAES {
 
     @Test
     void testWrongKeyDecryption() throws GeneralSecurityException {
-        random.nextBytes(salt);
-        random.nextBytes(iv);
-
         String plaintext = "Secret message";
         String password1 = "correctPassword";
         String password2 = "wrongPassword";
@@ -135,9 +159,6 @@ public class TestAES {
 
     @Test
     void testCorruptedCiphertext() throws GeneralSecurityException {
-        random.nextBytes(salt);
-        random.nextBytes(iv);
-
         String plaintext = "Test message";
         String password = "testPassword123";
 
@@ -157,9 +178,6 @@ public class TestAES {
 
     @Test
     void testLargeString() throws GeneralSecurityException {
-        random.nextBytes(salt);
-        random.nextBytes(iv);
-
         // Create a 1MiB string
         int MiB = 1024 * 1024;
         StringBuilder sb = new StringBuilder(MiB);
@@ -168,19 +186,11 @@ public class TestAES {
         String largeText = sb.toString();
         String password = "testPassword123";
 
-        for (SecurityVersion version : SecurityVersion.values()) {
-            byte[] key = version.getKey(password, salt);
-            byte[] encrypted = AES.encryptStringAES(largeText, key, iv);
-            String decrypted = AES.decryptStringAES(encrypted, key, iv);
-            assertEquals(largeText, decrypted);
-        }
+        testEncryptionDecryption(largeText, password);
     }
 
     @Test
     void testNullInputs() {
-        random.nextBytes(salt);
-        random.nextBytes(iv);
-
         String password = "testPassword123";
 
         for (SecurityVersion version : SecurityVersion.values()) {
@@ -196,5 +206,23 @@ public class TestAES {
                 () -> AES.decryptStringAES(null, key, iv)
             );
         }
+    }
+
+    private void testEncryptionDecryption(String plaintext, String password) throws GeneralSecurityException {
+        byte[] localSalt = newRandom16();
+        byte[] localIv = newRandom16();
+
+        for (SecurityVersion version : SecurityVersion.values()) {
+            byte[] key = version.getKey(password, localSalt);
+            byte[] encrypted = AES.encryptStringAES(plaintext, key, localIv);
+            String decrypted = AES.decryptStringAES(encrypted, key, localIv);
+            assertEquals(plaintext, decrypted);
+        }
+    }
+
+    private byte[] newRandom16() {
+        byte[] bytes = new byte[16];
+        random.nextBytes(bytes);
+        return bytes;
     }
 }
