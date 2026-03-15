@@ -49,6 +49,7 @@ public class Transaction {
 
     private final ExecutorService executor;
     private final int transactionId;
+    private final String description;
 
     /**
      * -- GETTER --
@@ -73,10 +74,12 @@ public class Transaction {
      *
      * @param executor the executor service to use for async operations
      * @param transactionId the ID of the transaction (for logging purposes)
+     * @param description a description of the transaction (for logging purposes)
      */
-    public Transaction(@NotNull ExecutorService executor, int transactionId) {
+    public Transaction(@NotNull ExecutorService executor, int transactionId, String description) {
         this.executor = executor;
         this.transactionId = transactionId;
+        this.description = description;
     }
 
     /**
@@ -110,7 +113,7 @@ public class Transaction {
     public @NotNull CompletableFuture<Boolean> commit() {
         if (committed || rolledBack) return CompletableFuture.completedFuture(false);
 
-        Logger.getInstance().addDebug("Attempting to commit transaction " + transactionId);
+        Logger.getInstance().addDebug("Attempting to commit transaction %d (%s)", transactionId, description);
         return CompletableFuture.allOf(operations.toArray(new CompletableFuture[0]))
                 .thenApply(v -> {
                     // Check if any operation failed
@@ -119,17 +122,17 @@ public class Transaction {
                     );
 
                     if (anyFailed) {
-                        Logger.getInstance().addDebug("Some operation failed during commit, rolling back transaction " + transactionId);
+                        Logger.getInstance().addDebug("Some operation failed during commit, rolling back transaction %d (%s)", transactionId, description);
                         rollback();
                         return false;
                     }
 
-                    Logger.getInstance().addDebug("Transaction " + transactionId + " committed successfully");
+                    Logger.getInstance().addDebug("Transaction %d (%s) committed successfully", transactionId, description);
                     committed = true;
                     return true;
                 })
                 .exceptionally(ex -> {
-                    Logger.getInstance().addDebug("Exception occurred during commit, rolling back transaction " + transactionId);
+                    Logger.getInstance().addDebug("Exception occurred during commit, rolling back transaction %d (%s)", transactionId, description);
                     rollback();
                     return false;
                 });
@@ -137,6 +140,7 @@ public class Transaction {
 
     /**
      * Rolls back the transaction by executing all registered rollback actions in reverse order.
+     * This should not be called directly; it is automatically invoked if commit fails.
      */
     public void rollback() {
         if (rolledBack) return;

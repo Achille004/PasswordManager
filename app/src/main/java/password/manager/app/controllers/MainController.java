@@ -30,29 +30,22 @@ import java.util.function.UnaryOperator;
 
 import org.jetbrains.annotations.NotNull;
 
-import javafx.animation.Animation.Status;
-import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
-import javafx.stage.Popup;
-import javafx.stage.Window;
 import javafx.util.Duration;
 import password.manager.app.App;
 import password.manager.app.controllers.main.ManagerController;
 import password.manager.app.controllers.main.SettingsController;
 import password.manager.app.singletons.AppConfig;
 import password.manager.app.singletons.IOManager;
-import password.manager.app.singletons.IOManager.SaveState;
 import password.manager.app.singletons.Logger;
 import password.manager.app.singletons.ObservableResourceFactory;
 import password.manager.lib.CustomPopup;
@@ -116,7 +109,7 @@ public class MainController extends AbstractController {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
+        Logger.getInstance().addDebug("Initializing %s", getClass().getSimpleName());
 
         if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
             Logger.getInstance().addInfo("Unsupported action: Desktop.Action.OPEN");

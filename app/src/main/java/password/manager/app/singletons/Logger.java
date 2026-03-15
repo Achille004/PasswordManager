@@ -96,6 +96,10 @@ public final class Logger extends Singleton {
         return currPath;
     }
 
+    public void addDebug(String str, Object... args) {
+        addDebug(String.format(str, args));
+    }
+
     public void addDebug(String str) {
         StringBuilder logStrBuilder = new StringBuilder();
         logStrBuilder
@@ -105,6 +109,10 @@ public final class Logger extends Singleton {
                 .append("\n");
 
         write(logWriter, logStrBuilder);
+    }
+
+    public void addInfo(String str, Object... args) {
+        addInfo(String.format(str, args));
     }
 
     public void addInfo(String str) {

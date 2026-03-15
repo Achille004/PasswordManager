@@ -58,8 +58,8 @@ public class TransactionManager {
      *
      * @return a new Transaction instance
      */
-    public @NotNull Transaction beginTransaction() {
-        return new Transaction(executor, transactionProgressiveId.incrementAndGet());
+    public @NotNull Transaction beginTransaction(String description) {
+        return new Transaction(executor, transactionProgressiveId.incrementAndGet(), description);
     }
 
     /**
@@ -73,8 +73,8 @@ public class TransactionManager {
      * @param <T> the return type of the function
      * @return a CompletableFuture that completes with the result of the function, or null if the transaction failed
      */
-    public <T> @NotNull CompletableFuture<T> executeInTransaction(@NotNull Function<Transaction, CompletableFuture<T>> transactionFunction) {
-        Transaction transaction = beginTransaction();
+    public <T> @NotNull CompletableFuture<T> executeInTransaction(@NotNull Function<Transaction, CompletableFuture<T>> transactionFunction, String description) {
+        Transaction transaction = beginTransaction(description);
 
         return transactionFunction.apply(transaction)
                 .thenCompose(result ->
@@ -96,8 +96,8 @@ public class TransactionManager {
      * @param rollback the rollback action to perform if the transaction fails (can be null)
      * @return a CompletableFuture that completes with the result of the operation, or null if the transaction failed
      */
-    public <T> @NotNull CompletableFuture<T> executeInTransaction(@NotNull Supplier<T> operation, @Nullable Runnable rollback) {
-        return executeInTransaction(t -> t.addOperation(operation, rollback));
+    public <T> @NotNull CompletableFuture<T> executeInTransaction(@NotNull Supplier<T> operation, @Nullable Runnable rollback, String description) {
+        return executeInTransaction(t -> t.addOperation(operation, rollback), description);
     }
 
     /**

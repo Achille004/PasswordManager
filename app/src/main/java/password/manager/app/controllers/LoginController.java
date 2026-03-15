@@ -61,7 +61,7 @@ public class LoginController extends AbstractController {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        Logger.getInstance().addDebug("Initializing " + getClass().getSimpleName());
+        Logger.getInstance().addDebug("Initializing %s", getClass().getSimpleName());
 
         final ObservableResourceFactory langResources = ObservableResourceFactory.getInstance();
         langResources.bindTextProperty(loginTitle, "login.title");

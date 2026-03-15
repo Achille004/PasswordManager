@@ -154,7 +154,7 @@ public final class Utils {
         final String path = controller.getFxmlPath();
 
         final String uiElementPath = path.replace("/fxml/", "").replace(".fxml", "");
-        Logger.getInstance().addDebug("Loading [" + uiElementPath + "] pane...");
+        Logger.getInstance().addDebug("Loading [%s] pane...", uiElementPath);
 
         Parent parent = null;
         try {
@@ -166,7 +166,7 @@ public final class Utils {
         }
 
         final String outcome = (parent != null) ? "Success" : "Error";
-        Logger.getInstance().addDebug(outcome + " [" + uiElementPath + "]");
+        Logger.getInstance().addDebug("%s [%s]", outcome, uiElementPath);
 
         if(parent != null) return parent;
 
