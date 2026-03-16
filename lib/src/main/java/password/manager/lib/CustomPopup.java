@@ -233,9 +233,9 @@ public class CustomPopup extends Popup {
      */
     @RequiredArgsConstructor
     public static enum Alignment {
-        TOP_LEFT(Alignment::fowards, Alignment::fowards),
-        TOP_RIGHT(Alignment::backwards, Alignment::fowards),
-        BOTTOM_LEFT(Alignment::fowards, Alignment::backwards),
+        TOP_LEFT(Alignment::forwards, Alignment::forwards),
+        TOP_RIGHT(Alignment::backwards, Alignment::forwards),
+        BOTTOM_LEFT(Alignment::forwards, Alignment::backwards),
         BOTTOM_RIGHT(Alignment::backwards, Alignment::backwards);
 
         private final PositionCalculator CALCULATOR_X, CALCULATOR_Y;
@@ -266,7 +266,7 @@ public class CustomPopup extends Popup {
 
         // Calculates the coordinate for the popup when aligned forwards (i.e. TOP_LEFT or BOTTOM_LEFT for X, TOP_LEFT or TOP_RIGHT for Y).
         // This is done by adding the specified spacing to the starting coordinate.
-        private static double fowards(double start, double offset, double itemSize, double spacing) {
+        private static double forwards(double start, double offset, double itemSize, double spacing) {
             return start + spacing;
         }
 

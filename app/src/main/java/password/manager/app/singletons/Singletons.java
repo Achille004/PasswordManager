@@ -122,9 +122,8 @@ public final class Singletons {
     }
 
     /**
-     * Shuts down all registered singletons in reverse order of registration.
-     * This ensures that singletons created later (which may depend on earlier ones)
-     * are closed first.
+     * Shuts down all registered singletons in reverse order of registration,
+     * thus enabling simple linear dependencies between singletons.
      * <p>
      * This method is idempotent and can be called multiple times safely.
      * After calling this method, all singletons are unregistered.

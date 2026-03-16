@@ -22,6 +22,11 @@ package password.manager.app.singletons;
  * Abstract base class for components that are intended to be used as singletons.
  * Subclasses are expected to implement {@link #getInstance} method to expose a
  * single instance of the subclass.
+ * This class also implements {@link AutoCloseable} to allow for proper resource management if needed.
+ * <p>
+ * <b>NOTE:</b> Linear dependencies between singletons are allowed as the closing order is the reverse of the registration order.
+ * However, circular dependencies MUST be avoided as they can lead to deadlocks during initialization or shutdown.
+ * <i>For more info, see the documentation of {@link Singletons#shutdownAll}.</i>
  */
 public abstract class Singleton implements AutoCloseable {
     /**
