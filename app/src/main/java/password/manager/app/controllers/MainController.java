@@ -192,15 +192,8 @@ public class MainController extends AbstractController {
 
         popup.hidden(false); // Start hidden without animation
 
+        final ObservableResourceFactory resources = ObservableResourceFactory.getInstance();
         IOManager.getInstance().savingProperty().addListener((_, _, newValue) -> {
-            final ObservableResourceFactory resources;
-            try {
-                resources = ObservableResourceFactory.getInstance();
-            } catch (IllegalStateException e) {
-                // This happens on the closing save, so just return since we don't need the popup
-                return;
-            }
-
             UnaryOperator<String> getString = i18nKey -> {
                 String key = "popup." + i18nKey;
                 try {
