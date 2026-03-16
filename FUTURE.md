@@ -4,7 +4,7 @@
     - Language, master password and GD linking goes into it
     - Sorting goes into left sidebar
 - QoL:
-  - Disable autosave (?)
+  - Add CLI option to generate sample data file
   - Google drive linking
   - Password generator
 - Guide (github pages):

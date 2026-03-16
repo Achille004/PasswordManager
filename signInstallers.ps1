@@ -1,5 +1,5 @@
 # Path to the folder containing the files to sign
-$folder = "./compiled/installers"
+$folder = "./compiled/installers/windows"
 
 # Search for signtool.exe in the system's PATH
 $signtoolPath = Get-Command -Name 'signtool.exe' | Select-Object -ExpandProperty Source
