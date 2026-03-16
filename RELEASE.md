@@ -8,10 +8,10 @@ Since the app works with any OS, but the installers are only for Windows and Lin
 
 ### PGP signatures and checksums
 The `.asc` files contain [OpenPGP](https://en.wikipedia.org/wiki/Pretty_Good_Privacy#OpenPGP) signatures. If desired, these can be verified with any tool that can read them, I suggest [Kleopatra](https://www.openpgp.org/software/kleopatra).
-If you need to verify the integrity of the file you've just downloaded, you can find all the checksums at the end of this page.
+You can easily find my public key (using the mail address listed below) on [keys.openpgp.org](https://keys.openpgp.org/), by running `gpg --auto-key-locate keyserver --locate-keys user@example.com` or simply uploaded as a release file.
 
 ### Project contribution
-If you find any bugs, want to suggest some features or just help out, feel free to open an issue or send me an email.
+If you find any bugs, want to suggest some features or just help out, feel free to open an issue or send me an email at 2004marras@gmail.com.
 
 # 3.1 PATCH HISTORY
 
