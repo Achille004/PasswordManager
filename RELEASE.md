@@ -17,7 +17,7 @@ If you find any bugs, want to suggest some features or just help out, feel free 
 
 ## Patch 3.1.2 (March 16, 2026)
 
-This update focuses on security and reliability first, while also polishing a few UX details that were still rough around the edges. The encryption flow has been redesigned to support safer key handling and future-proof account management, and several UI areas were improved to behave more consistently across different screen sizes. 
+This update focuses on security and reliability first, while also polishing a few UX details that were still rough around the edges. The encryption flow has been redesigned to support safer key handling and future-proof account management, and several UI areas were improved to behave more consistently across different screen sizes.
 Please note that the new internal encryption technique could be described as *"foreshadowing"*.
 
 ### Features

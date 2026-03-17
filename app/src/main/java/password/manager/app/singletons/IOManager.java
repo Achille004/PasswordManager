@@ -101,7 +101,7 @@ public final class IOManager extends Singleton {
         masterPassword = null;
 
         USER_PREFERENCES = UserPreferences.empty();
-        ACCOUNT_REPOSITORY = new AccountRepository();
+        ACCOUNT_REPOSITORY = new AccountRepository(USER_PREFERENCES);
 
         isFirstRun = true; // Assume first run until data is loaded
         isAuthenticated = false;
@@ -226,7 +226,7 @@ public final class IOManager extends Singleton {
     }
 
     private void saveData() {
-        if (!isAuthenticated()) {
+        if (!isAuthenticated) {
             Logger.getInstance().addInfo("Skipping save: Not authenticated");
             return;
         }
@@ -255,7 +255,7 @@ public final class IOManager extends Singleton {
 
     // #region Account methods
     public @NotNull CompletableFuture<Void> addAccount(@NotNull AccountData data) throws IllegalStateException {
-        if (!isAuthenticated()) throw new IllegalStateException("User is not authenticated [addAccount]");
+        if (!isAuthenticated) throw new IllegalStateException("User is not authenticated [addAccount]");
 
         return ACCOUNT_REPOSITORY.add(data)
                 .thenCompose(account -> {
@@ -276,7 +276,7 @@ public final class IOManager extends Singleton {
     }
 
     public @NotNull CompletableFuture<Void> editAccount(@NotNull Account account, @NotNull AccountData data) throws IllegalStateException  {
-        if (!isAuthenticated()) throw new IllegalStateException("User is not authenticated [editAccount]");
+        if (!isAuthenticated) throw new IllegalStateException("User is not authenticated [editAccount]");
 
         return ACCOUNT_REPOSITORY.edit(account, data)
                 .thenCompose(editedAcc -> {
@@ -292,7 +292,7 @@ public final class IOManager extends Singleton {
     }
 
     public @NotNull CompletableFuture<Void> removeAccount(@NotNull Account account) throws IllegalStateException {
-        if (!isAuthenticated()) throw new IllegalStateException("User is not authenticated [removeAccount]");
+        if (!isAuthenticated) throw new IllegalStateException("User is not authenticated [removeAccount]");
 
         return ACCOUNT_REPOSITORY.remove(account)
                 .thenAccept(removed -> {
@@ -305,7 +305,7 @@ public final class IOManager extends Singleton {
 
     // Asynchronously retrieves and injects the password into the given PasswordInputControl
     public <T extends PasswordInputControl> @NotNull CompletableFuture<Void> getAccountPassword(@NotNull T element, @NotNull Account account) {
-        if (!isAuthenticated()) throw new IllegalStateException("User is not authenticated [getAccountPassword]");
+        if (!isAuthenticated) throw new IllegalStateException("User is not authenticated [getAccountPassword]");
 
         LoadingAnimation.start(element);
         return ACCOUNT_REPOSITORY.getData(account)
@@ -319,35 +319,9 @@ public final class IOManager extends Singleton {
     // #endregion
 
     // #region UserPreferences methods
-    public boolean changeMasterPassword(String newMasterPassword) {
-        String oldMasterPassword = this.masterPassword; // Keep old password reference for later
-        if (!(oldMasterPassword == null || isAuthenticated())) return false;
-
-        boolean res = USER_PREFERENCES.setPasswordVerified(oldMasterPassword, newMasterPassword);
-        if (!res) return false;
-
-        this.masterPassword = newMasterPassword;
-
-        if (oldMasterPassword != null) {
-            Logger.getInstance().addInfo("Master password changed");
-            HAS_CHANGED.set(true); // Force future save
-        } else {
-            Logger.getInstance().addInfo("Master password set");
-            isAuthenticated = true;
-        }
-
-        return true;
-    }
-
-    public void displayMasterPassword(PasswordInputControl element) {
-        // Use Platform.runLater to queue the update after the field is ready
-        // (it also ensures that it gets called on the JavaFX Application Thread)
-        Platform.runLater(() -> element.setText(this.masterPassword));
-    }
-
     public boolean authenticate(String masterPassword) {
         // If already authenticated, no need to re-authenticate
-        if (isAuthenticated()) return false;
+        if (isAuthenticated) return false;
         Logger.getInstance().addInfo("Attempting user authentication...");
 
         isAuthenticated = USER_PREFERENCES.verifyPassword(masterPassword);
@@ -356,9 +330,7 @@ public final class IOManager extends Singleton {
         this.masterPassword = masterPassword;
         Logger.getInstance().addInfo("User authenticated");
 
-        this.ACCOUNT_REPOSITORY.setDEK(USER_PREFERENCES.getDEK());
-
-        CompletableFuture<Void> unlockFuture = ACCOUNT_REPOSITORY.unlockAll(masterPassword, USER_PREFERENCES.getLegacyVersion())
+        CompletableFuture<Void> unlockFuture = ACCOUNT_REPOSITORY.unlockAll(masterPassword)
                 .thenAccept(unlocked -> {
                     if (unlocked) {
                         Logger.getInstance().addInfo("All accounts unlocked");
@@ -375,6 +347,36 @@ public final class IOManager extends Singleton {
             Logger.getInstance().addError(e);
             return false;
         }
+    }
+
+    public boolean changeMasterPassword(@NotNull String newMasterPassword) {
+        if (newMasterPassword == null || newMasterPassword.isEmpty()) {
+            throw new IllegalArgumentException("New master password cannot be null or empty [changeMasterPassword]");
+        }
+
+        String oldMasterPassword = this.masterPassword; // Keep old password reference for later
+        // This should never happen, but we check it just to prevent data loss from a potential bug in the authentication logic (better safe than sorry)
+        if (!isAuthenticated && oldMasterPassword != null) {
+            throw new IllegalStateException("User is not authenticated but the master password is set");
+        }
+
+        boolean res = USER_PREFERENCES.setPasswordVerified(oldMasterPassword, newMasterPassword);
+        if (!res) return false;
+
+        this.masterPassword = newMasterPassword;
+        this.isAuthenticated = true;
+
+        Logger.getInstance().addInfo("Master password %s", (oldMasterPassword != null) ? "changed" : "set");
+        // Either it was a set or a change, in both cases we need to flag the data as changed to ensure it gets saved
+        HAS_CHANGED.set(true);
+
+        return true;
+    }
+
+    public void displayMasterPassword(PasswordInputControl element) {
+        // Use Platform.runLater to queue the update after the field is ready
+        // (it also ensures that it gets called on the JavaFX Application Thread)
+        Platform.runLater(() -> element.setText(this.masterPassword));
     }
     // #endregion
 

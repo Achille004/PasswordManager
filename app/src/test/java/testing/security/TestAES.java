@@ -16,7 +16,7 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package testing;
+package testing.security;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static testing.TestingUtils.*;

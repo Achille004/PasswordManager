@@ -38,7 +38,6 @@ import tools.jackson.databind.DeserializationContext;
 import tools.jackson.databind.ValueDeserializer;
 import tools.jackson.databind.annotation.JsonDeserialize;
 import tools.jackson.databind.node.ObjectNode;
-
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import password.manager.app.base.SecurityVersion;
@@ -214,21 +213,29 @@ public final class UserPreferences {
         securityVersionProperty.set(securityVersion);
     }
 
+    // #endregion
+
+    // #region Package-private getters for crypto fields
+
     /**
-     * Returns a defensive copy of the in-memory DEK.
+     * Returns the DEK. This method is visible only to classes in the same package.
+     * The returned array is the
      * @return a copy of the DEK, or {@code null} if the password has not been verified yet.
+     * @throws IllegalStateException if the DEK is not available (i.e. the password has not been verified yet).
      */
-    @Nullable @JsonIgnore
-    public synchronized byte[] getDEK() {
-        return dek != null ? Arrays.copyOf(dek, dek.length) : null;
+    @JsonIgnore
+    synchronized @NotNull byte[] getDEK() {
+        if (dek == null) throw new IllegalStateException("DEK is not available until the password has been verified");
+        return dek;
     }
 
     /**
-     * Return the legacy security version used for hashing the password in the old format;
+     * Return the legacy security version used for hashing the password in the old format.
+     * This method is visible only to classes in the same package.
      * @return the legacy security version, or {@code null} if this instance was not loaded from a legacy file.
      */
-    @Nullable @JsonIgnore
-    public synchronized SecurityVersion getLegacyVersion() {
+    @JsonIgnore
+    synchronized @Nullable SecurityVersion getLegacyVersion() {
         return legacySecurityVersion;
     }
 
@@ -252,8 +259,8 @@ public final class UserPreferences {
      * @return {@code true} if the password is correct (or no password has been set),
      *         {@code false} otherwise.
      */
-    public synchronized boolean verifyPassword(@Nullable String passwordToVerify) {
-        if (!isPasswordSet) return true;
+    public synchronized boolean verifyPassword(@NotNull String passwordToVerify) {
+        if (!isPasswordSet) throw new IllegalStateException("No password is set");
         if (passwordToVerify == null) return false;
 
         // Since the legacy hashed password is not nullified after upgrade, we can detect legacy mode by also checking that the DEK is still null.
@@ -282,9 +289,10 @@ public final class UserPreferences {
     }
 
     public synchronized boolean setPasswordVerified(@Nullable String oldPassword, @NotNull String newPassword) {
-        final boolean res = verifyPassword(oldPassword);
-        if (res) setPassword(newPassword);
-        return res;
+        // If no password is set yet, we allow setting a new one without verification (first-time setup).
+        final boolean canSet = !isPasswordSet || verifyPassword(oldPassword);
+        if (canSet) setPassword(newPassword);
+        return canSet;
     }
 
     /**

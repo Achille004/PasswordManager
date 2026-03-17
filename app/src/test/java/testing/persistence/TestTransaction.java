@@ -16,7 +16,7 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package testing;
+package testing.persistence;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -35,6 +35,7 @@ import org.junit.jupiter.api.Test;
 
 import password.manager.app.persistence.Transaction;
 import password.manager.app.singletons.Singletons;
+import testing.TestingUtils;
 
 public class TestTransaction {
 

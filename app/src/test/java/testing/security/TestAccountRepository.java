@@ -16,7 +16,7 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package testing;
+package testing.security;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -25,6 +25,7 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -36,19 +37,22 @@ import org.junit.jupiter.api.Test;
 import password.manager.app.security.Account;
 import password.manager.app.security.Account.AccountData;
 import password.manager.app.security.AccountRepository;
+import password.manager.app.security.UserPreferences;
 import password.manager.app.singletons.Singletons;
+import testing.TestingUtils;
 
 public class TestAccountRepository {
 
     private static final String DEFAULT_MASTER_PASSWORD = "MasterPassword123!";
     private static final byte[] DEFAULT_DEK = DEFAULT_MASTER_PASSWORD.getBytes(StandardCharsets.UTF_8);
 
+    private UserPreferences userPreferences;
     private AccountRepository repository;
 
     @BeforeEach
     void setUp() {
-        repository = new AccountRepository();
-        repository.setDEK(DEFAULT_DEK);
+        userPreferences = UserPreferences.of(DEFAULT_MASTER_PASSWORD);
+        repository = new AccountRepository(userPreferences);
     }
 
     @AfterEach
@@ -280,21 +284,36 @@ public class TestAccountRepository {
     }
 
     @Test
-    void testSetNullDEK() throws Exception {
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> repository.setDEK(null),
-            "Setting null master password should throw IllegalArgumentException"
-        );
-    }
+    void testEmptyUserPreferences() throws GeneralSecurityException {
+        // Just set the same data every time, we just want to test the user preferences check
+        AccountData data = new AccountData("TestSoftware", "TestUser", "TestPass");
 
-    @Test
-    void testChangeDEK() throws Exception {
-        byte[] newDEK = "NewMasterPassword456!".getBytes(StandardCharsets.UTF_8);
+        Account account = Account.of(data, DEFAULT_DEK);
+        repository.setAll(account);
+
+        userPreferences.set(UserPreferences.empty());
+
+        CompletableFuture<Account> addFuture = repository.add(data);
+        CompletableFuture<Account> editFuture = repository.edit(account, data); // Just set the same data, we just want to test the user preferences check
+        CompletableFuture<AccountData> getDataFuture = repository.getData(account);
+        CompletableFuture<Boolean> unlockFuture = repository.unlockAll(DEFAULT_MASTER_PASSWORD);
+
+        assertNull(addFuture.join(),
+            "Adding account with empty user preferences should fail and return null");
+
+        assertNull(editFuture.join(),
+            "Editing account with empty user preferences should fail and return null");
+
         assertThrows(
             IllegalStateException.class,
-            () -> repository.setDEK(newDEK),
-            "Setting null DEK should throw IllegalStateException"
+            () -> repository.remove(account),
+            "Removing account with empty user preferences should throw IllegalStateException"
         );
+
+        assertThrows(CompletionException.class, getDataFuture::join,
+            "Getting account data with empty user preferences should fail with CompletionException");
+
+        assertNull(unlockFuture.join(),
+            "Unlocking accounts with empty user preferences should fail and return null");
     }
 }
