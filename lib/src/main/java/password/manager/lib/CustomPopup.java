@@ -20,6 +20,7 @@ package password.manager.lib;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.function.BiConsumer;
 
@@ -296,7 +297,7 @@ public class CustomPopup extends Popup {
         }
 
         protected Content() {
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/customPopup/index.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(Objects.requireNonNull(getClass().getResource("/customPopup/index.fxml")));
             fxmlLoader.setRoot(this);
             fxmlLoader.setController(this);
             fxmlLoader.setClassLoader(getClass().getClassLoader());

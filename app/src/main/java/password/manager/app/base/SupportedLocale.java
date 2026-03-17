@@ -21,6 +21,7 @@ package password.manager.app.base;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Locale;
+import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -56,7 +57,7 @@ public enum SupportedLocale {
 
     private SupportedLocale(Locale locale, String flagResourcePath) {
         this.locale = locale;
-        this.flagImage = new Image(getClass().getResourceAsStream(flagResourcePath));
+        this.flagImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream(flagResourcePath)));
     }
 
     /**

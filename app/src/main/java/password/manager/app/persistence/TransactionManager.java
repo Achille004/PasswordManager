@@ -75,13 +75,21 @@ public class TransactionManager {
      */
     public <T> @NotNull CompletableFuture<T> executeInTransaction(@NotNull Function<Transaction, CompletableFuture<T>> transactionFunction, String description) {
         Transaction transaction = beginTransaction(description);
+        final CompletableFuture<T> transactionFuture;
 
-        return transactionFunction.apply(transaction)
+        try {
+            transactionFuture = transactionFunction.apply(transaction);
+        } catch (Throwable ex) {
+            transaction.rollback();
+            return CompletableFuture.failedFuture(ex);
+        }
+
+        return transactionFuture
                 .thenCompose(result ->
                     transaction.commit().thenApply(success -> success ? result : null)
                 )
-                .exceptionally(ex -> {
-                    Logger.getInstance().addError(ex);
+                .handle((result, ex) -> {
+                    if (ex == null) return result;
                     transaction.rollback();
                     return null;
                 });

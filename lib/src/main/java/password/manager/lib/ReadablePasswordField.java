@@ -128,7 +128,7 @@ public class ReadablePasswordField extends AnchorPane implements Initializable, 
     }
 
     public ReadablePasswordField() {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/readablePasswordField/index.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(Objects.requireNonNull(getClass().getResource("/readablePasswordField/index.fxml")));
         fxmlLoader.setRoot(this);
         fxmlLoader.setController(this);
         fxmlLoader.setClassLoader(getClass().getClassLoader());

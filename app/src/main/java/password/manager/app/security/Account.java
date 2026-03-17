@@ -92,8 +92,8 @@ public final class Account {
     }
 
     public Account(@NotNull AccountData data, @NotNull byte[] DEK) throws GeneralSecurityException {
-        if (data == null) throw new NullPointerException("Data cannot be null");
-        if (DEK == null) throw new NullPointerException("Data encryption key cannot be null");
+        if (data == null) throw new IllegalArgumentException("Data cannot be null");
+        if (DEK == null) throw new IllegalArgumentException("Data encryption key cannot be null");
 
         this();
 
@@ -130,9 +130,9 @@ public final class Account {
     @Deprecated // This constructor is used only for backward compatibility
     private Account(@NotNull String software, @NotNull String username, @NotNull byte[] encryptedPassword, @Nullable byte[] salt, @NotNull byte[] iv) {
 
-        if (software == null || software.isEmpty()) throw new NullPointerException("Software cannot be null or empty");
-        if (username == null || username.isEmpty()) throw new NullPointerException("Username cannot be null or empty");
-        if (encryptedPassword == null || encryptedPassword.length == 0) throw new NullPointerException("Encrypted password cannot be null or empty");
+        if (software == null || software.isEmpty()) throw new IllegalArgumentException("Software cannot be null or empty");
+        if (username == null || username.isEmpty()) throw new IllegalArgumentException("Username cannot be null or empty");
+        if (encryptedPassword == null || encryptedPassword.length == 0) throw new IllegalArgumentException("Encrypted password cannot be null or empty");
         if (salt != null && salt.length != SALT_LENGTH) throw new IllegalArgumentException("Salt should be " + SALT_LENGTH + " bytes long, if provided");
         if (iv == null || iv.length != IV_LENGTH) throw new IllegalArgumentException("IV should be not null and " + IV_LENGTH + " bytes long");
 
@@ -165,7 +165,7 @@ public final class Account {
      * @throws GeneralSecurityException if decryption fails (e.g. due to wrong master password or corrupted data)
      */
     public void unlock(@NotNull byte[] DEK, @Nullable SecurityVersion legacyVersion, @Nullable String legacyMasterPassword) throws GeneralSecurityException {
-        if (DEK == null) throw new NullPointerException("Data encryption key cannot be null");
+        if (DEK == null) throw new IllegalArgumentException("Data encryption key cannot be null");
 
         // If the account is not fully encrypted, it means that it was created with an older version where software and username were not encrypted.
         // In this case, we encrypt all fields with the current one to upgrade the account to the latest standard.
@@ -229,7 +229,7 @@ public final class Account {
 
     @JsonIgnore
     public AccountData getData(@NotNull byte[] DEK) throws GeneralSecurityException {
-        if (DEK == null) throw new NullPointerException("Data encryption key cannot be null");
+        if (DEK == null) throw new IllegalArgumentException("Data encryption key cannot be null");
 
         String plainSoftware, plainUsername, plainPassword;
 
@@ -260,8 +260,8 @@ public final class Account {
 
     @Contract(value = "_, _, _, _, _ -> new", pure = true)
     public static @NotNull Account of(@NotNull AccountData data, @NotNull byte[] DEK) throws GeneralSecurityException {
-        if (data == null) throw new NullPointerException("Account data cannot be null");
-        if (DEK == null) throw new NullPointerException("Data encryption key cannot be null");
+        if (data == null) throw new IllegalArgumentException("Account data cannot be null");
+        if (DEK == null) throw new IllegalArgumentException("Data encryption key cannot be null");
 
         // creates the account, adding its attributes by constructor
         return new Account(data, DEK);
@@ -279,8 +279,8 @@ public final class Account {
 
     // #region Package-private methods (exposed to AccountRepository)
     void setData(@NotNull AccountData data, @NotNull byte[] DEK) throws GeneralSecurityException {
-        if (data == null) throw new NullPointerException("Account data cannot be null");
-        if (DEK == null) throw new NullPointerException("Data encryption key cannot be null");
+        if (data == null) throw new IllegalArgumentException("Account data cannot be null");
+        if (DEK == null) throw new IllegalArgumentException("Data encryption key cannot be null");
 
         writeLock.lock();
         try {
@@ -355,7 +355,7 @@ public final class Account {
      * @param memento the memento containing the state to restore
      */
     void restoreState(@NotNull AccountMemento memento) {
-        if (memento == null) throw new NullPointerException("Memento cannot be null");
+        if (memento == null) throw new IllegalArgumentException("Memento cannot be null");
 
         writeLock.lock();
         try {
