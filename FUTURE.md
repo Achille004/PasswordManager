@@ -11,6 +11,7 @@
   - App guide
   - Building guide
 - Code-related:
+  - Tests for `base` and `singletons` package
   - Better code comments and documentation
   - code flow analysis (especially for null values)
   - deeper logging

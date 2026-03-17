@@ -128,7 +128,7 @@ public final class Account {
     }
 
     @Deprecated // This constructor is used only for backward compatibility
-    private Account(@NotNull String software, @NotNull  String username, @NotNull byte[] encryptedPassword, @Nullable byte[] salt, @NotNull byte[] iv) {
+    private Account(@NotNull String software, @NotNull String username, @NotNull byte[] encryptedPassword, @Nullable byte[] salt, @NotNull byte[] iv) {
 
         if (software == null || software.isEmpty()) throw new NullPointerException("Software cannot be null or empty");
         if (username == null || username.isEmpty()) throw new NullPointerException("Username cannot be null or empty");

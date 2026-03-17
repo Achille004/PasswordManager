@@ -32,7 +32,6 @@ import org.jetbrains.annotations.Nullable;
 import javafx.beans.Observable;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import password.manager.app.base.SecurityVersion;
 import password.manager.app.persistence.TransactionManager;
 import password.manager.app.security.Account.AccountData;
 import password.manager.app.singletons.Logger;
@@ -58,7 +57,7 @@ import password.manager.app.singletons.Logger;
  * </p>
  *
  * @see Account
- * @see SecurityVersion
+ * @see UserPreferences
  * @see password.manager.app.persistence.TransactionManager
  */
 public final class AccountRepository implements AutoCloseable {
@@ -67,13 +66,13 @@ public final class AccountRepository implements AutoCloseable {
     private final ObservableList<Account> accounts;
     private final TransactionManager transactionManager;
 
-    private transient byte[] DEK;
+    private final UserPreferences userPreferences;
 
     /**
      * Constructs a new AccountRepository with an empty synchronized observable list
      * and a transaction manager for asynchronous operations.
      */
-    public AccountRepository() {
+    public AccountRepository(UserPreferences userPreferences) {
         // The synchronized wrapper was removed since the ListChangeBuilder of the wrapping ObservableList was
         // suffering from broken internal state due to concurrent modifications, now synchronization is manual.
         this.accounts = FXCollections.observableList(
@@ -83,17 +82,12 @@ public final class AccountRepository implements AutoCloseable {
         );
         this.transactionManager = new TransactionManager();
 
-        this.DEK = null;
-    }
-
-    public void setDEK(@NotNull byte[] DEK) {
-        if (DEK == null) throw new IllegalArgumentException("Data encryption key cannot be null");
-        if (this.DEK != null) throw new IllegalStateException("Data encryption key is already set.");
-        this.DEK = DEK.clone(); // Defensive copy to prevent external modification
+        this.userPreferences = userPreferences;
     }
 
     /**
      * Retrieves all accounts in the repository.
+     * The returned list is an unmodifiable view of just the account references, no encryption or decryption can be performed on them without the DEK stored in the user preferences.
      *
      * @return an unmodifiable observable list of all accounts
      */
@@ -104,14 +98,26 @@ public final class AccountRepository implements AutoCloseable {
     }
 
     /**
-     * Replaces all accounts in the repository with the provided list.
+     * Sets all accounts in the repository with the provided array.
+     *
+     * @param newAccounts the new list of accounts to set
+     */
+    public void setAll(@NotNull Account... newAccounts) {
+        synchronized (accounts) {
+            if (!accounts.isEmpty()) throw new IllegalStateException("Accounts list is not empty.");
+            accounts.setAll(newAccounts);
+        }
+    }
+
+    /**
+     * Sets all accounts in the repository with the provided list.
      *
      * @param newAccounts the new list of accounts to set
      */
     public void setAll(@NotNull List<Account> newAccounts) {
         synchronized (accounts) {
             if (!accounts.isEmpty()) throw new IllegalStateException("Accounts list is not empty.");
-            accounts.addAll(newAccounts);
+            accounts.setAll(newAccounts);
         }
     }
 
@@ -126,7 +132,6 @@ public final class AccountRepository implements AutoCloseable {
      * @return a CompletableFuture that completes with the created Account, or null if the transaction fails
      */
     public @NotNull CompletableFuture<Account> add(@NotNull AccountData data) {
-        if (DEK == null) throw new IllegalStateException("Data encryption key is not set. Master password may not have been verified yet.");
         if (data == null) throw new NullPointerException("Account data cannot be null");
 
         // Use a holder to capture the account reference for rollback
@@ -135,7 +140,7 @@ public final class AccountRepository implements AutoCloseable {
         return transactionManager.executeInTransaction(
             () -> {
                 try {
-                    accountHolder[0] = Account.of(data, DEK);
+                    accountHolder[0] = Account.of(data, userPreferences.getDEK());
 
                     runOnFx(() -> {
                         synchronized (accounts) {
@@ -158,7 +163,7 @@ public final class AccountRepository implements AutoCloseable {
                     }).join();
                 }
             },
-            "Adding Account"
+            "Adding account"
         );
     }
 
@@ -175,7 +180,6 @@ public final class AccountRepository implements AutoCloseable {
      * @throws IllegalArgumentException if the account is not found in the repository
      */
     public @NotNull CompletableFuture<Account> edit(@NotNull Account account, @NotNull AccountData data) {
-        if (DEK == null) throw new IllegalStateException("Data encryption key is not set. Master password may not have been verified yet.");
         if (account == null) throw new NullPointerException("Account cannot be null");
         if (data == null) throw new NullPointerException("Account data cannot be null");
 
@@ -190,7 +194,7 @@ public final class AccountRepository implements AutoCloseable {
         return transactionManager.executeInTransaction(
             () -> {
                 try {
-                    account.setData(data, DEK);
+                    account.setData(data, userPreferences.getDEK());
                     return account;
                 } catch (GeneralSecurityException e) {
                     Logger.getInstance().addError(e);
@@ -201,7 +205,7 @@ public final class AccountRepository implements AutoCloseable {
                 // Rollback all changes using captured state
                 account.restoreState(originalState);
             },
-            "Editing Account"
+            "Editing account"
         );
     }
 
@@ -217,9 +221,10 @@ public final class AccountRepository implements AutoCloseable {
      * @throws IllegalArgumentException if the account is not found in the repository
      */
     public @NotNull CompletableFuture<Boolean> remove(@NotNull Account account) {
-        // Although DEK is not used in this method, we check it to ensure that the master password has been verified before allowing any modifications to the accounts list.
-        if (DEK == null) throw new IllegalStateException("Data encryption key is not set. Master password may not have been verified yet.");
         if (account == null) throw new NullPointerException("Account cannot be null");
+
+        // Although DEK is not used in this method, we check it to ensure that the master password has been verified before allowing any modifications to the accounts list.
+        userPreferences.getDEK();
 
         final int originalIndex;
         synchronized (accounts) {
@@ -246,7 +251,7 @@ public final class AccountRepository implements AutoCloseable {
                     }
                 }).join();
             },
-            "Removing Account"
+            "Removing account"
         );
     }
 
@@ -258,15 +263,13 @@ public final class AccountRepository implements AutoCloseable {
      * </p>
      *
      * @param legacyMasterPassword the master password for legacy accounts, can be null if not in legacy mode.
-     * @param legacyVersion the security version of the legacy accounts, can be null if not in legacy mode.
      * @return a CompletableFuture that completes with true if all accounts were successfully unlocked, false if any account failed to unlock
      */
-    public @NotNull CompletableFuture<Boolean> unlockAll(@Nullable String legacyMasterPassword, @Nullable SecurityVersion legacyVersion) {
-        if (DEK == null) throw new IllegalStateException("Data encryption key is not set. Master password may not have been verified yet.");
-
+    public @NotNull CompletableFuture<Boolean> unlockAll(@Nullable String legacyMasterPassword) {
         List<Account> accountList;
         List<Account.AccountMemento> originalStates;
         synchronized (accounts) {
+            if (accounts.isEmpty()) return CompletableFuture.completedFuture(true); // No accounts to unlock, consider it successful
             accountList = new ArrayList<>(accounts);
             originalStates = accounts.stream().map(Account::captureState).toList();
         }
@@ -281,7 +284,7 @@ public final class AccountRepository implements AutoCloseable {
                 CompletableFuture<Boolean> updateFuture = transaction.addOperation(
                     () -> {
                         try {
-                            account.unlock(DEK, legacyVersion, legacyMasterPassword);
+                            account.unlock(userPreferences.getDEK(), userPreferences.getLegacyVersion(), legacyMasterPassword);
                             return true;
                         } catch (GeneralSecurityException e) {
                             Logger.getInstance().addError(e);
@@ -298,7 +301,7 @@ public final class AccountRepository implements AutoCloseable {
             }
 
             return allSuccessful(updateFutures);
-        }, "Unlocking All Accounts");
+        }, "Unlocking all accounts");
     }
 
     /**
@@ -320,7 +323,7 @@ public final class AccountRepository implements AutoCloseable {
         // Wait for any ongoing master password or security version changes to complete
         return CompletableFuture.supplyAsync(() -> {
                     try {
-                        return account.getData(DEK);
+                        return account.getData(userPreferences.getDEK());
                     } catch (GeneralSecurityException e) {
                         Logger.getInstance().addError(e);
                         return null;
@@ -348,6 +351,7 @@ public final class AccountRepository implements AutoCloseable {
      * @return a CompletableFuture that completes with true if all futures completed successfully with true, false otherwise
     */
     private static CompletableFuture<Boolean> allSuccessful(Collection<CompletableFuture<Boolean>> futures) {
+        if (futures.isEmpty()) return CompletableFuture.completedFuture(true); // Consider empty collection as successful
         return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new))
                 .thenApply(_ -> futures.stream().allMatch(
                     f -> (f.isDone() && !f.isCompletedExceptionally() && f.join())

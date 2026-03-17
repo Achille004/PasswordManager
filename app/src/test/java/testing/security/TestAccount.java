@@ -16,7 +16,7 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package testing;
+package testing.security;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static testing.TestingUtils.*;
@@ -25,6 +25,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 
@@ -157,5 +159,88 @@ public class TestAccount {
         assertEquals(expectedData.software(), actualData.software());
         assertEquals(expectedData.username(), actualData.username());
         assertEquals(expectedData.password(), actualData.password());
+    }
+
+    @Test
+    void testSetDataViaReflection() throws GeneralSecurityException {
+        byte[] DEK = "masterPass456".getBytes(StandardCharsets.UTF_8);
+
+        AccountData initialData = new AccountData("GitHub", "oldUser", "oldPassword");
+        Account account = Account.of(initialData, DEK);
+
+        AccountData newData = new AccountData("GitLab", "newUser", "newPassword");
+        invokeSetData(account, newData, DEK);
+
+        AccountData actualData = account.getData(DEK);
+        assertEquals(newData.software(), actualData.software());
+        assertEquals(newData.username(), actualData.username());
+        assertEquals(newData.password(), actualData.password());
+    }
+
+    @Test
+    void testCaptureAndRestoreStateViaReflection() throws GeneralSecurityException {
+        byte[] DEK = "masterPass456".getBytes(StandardCharsets.UTF_8);
+
+        AccountData initialData = new AccountData("GitHub", "oldUser", "oldPassword");
+        Account account = Account.of(initialData, DEK);
+
+        Account.AccountMemento memento = invokeCaptureState(account);
+
+        AccountData changedData = new AccountData("Bitbucket", "changedUser", "changedPassword");
+        invokeSetData(account, changedData, DEK);
+        assertEquals(changedData, account.getData(DEK));
+
+        invokeRestoreState(account, memento);
+        assertEquals(initialData, account.getData(DEK));
+    }
+
+    @Test
+    void testRestoreNullStateViaReflection() throws GeneralSecurityException {
+        byte[] DEK = "masterPass456".getBytes(StandardCharsets.UTF_8);
+        Account account = Account.of(new AccountData("GitHub", "user", "password"), DEK);
+
+        assertThrows(NullPointerException.class, () -> invokeRestoreState(account, null));
+    }
+
+    private static void invokeSetData(Account account, AccountData data, byte[] DEK) {
+        try {
+            Method method = Account.class.getDeclaredMethod("setData", AccountData.class, byte[].class);
+            method.setAccessible(true);
+            method.invoke(account, data, DEK);
+        } catch (InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException runtimeException) throw runtimeException;
+            throw new RuntimeException(cause);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static Account.AccountMemento invokeCaptureState(Account account) {
+        try {
+            Method method = Account.class.getDeclaredMethod("captureState");
+            method.setAccessible(true);
+            return (Account.AccountMemento) method.invoke(account);
+        } catch (InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException runtimeException) throw runtimeException;
+            throw new RuntimeException(cause);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void invokeRestoreState(Account account, Account.AccountMemento memento) {
+        try {
+            Method method = Account.class.getDeclaredMethod("restoreState", Account.AccountMemento.class);
+            method.setAccessible(true);
+            method.invoke(account, memento);
+        } catch (InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException runtimeException) throw runtimeException;
+            throw new RuntimeException(cause);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -16,10 +16,12 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package testing;
+package testing.security;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Base64;
 import java.util.Arrays;
 
@@ -42,7 +44,7 @@ public class TestUserPreferences {
 
         assertTrue(prefs.verifyPassword("testPassword123"));
 
-        byte[] dek = prefs.getDEK();
+        byte[] dek = invokeGetDEK(prefs);
         assertNotNull(dek);
         assertEquals(AES.AES_BITS / 8, dek.length);
     }
@@ -53,19 +55,19 @@ public class TestUserPreferences {
         // even before an explicit verifyPassword() call.
         UserPreferences prefs = UserPreferences.of("myPassword");
 
-        byte[] dek = prefs.getDEK();
+        byte[] dek = invokeGetDEK(prefs);
         assertNotNull(dek);
         assertEquals(AES.AES_BITS / 8, dek.length);
     }
 
     @Test
-    void testGetDEKReturnsDefensiveCopy() {
+    void testGetDEKReturnsSameReference() {
         UserPreferences prefs = UserPreferences.of("password");
 
-        byte[] dek1 = prefs.getDEK();
-        byte[] dek2 = prefs.getDEK();
+        byte[] dek1 = invokeGetDEK(prefs);
+        byte[] dek2 = invokeGetDEK(prefs);
 
-        assertNotSame(dek1, dek2, "getDEK() must return a fresh copy each time");
+        assertSame(dek1, dek2, "getDEK() now returns the in-memory DEK reference");
         assertArrayEquals(dek1, dek2, "Both copies must contain the same bytes");
     }
 
@@ -75,7 +77,7 @@ public class TestUserPreferences {
         UserPreferences p1 = UserPreferences.of("samePassword");
         UserPreferences p2 = UserPreferences.of("samePassword");
 
-        assertFalse(Arrays.equals(p1.getDEK(), p2.getDEK()),
+        assertFalse(Arrays.equals(invokeGetDEK(p1), invokeGetDEK(p2)),
                 "Two separate instances must have different DEKs");
     }
 
@@ -83,20 +85,20 @@ public class TestUserPreferences {
     void testDEKPreservedAfterPasswordChange() {
         // Changing the master password must re-encrypt the DEK but keep its value.
         UserPreferences prefs = UserPreferences.of("oldPassword");
-        byte[] originalDEK = prefs.getDEK();
+        byte[] originalDEK = invokeGetDEK(prefs);
 
         assertTrue(prefs.setPasswordVerified("oldPassword", "newPassword"));
         // Re-verify with the new password so getDEK() returns the decrypted DEK.
         assertTrue(prefs.verifyPassword("newPassword"));
 
-        assertArrayEquals(originalDEK, prefs.getDEK(),
+        assertArrayEquals(originalDEK, invokeGetDEK(prefs),
                 "The DEK must remain unchanged after a password change");
     }
 
     @Test
-    void testEmptyPreferencesDEKIsNull() {
+    void testEmptyPreferencesDEKThrows() {
         UserPreferences prefs = UserPreferences.empty();
-        assertNull(prefs.getDEK());
+        assertThrows(IllegalStateException.class, () -> invokeGetDEK(prefs));
     }
 
     // #endregion
@@ -118,20 +120,20 @@ public class TestUserPreferences {
     @Test
     void testFailedVerifyDoesNotClearDEK() {
         UserPreferences prefs = UserPreferences.of("correctPassword");
-        byte[] dekBefore = prefs.getDEK();
+        byte[] dekBefore = invokeGetDEK(prefs);
 
         prefs.verifyPassword("wrongPassword");
 
-        assertArrayEquals(dekBefore, prefs.getDEK(),
+        assertArrayEquals(dekBefore, invokeGetDEK(prefs),
                 "A failed verifyPassword() must not alter the in-memory DEK");
     }
 
     @Test
-    void testEmptyPreferencesVerifyAlwaysReturnsTrue() {
+    void testEmptyPreferencesVerifyThrows() {
         UserPreferences prefs = UserPreferences.empty();
-        assertTrue(prefs.verifyPassword(null));
-        assertTrue(prefs.verifyPassword("anyPassword"));
-        assertTrue(prefs.verifyPassword(""));
+        assertThrows(IllegalStateException.class, () -> prefs.verifyPassword(null));
+        assertThrows(IllegalStateException.class, () -> prefs.verifyPassword("anyPassword"));
+        assertThrows(IllegalStateException.class, () -> prefs.verifyPassword(""));
     }
 
     // #endregion
@@ -216,7 +218,7 @@ public class TestUserPreferences {
         assertEquals(SortingOrder.USERNAME, target.getSortingOrder());
         assertEquals(SupportedLocale.ITALIAN, target.getLocale());
         assertEquals(SecurityVersion.ARGON2, target.getSecurityVersion());
-        assertArrayEquals(source.getDEK(), target.getDEK(),
+        assertArrayEquals(invokeGetDEK(source), invokeGetDEK(target),
                 "DEK must be copied by set()");
         // target must accept the same password as source after copying
         assertTrue(target.verifyPassword("password"));
@@ -229,10 +231,9 @@ public class TestUserPreferences {
 
         target.set(source);
 
-        // After copying an empty preferences, any password must be accepted
-        assertTrue(target.verifyPassword(null));
-        assertTrue(target.verifyPassword("anything"));
-        assertNull(target.getDEK());
+        assertThrows(IllegalStateException.class, () -> target.verifyPassword(null));
+        assertThrows(IllegalStateException.class, () -> target.verifyPassword("anything"));
+        assertThrows(IllegalStateException.class, () -> invokeGetDEK(target));
     }
 
     // #endregion
@@ -242,10 +243,9 @@ public class TestUserPreferences {
     @Test
     void testOfNullCreatesEmptyPreferences() {
         UserPreferences prefs = UserPreferences.of(null);
-        // Behaviorally equivalent to empty(): no password set
-        assertTrue(prefs.verifyPassword(null));
-        assertTrue(prefs.verifyPassword("anything"));
-        assertNull(prefs.getDEK());
+        assertThrows(IllegalStateException.class, () -> prefs.verifyPassword(null));
+        assertThrows(IllegalStateException.class, () -> prefs.verifyPassword("anything"));
+        assertThrows(IllegalStateException.class, () -> invokeGetDEK(prefs));
     }
 
     // #endregion
@@ -259,15 +259,16 @@ public class TestUserPreferences {
         UserPreferences prefs = fromLegacyHashJson(password, SecurityVersion.PBKDF2, true);
 
         assertEquals(SecurityVersion.PBKDF2, prefs.getSecurityVersion());
-        assertEquals(SecurityVersion.PBKDF2, prefs.getLegacyVersion());
-        assertNull(prefs.getDEK(), "Legacy hash format should not have in-memory DEK before verification");
+        assertEquals(SecurityVersion.PBKDF2, invokeGetLegacyVersion(prefs));
+        assertThrows(IllegalStateException.class, () -> invokeGetDEK(prefs),
+            "Legacy hash format should not expose DEK before verification");
 
         assertTrue(prefs.verifyPassword(password));
 
         assertEquals(SecurityVersion.LATEST, prefs.getSecurityVersion(),
                 "After successful legacy verification, security version must upgrade to LATEST");
-        assertNotNull(prefs.getDEK(), "DEK must be generated during migration");
-        assertEquals(AES.AES_BITS / 8, prefs.getDEK().length);
+        assertNotNull(invokeGetDEK(prefs), "DEK must be generated during migration");
+        assertEquals(AES.AES_BITS / 8, invokeGetDEK(prefs).length);
         assertFalse(prefs.verifyPassword("wrongPassword"));
     }
 
@@ -279,13 +280,13 @@ public class TestUserPreferences {
 
         assertEquals(SecurityVersion.PBKDF2, prefs.getSecurityVersion(),
                 "Missing securityVersion in legacy JSON should fallback to PBKDF2");
-        assertNull(prefs.getLegacyVersion(),
+        assertNull(invokeGetLegacyVersion(prefs),
                 "Legacy version metadata should be null when field is absent in JSON");
-        assertNull(prefs.getDEK());
+        assertThrows(IllegalStateException.class, () -> invokeGetDEK(prefs));
 
         assertTrue(prefs.verifyPassword(password));
         assertEquals(SecurityVersion.LATEST, prefs.getSecurityVersion());
-        assertNotNull(prefs.getDEK());
+        assertNotNull(invokeGetDEK(prefs));
     }
 
     @Test
@@ -294,14 +295,14 @@ public class TestUserPreferences {
         UserPreferences prefs = fromLegacyHashJson(password, SecurityVersion.ARGON2, true);
 
         assertEquals(SecurityVersion.ARGON2, prefs.getSecurityVersion());
-        assertEquals(SecurityVersion.ARGON2, prefs.getLegacyVersion());
-        assertNull(prefs.getDEK());
+        assertEquals(SecurityVersion.ARGON2, invokeGetLegacyVersion(prefs));
+        assertThrows(IllegalStateException.class, () -> invokeGetDEK(prefs));
 
         assertTrue(prefs.verifyPassword(password));
 
         assertEquals(SecurityVersion.LATEST, prefs.getSecurityVersion());
-        assertNotNull(prefs.getDEK());
-        assertEquals(AES.AES_BITS / 8, prefs.getDEK().length);
+        assertNotNull(invokeGetDEK(prefs));
+        assertEquals(AES.AES_BITS / 8, invokeGetDEK(prefs).length);
     }
 
     @Test
@@ -312,7 +313,8 @@ public class TestUserPreferences {
         assertFalse(prefs.verifyPassword("notTheRightPassword"));
         assertEquals(SecurityVersion.ARGON2, prefs.getSecurityVersion(),
                 "On failed legacy verification, security version must stay unchanged");
-        assertNull(prefs.getDEK(), "DEK must not be created when legacy password verification fails");
+        assertThrows(IllegalStateException.class, () -> invokeGetDEK(prefs),
+            "DEK must not be created when legacy password verification fails");
     }
 
     // #endregion
@@ -345,5 +347,33 @@ public class TestUserPreferences {
             salt[i] = (byte) (i + 1);
         }
         return salt;
+    }
+
+    private static byte[] invokeGetDEK(UserPreferences prefs) {
+        try {
+            Method method = UserPreferences.class.getDeclaredMethod("getDEK");
+            method.setAccessible(true);
+            return (byte[]) method.invoke(prefs);
+        } catch (InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException runtimeException) throw runtimeException;
+            throw new RuntimeException(cause);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static SecurityVersion invokeGetLegacyVersion(UserPreferences prefs) {
+        try {
+            Method method = UserPreferences.class.getDeclaredMethod("getLegacyVersion");
+            method.setAccessible(true);
+            return (SecurityVersion) method.invoke(prefs);
+        } catch (InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException runtimeException) throw runtimeException;
+            throw new RuntimeException(cause);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
