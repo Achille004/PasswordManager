@@ -22,6 +22,7 @@ import static password.manager.lib.Utils.*;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.function.Function;
 
@@ -102,7 +103,7 @@ public class ReadablePasswordFieldWithStr extends AnchorPane implements Initiali
     }
 
     public ReadablePasswordFieldWithStr() {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/readablePasswordFieldWithStr/index.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(Objects.requireNonNull(getClass().getResource("/readablePasswordFieldWithStr/index.fxml")));
         fxmlLoader.setClassLoader(getClass().getClassLoader());
         fxmlLoader.setRoot(this);
         fxmlLoader.setController(this);

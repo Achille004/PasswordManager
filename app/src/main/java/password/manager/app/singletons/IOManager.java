@@ -38,6 +38,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -57,7 +59,6 @@ import password.manager.app.security.Account;
 import password.manager.app.security.AccountRepository;
 import password.manager.app.security.UserPreferences;
 import password.manager.app.security.Account.AccountData;
-import password.manager.lib.LoadingAnimation;
 import password.manager.lib.PasswordInputControl;
 
 public final class IOManager extends Singleton {
@@ -254,66 +255,68 @@ public final class IOManager extends Singleton {
     // #endregion
 
     // #region Account methods
-    public @NotNull CompletableFuture<Void> addAccount(@NotNull AccountData data) throws IllegalStateException {
+    public @NotNull CompletableFuture<Account> addAccount(@NotNull AccountData data) throws IllegalStateException {
         if (!isAuthenticated) throw new IllegalStateException("User is not authenticated [addAccount]");
 
-        return ACCOUNT_REPOSITORY.add(data)
-                .thenCompose(account -> {
-                    if (account == null) throw new RuntimeException("Failed to create account");
-
-                    final CompletableFuture<Void> uiUpdate = new CompletableFuture<>();
-                    try {
-                        HAS_CHANGED.set(true);
-                        Logger.getInstance().addInfo("Account added");
-                        uiUpdate.complete(null);
-                    } catch (Exception e) {
-                        Logger.getInstance().addError(e);
-                        uiUpdate.completeExceptionally(e);
-                    }
-
-                    return uiUpdate;
-                });
+        return handleFuture(
+            ACCOUNT_REPOSITORY.add(data),
+            addedAcc -> addedAcc != null,
+            "Account added",
+            "Failed to create account"
+        );
     }
 
-    public @NotNull CompletableFuture<Void> editAccount(@NotNull Account account, @NotNull AccountData data) throws IllegalStateException  {
+    public @NotNull CompletableFuture<Account> editAccount(@NotNull Account account, @NotNull AccountData data) throws IllegalStateException  {
         if (!isAuthenticated) throw new IllegalStateException("User is not authenticated [editAccount]");
 
-        return ACCOUNT_REPOSITORY.edit(account, data)
-                .thenCompose(editedAcc -> {
-                    if(editedAcc == null) throw new RuntimeException("Failed to edit account");
-                    final CompletableFuture<Void> uiUpdate = new CompletableFuture<>();
-
-                    HAS_CHANGED.set(true);
-                    Logger.getInstance().addInfo("Account edited");
-                    uiUpdate.complete(null);
-
-                    return uiUpdate;
-                });
+        return handleFuture(
+            ACCOUNT_REPOSITORY.edit(account, data),
+            editedAcc -> editedAcc != null,
+            "Account edited",
+            "Failed to edit account"
+        );
     }
 
-    public @NotNull CompletableFuture<Void> removeAccount(@NotNull Account account) throws IllegalStateException {
+    public @NotNull CompletableFuture<Boolean> removeAccount(@NotNull Account account) throws IllegalStateException {
         if (!isAuthenticated) throw new IllegalStateException("User is not authenticated [removeAccount]");
 
-        return ACCOUNT_REPOSITORY.remove(account)
-                .thenAccept(removed -> {
-                    if (removed) {
-                        HAS_CHANGED.set(true);
-                        Logger.getInstance().addInfo("Account deleted");
-                    }
-                });
+        return handleFuture(
+            ACCOUNT_REPOSITORY.remove(account),
+            removed -> removed, // success if true
+            "Account deleted",
+            "Failed to remove account"
+        );
     }
 
     // Asynchronously retrieves and injects the password into the given PasswordInputControl
-    public <T extends PasswordInputControl> @NotNull CompletableFuture<Void> getAccountPassword(@NotNull T element, @NotNull Account account) {
-        if (!isAuthenticated) throw new IllegalStateException("User is not authenticated [getAccountPassword]");
+    public @NotNull CompletableFuture<AccountData> getAccountData(@NotNull Account account) throws IllegalStateException {
+        if (!isAuthenticated) throw new IllegalStateException("User is not authenticated [getAccountData]");
 
-        LoadingAnimation.start(element);
         return ACCOUNT_REPOSITORY.getData(account)
-                .thenAccept(data -> {
-                    LoadingAnimation.stop(element);
+                .thenApply(data -> {
                     if (data == null) throw new RuntimeException("Failed to retrieve account data");
-                    // Ensure the UI update happens on the JavaFX Application Thread
-                    Platform.runLater(() -> element.setText(data.password()));
+                    return data;
+                })
+                .exceptionally(e -> {
+                    Logger.getInstance().addError(e);
+                    return null;
+                });
+    }
+
+    private <T> CompletableFuture<T> handleFuture(CompletableFuture<T> future, Predicate<T> successCheck, String successMsg, String failureMsg) {
+        return future
+                .thenApply(result -> {
+                    boolean success = successCheck.test(result);
+                    if (!success) throw new RuntimeException(failureMsg);
+
+                    HAS_CHANGED.set(true);
+                    Logger.getInstance().addInfo(successMsg);
+
+                    return result;
+                })
+                .exceptionally(e -> {
+                    Logger.getInstance().addError(e);
+                    return null;
                 });
     }
     // #endregion
@@ -330,23 +333,16 @@ public final class IOManager extends Singleton {
         this.masterPassword = masterPassword;
         Logger.getInstance().addInfo("User authenticated");
 
-        CompletableFuture<Void> unlockFuture = ACCOUNT_REPOSITORY.unlockAll(masterPassword)
+        ACCOUNT_REPOSITORY.unlockAll(masterPassword)
                 .thenAccept(unlocked -> {
-                    if (unlocked) {
-                        Logger.getInstance().addInfo("All accounts unlocked");
-                    } else {
-                        Logger.getInstance().addError(new RuntimeException("Failed to unlock all accounts"));
-                    }
+                    if (unlocked) Logger.getInstance().addInfo("All accounts unlocked");
+                })
+                .exceptionally(e -> {
+                    Logger.getInstance().addError(e);
+                    return null;
                 });
 
-        try {
-            // Wait for all accounts to be unlocked before allowing access to the UI
-            unlockFuture.get();
-            return true;
-        } catch (Exception e) {
-            Logger.getInstance().addError(e);
-            return false;
-        }
+        return true;
     }
 
     public boolean changeMasterPassword(@NotNull String newMasterPassword) {

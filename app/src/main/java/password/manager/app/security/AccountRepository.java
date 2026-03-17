@@ -34,7 +34,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import password.manager.app.persistence.TransactionManager;
 import password.manager.app.security.Account.AccountData;
-import password.manager.app.singletons.Logger;
 
 /**
  * Repository for managing password accounts with CRUD operations.
@@ -132,7 +131,7 @@ public final class AccountRepository implements AutoCloseable {
      * @return a CompletableFuture that completes with the created Account, or null if the transaction fails
      */
     public @NotNull CompletableFuture<Account> add(@NotNull AccountData data) {
-        if (data == null) throw new NullPointerException("Account data cannot be null");
+        if (data == null) throw new IllegalArgumentException("Account data cannot be null");
 
         // Use a holder to capture the account reference for rollback
         final Account[] accountHolder = new Account[1];
@@ -150,8 +149,7 @@ public final class AccountRepository implements AutoCloseable {
 
                     return accountHolder[0];
                 } catch (GeneralSecurityException e) {
-                    Logger.getInstance().addError(e);
-                    return null;
+                    throw new RuntimeException("Failed to encrypt account data", e);
                 }
             },
             () -> {
@@ -180,8 +178,8 @@ public final class AccountRepository implements AutoCloseable {
      * @throws IllegalArgumentException if the account is not found in the repository
      */
     public @NotNull CompletableFuture<Account> edit(@NotNull Account account, @NotNull AccountData data) {
-        if (account == null) throw new NullPointerException("Account cannot be null");
-        if (data == null) throw new NullPointerException("Account data cannot be null");
+        if (account == null) throw new IllegalArgumentException("Account cannot be null");
+        if (data == null) throw new IllegalArgumentException("Account data cannot be null");
 
         final Account.AccountMemento originalState;
         synchronized (accounts) {
@@ -197,8 +195,7 @@ public final class AccountRepository implements AutoCloseable {
                     account.setData(data, userPreferences.getDEK());
                     return account;
                 } catch (GeneralSecurityException e) {
-                    Logger.getInstance().addError(e);
-                    return null;
+                    throw new RuntimeException("Failed to update account data", e);
                 }
             },
             () -> {
@@ -221,7 +218,7 @@ public final class AccountRepository implements AutoCloseable {
      * @throws IllegalArgumentException if the account is not found in the repository
      */
     public @NotNull CompletableFuture<Boolean> remove(@NotNull Account account) {
-        if (account == null) throw new NullPointerException("Account cannot be null");
+        if (account == null) throw new IllegalArgumentException("Account cannot be null");
 
         // Although DEK is not used in this method, we check it to ensure that the master password has been verified before allowing any modifications to the accounts list.
         userPreferences.getDEK();
@@ -287,8 +284,7 @@ public final class AccountRepository implements AutoCloseable {
                             account.unlock(userPreferences.getDEK(), userPreferences.getLegacyVersion(), legacyMasterPassword);
                             return true;
                         } catch (GeneralSecurityException e) {
-                            Logger.getInstance().addError(e);
-                            return false;
+                            throw new RuntimeException("Failed to unlock account", e);
                         }
                     },
                     () -> {
@@ -325,8 +321,7 @@ public final class AccountRepository implements AutoCloseable {
                     try {
                         return account.getData(userPreferences.getDEK());
                     } catch (GeneralSecurityException e) {
-                        Logger.getInstance().addError(e);
-                        return null;
+                        throw new RuntimeException("Failed to decrypt account data", e);
                     }
                 });
     }

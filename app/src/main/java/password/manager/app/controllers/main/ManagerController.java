@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
@@ -65,6 +66,7 @@ import password.manager.app.security.Account.AccountData;
 import password.manager.app.singletons.IOManager;
 import password.manager.app.singletons.Logger;
 import password.manager.app.singletons.ObservableResourceFactory;
+import password.manager.lib.LoadingAnimation;
 import password.manager.lib.ReadablePasswordFieldWithStr;
 
 public class ManagerController extends AbstractController {
@@ -88,7 +90,7 @@ public class ManagerController extends AbstractController {
     private Timeline searchTimeline;
 
     // App state variables
-    private volatile boolean editOperationInProgress = false;
+    private AtomicInteger editOperationsCounter = new AtomicInteger(0);
     private volatile boolean isMatchCase = false, isMatchWholeWord = false;
 
     // Auto-completion data sources
@@ -212,7 +214,7 @@ public class ManagerController extends AbstractController {
                                       FilteredList<Account> filteredAccountList, TabManager<Account, EditorController> tabManager) {
         // #region Sorted Account List setup
         final ListChangeListener<Account> ACCOUNT_LIST_CHANGE_HANDLER = change -> {
-            if (editOperationInProgress) return;
+            if (editOperationsCounter.get() > 0) return;
 
             while(change.next()) {
                 if (change.wasRemoved() && !change.wasAdded()) {
@@ -248,7 +250,7 @@ public class ManagerController extends AbstractController {
         };
 
         final ChangeListener<Account> LIST_VIEW_HANDLER = (_, _, newItem) -> {
-            if (newItem != null && !editOperationInProgress) {
+            if (newItem != null && editOperationsCounter.get() == 0) {
                 tabManager.openTab(newItem);
                 // Defer the task to avoid conflicts on the underlying list of selected accounts
                 Platform.runLater(accountListView.getSelectionModel()::clearSelection);
@@ -428,13 +430,17 @@ public class ManagerController extends AbstractController {
                 clearTextFields(editorSoftware, editorUsername, editorPassword.getTextField());
                 editorPassword.setReadable(false);
             } else {
-                editorSoftware.setText(account.getSoftware());
-                editorUsername.setText(account.getUsername());
+                LoadingAnimation.start(editorSoftware, editorUsername, editorPassword, editorSaveBtn, editorDeleteBtn);
+                IOManager.getInstance().getAccountData(account)
+                        .whenComplete((data, ex) -> {
+                            LoadingAnimation.stop(editorSoftware, editorUsername, editorPassword, editorSaveBtn, editorDeleteBtn);
 
-                IOManager.getInstance().getAccountPassword(editorPassword, account)
-                        .exceptionally(e -> {
-                            Logger.getInstance().addError(e);
-                            return null;
+                            boolean success = (ex == null && data != null);
+                            if (!success) return; // Just keep the old data in case of failure
+
+                            editorSoftware.setText(data.software());
+                            editorUsername.setText(data.username());
+                            editorPassword.setText(data.password());
                         });
             }
 
@@ -454,6 +460,10 @@ public class ManagerController extends AbstractController {
         public void editorSave(ActionEvent event) {
             if (checkTextFields(editorSoftware, editorUsername, editorPassword.getTextField())) {
                 editorSaveTimeline.playFromStart();
+
+                // Reset the delete button state
+                editorDeleteCounter = false;
+                clearStyle(editorDeleteBtn);
 
                 // get the new software, username and password
                 final String software = editorSoftware.getText().strip();
@@ -475,13 +485,17 @@ public class ManagerController extends AbstractController {
                     IOManager.getInstance().addAccount(data);
                     reset();
                 } else {
-                    editOperationInProgress = true;
+                    editOperationsCounter.incrementAndGet();
+                    LoadingAnimation.start(editorSoftware, editorUsername, editorPassword, editorSaveBtn, editorDeleteBtn);
                     IOManager.getInstance().editAccount(account, data)
-                            .thenAccept(_ -> editOperationInProgress = false)
-                            .exceptionally(e -> {
-                                Logger.getInstance().addError(e);
-                                editOperationInProgress = false;
-                                return null;
+                            .whenComplete((result, ex) -> {
+                                LoadingAnimation.stop(editorSoftware, editorUsername, editorPassword, editorSaveBtn, editorDeleteBtn);
+                                editOperationsCounter.decrementAndGet();
+
+                                // Re-write the fields since the loading animation leaves "Loading..."
+                                editorSoftware.setText(data.software());
+                                editorUsername.setText(data.username());
+                                editorPassword.setText(data.password());
                             });
                 }
             }
@@ -491,11 +505,7 @@ public class ManagerController extends AbstractController {
         public void editorDelete(ActionEvent event) {
             // when the deleteCounter is true it means that the user has confirmed the elimination
             if (editorDeleteCounter) {
-                IOManager.getInstance().removeAccount(account)
-                        .exceptionally(e -> {
-                            Logger.getInstance().addError(e);
-                            return null;
-                        });
+                IOManager.getInstance().removeAccount(account);
             } else {
                 editorDeleteBtn.setStyle("-fx-background-color: -fx-color-red");
                 editorDeleteCounter = true;

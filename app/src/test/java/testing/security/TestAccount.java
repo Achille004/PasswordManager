@@ -102,10 +102,10 @@ public class TestAccount {
     @Test
     void testNullValues() {
         byte[] DEK = "masterPass".getBytes(StandardCharsets.UTF_8);
-        assertThrows(NullPointerException.class, () -> Account.of(null, DEK));
+        assertThrows(IllegalArgumentException.class, () -> Account.of(null, DEK));
 
         AccountData data = new AccountData("software", "user", "password");
-        assertThrows(NullPointerException.class, () -> Account.of(data, null));
+        assertThrows(IllegalArgumentException.class, () -> Account.of(data, null));
     }
 
     @Test
@@ -199,7 +199,7 @@ public class TestAccount {
         byte[] DEK = "masterPass456".getBytes(StandardCharsets.UTF_8);
         Account account = Account.of(new AccountData("GitHub", "user", "password"), DEK);
 
-        assertThrows(NullPointerException.class, () -> invokeRestoreState(account, null));
+        assertThrows(IllegalArgumentException.class, () -> invokeRestoreState(account, null));
     }
 
     private static void invokeSetData(Account account, AccountData data, byte[] DEK) {
