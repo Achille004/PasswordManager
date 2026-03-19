@@ -19,38 +19,54 @@
 import org.panteleyev.jpackage.ImageType
 import org.panteleyev.jpackage.JPackageTask
 
-// #region Copied from build.gradle
+// #region Common configuration and utilities
+
+String BUILD_GROUP = "build"
+String DISTRIBUTION_GROUP = "distribution"
 
 // https://github.com/controlsfx/controlsfx/wiki/Using-ControlsFX-with-JDK-9-and-above
-def defaultJvmArgs = [
+List<String> defaultJvmArgs = [
     '--enable-native-access=javafx.graphics',
     '--add-exports', 'javafx.base/com.sun.javafx.event=org.controlsfx.controls',
     '-Dapp.name=' + project.appName,
     '-Dapp.version=' + project.appVersion
 ]
 
-def resourceDir = layout.projectDirectory.dir('src/main/resources')
+Directory resourceDir = layout.projectDirectory.dir('src/main/resources')
 resourceDir.asFile.mkdirs()
 
-def compileDir = rootProject.layout.projectDirectory.dir('compiled')
+Directory compileDir = rootProject.layout.projectDirectory.dir('compiled')
 compileDir.asFile.mkdirs()
 
 // #endregion
 
 // appName and appVersion are inherited from JPackageTask
-def osArch = System.getProperty("os.arch")
-def basename = appName.replace(" ", "") + "-" + appVersion + "-" + osArch
+String osArch = System.getProperty("os.arch")
+String basename = appName.replace(" ", "") + "-" + appVersion + "-" + osArch
 
-def types = PackagingUtils.getTypes()
+List<ImageType> types = PackagingUtils.getTypes()
 
-def installerDir = compileDir.dir('installers')
-def dest
+Directory installerDir = compileDir.dir('installers')
+Directory dest
 
 types.each { t ->
-    def isAppImage = (t == ImageType.APP_IMAGE)
+    boolean isAppImage = (t == ImageType.APP_IMAGE)
+    Directory appImgDest = installerDir.dir(project.appName)
+    println "Configuring packaging task for ${t}"
+
     tasks.register("jpackage_$t", JPackageTask.class) {
+        group = DISTRIBUTION_GROUP
+
+        onlyIf { task ->
+            if (PackagingUtils.isToolAvailableFor(t)) return true
+            println "Skipping ${task.path}: required tool for ${t} is not available"
+            return false
+        }
+
         outputs.upToDateWhen { false }
-        dependsOn tasks.readyAllJars
+        dependsOn tasks.named('readyAllJars')
+
+        if (!isAppImage) dependsOn tasks.jpackage_APP_IMAGE
 
         type = t
 
@@ -61,13 +77,15 @@ types.each { t ->
         vendor = project.appVendor
 
         if (isAppImage) {
+            dependsOn tasks.named('delAppImage')
+
             javaOptions = ['-Dfile.encoding=UTF-8'] + defaultJvmArgs
             module = 'password.manager.app/password.manager.app.App'
             modulePaths = files(layout.buildDirectory.dir('jars'))
             runtimeImage = file(System.getProperty('java.home'))
         } else {
             aboutUrl = 'https://github.com/Achille004/PasswordManager'
-            appImage = installerDir.dir(project.appName).toString()
+            appImage = compileDir.dir("appimage").asFile.toString()
             licenseFile = resourceDir.file('license.txt')
         }
 
@@ -78,6 +96,8 @@ types.each { t ->
             winConsole = debugMode.toBoolean()
 
             if (!isAppImage) {
+                dependsOn tasks.delWindowsInstallers
+
                 winDirChooser = true
                 winHelpUrl = 'https://github.com/Achille004/PasswordManager/issues'
                 winMenu = true
@@ -92,6 +112,8 @@ types.each { t ->
             icon =  resourceDir.file('icon.icns')
 
             if (!isAppImage) {
+                dependsOn tasks.named('delMacInstallers')
+
                 macAppCategory  = 'security'
                 macAppStore = false
                 macPackageName = project.appName
@@ -105,6 +127,8 @@ types.each { t ->
             icon =  resourceDir.file('icon.png')
 
             if (!isAppImage) {
+                dependsOn tasks.named('delLinuxInstallers')
+
                 linuxAppCategory = 'security'
                 linuxDebMaintainer = '2004marras@gmail.com'
                 linuxMenuGroup = project.appVendor
@@ -113,42 +137,83 @@ types.each { t ->
             }
         }
 
-        destination = isAppImage ? installerDir : dest
-    }
-}
+        destination = isAppImage ? compileDir : dest
 
-tasks.register("assembleInstallers") {
-    delete installerDir
-    mkdir installerDir
+        // Rename the file to the desired format
+        doLast {
+            File outFile = destination.get().asFile.listFiles()
+                    .find {
+                        String toMatch = (isAppImage ? appImgDest.asFile.name : t.toString()).toLowerCase()
+                        return it.name.toLowerCase().contains(toMatch)
+                    }
 
-    println "Packaging ${appName} ${appVersion}"
+            if (outFile == null) return
 
-    println "Building for: ${types.join(', ')}"
-    dependsOn types.collect { type -> tasks.named("jpackage_$type") }
+            String targetName
+            if (isAppImage) {
+                targetName = "appimage"
+            } else {
+                targetName = basename
+                int dot  = outFile.name.lastIndexOf(".")
+                if (dot >= 0) targetName += outFile.name.substring(dot)
+            }
 
-    doLast {
-        println "Renaming files for ${osArch}"
-        dest.asFile.listFiles().each { f ->
-            def targetname = basename
-            def dot  = f.name.lastIndexOf(".")
-            if (dot >= 0) targetname += f.name.substring(dot)
+            File newFile = new File(outFile.parentFile, targetName)
+            outFile.renameTo(newFile)
+            outFile.delete()
 
-            def newFile = new File(f.parentFile, targetname)
-            println " - ${f.name} => ${newFile.name}"
-            f.renameTo(newFile)
-            f.delete()
+            println "Renamed '${outFile.name}' to '${newFile.name}'"
 
             // Make sure the new file is writable (WiX was building read-only EXEs
             // but ok MSIs, and I'm not gonna dive into that rabbit hole right now)
             if (!newFile.canWrite()) {
                 newFile.setWritable(true)
-                println "   L Was read-only, removed attribute"
+                println "  L Was read-only, removed attribute"
             }
         }
     }
 }
 
+tasks.register("assembleInstallers") {
+    group = DISTRIBUTION_GROUP
+
+    mkdir installerDir
+
+    println "Packaging ${appName} ${appVersion}"
+
+    println "Building candidates: ${types.join(', ')}"
+    dependsOn types.collect { type -> tasks.named("jpackage_$type") }
+}
+
 tasks.register('dryAssembleInstallers') {
+    group = DISTRIBUTION_GROUP
+
     System.setProperty("jpackage.dryRun", "true")
     finalizedBy tasks.assembleInstallers
+}
+
+///// CLEANUP TASKS /////
+
+tasks.register("delAppImage", Delete) {
+    group = BUILD_GROUP
+    outputs.upToDateWhen { false }
+
+    File appImageDir = compileDir.dir("appimage").asFile
+    if (!appImageDir.exists()) return
+
+    delete appImageDir
+    println "Removed app image directory"
+}
+
+["windows", "mac", "linux"].each { platform ->
+    tasks.register("del${platform.capitalize()}Installers", Delete) {
+        group = BUILD_GROUP
+        outputs.upToDateWhen { false }
+
+        File platformDir = installerDir.dir(platform).asFile
+        if (!platformDir.exists()) return
+
+        delete platformDir.listFiles()
+        println "Cleaned ${platform.capitalize()} directory"
+    }
 }

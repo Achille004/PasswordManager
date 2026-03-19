@@ -72,7 +72,7 @@ testing {
 
 javafx {
     version = '25.0.2'
-    modules = [ 'javafx.base', 'javafx.controls', 'javafx.fxml', 'javafx.graphics', 'javafx.web' ]
+    modules = [ 'javafx.base', 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
 }
 
 jar {

@@ -61,19 +61,26 @@ java {
     }
 }
 
+// #region Common configuration and utilities
+
+String BUILD_GROUP = "build"
+String DISTRIBUTION_GROUP = "distribution"
+
 // https://github.com/controlsfx/controlsfx/wiki/Using-ControlsFX-with-JDK-9-and-above
-def defaultJvmArgs = [
+List<String> defaultJvmArgs = [
     '--enable-native-access=javafx.graphics',
     '--add-exports', 'javafx.base/com.sun.javafx.event=org.controlsfx.controls',
     '-Dapp.name=' + project.appName,
     '-Dapp.version=' + project.appVersion
 ]
 
-def resourceDir = layout.projectDirectory.dir('src/main/resources')
+Directory resourceDir = layout.projectDirectory.dir('src/main/resources')
 resourceDir.asFile.mkdirs()
 
-def compileDir = rootProject.layout.projectDirectory.dir('compiled')
+Directory compileDir = rootProject.layout.projectDirectory.dir('compiled')
 compileDir.asFile.mkdirs()
+
+// #endregion
 
 application {
     // Define the main class for the application.
@@ -94,7 +101,7 @@ testing {
 
 javafx {
     version = '25.0.2'
-    modules = [ 'javafx.base', 'javafx.controls', 'javafx.fxml', 'javafx.graphics', 'javafx.web' ]
+    modules = [ 'javafx.base', 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
 }
 
 jar {
@@ -104,65 +111,14 @@ jar {
     }
 }
 
-def gpgExists = ['gpg', 'gpg.exe'].any { executable ->
-    System.getenv('PATH').split(File.pathSeparator).any { path -> new File(path, executable).exists() }
-}
-def gpgPropertiesExist = (project.hasProperty('signing.keyId')
-        && project.hasProperty('signing.password')
-        && project.hasProperty('signing.secretKeyRingFile'))
+///// Packaging tasks and utilities /////
 
-signing {
-    if(!gpgExists) {
-        println "Gpg executable not found in PATH"
-    } else if(!gpgPropertiesExist) {
-        println "Gpg signing properties missing"
-    } else {
-        println "Gpg signing enabled"
-        useGpgCmd()
-        sign jar
-        sign distZip
-        sign distTar
-    }
-}
-
-def gpgSignable = gpgExists && gpgPropertiesExist
-
-tasks.register('assemblePortables', Delete) {
-    def distDir = compileDir.dir('distributions')
-    delete distDir
-    mkdir distDir
-
-    dependsOn tasks.distTar, tasks.distZip
-    if(gpgSignable) dependsOn tasks.signDistTar, tasks.signDistZip
-
-    doLast {
-        mkdir distDir
-        copy {
-            from tasks.distTar
-            if(gpgSignable) from tasks.signDistTar
-            into distDir.dir('tar')
-        }
-        copy {
-            from tasks.distZip
-            if(gpgSignable) from tasks.signDistZip
-            into distDir.dir('zip')
-        }
-    }
-}
-
-tasks.register('readyAllJars', Copy) {
-    dependsOn tasks.jar
-    if(gpgSignable) dependsOn tasks.signJar
-
-    from configurations.runtimeClasspath
-    from tasks.named('jar').flatMap { it.archiveFile }
-    if(gpgSignable) from tasks.signJar
-    into layout.buildDirectory.dir('jars')
-}
-
-apply from: 'packaging.gradle'
+apply from: 'portables.gradle'
+apply from: 'installers.gradle'
 
 tasks.register('assembleAll') {
+    group = DISTRIBUTION_GROUP
+
     dependsOn tasks.assemblePortables
     dependsOn tasks.assembleInstallers
 }
