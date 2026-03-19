@@ -38,7 +38,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import org.jetbrains.annotations.NotNull;
@@ -59,7 +58,7 @@ import password.manager.app.security.Account;
 import password.manager.app.security.AccountRepository;
 import password.manager.app.security.UserPreferences;
 import password.manager.app.security.Account.AccountData;
-import password.manager.lib.PasswordInputControl;
+import password.manager.lib.CustomPasswordField;
 
 public final class IOManager extends Singleton {
 
@@ -288,7 +287,6 @@ public final class IOManager extends Singleton {
         );
     }
 
-    // Asynchronously retrieves and injects the password into the given PasswordInputControl
     public @NotNull CompletableFuture<AccountData> getAccountData(@NotNull Account account) throws IllegalStateException {
         if (!isAuthenticated) throw new IllegalStateException("User is not authenticated [getAccountData]");
 
@@ -369,7 +367,7 @@ public final class IOManager extends Singleton {
         return true;
     }
 
-    public void displayMasterPassword(PasswordInputControl element) {
+    public void displayMasterPassword(CustomPasswordField element) {
         // Use Platform.runLater to queue the update after the field is ready
         // (it also ensures that it gets called on the JavaFX Application Thread)
         Platform.runLater(() -> element.setText(this.masterPassword));

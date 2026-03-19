@@ -35,7 +35,6 @@ import javafx.scene.control.Labeled;
 import javafx.scene.control.TextInputControl;
 import javafx.stage.Stage;
 import password.manager.app.base.SupportedLocale;
-import password.manager.lib.PasswordInputControl;
 
 public final class ObservableResourceFactory extends Singleton {
 
@@ -134,23 +133,13 @@ public final class ObservableResourceFactory extends Singleton {
         bindStringProperty(stage.titleProperty(), key);
     }
 
-    public void bindPromptTextProperty(@NotNull Object... fields) {
+    public void bindPromptTextProperty(@NotNull TextInputControl... fields) {
         if (emptyFieldPrompts.isEmpty()) return;
 
-        for (@NotNull Object field : fields) {
+        for (@NotNull TextInputControl field : fields) {
             int index = rand.nextInt(emptyFieldPrompts.size());
-
-            switch (field) {
-                case TextInputControl tic -> {
-                    tic.promptTextProperty().unbind();
-                    tic.promptTextProperty().bind(emptyFieldPrompts.get(index));
-                }
-                case PasswordInputControl pic -> {
-                    pic.promptTextProperty().unbind();
-                    pic.promptTextProperty().bind(emptyFieldPrompts.get(index));
-                }
-                default -> throw new IllegalArgumentException("Unsupported field type: " + field.getClass().getName());
-            }
+            field.promptTextProperty().unbind();
+            field.promptTextProperty().bind(emptyFieldPrompts.get(index));
         }
     }
 

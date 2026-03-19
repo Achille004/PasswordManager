@@ -19,31 +19,11 @@
 package password.manager.lib;
 
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ReadOnlyIntegerProperty;
-import javafx.beans.property.StringProperty;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
+import javafx.scene.control.PasswordField;
 
-public interface PasswordInputControl {
-    BooleanProperty readableProperty();
-    void setReadable(boolean readable);
-    void toggleReadable();
-    boolean isReadable();
-
-    StringProperty textProperty();
-    void setText(String text);
-    String getText();
-
-    StringProperty promptTextProperty();
-    void setPromptText(String text);
-    String getPromptText();
-
-    ReadOnlyIntegerProperty caretPositionProperty();
-    void positionCaret(int pos);
-    int getCaretPosition();
-
-    void requestFocus();
-    void setOnAction(EventHandler<ActionEvent> value);
-
-    void setDisable(boolean disable);
+public abstract class CustomPasswordField extends PasswordField {
+    abstract BooleanProperty readableProperty();
+    abstract void setReadable(boolean readable);
+    abstract void toggleReadable();
+    abstract boolean isReadable();
 }

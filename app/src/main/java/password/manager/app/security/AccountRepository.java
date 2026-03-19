@@ -71,7 +71,9 @@ public final class AccountRepository implements AutoCloseable {
      * Constructs a new AccountRepository with an empty synchronized observable list
      * and a transaction manager for asynchronous operations.
      */
-    public AccountRepository(UserPreferences userPreferences) {
+    public AccountRepository(@NotNull UserPreferences userPreferences) {
+        if (userPreferences == null) throw new IllegalArgumentException("User preferences cannot be null");
+
         // The synchronized wrapper was removed since the ListChangeBuilder of the wrapping ObservableList was
         // suffering from broken internal state due to concurrent modifications, now synchronization is manual.
         this.accounts = FXCollections.observableList(

@@ -29,7 +29,7 @@ import javafx.animation.Timeline;
 import javafx.util.Duration;
 
 /**
- * Utility class to manage loading animations for PasswordInputControl elements.
+ * Utility class to manage loading animations for CustomPasswordField elements.
  */
 public class LoadingAnimation {
     private static final Duration LOAD_ANIM_TIME_UNIT = Duration.millis(125);

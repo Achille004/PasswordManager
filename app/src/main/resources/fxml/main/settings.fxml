@@ -42,7 +42,7 @@
    </AnchorPane>
    <AnchorPane prefHeight="0.0" prefWidth="502.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
       <Label fx:id="settingsMasterPasswordDesc" alignment="CENTER_RIGHT" nodeOrientation="LEFT_TO_RIGHT" prefHeight="20.0" prefWidth="465.0" styleClass="italic, regular-small" text="Press ENTER to confirm." />
-      <ReadablePasswordFieldWithStr fx:id="settingsMasterPassword" layoutY="20.0" minHeight="40.0" minWidth="465.0" />
+      <ReadablePasswordFieldWithStr fx:id="settingsMasterPassword" layoutY="20.0" minHeight="30.0" minWidth="465.0" />
    </AnchorPane>
    <AnchorPane GridPane.rowIndex="3">
       <Label fx:id="settingsDriveConnLbl" alignment="CENTER_RIGHT" layoutY="17.0" prefHeight="35.0" prefWidth="260.0" styleClass="bold-italic, regular-medium" text="Drive Connection:" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="7.0" />

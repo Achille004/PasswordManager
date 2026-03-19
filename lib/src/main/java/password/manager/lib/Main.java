@@ -27,6 +27,7 @@ public class Main extends Application {
     @Override
     public void start(Stage stage) {
         ReadablePasswordField custom1 = new ReadablePasswordField();
+        custom1.setPrefSize(400, 30);
         ReadablePasswordFieldWithStr custom2 = new ReadablePasswordFieldWithStr();
         custom2.setPrefSize(542.0, 70.0);
 
