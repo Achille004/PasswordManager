@@ -106,7 +106,7 @@ public final class Account {
             @NotNull byte[] salt,
             @NotNull byte[] software, @NotNull byte[] sIv,
             @NotNull byte[] username, @NotNull byte[] uIv,
-            @NotNull byte[] password, @NotNull byte[] pIv) throws GeneralSecurityException {
+            @NotNull byte[] password, @NotNull byte[] pIv) {
 
         // Here we consider salt as present as this constructor is used only for latest versions where salt is mandatory
         if (salt == null || salt.length != SALT_LENGTH) throw new IllegalArgumentException("Salt should be not null and " + SALT_LENGTH + " bytes long");
@@ -133,7 +133,6 @@ public final class Account {
         if (software == null || software.isEmpty()) throw new IllegalArgumentException("Software cannot be null or empty");
         if (username == null || username.isEmpty()) throw new IllegalArgumentException("Username cannot be null or empty");
         if (encryptedPassword == null || encryptedPassword.length == 0) throw new IllegalArgumentException("Encrypted password cannot be null or empty");
-        if (salt != null && salt.length != SALT_LENGTH) throw new IllegalArgumentException("Salt should be " + SALT_LENGTH + " bytes long, if provided");
         if (iv == null || iv.length != IV_LENGTH) throw new IllegalArgumentException("IV should be not null and " + IV_LENGTH + " bytes long");
 
         this();
@@ -237,13 +236,13 @@ public final class Account {
         try {
             if (this.isFullyEncrypted) {
                 // Decrypt all fields
-                byte[] sKey = AES.derivateKey(DEK, salt, "software");
+                byte[] sKey = AES.deriveKey(DEK, salt, "software");
                 plainSoftware = AES.decryptStringAES(software, sKey, sIv);
 
-                byte[] uKey = AES.derivateKey(DEK, salt, "username");
+                byte[] uKey = AES.deriveKey(DEK, salt, "username");
                 plainUsername = AES.decryptStringAES(username, uKey, uIv);
 
-                byte[] pKey = AES.derivateKey(DEK, salt, "password");
+                byte[] pKey = AES.deriveKey(DEK, salt, "password");
                 plainPassword = AES.decryptStringAES(password, pKey, pIv);
             } else {
                 // Decrypt only password
@@ -258,7 +257,7 @@ public final class Account {
         return new AccountData(plainSoftware, plainUsername, plainPassword);
     }
 
-    @Contract(value = "_, _, _, _, _ -> new", pure = true)
+    @Contract(value = "_, _ -> new", pure = true)
     public static @NotNull Account of(@NotNull AccountData data, @NotNull byte[] DEK) throws GeneralSecurityException {
         if (data == null) throw new IllegalArgumentException("Account data cannot be null");
         if (DEK == null) throw new IllegalArgumentException("Data encryption key cannot be null");
@@ -325,7 +324,7 @@ public final class Account {
         random.nextBytes(iv);
 
         // Derive key and encrypt
-        final byte[] key = AES.derivateKey(sourceKey, salt, info);
+        final byte[] key = AES.deriveKey(sourceKey, salt, info);
         return AES.encryptStringAES(newVal, key, iv);
     }
 
@@ -404,29 +403,25 @@ public final class Account {
         public Account deserialize(JsonParser p, DeserializationContext ctxt) throws JacksonException {
             ObjectNode node = p.readValueAsTree();
 
-            try {
-                // If encryptedPassword is present, it's the legacy format; otherwise, it's the modern format
-                if (node.has("encryptedPassword")) {
-                    // Legacy format: software/username are plain strings, only password is encrypted
-                    String software = node.get("software").asString();
-                    String username = node.get("username").asString();
-                    byte[] encryptedPassword = node.get("encryptedPassword").binaryValue();
-                    byte[] salt = node.has("salt") ? node.get("salt").binaryValue() : null;
-                    byte[] iv = node.get("iv").binaryValue();
-                    return new Account(software, username, encryptedPassword, salt, iv);
-                } else {
-                    // Modern format: all fields are encrypted byte arrays
-                    byte[] salt = node.get("salt").binaryValue();
-                    byte[] software = node.get("software").binaryValue();
-                    byte[] softIv = node.get("softIv").binaryValue();
-                    byte[] username = node.get("username").binaryValue();
-                    byte[] userIv = node.get("userIv").binaryValue();
-                    byte[] password = node.get("password").binaryValue();
-                    byte[] passIv = node.get("passIv").binaryValue();
-                    return new Account(salt, software, softIv, username, userIv, password, passIv);
-                }
-            } catch (GeneralSecurityException e) {
-                throw ctxt.instantiationException(Account.class, e);
+            // If encryptedPassword is present, it's the legacy format; otherwise, it's the modern format
+            if (node.has("encryptedPassword")) {
+                // Legacy format: software/username are plain strings, only password is encrypted
+                String software = node.get("software").asString();
+                String username = node.get("username").asString();
+                byte[] encryptedPassword = node.get("encryptedPassword").binaryValue();
+                byte[] salt = node.has("salt") ? node.get("salt").binaryValue() : null;
+                byte[] iv = node.get("iv").binaryValue();
+                return new Account(software, username, encryptedPassword, salt, iv);
+            } else {
+                // Modern format: all fields are encrypted byte arrays
+                byte[] salt = node.get("salt").binaryValue();
+                byte[] software = node.get("software").binaryValue();
+                byte[] softIv = node.get("softIv").binaryValue();
+                byte[] username = node.get("username").binaryValue();
+                byte[] userIv = node.get("userIv").binaryValue();
+                byte[] password = node.get("password").binaryValue();
+                byte[] passIv = node.get("passIv").binaryValue();
+                return new Account(salt, software, softIv, username, userIv, password, passIv);
             }
         }
     }

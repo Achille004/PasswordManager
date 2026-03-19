@@ -27,6 +27,7 @@ import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
 import java.util.Objects;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 
 import javafx.application.Platform;
@@ -198,12 +199,12 @@ public final class Utils {
      * can detect (and propagate) any exception thrown by the action.
      * </p>
      */
-    public static CompletableFuture<Void> runOnFx(Runnable action) {
-        CompletableFuture<Void> future = new CompletableFuture<>();
+    public static <T> CompletableFuture<T> runOnFx(Callable<T> action) {
+        CompletableFuture<T> future = new CompletableFuture<>();
         Runnable wrappedAction = () -> {
             try {
-                action.run();
-                future.complete(null);
+                T result = action.call();
+                future.complete(result);
             } catch (Throwable t) {
                 future.completeExceptionally(t);
             }
@@ -221,5 +222,20 @@ public final class Utils {
         }
 
         return future;
+    }
+
+    /**
+     * Schedules {@code action} on the JavaFX Application Thread when the toolkit is running,
+     * or executes it synchronously when it is not (e.g. in unit-test environments).
+     * <p>
+     * Returns a {@link CompletableFuture} that completes once the action has run, so callers
+     * can detect (and propagate) any exception thrown by the action.
+     * </p>
+     */
+    public static CompletableFuture<Void> runOnFx(Runnable action) {
+        return runOnFx(() -> {
+            action.run();
+            return null;
+        });
     }
 }

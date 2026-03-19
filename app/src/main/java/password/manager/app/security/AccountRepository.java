@@ -234,22 +234,19 @@ public final class AccountRepository implements AutoCloseable {
         }
 
         return transactionManager.executeInTransaction(
-            () -> {
-                runOnFx(() -> {
-                    synchronized (accounts) {
-                        accounts.remove(account);
-                    }
-                }).join();
-                return true;
-            },
-            () -> {
-                runOnFx(() -> {
-                    synchronized (accounts) {
-                        // Rollback: restore at original position
-                        accounts.add(originalIndex, account);
-                    }
-                }).join();
-            },
+            runOnFx(() -> {
+                synchronized (accounts) {
+                    return accounts.remove(account);
+                }
+            }),
+            // Leave as lambda so that the rollback action is only run if needed
+            // Writing it as runOnFx(...)::join would result in join() being the runnable instead of the lambda itself
+            () -> runOnFx(() -> {
+                synchronized (accounts) {
+                    // Rollback: restore at original position
+                    accounts.add(originalIndex, account);
+                }
+            }).join(),
             "Removing account"
         );
     }

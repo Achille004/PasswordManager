@@ -28,10 +28,11 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.skin.TextFieldSkin;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import lombok.Getter;
 
 public class ReadablePasswordFieldSkin extends TextFieldSkin {
 
-    public static final char BULLET = '\u25cf';
+    public static final char BULLET = '●';
 
     private final ImageView actionIcon = new ImageView();
     private final BooleanProperty readable = new SimpleBooleanProperty(false);
@@ -101,6 +102,7 @@ public class ReadablePasswordFieldSkin extends TextFieldSkin {
         super.dispose();
     }
 
+    @Getter
     private enum Icons {
         SHOWING("/icons/open-eye.png"),
         HIDDEN("/icons/closed-eye.png");
@@ -111,9 +113,6 @@ public class ReadablePasswordFieldSkin extends TextFieldSkin {
             this.image = new Image(Objects.requireNonNull(getClass().getResourceAsStream(path)));
         }
 
-        public Image getImage() {
-            return image;
-        }
     }
 
     ///// PASSWORD INPUT CONTROL METHODS /////

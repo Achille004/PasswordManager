@@ -123,8 +123,11 @@ public class TestSingletons {
 
         // Verify the cause is NoSuchMethodException
         assertNotNull(exception.getCause());
-        assertTrue(exception.getCause() instanceof NoSuchMethodException,
-            "Expected cause to be NoSuchMethodException but was: " + exception.getCause().getClass().getName());
+        assertInstanceOf(
+            NoSuchMethodException.class,
+            exception.getCause(),
+            "Expected cause to be NoSuchMethodException but was: " + exception.getCause().getClass().getName()
+        );
     }
 
     @Test
@@ -155,7 +158,7 @@ public class TestSingletons {
 
         // Verify all threads got the exact same instance
         assertEquals(threadCount, instances.size());
-        TestResource first = instances.get(0);
+        TestResource first = instances.getFirst();
         for (TestResource instance : instances) {
             assertSame(first, instance, "All threads should get the same singleton instance");
         }
@@ -221,7 +224,7 @@ public class TestSingletons {
         assertTrue(resource.isClosed());
 
         // Calling shutdownAll again should not throw
-        assertDoesNotThrow(() -> Singletons.shutdownAll());
+        assertDoesNotThrow(Singletons::shutdownAll);
     }
 
     @Test

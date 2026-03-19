@@ -97,13 +97,14 @@ public final class UserPreferences {
     private UserPreferences(
             @NotNull SupportedLocale locale,
             @NotNull SortingOrder sortingOrder,
-            @Nullable SecurityVersion securityVersion,
+            @NotNull SecurityVersion securityVersion,
             @NotNull byte[] pwEncDek,
             @NotNull byte[] pwSalt,
             @NotNull byte[] pwIv) {
 
         if (locale == null) throw new IllegalArgumentException("Locale cannot be null");
         if (sortingOrder == null) throw new IllegalArgumentException("Sorting order cannot be null");
+        if (securityVersion == null) throw new IllegalArgumentException("Security version cannot be null");
         if (pwEncDek == null || pwEncDek.length != ENC_DEK_LENGTH) throw new IllegalArgumentException("Encrypted DEK must be exactly " + ENC_DEK_LENGTH + " bytes");
         if (pwSalt == null || pwSalt.length != SALT_LENGTH) throw new IllegalArgumentException("Salt must be exactly " + SALT_LENGTH + " bytes");
         if (pwIv == null || pwIv.length != IV_LENGTH) throw new IllegalArgumentException("IV must be exactly " + IV_LENGTH + " bytes");
@@ -112,8 +113,7 @@ public final class UserPreferences {
 
         this.localeProperty.set(locale);
         this.sortingOrderProperty.set(sortingOrder);
-        // Default to ARGON2 since this constructor was created for the new format (should never be PBKDF2), but allow possible new versions
-        this.securityVersionProperty.set(securityVersion == null ? SecurityVersion.ARGON2 : securityVersion);
+        this.securityVersionProperty.set(securityVersion);
 
         System.arraycopy(pwEncDek, 0, this.pwEncDek, 0, ENC_DEK_LENGTH);
         System.arraycopy(pwSalt, 0, this.pwSalt, 0, SALT_LENGTH);

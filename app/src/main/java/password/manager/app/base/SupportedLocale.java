@@ -55,7 +55,7 @@ public enum SupportedLocale {
     private final @JsonValue Locale locale;
     private final transient Image flagImage;
 
-    private SupportedLocale(Locale locale, String flagResourcePath) {
+     SupportedLocale(Locale locale, String flagResourcePath) {
         this.locale = locale;
         this.flagImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream(flagResourcePath)));
     }

@@ -69,8 +69,9 @@ public class TransactionManager {
      * or rolled back if an exception occurs.
      * </p>
      *
-     * @param transactionFunction the function to execute within the transaction context
      * @param <T> the return type of the function
+     * @param transactionFunction the function to execute within the transaction context
+     * @param description a description of the transaction for logging purposes
      * @return a CompletableFuture that completes with the result of the function, or null if the transaction failed
      */
     public <T> @NotNull CompletableFuture<T> executeInTransaction(@NotNull Function<Transaction, CompletableFuture<T>> transactionFunction, String description) {
@@ -96,15 +97,30 @@ public class TransactionManager {
 
     /**
      * Shorthand method to execute an operation within a transaction with a rollback action.
-     * See {@link #executeInTransaction} for details.
+     * See {@link #executeInTransaction(Function, String)} for details.
      *
      * @param <T> the return type of the operation
      * @param operation the operation to execute within the transaction
      * @param rollback the rollback action to perform if the transaction fails (can be null)
+     * @param description a description of the transaction for logging purposes
      * @return a CompletableFuture that completes with the result of the operation, or null if the transaction failed
      */
     public <T> @NotNull CompletableFuture<T> executeInTransaction(@NotNull Supplier<T> operation, @Nullable Runnable rollback, String description) {
         return executeInTransaction(t -> t.addOperation(operation, rollback), description);
+    }
+
+    /**
+     * Shorthand method to execute an operation within a transaction with a rollback action.
+     * See {@link #executeInTransaction(Supplier, Runnable, String)} for details.
+     *
+     * @param <T> the return type of the operation
+     * @param operation the future operation to execute within the transaction
+     * @param rollback the future rollback action to perform if the transaction fails (can be null)
+     * @param description a description of the transaction for logging purposes
+     * @return a CompletableFuture that completes with the result of the operation, or null if the transaction failed
+     */
+    public <T> @NotNull CompletableFuture<T> executeInTransaction(@NotNull CompletableFuture<T> operation, @Nullable Runnable rollback, String description) {
+        return executeInTransaction(operation::join, rollback, description);
     }
 
     /**

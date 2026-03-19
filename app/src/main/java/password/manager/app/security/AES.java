@@ -50,7 +50,7 @@ public final class AES {
     public static final int AES_BITS = 256;
     public static final int GCM_TAG_BITS = 128; // 16 bytes for GCM TAG
 
-    public static byte[] derivateKey(@NotNull byte[] sourceKey, @NotNull byte[] salt, @NotNull String info) {
+    public static byte[] deriveKey(@NotNull byte[] sourceKey, @NotNull byte[] salt, @NotNull String info) {
         Digest digest = SHA256Digest.newInstance(CryptoServicePurpose.KEYGEN);
         DerivationParameters params = new HKDFParameters(sourceKey, salt, info.getBytes(StandardCharsets.UTF_8));
 
