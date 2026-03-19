@@ -33,7 +33,7 @@
                <Label fx:id="firstRunDescBtm" alignment="TOP_CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="25.0" minWidth="650.0" styleClass="italic, light-grey-text" text="PasswordManager will NEVER collect your data *" textAlignment="CENTER" wrapText="true" />
             </children>
          </AnchorPane>
-         <ReadablePasswordFieldWithStr fx:id="firstRunPassword" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="40.0" minWidth="650.0" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
+         <ReadablePasswordFieldWithStr fx:id="firstRunPassword" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="30.0" minWidth="650.0" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
          <Label fx:id="firstRunTermsCred" alignment="TOP_LEFT" minHeight="45.0" minWidth="450.0" onMouseClicked="#showEula" text="Terms and Credits" GridPane.halignment="LEFT" GridPane.rowIndex="3" GridPane.valignment="TOP">
             <cursor>
                <Cursor fx:constant="HAND" />

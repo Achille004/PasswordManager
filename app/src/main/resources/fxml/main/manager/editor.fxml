@@ -38,7 +38,7 @@
    </AnchorPane>
    <AnchorPane GridPane.rowIndex="2">
       <Label fx:id="editorPasswordLbl" prefHeight="30.0" prefWidth="542.0" text="Password" />
-      <ReadablePasswordFieldWithStr fx:id="editorPassword" layoutY="30.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="40.0" minWidth="542.0" />
+      <ReadablePasswordFieldWithStr fx:id="editorPassword" layoutY="30.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="30.0" minWidth="542.0" />
    </AnchorPane>
    <AnchorPane GridPane.rowIndex="4">
       <Button fx:id="editorDeleteBtn" contentDisplay="GRAPHIC_ONLY" graphicTextGap="0.0" layoutX="435.0" layoutY="33.0" mnemonicParsing="false" onAction="#editorDelete" prefHeight="50.0" prefWidth="50.0" styleClass="editor-button" text="D" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="57.0">

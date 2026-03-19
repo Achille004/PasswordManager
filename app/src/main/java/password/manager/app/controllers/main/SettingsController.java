@@ -86,7 +86,7 @@ public class SettingsController extends AbstractController {
 
         // Master password
         settingsMasterPassword.setOnAction(_ -> {
-            if (checkTextFields(settingsMasterPassword.getTextField())) {
+            if (checkTextFields(settingsMasterPassword)) {
                 ioManager.changeMasterPassword(settingsMasterPassword.getText().strip());
             }
         });
@@ -99,7 +99,7 @@ public class SettingsController extends AbstractController {
 
     @Override
     public void reset() {
-        clearStyle(settingsMasterPassword.getTextField());
+        clearStyle(settingsMasterPassword);
         ObservableResourceFactory.getInstance().bindPromptTextProperty(settingsMasterPassword);
 
         IOManager.getInstance().displayMasterPassword(settingsMasterPassword);

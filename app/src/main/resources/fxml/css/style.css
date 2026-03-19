@@ -10,11 +10,17 @@ GridPane {
 }
 
 TextField,
-PasswordField {
+ReadablePasswordField,
+ReadablePasswordFieldWithStr {
   -fx-font-size: 14px;
   -fx-background-color: -fx-color-element-bg;
   -fx-border-color: -fx-color-grey;
   -fx-border-radius: 3deg;
+}
+
+ReadablePasswordFieldWithStr .progress-bar>.bar,
+ReadablePasswordFieldWithStr .progress-bar>.track {
+  -fx-background-color: transparent;
 }
 
 Button {

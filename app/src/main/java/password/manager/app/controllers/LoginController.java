@@ -87,7 +87,7 @@ public class LoginController extends AbstractController {
 
     @FXML
     public void doLogin() {
-        if (checkTextFields(loginPassword.getTextField())) {
+        if (checkTextFields(loginPassword)) {
             wrongPasswordTimeline.stop();
             IOManager.getInstance().authenticate(loginPassword.getText().strip());
 
@@ -97,7 +97,7 @@ public class LoginController extends AbstractController {
                 wrongPasswordTimeline.playFromStart();
             }
 
-            clearTextFields(loginPassword.getTextField());
+            clearTextFields(loginPassword);
         }
     }
 }

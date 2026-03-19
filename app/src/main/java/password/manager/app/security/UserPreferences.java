@@ -219,7 +219,8 @@ public final class UserPreferences {
 
     /**
      * Returns the DEK. This method is visible only to classes in the same package.
-     * The returned array is the
+     * For security reasons, the returned array is the same instance used internally,
+     * but it should be treated as read-only by callers outside this class.
      * @return a copy of the DEK, or {@code null} if the password has not been verified yet.
      * @throws IllegalStateException if the DEK is not available (i.e. the password has not been verified yet).
      */
@@ -256,10 +257,11 @@ public final class UserPreferences {
      * and can be retrieved via {@link #getDEK()}.
      * </p>
      *
-     * @return {@code true} if the password is correct (or no password has been set),
-     *         {@code false} otherwise.
+     * @return {@code true} if the password is not null and correct, {@code false} otherwise.
+     * @throws IllegalStateException if no password has been set.
+     * @throws RuntimeException if an unexpected error occurs during hashing or decryption.
      */
-    public synchronized boolean verifyPassword(@NotNull String passwordToVerify) {
+    public synchronized boolean verifyPassword(@Nullable String passwordToVerify) {
         if (!isPasswordSet) throw new IllegalStateException("No password is set");
         if (passwordToVerify == null) return false;
 

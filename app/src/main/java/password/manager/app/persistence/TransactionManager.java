@@ -88,10 +88,9 @@ public class TransactionManager {
                 .thenCompose(result ->
                     transaction.commit().thenApply(success -> success ? result : null)
                 )
-                .handle((result, ex) -> {
-                    if (ex == null) return result;
+                .exceptionally(ex -> {
                     transaction.rollback();
-                    return null;
+                    throw new RuntimeException("Transaction failed and was rolled back", ex);
                 });
     }
 

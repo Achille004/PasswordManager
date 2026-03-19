@@ -369,9 +369,12 @@ public class ManagerController extends AbstractController {
         private AutoCompletionBinding<String> softwareAutoCompletion;
         private AutoCompletionBinding<String> usernameAutoCompletion;
 
+        private volatile boolean isErrBound;
+
         public EditorController(Account account) {
             this.account = account;
-            this.isAddEditor = account == null;
+            this.isAddEditor = (account == null);
+            this.isErrBound = false;
         }
 
         @Override
@@ -385,11 +388,11 @@ public class ManagerController extends AbstractController {
 
             editorSoftware.setOnAction(_ -> {
                 editorUsername.requestFocus(); // Normally it would select the text, but that's ugly
-                editorUsername.positionCaret(editorUsername.getText().length());
+                editorUsername.end();
             });
             editorUsername.setOnAction(_ -> {
                 editorPassword.requestFocus(); // Normally it would select the text, but that's ugly
-                editorPassword.positionCaret(editorPassword.getText().length());
+                editorPassword.end();
             });
             editorPassword.setOnAction(this::editorSave);
 
@@ -405,14 +408,9 @@ public class ManagerController extends AbstractController {
 
             // Update auto-completion when suggestions change
             suggestionsUpdateTrigger.addListener((_, _, _) -> {
-                if (softwareAutoCompletion != null) {
-                    softwareAutoCompletion.dispose();
-                    softwareAutoCompletion = TextFields.bindAutoCompletion(editorSoftware, getSuggestionProvider(possibleSoftwares));
-                }
-                if (usernameAutoCompletion != null) {
-                    usernameAutoCompletion.dispose();
-                    usernameAutoCompletion = TextFields.bindAutoCompletion(editorUsername, getSuggestionProvider(possibleUsernames));
-                }
+                if (this.isErrBound) return;
+                unbindAutoCompletion();
+                bindAutoCompletion();
             });
 
             // Disable the delete button if this is the add editor
@@ -427,38 +425,47 @@ public class ManagerController extends AbstractController {
         @Override
         public void reset() {
             if(isAddEditor) {
-                clearTextFields(editorSoftware, editorUsername, editorPassword.getTextField());
+                clearTextFields(editorSoftware, editorUsername, editorPassword);
                 editorPassword.setReadable(false);
             } else {
+                clearErrorLoadState();
+                // Do operations HERE, if needed
                 LoadingAnimation.start(editorSoftware, editorUsername, editorPassword, editorSaveBtn, editorDeleteBtn);
+
                 IOManager.getInstance().getAccountData(account)
                         .whenComplete((data, ex) -> {
-                            LoadingAnimation.stop(editorSoftware, editorUsername, editorPassword, editorSaveBtn, editorDeleteBtn);
+                            Platform.runLater(() -> {
+                                LoadingAnimation.stop(editorSoftware, editorUsername, editorPassword, editorSaveBtn, editorDeleteBtn);
 
-                            boolean success = (ex == null && data != null);
-                            if (!success) return; // Just keep the old data in case of failure
+                                boolean success = (ex == null && data != null);
+                                if (!success) {
+                                    clearErrorLoadState();
+                                    editorSoftware.setText(data.software());
+                                    editorUsername.setText(data.username());
+                                    editorPassword.setText(data.password());
+                                    return;
+                                }
 
-                            editorSoftware.setText(data.software());
-                            editorUsername.setText(data.username());
-                            editorPassword.setText(data.password());
+                                applyErrorLoadState();
+                            });
                         });
             }
 
             ObservableResourceFactory.getInstance().bindPromptTextProperty(editorSoftware, editorUsername, editorPassword);
 
             editorDeleteCounter = false;
-            clearStyle(editorSoftware, editorUsername, editorPassword.getTextField(), editorDeleteBtn);
+            clearStyle(editorSoftware, editorUsername, editorPassword, editorDeleteBtn);
 
             // Use runLater to ensure that the focus request actually happens, after all UI updates
             Platform.runLater(() -> {
                 editorSoftware.requestFocus(); // Normally it would select the text, but that's ugly
-                editorSoftware.positionCaret(editorSoftware.getText().length());
+                editorSoftware.end();
             });
         }
 
         @FXML
         public void editorSave(ActionEvent event) {
-            if (checkTextFields(editorSoftware, editorUsername, editorPassword.getTextField())) {
+            if (checkTextFields(editorSoftware, editorUsername, editorPassword)) {
                 editorSaveTimeline.playFromStart();
 
                 // Reset the delete button state
@@ -488,9 +495,15 @@ public class ManagerController extends AbstractController {
                     editOperationsCounter.incrementAndGet();
                     LoadingAnimation.start(editorSoftware, editorUsername, editorPassword, editorSaveBtn, editorDeleteBtn);
                     IOManager.getInstance().editAccount(account, data)
-                            .whenComplete((result, ex) -> {
+                            .whenComplete((account, ex) -> {
                                 LoadingAnimation.stop(editorSoftware, editorUsername, editorPassword, editorSaveBtn, editorDeleteBtn);
                                 editOperationsCounter.decrementAndGet();
+
+                                boolean success = (ex == null && account != null);
+                                if (!success) {
+                                    Platform.runLater(this::reset);
+                                    return;
+                                }
 
                                 // Re-write the fields since the loading animation leaves "Loading..."
                                 editorSoftware.setText(data.software());
@@ -522,6 +535,64 @@ public class ManagerController extends AbstractController {
                         .filter(s -> s.toLowerCase().startsWith(lowerUserText))
                         .toList();
             };
+        }
+
+        private void bindAutoCompletion() {
+            if (softwareAutoCompletion == null) {
+                softwareAutoCompletion = TextFields.bindAutoCompletion(editorSoftware, getSuggestionProvider(possibleSoftwares));
+            }
+            if (usernameAutoCompletion == null) {
+                usernameAutoCompletion = TextFields.bindAutoCompletion(editorUsername, getSuggestionProvider(possibleUsernames));
+            }
+        }
+
+        private void clearErrorLoadState() {
+            if (!this.isErrBound) return;
+
+            editorSoftware.textProperty().unbind();
+            editorSoftware.setDisable(false);
+            editorUsername.textProperty().unbind();
+            editorUsername.setDisable(false);
+            editorPassword.textProperty().unbind();
+            editorPassword.setDisable(false);
+            editorSaveBtn.setDisable(false);
+            editorDeleteBtn.setDisable(false);
+
+            editorPassword.setReadable(false);
+
+            this.isErrBound = false;
+            bindAutoCompletion();
+        }
+
+        private void applyErrorLoadState() {
+            clearErrorLoadState();
+            unbindAutoCompletion();
+            this.isErrBound = true;
+
+            // Must be done before binding textProperty(): the skin refresh logic calls setText(...)
+            // when readability changes, and that would fail on a bound text property.
+            editorPassword.setReadable(true);
+
+            ObservableResourceFactory resFact = ObservableResourceFactory.getInstance();
+            resFact.bindStringProperty(editorSoftware.textProperty(), "editor.load_error");
+            editorSoftware.setDisable(true);
+            resFact.bindStringProperty(editorUsername.textProperty(), "editor.load_error");
+            editorUsername.setDisable(true);
+            resFact.bindStringProperty(editorPassword.textProperty(), "editor.load_error");
+            editorPassword.setDisable(true);
+            editorSaveBtn.setDisable(true);
+            editorDeleteBtn.setDisable(true);
+        }
+
+        private void unbindAutoCompletion() {
+            if (softwareAutoCompletion != null) {
+                softwareAutoCompletion.dispose();
+                softwareAutoCompletion = null;
+            }
+            if (usernameAutoCompletion != null) {
+                usernameAutoCompletion.dispose();
+                usernameAutoCompletion = null;
+            }
         }
     }
 }
