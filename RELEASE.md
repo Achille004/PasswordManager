@@ -1,7 +1,7 @@
 # IMPORTANT NOTES
 
 ### Windows users
-The windows installers are signed with an open source self-certificate, so Windows might do... you know, _Windows shenanigans_ and complain about the app's trustworthiness. Of course, it's up to you whether to trust them or build them yourself. (Can't really afford a code signing certificate, sorry!)
+The Windows installers are signed with an open source self-certificate, so Windows might do... you know, _Windows shenanigans_ and complain about the app's trustworthiness. Of course, it's up to you whether to trust them or build them yourself. (Can't really afford a code signing certificate, sorry!)
 
 ### Other operating systems
 Since the app works with any OS, but the installers are only for Windows and Linux, I included the portable versions (which do not come with a bundled java runtime), with their respective signature.
@@ -11,7 +11,7 @@ The `.asc` files contain [OpenPGP](https://en.wikipedia.org/wiki/Pretty_Good_Pri
 You can easily find my public key (using the mail address listed below) on [keys.openpgp.org](https://keys.openpgp.org/), by running `gpg --auto-key-locate keyserver --locate-keys user@example.com` or simply uploaded as a release file.
 
 ### Project contribution
-If you find any bugs, want to suggest some features or just help out, feel free to open an issue or send me an email at 2004marras@gmail.com.
+If you find any bugs, want to suggest some features or just help out, feel free to open an issue or email me at 2004marras@gmail.com.
 
 # 3.1 PATCH HISTORY
 
@@ -58,7 +58,7 @@ A lot of under-the-hood changes have been made to the application for better acc
 
 - Merged AbstractViewController into AbstractController
 - Introduced animation-dedicated classes while refactoring their handling
-- Implemented an unified singleton pattern
+- Implemented a unified singleton pattern
 - Refactored IOManager to use AccountRepository, with a CRUD-like implementation
 - Added TransactionManager for transactional operations
 - Enhanced SecurityVersion with memory reservation
@@ -75,7 +75,7 @@ Also, the following shortcuts have been added:
 - Ctrl + W: Close current tab
 - Ctrl + T: Go to add tab
 
-This adds up to the pre-existing Return shortcut (helps navigating trough text fields).
+This adds up to the pre-existing Return shortcut (helps to navigate trough text fields).
 
 ### Features
 - Implemented search functionality in ManagerController.

@@ -48,7 +48,7 @@ public class AppConfig extends Singleton {
 
     // #region Singleton methods
     @Override
-    public void close() throws Exception {
+    public void close() {
         // Nothing to close
     }
 

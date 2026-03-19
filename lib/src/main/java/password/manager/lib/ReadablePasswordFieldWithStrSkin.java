@@ -49,7 +49,7 @@ public class ReadablePasswordFieldWithStrSkin extends ReadablePasswordFieldSkin 
         strengthBar.setManaged(false);
         strengthBar.setFocusTraversable(false);
         strengthBar.setPickOnBounds(false);
-        
+
         strengthBar.setVisible(true);
         strengthBar.setBackground(Background.EMPTY);
 

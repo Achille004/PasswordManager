@@ -88,7 +88,7 @@ public final class Singletons {
             }
 
             // Create the instance (outside of INSTANCES_LOCK to avoid holding lock during construction)
-            Singleton inst;
+            T inst;
             try {
                 Constructor<T> constr = cls.getDeclaredConstructor();
                 constr.setAccessible(true);
@@ -114,7 +114,7 @@ public final class Singletons {
 
                 // Store the new instance
                 INSTANCES.put(cls, inst);
-                return (T) inst;
+                return inst;
             } finally {
                 INSTANCES_LOCK.writeLock().unlock();
             }

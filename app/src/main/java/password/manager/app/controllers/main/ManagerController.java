@@ -90,7 +90,7 @@ public class ManagerController extends AbstractController {
     private Timeline searchTimeline;
 
     // App state variables
-    private AtomicInteger editOperationsCounter = new AtomicInteger(0);
+    private final AtomicInteger editOperationsCounter = new AtomicInteger(0);
     private volatile boolean isMatchCase = false, isMatchWholeWord = false;
 
     // Auto-completion data sources
@@ -427,40 +427,38 @@ public class ManagerController extends AbstractController {
             if(isAddEditor) {
                 clearTextFields(editorSoftware, editorUsername, editorPassword);
                 editorPassword.setReadable(false);
+                Platform.runLater(editorSoftware::requestFocus);
             } else {
                 clearErrorLoadState();
                 // Do operations HERE, if needed
                 LoadingAnimation.start(editorSoftware, editorUsername, editorPassword, editorSaveBtn, editorDeleteBtn);
 
                 IOManager.getInstance().getAccountData(account)
-                        .whenComplete((data, ex) -> {
-                            Platform.runLater(() -> {
-                                LoadingAnimation.stop(editorSoftware, editorUsername, editorPassword, editorSaveBtn, editorDeleteBtn);
+                        .whenComplete((data, ex) -> Platform.runLater(() -> {
+                            LoadingAnimation.stop(editorSoftware, editorUsername, editorPassword, editorSaveBtn, editorDeleteBtn);
 
-                                boolean success = (ex == null && data != null);
-                                if (!success) {
-                                    clearErrorLoadState();
-                                    editorSoftware.setText(data.software());
-                                    editorUsername.setText(data.username());
-                                    editorPassword.setText(data.password());
-                                    return;
-                                }
-
+                            boolean success = (ex == null && data != null);
+                            if (!success) {
                                 applyErrorLoadState();
-                            });
-                        });
+                                return;
+                            }
+
+                            clearErrorLoadState();
+                            editorSoftware.setText(data.software());
+                            editorUsername.setText(data.username());
+                            editorPassword.setText(data.password());
+
+                            // When everything is ready, focus the software field and set caret to the end of the text
+                            // (not setting the caret would result in the text being selected, which is really weird when editing)
+                            editorSoftware.requestFocus();
+                            editorSoftware.end();
+                        }));
             }
 
             ObservableResourceFactory.getInstance().bindPromptTextProperty(editorSoftware, editorUsername, editorPassword);
 
             editorDeleteCounter = false;
             clearStyle(editorSoftware, editorUsername, editorPassword, editorDeleteBtn);
-
-            // Use runLater to ensure that the focus request actually happens, after all UI updates
-            Platform.runLater(() -> {
-                editorSoftware.requestFocus(); // Normally it would select the text, but that's ugly
-                editorSoftware.end();
-            });
         }
 
         @FXML

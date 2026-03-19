@@ -106,7 +106,7 @@ public class LoadingAnimation {
     private record ElementWithDisabler(Object element, Method setDisableMethod, Method setTextMethod, Method setReadableMethod) {
         private static final ClassValue<MethodCache> METHOD_CACHE = new ClassValue<>() {
             @Override
-            protected MethodCache computeValue(Class<?> type) {
+            protected MethodCache computeValue(@NotNull Class<?> type) {
                 Method setDisableMethod = findMethod(type, "setDisable", Boolean.TYPE, Boolean.class);
                 Method setTextMethod = findMethod(type, "setText", String.class);
                 Method setReadableMethod = findMethod(type, "setReadable", Boolean.TYPE, Boolean.class);

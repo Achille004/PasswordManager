@@ -298,11 +298,17 @@ public class TestAccountRepository {
         CompletableFuture<AccountData> getDataFuture = repository.getData(account);
         CompletableFuture<Boolean> unlockFuture = repository.unlockAll(DEFAULT_MASTER_PASSWORD);
 
-        assertNull(addFuture.join(),
-            "Adding account with empty user preferences should fail and return null");
+        assertThrows(
+            CompletionException.class,
+            addFuture::join,
+            "Adding account with empty user preferences should fail exceptionally"
+        );
 
-        assertNull(editFuture.join(),
-            "Editing account with empty user preferences should fail and return null");
+        assertThrows(
+            CompletionException.class,
+            editFuture::join,
+            "Editing account with empty user preferences should fail exceptionally"
+        );
 
         assertThrows(
             IllegalStateException.class,
@@ -310,10 +316,15 @@ public class TestAccountRepository {
             "Removing account with empty user preferences should throw IllegalStateException"
         );
 
-        assertThrows(CompletionException.class, getDataFuture::join,
-            "Getting account data with empty user preferences should fail with CompletionException");
+        assertThrows(
+            CompletionException.class,
+            getDataFuture::join,
+            "Getting account data with empty user preferences should fail exceptionally");
 
-        assertNull(unlockFuture.join(),
-            "Unlocking accounts with empty user preferences should fail and return null");
+        assertThrows(
+            CompletionException.class,
+            unlockFuture::join,
+            "Unlocking accounts with empty user preferences should fail exceptionally"
+        );
     }
 }

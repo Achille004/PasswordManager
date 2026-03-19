@@ -107,7 +107,7 @@ public class CustomPopup extends Popup {
     // Used by constructor
     private void setup() {
         getContent().add(content);
-        // DONT EVEN TRY REMOVING THESE PROPERTIES, TWO HOURS OF MY LIFE WASTED!!
+        // DON'T EVEN TRY REMOVING THESE PROPERTIES, TWO HOURS OF MY LIFE WASTED!!
         setAutoHide(false);
         setHideOnEscape(false);
 
@@ -174,7 +174,7 @@ public class CustomPopup extends Popup {
      * Use {@link Builder#create(Window, Alignment, double) Builder.create(owner, alignment, spacing)} to start building a CustomPopup.
      */
     public static class Builder {
-        private CustomPopup popup;
+        private final CustomPopup popup;
 
         private Builder(Window owner, Alignment alignment, double spacing) {
             this.popup = new CustomPopup(owner, alignment, spacing);
@@ -233,7 +233,7 @@ public class CustomPopup extends Popup {
      * Each alignment option specifies how the popup should be positioned based on the owner's dimensions and the specified spacing.
      */
     @RequiredArgsConstructor
-    public static enum Alignment {
+    public enum Alignment {
         TOP_LEFT(Alignment::forwards, Alignment::forwards),
         TOP_RIGHT(Alignment::backwards, Alignment::forwards),
         BOTTOM_LEFT(Alignment::forwards, Alignment::backwards),

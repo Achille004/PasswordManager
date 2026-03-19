@@ -31,6 +31,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -259,7 +260,7 @@ public final class IOManager extends Singleton {
 
         return handleFuture(
             ACCOUNT_REPOSITORY.add(data),
-            addedAcc -> addedAcc != null,
+                Objects::nonNull,
             "Account added",
             "Failed to create account"
         );
@@ -270,7 +271,7 @@ public final class IOManager extends Singleton {
 
         return handleFuture(
             ACCOUNT_REPOSITORY.edit(account, data),
-            editedAcc -> editedAcc != null,
+                Objects::nonNull,
             "Account edited",
             "Failed to edit account"
         );

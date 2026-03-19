@@ -167,7 +167,7 @@ public class TestAES {
             byte[] encrypted = AES.encryptStringAES(plaintext, key, iv);
 
             // Corrupt the ciphertext
-            encrypted[encrypted.length / 2] ^= 0xFF;
+            encrypted[encrypted.length / 2] ^= (byte) 0xFF;
 
             assertThrows(
                 GeneralSecurityException.class,
