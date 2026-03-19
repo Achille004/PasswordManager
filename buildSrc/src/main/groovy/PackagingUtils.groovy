@@ -22,16 +22,29 @@ import org.gradle.api.tasks.Internal
 import org.panteleyev.jpackage.ImageType
 
 class PackagingUtils {
-    static def isWindows = Os.isFamily(Os.FAMILY_WINDOWS)
-    static def isMac = Os.isFamily(Os.FAMILY_MAC)
-    static def isUnix = Os.isFamily(Os.FAMILY_UNIX) && !isMac
+    static boolean isWindows = Os.isFamily(Os.FAMILY_WINDOWS)
+    static boolean isMac = Os.isFamily(Os.FAMILY_MAC)
+    static boolean isUnix = Os.isFamily(Os.FAMILY_UNIX) && !isMac
 
-    static List<ImageType> addImgType(String command, String toolsetName, List<ImageType> types) {
-        def success = command.execute().waitFor() == 0
-        if (!success) return []
+    static String getProbeCommand(ImageType type) {
+        switch (type) {
+            case ImageType.EXE:
+            case ImageType.MSI:
+                return "wix --version"
+            case ImageType.DEB:
+                return "which dpkg-deb"
+            case ImageType.RPM:
+                return "which rpmbuild"
+            default:
+                return null
+        }
+    }
 
-        println " - ${toolsetName} found"
-        return types
+    static boolean isToolAvailableFor(ImageType type) {
+        String command = getProbeCommand(type)
+        if (command == null) return true
+
+        return command.execute().waitFor() == 0
     }
 
     static List<ImageType> getTypes() {
@@ -39,14 +52,13 @@ class PackagingUtils {
 
         if (isWindows) {
             println "Targeting Windows"
-            types += addImgType("wix --version", "WiX toolset", [ImageType.EXE, ImageType.MSI])
+            types += [ImageType.EXE, ImageType.MSI]
         } else if (isMac) {
             println "Targeting Mac"
             types += [ImageType.DMG, ImageType.PKG]
         } else if (isUnix) {
             println "Targeting Linux/Unix"
-            types += addImgType("which dpkg-deb", "DEB package manager", [ImageType.DEB])
-            types += addImgType("which rpmbuild", "RPM package manager", [ImageType.RPM])
+            types += [ImageType.DEB, ImageType.RPM]
         }
 
         if (types.isEmpty()) println "No package builder found"

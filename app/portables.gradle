@@ -1,0 +1,84 @@
+// #region Common configuration and utilities
+
+String BUILD_GROUP = "build"
+String DISTRIBUTION_GROUP = "distribution"
+
+// https://github.com/controlsfx/controlsfx/wiki/Using-ControlsFX-with-JDK-9-and-above
+List<String> defaultJvmArgs = [
+    '--enable-native-access=javafx.graphics',
+    '--add-exports', 'javafx.base/com.sun.javafx.event=org.controlsfx.controls',
+    '-Dapp.name=' + project.appName,
+    '-Dapp.version=' + project.appVersion
+]
+
+Directory resourceDir = layout.projectDirectory.dir('src/main/resources')
+resourceDir.asFile.mkdirs()
+
+Directory compileDir = rootProject.layout.projectDirectory.dir('compiled')
+compileDir.asFile.mkdirs()
+
+// #endregion
+
+boolean gpgExists = ['gpg', 'gpg.exe'].any { executable ->
+    System.getenv('PATH').split(File.pathSeparator).any { path -> new File(path, executable).exists() }
+}
+boolean gpgPropertiesExist = (project.hasProperty('signing.keyId')
+        && project.hasProperty('signing.password')
+        && project.hasProperty('signing.secretKeyRingFile'))
+
+signing {
+    if(!gpgExists) {
+        println "Gpg executable not found in PATH"
+    } else if(!gpgPropertiesExist) {
+        println "Gpg signing properties missing"
+    } else {
+        println "Gpg signing enabled"
+        useGpgCmd()
+        sign jar
+        sign distZip
+        sign distTar
+    }
+}
+
+boolean gpgSignable = gpgExists && gpgPropertiesExist
+Directory portableDistDir = compileDir.dir('portables')
+
+tasks.register('assemblePortableTar', Copy) {
+    group = DISTRIBUTION_GROUP
+
+    dependsOn tasks.distTar
+    if(gpgSignable) dependsOn tasks.signDistTar
+
+    from tasks.distTar
+    if(gpgSignable) from tasks.signDistTar
+    into portableDistDir.dir('tar')
+}
+
+tasks.register('assemblePortableZip', Copy) {
+    group = DISTRIBUTION_GROUP
+
+    dependsOn tasks.distZip
+    if(gpgSignable) dependsOn tasks.signDistZip
+
+    from tasks.distZip
+    if(gpgSignable) from tasks.signDistZip
+    into portableDistDir.dir('zip')
+}
+
+tasks.register('assemblePortables') {
+    group = DISTRIBUTION_GROUP
+
+    dependsOn assemblePortableTar, assemblePortableZip
+}
+
+tasks.register('readyAllJars', Copy) {
+    group = BUILD_GROUP
+
+    dependsOn tasks.jar
+    if(gpgSignable) dependsOn tasks.signJar
+
+    from configurations.runtimeClasspath
+    from tasks.named('jar').flatMap { it.archiveFile }
+    if(gpgSignable) from tasks.signJar
+    into layout.buildDirectory.dir('jars')
+}

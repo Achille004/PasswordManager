@@ -27,6 +27,8 @@ Please note that the new internal encryption technique could be described as *"f
 - Made all the application resizable, beside EULA.
 - Improved save popup behavior and visibility.
 - Added country flags to the language selector for clearer localization settings.
+- Refined password field controls for clearer and more consistent UI behavior.
+- Improved loading animations and error handling across the application.
 - Included various stability and compatibility improvements through dependency and configuration updates.
 
 ### Code
@@ -40,7 +42,9 @@ Please note that the new internal encryption technique could be described as *"f
 - Refined controller and FXML structure (including `AbstractController`, `TabManager`, and package/layout moves) for cleaner separation.
 - Improved `Logger` formatting support and updated `Transaction` naming/identifier handling.
 - Enhanced memory reservation logic to account for internal overhead.
-- Expanded and revised tests (including new `TestUserPreferences`) to cover security, singleton lifecycle, repository behavior, and transactions more thoroughly.
+- Refactored password field controls to use skin-based approach for lighter and clearer implementation.
+- Enhanced `LoadingAnimation` with improved future handling and error validation.
+- Expanded and revised tests (including new `TestUserPreferences` and reorganized test packages) to cover security, singleton lifecycle, repository behavior, and transactions more thoroughly.
 - Updated dependencies/modules and related Gradle configuration for better cross-module compatibility.
 
 ## Patch 3.1.1 (December 12, 2025)
