@@ -28,7 +28,7 @@ plugins {
     id 'io.franzbecker.gradle-lombok' version '5.0.0'
 
     // https://github.com/gradlex-org/java-module-dependencies
-    id 'org.gradlex.java-module-dependencies' version '1.11'
+    id 'org.gradlex.java-module-dependencies' version '1.12.1'
 
     // https://github.com/petr-panteleyev/jpackage-gradle-plugin
     id 'org.panteleyev.jpackageplugin'
@@ -91,11 +91,9 @@ application {
     applicationDefaultJvmArgs = defaultJvmArgs
 }
 
-testing {
-    suites {
-        test {
-            useJUnitJupiter '6.0.3'
-        }
+testing.suites {
+    test {
+        useJUnitJupiter '6.0.3'
     }
 }
 

@@ -15,20 +15,28 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
+package password.manager.lib
 
-package password.manager.lib;
+import javafx.beans.property.BooleanProperty
 
-public interface AnimationAwareControl {
+class ReadablePasswordFieldWithStr : CustomPasswordField(), AnimationAwareControl {
+    private val skin: ReadablePasswordFieldWithStrSkin = ReadablePasswordFieldWithStrSkin(this)
 
-    AnimationController<?> getAnimationController();
+    override fun createDefaultSkin(): ReadablePasswordFieldSkin = skin
 
-    /**
-     * Optional hook called when animation listener is detached.
-     */
-    default void onListenerDetached() {}
+    ///// CUSTOM PASSWORD FIELD METHODS //////
+    override val readableProperty: BooleanProperty
+        get() = skin.readableProperty()
 
-    /**
-     * Optional hook called when animation listener is reattached.
-     */
-    default void onListenerAttached() {}
+    ///// ANIMATION AWARE CONTROL METHODS //////
+    override val animationController: AnimationController<*>
+        get() = skin.animationController
+
+    override fun onListenerDetached() {
+        skin.onListenerDetached()
+    }
+
+    override fun onListenerAttached() {
+        skin.onListenerAttached()
+    }
 }

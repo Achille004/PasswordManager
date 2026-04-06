@@ -15,15 +15,18 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
+package password.manager.lib
 
-package password.manager.lib;
+interface AnimationAwareControl {
+    val animationController: AnimationController<*>
 
-import javafx.beans.property.BooleanProperty;
-import javafx.scene.control.PasswordField;
+    /**
+     * Optional hook called when animation listener is detached.
+     */
+    fun onListenerDetached() {}
 
-public abstract class CustomPasswordField extends PasswordField {
-    abstract BooleanProperty readableProperty();
-    abstract void setReadable(boolean readable);
-    abstract void toggleReadable();
-    abstract boolean isReadable();
+    /**
+     * Optional hook called when animation listener is reattached.
+     */
+    fun onListenerAttached() {}
 }

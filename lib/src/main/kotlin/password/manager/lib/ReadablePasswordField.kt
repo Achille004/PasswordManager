@@ -15,20 +15,15 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
+package password.manager.lib
 
-package main;
+import javafx.beans.property.BooleanProperty
 
-import static password.manager.lib.Utils.*;
+class ReadablePasswordField : CustomPasswordField() {
+    private val skin: ReadablePasswordFieldSkin = ReadablePasswordFieldSkin(this)
 
-import org.junit.jupiter.api.Test;
+    override fun createDefaultSkin(): ReadablePasswordFieldSkin = skin
 
-class AppTest {
-    @Test
-    void calcPassStr() {
-        String[] passwords = {"C", "E$", "}18", "0s(C", "oA633=", "mZ/66am5", "F1/nro1u4Y", "5£@>4}7>$Hv7", "2rq8KU*5E!)'*bal"};
-        for(String password : passwords) {
-            double passStr = passwordStrength(password);
-            System.out.println("Strength of '" +password + "': " + passStr);
-        }
-    }
+    override val readableProperty: BooleanProperty
+        get() = skin.readableProperty()
 }

@@ -18,6 +18,7 @@
 
 module password.manager.lib {
     // requires java.desktop;
+    requires kotlin.stdlib;
 
     requires javafx.base;
     requires transitive javafx.controls;
@@ -25,12 +26,7 @@ module password.manager.lib {
     requires transitive javafx.graphics;
     // requires javafx.web;
 
-    // requires static lombok;
-
     requires me.gosimple.nbvcxz;
-
-    requires org.jetbrains.annotations;
-    requires static lombok;
 
     exports password.manager.lib;
 

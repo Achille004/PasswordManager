@@ -17,30 +17,23 @@
  */
 
 plugins {
-    id 'java'
-    // id 'java-library'
-    id 'application'
+    // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
+    id("org.jetbrains.kotlin.jvm") version "2.3.20"
 
-    id 'org.openjfx.javafxplugin' version '0.1.0'
-    id 'io.franzbecker.gradle-lombok' version '5.0.0'
+    // Apply the application plugin to add support for building a CLI application in Java.
+    id("application")
+
+    id("org.openjfx.javafxplugin") version "0.1.0"
 
     // https://github.com/gradlex-org/java-module-dependencies
-    id 'org.gradlex.java-module-dependencies' version '1.11'
+    id("org.gradlex.java-module-dependencies") version "1.12.1"
 
-    id 'com.adarshr.test-logger' version '4.0.0'
+    id("com.adarshr.test-logger") version "4.0.0"
 }
 
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
-}
-
-mainModuleInfo {
-    annotationProcessor 'lombok'
-}
-
-testModuleInfo {
-    annotationProcessor 'lombok'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -53,31 +46,33 @@ java {
 
 application {
     // Define the main class for the application.
-    mainModule = 'password.manager.lib'
-    mainClass = 'password.manager.lib.Main'
+    mainModule = "password.manager.lib"
+    mainClass = "password.manager.lib.Main"
 
     // JVM arguments
-    applicationDefaultJvmArgs = [
-        '--enable-native-access=javafx.graphics'
-    ]
+    applicationDefaultJvmArgs = listOf("--enable-native-access=javafx.graphics")
 }
 
-testing {
-    suites {
-        test {
-            useJUnitJupiter '6.0.3'
-        }
+testing.suites {
+    val test by getting(JvmTestSuite::class) {
+        useJUnitJupiter("6.0.3")
     }
 }
 
 javafx {
-    version = '25.0.2'
-    modules = [ 'javafx.base', 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
+    version = "25.0.2"
+    modules = listOf("javafx.base", "javafx.controls", "javafx.fxml", "javafx.graphics")
 }
 
-jar {
-    archiveBaseName.set(rootProject.name + 'Components')
+val appName: String by project
+
+tasks.compileJava {
+    dependsOn(tasks.compileKotlin)
+}
+
+tasks.jar {
+    archiveBaseName.set(rootProject.name + "Components")
     manifest {
-        attributes 'Implementation-Title': 'Custom components for ' + project.appName
+        attributes("Implementation-Title" to "Custom components for $appName")
     }
 }

@@ -99,6 +99,28 @@ public final class Utils {
         return BASE64DEC.decode(src);
     }
 
+     /**
+     * Clamps an integer value between a lower and upper bound.
+     * @param lowerBound The lower bound.
+     * @param value The value to clamp.
+     * @param upperBound The upper bound.
+     * @return The clamped integer value.
+     */
+    public static int intSquash(int lowerBound, int value, int upperBound) {
+        return Math.min(Math.max(value, lowerBound), upperBound);
+    }
+
+    /**
+     * Clamps a double value between a lower and upper bound.
+     * @param lowerBound The lower bound.
+     * @param value The value to clamp.
+     * @param upperBound The upper bound.
+     * @return The clamped double value.
+     */
+    public static double doubleSquash(double lowerBound, double value, double upperBound) {
+        return Math.min(Math.max(value, lowerBound), upperBound);
+    }
+
     /**
      * Capitalizes the first letter of the given word and makes the rest lowercase.
      * @param str The word to capitalize.

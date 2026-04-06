@@ -15,35 +15,22 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
+package password.manager.lib
 
-package password.manager.lib;
+import javafx.beans.property.BooleanProperty
+import javafx.scene.control.PasswordField
 
-import javafx.beans.property.BooleanProperty;
+abstract class CustomPasswordField : PasswordField() {
+    abstract val readableProperty: BooleanProperty
 
-public class ReadablePasswordField extends CustomPasswordField {
+    var isReadable: Boolean
+        get() = readableProperty.get()
+        set(value) {
+            // Use XOR to avoid unnecessary updates
+            if (value xor isReadable) readableProperty.set(value)
+        }
 
-    private final ReadablePasswordFieldSkin skin;
-
-    public ReadablePasswordField() {
-        super();
-
-        this.skin = new ReadablePasswordFieldSkin(this);
-        setSkin(skin);
-    }
-
-    public BooleanProperty readableProperty() {
-        return skin.readableProperty();
-    }
-
-    public void setReadable(boolean readable) {
-        skin.setReadable(readable);
-    }
-
-    public void toggleReadable() {
-        skin.toggleReadable();
-    }
-
-    public boolean isReadable() {
-        return skin.isReadable();
+    fun toggleReadable() {
+        isReadable = !isReadable
     }
 }

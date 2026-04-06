@@ -1,6 +1,6 @@
 /*
     Password Manager: Manages accounts given by user with encrypted password.
-    Copyright (C) 2022-2026  Francesco Marras (2004marras@gmail.com)
+    Copyright (C) 2022-2026  Francesco Marras
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,20 +16,14 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-pluginManagement {
-    repositories {
-        maven { url = "https://plugins.gradle.org/m2/" }
-        gradlePluginPortal()
-    }
-    plugins {
-        // Apply the foojay-resolver plugin to allow automatic download of JDKs
-        id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
-        // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-        id 'org.jetbrains.kotlin.jvm' version '2.3.20'
+package password.manager.lib;
+
+/**
+ * Marker class to ensure JPMS recognizes the password.manager.lib package.
+ * This file allows the module-info.java to export the package that is otherwise
+ * only defined in Kotlin sources.
+ */
+final class Marker {
+    private Marker() {
     }
 }
-
-rootProject.name = 'PasswordManager'
-
-include 'app'
-include 'lib'
