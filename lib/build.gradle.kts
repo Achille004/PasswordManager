@@ -60,7 +60,7 @@ testing.suites {
 }
 
 javafx {
-    version = "25.0.2"
+    version = "26"
     modules = listOf("javafx.base", "javafx.controls", "javafx.fxml", "javafx.graphics")
 }
 
