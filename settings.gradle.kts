@@ -18,18 +18,20 @@
 
 pluginManagement {
     repositories {
-        maven { url = "https://plugins.gradle.org/m2/" }
+        maven { url = java.net.URI("https://plugins.gradle.org/m2/") }
         gradlePluginPortal()
     }
+
     plugins {
         // Apply the foojay-resolver plugin to allow automatic download of JDKs
-        id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+        id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+
         // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-        id 'org.jetbrains.kotlin.jvm' version '2.3.20'
+        id("org.jetbrains.kotlin.jvm") version "2.3.20"
     }
 }
 
-rootProject.name = 'PasswordManager'
+rootProject.name = "PasswordManager"
 
-include 'app'
-include 'lib'
+include("app")
+include("lib")

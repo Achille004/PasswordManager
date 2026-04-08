@@ -20,6 +20,7 @@ module password.manager.app {
     ///// REQUIRES /////
 
     requires java.desktop;
+    requires kotlin.stdlib;
 
     requires javafx.base;
     requires transitive javafx.controls;

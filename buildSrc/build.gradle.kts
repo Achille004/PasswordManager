@@ -16,11 +16,19 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
+plugins {
+    `kotlin-dsl`
+}
+
 repositories {
     mavenCentral()
     gradlePluginPortal()
 }
 
 dependencies {
-    implementation 'org.panteleyev:jpackage-gradle-plugin:1.7.6'
+    implementation("org.panteleyev:jpackage-gradle-plugin:1.7.6")
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.20")
+    implementation("org.openjfx:javafx-plugin:0.1.0")
+    implementation("org.gradlex:java-module-dependencies:1.12.1")
+    implementation("com.adarshr:gradle-test-logger-plugin:4.0.0")
 }

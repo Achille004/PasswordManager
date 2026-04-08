@@ -17,31 +17,7 @@
  */
 
 plugins {
-    // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    id("org.jetbrains.kotlin.jvm") version "2.3.20"
-
-    // Apply the application plugin to add support for building a CLI application in Java.
-    id("application")
-
-    id("org.openjfx.javafxplugin") version "0.1.0"
-
-    // https://github.com/gradlex-org/java-module-dependencies
-    id("org.gradlex.java-module-dependencies") version "1.12.1"
-
-    id("com.adarshr.test-logger") version "4.0.0"
-}
-
-repositories {
-    // Use Maven Central for resolving dependencies.
-    mavenCentral()
-}
-
-// Apply a specific Java toolchain to ease working on different environments.
-java {
-    sourceCompatibility = JavaVersion.VERSION_25
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
-    }
+    id("common-buildscript")
 }
 
 application {
@@ -53,22 +29,7 @@ application {
     applicationDefaultJvmArgs = listOf("--enable-native-access=javafx.graphics")
 }
 
-testing.suites {
-    val test by getting(JvmTestSuite::class) {
-        useJUnitJupiter("6.0.3")
-    }
-}
-
-javafx {
-    version = "26"
-    modules = listOf("javafx.base", "javafx.controls", "javafx.fxml", "javafx.graphics")
-}
-
 val appName: String by project
-
-tasks.compileJava {
-    dependsOn(tasks.compileKotlin)
-}
 
 tasks.jar {
     archiveBaseName.set(rootProject.name + "Components")
