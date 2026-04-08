@@ -22,21 +22,13 @@ import javafx.beans.property.BooleanProperty
 class ReadablePasswordFieldWithStr : CustomPasswordField(), AnimationAwareControl {
     private val skin: ReadablePasswordFieldWithStrSkin = ReadablePasswordFieldWithStrSkin(this)
 
-    override fun createDefaultSkin(): ReadablePasswordFieldSkin = skin
+    override fun createDefaultSkin() = skin
 
     ///// CUSTOM PASSWORD FIELD METHODS //////
-    override val readableProperty: BooleanProperty
-        get() = skin.readableProperty()
+    override val readableProperty = skin.readableProperty()
 
     ///// ANIMATION AWARE CONTROL METHODS //////
-    override val animationController: AnimationController<*>
-        get() = skin.animationController
-
-    override fun onListenerDetached() {
-        skin.onListenerDetached()
-    }
-
-    override fun onListenerAttached() {
-        skin.onListenerAttached()
-    }
+    override val animationController = skin.animationController
+    override fun onListenerDetached() = skin.onListenerDetached()
+    override fun onListenerAttached() = skin.onListenerAttached()
 }

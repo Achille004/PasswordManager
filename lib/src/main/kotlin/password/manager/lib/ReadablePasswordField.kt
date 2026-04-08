@@ -22,8 +22,8 @@ import javafx.beans.property.BooleanProperty
 class ReadablePasswordField : CustomPasswordField() {
     private val skin: ReadablePasswordFieldSkin = ReadablePasswordFieldSkin(this)
 
-    override fun createDefaultSkin(): ReadablePasswordFieldSkin = skin
+    override fun createDefaultSkin() = skin
 
-    override val readableProperty: BooleanProperty
-        get() = skin.readableProperty()
+    ///// CUSTOM PASSWORD FIELD METHODS //////
+    override val readableProperty = skin.readableProperty()
 }

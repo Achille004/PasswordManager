@@ -54,36 +54,6 @@ class CustomPopup private constructor(
         setup()
     }
 
-    /**
-     * Makes the popup visible. If stopAnimation is true, any ongoing disappear animation will be stopped and the popup will become fully visible immediately.
-     * @param stopAnimation Whether to stop any ongoing disappear animation while making the popup visible, defaults to true.
-     */
-    @JvmOverloads
-    fun visible(stopAnimation: Boolean = true) {
-        if (stopAnimation && disappearTransition != null) disappearTransition!!.stop()
-        content.setVisible(owner.isFocused)
-        content.setOpacity(1.0)
-    }
-
-    /**
-     * Hides the popup. If playAnimation is true and a disappear animation is set, the animation will be played before the popup is hidden.
-     * @param playAnimation Whether to play the disappear animation (if set) while hiding the popup.
-     */
-    @JvmOverloads
-    fun hidden(playAnimation: Boolean = true) {
-        if (playAnimation && disappearTransition != null) disappearTransition!!.playFromStart()
-        else content.setVisible(false)
-    }
-
-    /**
-     * Sets the state of the popup, including the displayed text and the color of the bottom bar. This can be used to indicate different states such as success or error.
-     * @param text The text to display in the popup.
-     * @param bottomBarColor The color to set for the bottom bar, specified as a CSS color value (e.g. "-fx-color-green" or "#00FF00").
-     */
-    fun setState(text: String, bottomBarColor: String) {
-        content.setState(text, bottomBarColor)
-    }
-
     // Used by constructor
     private fun setup() {
         super.content.add(content)
@@ -159,15 +129,42 @@ class CustomPopup private constructor(
             })
     }
 
+    /**
+     * Makes the popup visible. If stopAnimation is true, any ongoing disappear animation will be stopped and the popup will become fully visible immediately.
+     * @param stopAnimation Whether to stop any ongoing disappear animation while making the popup visible, defaults to true.
+     */
+    @JvmOverloads
+    fun visible(stopAnimation: Boolean = true) {
+        if (stopAnimation && disappearTransition != null) disappearTransition!!.stop()
+        content.setVisible(owner.isFocused)
+        content.setOpacity(1.0)
+    }
+
+    /**
+     * Hides the popup. If playAnimation is true and a disappear animation is set, the animation will be played before the popup is hidden.
+     * @param playAnimation Whether to play the disappear animation (if set) while hiding the popup.
+     */
+    @JvmOverloads
+    fun hidden(playAnimation: Boolean = true) {
+        if (playAnimation && disappearTransition != null) disappearTransition!!.playFromStart()
+        else content.setVisible(false)
+    }
+
+    /**
+     * Sets the state of the popup, including the displayed text and the color of the bottom bar. This can be used to indicate different states such as success or error.
+     * @param text The text to display in the popup.
+     * @param bottomBarColor The color to set for the bottom bar, specified as a CSS color value (e.g. "-fx-color-green" or "#00FF00").
+     */
+    fun setState(text: String, bottomBarColor: String) = content.setState(text, bottomBarColor)
+
     // Used by builder
     private fun setFadingAnimation(fadeDuration: Duration) {
-        val transition = FadeTransition(fadeDuration, content)
-        transition.fromValue = 1.0
-        transition.toValue = 0.0
-        transition.cycleCount = 1
-        transition.onFinished = EventHandler { _: ActionEvent -> content.setVisible(false) }
-
-        this.disappearTransition = transition
+        disappearTransition = FadeTransition(fadeDuration, content) .also {
+            it.fromValue = 1.0
+            it.toValue = 0.0
+            it.cycleCount = 1
+            it.onFinished = EventHandler { _: ActionEvent -> content.setVisible(false) }
+        }
     }
 
     // Used by builder
@@ -198,6 +195,7 @@ class CustomPopup private constructor(
         @Throws(IllegalArgumentException::class)
         fun withFadingAnimation(fadeDuration: Duration): Builder {
             require(!fadeDuration.lessThanOrEqualTo(Duration.ZERO)) { "Fade duration must be greater than zero" }
+
             popup.setFadingAnimation(fadeDuration)
             return this
         }
@@ -222,10 +220,7 @@ class CustomPopup private constructor(
          * This will also prepare the popup for display by computing its layout and showing it to ensure all dimensions are set.
          * @return The constructed CustomPopup instance.
          */
-        fun build(): CustomPopup {
-            popup.ready()
-            return popup
-        }
+        fun build() = popup.also(CustomPopup::ready)
 
         companion object {
             /**
@@ -253,10 +248,10 @@ class CustomPopup private constructor(
         private val calculatorX: (Double, Double, Double, Double) -> Double,
         private val calculatorY: (Double, Double, Double, Double) -> Double,
     ) {
-        TOP_LEFT(::forwards, ::forwards),
-        TOP_RIGHT(::backwards, ::forwards),
-        BOTTOM_LEFT(::forwards, ::backwards),
-        BOTTOM_RIGHT(::backwards, ::backwards);
+        TOP_LEFT(AlignmentDirection::forwards, AlignmentDirection::forwards),
+        TOP_RIGHT(AlignmentDirection::backwards, AlignmentDirection::forwards),
+        BOTTOM_LEFT(AlignmentDirection::forwards, AlignmentDirection::backwards),
+        BOTTOM_RIGHT(AlignmentDirection::backwards, AlignmentDirection::backwards);
 
         /**
          * Calculates the X coordinate for the popup based on the owner's position and dimensions, the popup's dimensions, and the specified spacing.
@@ -266,9 +261,7 @@ class CustomPopup private constructor(
          * @param spacing The spacing in pixels between the popup and the edge of the owner window, as determined by the alignment.
          * @return The calculated X coordinate for the popup.
          */
-        fun calcX(start: Double, offset: Double, itemSize: Double, spacing: Double): Double {
-            return calculatorX(start, offset, itemSize, spacing)
-        }
+        fun calcX(start: Double, offset: Double, itemSize: Double, spacing: Double) = calculatorX(start, offset, itemSize, spacing)
 
         /**
          * Calculates the Y coordinate for the popup based on the owner's position and dimensions, the popup's dimensions, and the specified spacing.
@@ -278,8 +271,18 @@ class CustomPopup private constructor(
          * @param spacing The spacing in pixels between the popup and the edge of the owner window, as determined by the alignment.
          * @return The calculated Y coordinate for the popup.
          */
-        fun calcY(start: Double, offset: Double, itemSize: Double, spacing: Double): Double {
-            return calculatorY(start, offset, itemSize, spacing)
+        fun calcY(start: Double, offset: Double, itemSize: Double, spacing: Double) = calculatorY(start, offset, itemSize, spacing)
+
+        private object AlignmentDirection {
+            // Calculates the coordinate for the popup when aligned forwards (i.e. TOP_LEFT or BOTTOM_LEFT for X, TOP_LEFT or TOP_RIGHT for Y).
+            // This is done by adding the specified spacing to the starting coordinate.
+            @JvmStatic
+            fun forwards(start: Double, offset: Double, itemSize: Double, spacing: Double) = start + spacing
+
+            // Calculates the coordinate for the popup when aligned backwards (i.e. TOP_RIGHT or BOTTOM_RIGHT for X, BOTTOM_LEFT or BOTTOM_RIGHT for Y).
+            // This is done by starting from the end of the owner window (start + offset) and subtracting the popup's size and the specified spacing.
+            @JvmStatic
+            fun backwards(start: Double, offset: Double, itemSize: Double, spacing: Double) =  start + offset - itemSize - spacing
         }
     }
 
@@ -302,7 +305,7 @@ class CustomPopup private constructor(
             fxmlLoader.classLoader = javaClass.classLoader
 
             try {
-                fxmlLoader.load<Any?>()
+                fxmlLoader.load<Any>()
             } catch (exception: IOException) {
                 throw RuntimeException(exception)
             }
@@ -314,16 +317,4 @@ class CustomPopup private constructor(
             bottomBar?.style = "-fx-background-color: $bottomBarColor;"
         }
     }
-}
-
-// Calculates the coordinate for the popup when aligned forwards (i.e. TOP_LEFT or BOTTOM_LEFT for X, TOP_LEFT or TOP_RIGHT for Y).
-// This is done by adding the specified spacing to the starting coordinate.
-private fun forwards(start: Double, offset: Double, itemSize: Double, spacing: Double): Double {
-    return start + spacing
-}
-
-// Calculates the coordinate for the popup when aligned backwards (i.e. TOP_RIGHT or BOTTOM_RIGHT for X, BOTTOM_LEFT or BOTTOM_RIGHT for Y).
-// This is done by starting from the end of the owner window (start + offset) and subtracting the popup's size and the specified spacing.
-private fun backwards(start: Double, offset: Double, itemSize: Double, spacing: Double): Double {
-    return start + offset - itemSize - spacing
 }

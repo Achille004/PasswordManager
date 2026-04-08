@@ -35,40 +35,35 @@ object LoadingAnimation {
     private val timelines: MutableMap<ElementWithDisabler, Timeline> = IdentityHashMap<ElementWithDisabler, Timeline>()
 
     @JvmStatic
-    fun start(vararg elements: Any) {
-        elements.forEach(LoadingAnimation::start)
-    }
+    fun start(vararg elements: Any) = elements.forEach(LoadingAnimation::start)
 
     @Synchronized
     @JvmStatic
     fun start(element: Any) {
         check(!elementMap.containsKey(element)) { "Loading animation is already running for this element" }
 
-        val wrappedElement: ElementWithDisabler
-        try {
-            wrappedElement = ElementWithDisabler(element)
-        } catch (_: IllegalStateException) {
-            return  // Element does not have the required methods, silently ignore
-        }
+        val wrappedElement =
+            try {
+                ElementWithDisabler(element)
+            } catch (_: IllegalStateException) {
+                return  // Element does not have the required methods, silently ignore
+            }
 
         elementMap[element] = wrappedElement
 
         // Create and cache the timeline for this element if it has a setText method
-        val timeline = createTimeline(wrappedElement)
-        if (timeline != null) {
-            timelines[wrappedElement] = timeline
-            timeline.playFromStart()
+        createTimeline(wrappedElement) ?.let {
+            timelines[wrappedElement] = it
+            it.playFromStart()
         }
 
-        wrappedElement.setDisable(true)
-        wrappedElement.setReadable(true)
+        wrappedElement.callDisable(true)
+        wrappedElement.callReadable(true)
         if (element is AnimationAwareControl) element.onListenerDetached()
     }
 
     @JvmStatic
-    fun stop(vararg elements: Any) {
-        elements.forEach(LoadingAnimation::stop)
-    }
+    fun stop(vararg elements: Any) = elements.forEach(LoadingAnimation::stop)
 
     @Synchronized
     @JvmStatic
@@ -76,35 +71,30 @@ object LoadingAnimation {
         val wrappedElement: ElementWithDisabler = elementMap.remove(element)!!
 
         // Retrieve and remove the timeline associated with the element, if it exists, and stop it
-        val timeline: Timeline? = timelines.remove(wrappedElement)
-        timeline?.stop()
+        timelines.remove(wrappedElement)?.stop()
 
-        wrappedElement.setDisable(false)
-        wrappedElement.setReadable(false)
+        wrappedElement.callDisable(false)
+        wrappedElement.callReadable(false)
         if (element is AnimationAwareControl) element.onListenerAttached()
     }
 
     ///// HELPER METHODS //////
     private fun createTimeline(element: ElementWithDisabler): Timeline? {
-        if (element.setTextMethod == null) return null
-
-        val passLoadTimeline = Timeline(
-            KeyFrame(Duration.ZERO, { _: ActionEvent?-> element.setText("Loading") }),
-            KeyFrame(LOAD_ANIM_TIME_UNIT, { _: ActionEvent? -> element.setText("Loading.") }),
-            KeyFrame(LOAD_ANIM_TIME_UNIT.multiply(2.0), { _: ActionEvent? -> element.setText("Loading..") }),
-            KeyFrame(LOAD_ANIM_TIME_UNIT.multiply(3.0), { _: ActionEvent? -> element.setText("Loading...") }),
+        if (!element.canText()) return null
+        return Timeline(
+            KeyFrame(Duration.ZERO, { _: ActionEvent? -> element.callText("Loading") }),
+            KeyFrame(LOAD_ANIM_TIME_UNIT, { _: ActionEvent? -> element.callText("Loading.") }),
+            KeyFrame(LOAD_ANIM_TIME_UNIT.multiply(2.0), { _: ActionEvent? -> element.callText("Loading..") }),
+            KeyFrame(LOAD_ANIM_TIME_UNIT.multiply(3.0), { _: ActionEvent? -> element.callText("Loading...") }),
             KeyFrame(LOAD_ANIM_TIME_UNIT.multiply(4.0), { _: ActionEvent? -> }) // Wait another time unit before restarting
-        )
-        passLoadTimeline.cycleCount = Timeline.INDEFINITE
-
-        return passLoadTimeline
+        ) .also { it.cycleCount = Timeline.INDEFINITE }
     }
 
     private class ElementWithDisabler (
         val element: Any,
-        val setDisableMethod: Method?,
-        val setTextMethod: Method?,
-        val setReadableMethod: Method?
+        private val setDisableMethod: Method?,
+        private val setTextMethod: Method?,
+        private val setReadableMethod: Method?
     ) {
         constructor(element: Any) : this(element, requireMethodCache(element))
 
@@ -115,35 +105,21 @@ object LoadingAnimation {
             methodCache.setReadableMethod
         )
 
-        fun setDisable(disable: Boolean) {
-            if (setDisableMethod == null) return
+        fun canDisable() = setDisableMethod != null
+        fun callDisable(disable: Boolean) = tryInvoke(setDisableMethod, disable)
 
+        fun canText() = setTextMethod != null
+        fun callText(text: String) = tryInvoke(setTextMethod, text)
+
+        fun canReadable() = setReadableMethod != null
+        fun callReadable(readable: Boolean) = tryInvoke(setReadableMethod, readable)
+
+        private fun tryInvoke(method: Method?, vararg args: Any): Any? =
             try {
-                setDisableMethod.invoke(element, disable)
+                method?.invoke(element, args)
             } catch (e: Exception) {
-                throw IllegalStateException("Failed to invoke setDisable method", e)
+                throw IllegalStateException("Failed to invoke method", e)
             }
-        }
-
-        fun setText(text: String) {
-            if (setTextMethod == null) return
-
-            try {
-                setTextMethod.invoke(element, text)
-            } catch (e: Exception) {
-                throw IllegalStateException("Failed to invoke setText method", e)
-            }
-        }
-
-        fun setReadable(readable: Boolean) {
-            if (setReadableMethod == null) return
-
-            try {
-                setReadableMethod.invoke(element, readable)
-            } catch (e: Exception) {
-                throw IllegalStateException("Failed to invoke setReadable method", e)
-            }
-        }
 
         @JvmRecord
         private data class MethodCache(
@@ -151,9 +127,7 @@ object LoadingAnimation {
             val setTextMethod: Method?,
             val setReadableMethod: Method?
         ) {
-            fun hasAnyMethod(): Boolean {
-                return setDisableMethod != null || setTextMethod != null || setReadableMethod != null
-            }
+            fun hasAnyMethod() = setDisableMethod != null || setTextMethod != null || setReadableMethod != null
         }
 
         companion object {
@@ -167,10 +141,8 @@ object LoadingAnimation {
                 }
             }
 
-            private fun requireMethodCache(element: Any): MethodCache {
-                val methodCache = METHOD_CACHE.get(element.javaClass)
-                check(methodCache.hasAnyMethod()) { "Element must have at least one of the following methods: setDisable, setText, or setReadable" }
-                return methodCache
+            private fun requireMethodCache(element: Any) = METHOD_CACHE.get(element.javaClass).also {
+                check(it.hasAnyMethod()) { "Element must have at least one of the following methods: setDisable, setText, or setReadable" }
             }
 
             private fun findMethod(type: Class<*>, methodName: String, vararg parameterTypes: Class<*>?): Method? {

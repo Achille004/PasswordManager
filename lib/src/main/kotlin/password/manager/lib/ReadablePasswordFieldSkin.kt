@@ -64,8 +64,10 @@ open class ReadablePasswordFieldSkin @JvmOverloads constructor(
     @Suppress("UNNECESSARY_SAFE_CALL")
     override fun maskText(txt: String?): String? {
         val isReadable = readable?.get() ?: false
-        return txt
-            ?.let { if (skinnable is PasswordField && !isReadable) super.maskText(it) else it }
+        return txt ?.let {
+            if (skinnable is PasswordField && !isReadable) super.maskText(it)
+            else it
+        }
     }
 
     @Suppress("UNNECESSARY_SAFE_CALL")
@@ -100,8 +102,5 @@ open class ReadablePasswordFieldSkin @JvmOverloads constructor(
     }
 
     ///// CUSTOM PASSWORD FIELD METHODS //////
-
-    fun readableProperty(): BooleanProperty {
-        return readable
-    }
+    fun readableProperty() = readable
 }

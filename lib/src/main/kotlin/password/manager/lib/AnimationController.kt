@@ -32,6 +32,14 @@ import javafx.util.Duration
 import password.manager.lib.Utils.doubleEquals
 import kotlin.math.roundToInt
 
+/**
+ * Registers a generic property to be animated when its source property changes.
+ * @param sourceProperty `T` source property to listen to
+ * @param progressExtractor function that extracts the [Double] progress value from the `T` source property value
+ * @param progressProperty [DoubleProperty] to animate
+ * @param styleFunction function that generates the style [KeyValue] based on current [Double] progress
+ * @param destinationControl control whose skin will be updated
+ */
 class AnimationController<T>(
     private val sourceProperty: Property<T>,
     private val progressExtractor: (T) -> Double,
@@ -42,14 +50,6 @@ class AnimationController<T>(
     private val attached = SimpleBooleanProperty()
     private var currentTimeline: Timeline? = null
 
-    /**
-     * Registers a generic property to be animated when its source property changes.
-     * @param sourceProperty `T` source property to listen to
-     * @param progressExtractor function that extracts the [Double] progress value from the `T` source property value
-     * @param progressProperty [DoubleProperty] to animate
-     * @param styleFunction function that generates the style [KeyValue] based on current [Double] progress
-     * @param destinationControl control whose skin will be updated
-     */
     init {
         attached.addListener(ChangeListener {_: ObservableValue<out Boolean>, _: Boolean, newValue: Boolean ->
             if (newValue) attach()
@@ -101,7 +101,7 @@ class AnimationController<T>(
         * @param property [DoubleProperty] to animate
         * @param destination destination value of `property`
         * @param styleFunction function that generates the style [KeyValue] based on current `property` progress
-        * @ return the generated [Timeline], or `null` if no animation is needed
+        * @return the generated [Timeline], or `null` if no animation is needed
         */
         private fun genTimeline(property: DoubleProperty, destination: Double, styleFunction: (Double) -> KeyValue?): Timeline? {
             val start: Double = property.get()

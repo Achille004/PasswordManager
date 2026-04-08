@@ -21,12 +21,12 @@ interface AnimationAwareControl {
     val animationController: AnimationController<*>
 
     /**
-     * Optional hook called when animation listener is detached.
+     * Hook called when the animation listener is detached.
      */
-    fun onListenerDetached() {}
+    fun onListenerDetached()
 
     /**
-     * Optional hook called when animation listener is reattached.
+     * Hook called when the animation listener is reattached.
      */
-    fun onListenerAttached() {}
+    fun onListenerAttached()
 }

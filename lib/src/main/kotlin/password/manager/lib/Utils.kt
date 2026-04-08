@@ -115,7 +115,5 @@ object Utils {
      * @return True if the values are considered equal, false otherwise.
      */
     @JvmStatic
-    fun doubleEquals(a: Double, b: Double): Boolean {
-        return abs(a - b) < DOUBLE_EPSILON
-    }
+    fun doubleEquals(a: Double, b: Double) = abs(a - b) < DOUBLE_EPSILON
 }

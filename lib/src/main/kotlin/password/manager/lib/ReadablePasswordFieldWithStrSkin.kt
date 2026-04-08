@@ -47,7 +47,7 @@ class ReadablePasswordFieldWithStrSkin @JvmOverloads constructor(
             bar?.let { KeyValue(it.styleProperty(), "-fx-background-color:${passwordStrengthGradient(prog)};") }
         }
 
-        animContr = AnimationController<String>(
+        animContr = AnimationController(
             control.textProperty(),
             PROGRESS_EXTRACTOR,
             strengthBar.progressProperty(),
@@ -75,21 +75,15 @@ class ReadablePasswordFieldWithStrSkin @JvmOverloads constructor(
     }
 
     ///// ANIMATION AWARE CONTROL METHODS //////
-    override val animationController: AnimationController<*>
-        get() = animContr
-
-    override fun onListenerDetached() {
-        strengthBar.isVisible = false
-    }
-
-    override fun onListenerAttached() {
-        strengthBar.isVisible = true
-    }
+    override val animationController = animContr
+    override fun onListenerDetached() { strengthBar.isVisible = false }
+    override fun onListenerAttached() { strengthBar.isVisible = true }
 
     companion object {
         private val PROGRESS_EXTRACTOR: (String) -> Double = { pass: String ->
             val passStr = passwordStrength(pass)
-            ((passStr.first - 20.0) / 30.0).coerceIn(0.0, 1.0)
+            val str = (passStr.first - 20.0) / 30.0
+            str.coerceIn(0.0, 1.0)
         }
     }
 }
