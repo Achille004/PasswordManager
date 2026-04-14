@@ -32,7 +32,7 @@ import kotlin.plus
 enum class SortingOrder(
     val i18nKey: String,
     val converter: BinaryOperator<String>,
-    val comparator: Comparator<Account>
+    val comparator: Comparator<Account?>
 ) {
     SOFTWARE(
         "software", BinaryOperator { software: String?, username: String? -> software + "\n" + username },

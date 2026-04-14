@@ -28,6 +28,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import javafx.beans.property.ReadOnlyStringProperty;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -193,9 +194,7 @@ public final class Account {
      * This is a UI-facing property and therefore its updates should are considered low-priority.
      * @return the software name property, read-only
      */
-    public ReadOnlyProperty<String> softwareProperty() {
-        return softwareProperty.getReadOnlyProperty();
-    }
+    public ReadOnlyStringProperty softwareProperty() { return softwareProperty.getReadOnlyProperty(); }
 
     /**
      * Gets the software name associated with this account.
@@ -212,7 +211,7 @@ public final class Account {
      * This is a UI-facing property and therefore its updates should are considered low-priority.
      * @return the username property, read-only
      */
-    public ReadOnlyProperty<String> usernameProperty() {
+    public ReadOnlyStringProperty usernameProperty() {
         return usernameProperty.getReadOnlyProperty();
     }
 
