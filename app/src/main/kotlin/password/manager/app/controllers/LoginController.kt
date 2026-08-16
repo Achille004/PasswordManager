@@ -20,10 +20,6 @@ package password.manager.app.controllers
 import javafx.animation.KeyFrame
 import javafx.animation.Timeline
 import javafx.beans.property.BooleanProperty
-import javafx.beans.value.ChangeListener
-import javafx.beans.value.ObservableValue
-import javafx.event.ActionEvent
-import javafx.event.EventHandler
 import javafx.fxml.FXML
 import javafx.scene.Scene
 import javafx.scene.control.Button
@@ -47,11 +43,11 @@ class LoginController(private val switchToMain: BooleanProperty) : AbstractContr
     private var loginSubmitBtn: Button? = null
 
     private val wrongPasswordTimeline = Timeline(
-        KeyFrame(Duration.ZERO,  { _ ->
+        KeyFrame(Duration.ZERO,  {
             loginSubmitBtn!!.isDisable = true
             loginSubmitBtn!!.style = "-fx-border-color: -fx-color-red"
         }),
-        KeyFrame(Duration.seconds(1.0),  { _ ->
+        KeyFrame(Duration.seconds(1.0),  {
             loginSubmitBtn!!.isDisable = false
             clearStyle(loginSubmitBtn!!)
         })
@@ -66,11 +62,10 @@ class LoginController(private val switchToMain: BooleanProperty) : AbstractContr
         // Adding a whole method override just for line would be overkill, so just pass the property
         langResources.bindStringProperty(loginPassword!!.promptTextProperty(), "login.password")
 
-        loginPassword.onAction = { _ -> doLogin() }
-        loginPassword.sceneProperty()
-            .addListener(ChangeListener { _, _, newScene: Scene? ->
-                newScene ?.run { loginPassword.requestFocus() }
-            })
+        loginPassword.onAction = { doLogin() }
+        loginPassword.sceneProperty().addListener { _, _, newScene: Scene? ->
+            newScene?.run { loginPassword.requestFocus() }
+        }
     }
 
     override val fxmlPath =  "/fxml/login.fxml"
@@ -79,17 +74,17 @@ class LoginController(private val switchToMain: BooleanProperty) : AbstractContr
 
     @FXML
     fun doLogin() {
-        if (checkTextFields(loginPassword!!)) {
-            wrongPasswordTimeline.stop()
-            IOManager.getInstance().authenticate(loginPassword.text.trim())
+        if (!checkTextFields(loginPassword!!)) return
 
-            if (IOManager.getInstance().isAuthenticated) {
-                switchToMain.set(true)
-            } else {
-                wrongPasswordTimeline.playFromStart()
-            }
+        wrongPasswordTimeline.stop()
+        IOManager.getInstance().authenticate(loginPassword.text.trim())
 
-            clearTextFields(loginPassword)
+        if (IOManager.getInstance().isAuthenticated) {
+            switchToMain.set(true)
+        } else {
+            wrongPasswordTimeline.playFromStart()
         }
+
+        clearTextFields(loginPassword)
     }
 }

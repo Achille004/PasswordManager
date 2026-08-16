@@ -22,8 +22,6 @@ import javafx.animation.Timeline
 import javafx.application.Platform
 import javafx.beans.binding.Bindings
 import javafx.beans.property.ObjectProperty
-import javafx.beans.property.SimpleIntegerProperty
-import javafx.beans.value.ChangeListener
 import javafx.collections.ListChangeListener
 import javafx.collections.ObservableList
 import javafx.collections.transformation.FilteredList
@@ -38,6 +36,7 @@ import javafx.scene.control.ListView
 import javafx.scene.control.Tab
 import javafx.scene.control.TabPane
 import javafx.scene.control.TextField
+import javafx.scene.control.TextInputControl
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyEvent
 import javafx.util.Callback
@@ -60,8 +59,6 @@ import java.net.URL
 import java.util.Map
 import java.util.ResourceBundle
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.function.BiConsumer
-import java.util.function.Function
 import java.util.function.Predicate
 import java.util.stream.Collectors
 import kotlin.concurrent.Volatile
@@ -102,7 +99,7 @@ class ManagerController : AbstractController() {
     // Auto-completion data sources
     private var possibleSoftwares: MutableList<String?>? = null
     private var possibleUsernames: MutableList<String?>? = null
-    private val suggestionsUpdateTrigger = SimpleIntegerProperty(0)
+    private var onSuggestionEvent: (() -> Unit)? = null
 
     override fun initialize(location: URL, resources: ResourceBundle) {
         Logger.getInstance().addDebug("Initializing %s", javaClass.getSimpleName())
@@ -132,24 +129,22 @@ class ManagerController : AbstractController() {
 
     @FXML
     fun matchCaseAction(event: ActionEvent?) {
+        isMatchCase = !isMatchCase
         if (isMatchCase) {
-            isMatchCase = false
-            clearStyle(matchCaseButton!!)
-        } else {
-            isMatchCase = true
             matchCaseButton!!.style = "-fx-background-color: -fx-color-green; -fx-background-radius: 2deg;"
+        } else {
+            clearStyle(matchCaseButton!!)
         }
         searchTimeline!!.playFrom(SEARCH_DELAY)
     }
 
     @FXML
     fun matchWholeWordAction(event: ActionEvent?) {
+        isMatchWholeWord = !isMatchWholeWord
         if (isMatchWholeWord) {
-            isMatchWholeWord = false
-            clearStyle(matchWholeWordButton!!)
-        } else {
-            isMatchWholeWord = true
             matchWholeWordButton!!.style = "-fx-background-color: -fx-color-green; -fx-background-radius: 2deg;"
+        } else {
+            clearStyle(matchWholeWordButton!!)
         }
         searchTimeline!!.playFrom(SEARCH_DELAY)
     }
@@ -158,7 +153,7 @@ class ManagerController : AbstractController() {
         val fieldListExtractor = { fieldExtractor: Function1<Account, String> ->
             val fieldSortedByUsage = accountList.stream()
                 .map { it?.let(fieldExtractor) }
-                .collect(Collectors.groupingBy(Function { s: String? -> s }, Collectors.counting()))
+                .collect(Collectors.groupingBy({ s: String? -> s }, Collectors.counting()))
 
             fieldSortedByUsage.entries.stream()
                 .sorted(Map.Entry.comparingByValue<String?, Long>().reversed())
@@ -167,28 +162,27 @@ class ManagerController : AbstractController() {
         }
 
         // Listen for changes in the account list and update suggestions
-        val accountListChangeHandler = ListChangeListener<Account> { _ ->
+        accountList.addListener(ListChangeListener {
             possibleSoftwares = fieldListExtractor.invoke(Account::getSoftware)
-            possibleUsernames = fieldListExtractor.invoke(Account::getSoftware)
-
-            // Trigger update of auto-completion suggestions by just incrementing the property
-            suggestionsUpdateTrigger.set(suggestionsUpdateTrigger.get() + 1)
-        }
-        accountList.addListener(accountListChangeHandler)
+            possibleUsernames = fieldListExtractor.invoke(Account::getUsername)
+            // Trigger update of auto-completion, if the handler is present
+            onSuggestionEvent?.invoke()
+        })
 
         // Initial population
-        accountListChangeHandler.onChanged(null)
+        possibleSoftwares = fieldListExtractor.invoke(Account::getSoftware)
+        possibleUsernames = fieldListExtractor.invoke(Account::getSoftware)
     }
 
     private fun setupSearchFunctionality(filteredAccountList: FilteredList<Account>) {
-        searchTimeline = Timeline(KeyFrame(SEARCH_DELAY, EventHandler { `_`: ActionEvent? ->
+        val defaultLocale = SupportedLocale.DEFAULT.locale
+
+        searchTimeline = Timeline(KeyFrame(SEARCH_DELAY, {
             val searchText = searchField!!.text.trim()
             if (searchText.isEmpty()) {
                 filteredAccountList.predicate = null // Show all accounts
-                return@EventHandler
+                return@KeyFrame
             }
-
-            val defaultLocale = SupportedLocale.DEFAULT.locale
 
             val finalSearchText = if (isMatchCase) searchText else searchText.lowercase(defaultLocale)
             val punctSplitRegex = Regex("[\\s\\p{P}]+")
@@ -196,10 +190,10 @@ class ManagerController : AbstractController() {
                 str.split(punctSplitRegex).dropLastWhile(String::isEmpty).contains(finalSearchText)
             }
 
-            filteredAccountList.predicate = Predicate { account: Account ->
+            filteredAccountList.predicate = { account: Account ->
                 val software = if (isMatchCase) account.software else account.software.lowercase(defaultLocale)
                 val username = if (isMatchCase) account.username else account.username.lowercase(defaultLocale)
-                return@Predicate if (isMatchWholeWord) {
+                if (isMatchWholeWord) {
                     wholeWordPredicate.test(software) || wholeWordPredicate.test(username)
                 } else {
                     software.contains(finalSearchText) || username.contains(finalSearchText)
@@ -208,10 +202,8 @@ class ManagerController : AbstractController() {
         }))
         searchTimeline!!.cycleCount = 1
 
-        searchField!!.textProperty().addListener { _, _, _ ->
-            searchTimeline!!.playFromStart()
-        }
-        searchField.onAction = { _ ->
+        searchField!!.textProperty().addListener { searchTimeline!!.playFromStart() }
+        searchField.onAction = {
             searchTimeline!!.stop()
             searchTimeline!!.playFrom(SEARCH_DELAY)
         }
@@ -240,7 +232,7 @@ class ManagerController : AbstractController() {
         // #endregion
 
         // #region Account ListView setup
-        val accountCellFactory: Callback<ListView<Account?>, ListCell<Account?>> = { _ ->
+        val accountCellFactory: Callback<ListView<Account?>, ListCell<Account?>> = {
             object : ListCell<Account?>() {
                 override fun updateItem(account: Account?, empty: Boolean) {
                     super.updateItem(account, empty)
@@ -260,35 +252,34 @@ class ManagerController : AbstractController() {
             }
         }
 
-        val listViewHandler = ChangeListener { _, _, newItem: Account ->
-            if (editOperationsCounter.get() > 0) return@ChangeListener
+        accountListView!!.items = filteredAccountList
+        accountListView.cellFactory = accountCellFactory
+        accountListView.getSelectionModel().selectedItemProperty().addListener { _, _, newItem: Account? ->
+            // Return if the target account is null or any edit operation is being run
+            newItem ?: return@addListener
+            if (editOperationsCounter.get() > 0) return@addListener
 
             tabManager.openTab(newItem)
             // Defer the task to avoid conflicts on the underlying list of selected accounts
-            Platform.runLater(accountListView!!.getSelectionModel()::clearSelection)
+            Platform.runLater(accountListView.getSelectionModel()::clearSelection)
         }
-
-        accountListView!!.items = filteredAccountList
-        accountListView.cellFactory = accountCellFactory
-        accountListView.getSelectionModel().selectedItemProperty().addListener(listViewHandler)
         // #endregion
     }
 
     private fun setupKeyboardShortcuts(tabManager: TabManager<Account, EditorController>) {
-        val shortcutsHandler = EventHandler { keyEvent: KeyEvent? ->
-            val selectedTab = accountTabPane!!.selectionModel.getSelectedItem()
-            if (!keyEvent!!.isControlDown || selectedTab == null) return@EventHandler
+        accountTabPane!!.onKeyPressed = EventHandler { keyEvent: KeyEvent ->
+            val selectedTab = accountTabPane.selectionModel.selectedItem ?: return@EventHandler
+            if (!keyEvent.isControlDown) return@EventHandler
+
             when (keyEvent.code) {
-                KeyCode.W ->  {
+                KeyCode.W -> {
                     keyEvent.consume()
                     when (selectedTab) {
                         homeTab -> {}
-                        // It's better to just handle this manually
                         addTab -> tabManager.selectTab(homeTab!!)
                         else -> tabManager.closeTab(selectedTab)
                     }
                 }
-
                 KeyCode.T -> {
                     keyEvent.consume()
                     when (selectedTab) {
@@ -296,17 +287,13 @@ class ManagerController : AbstractController() {
                         else -> tabManager.selectTab(addTab!!)
                     }
                 }
-
                 KeyCode.Q, KeyCode.E -> {
                     keyEvent.consume()
                     tabManager.selectAdjacentTab(if (keyEvent.code == KeyCode.Q) -1 else 1)
                 }
-
                 else -> {}
             }
         }
-
-        accountTabPane!!.onKeyPressed = shortcutsHandler
     }
 
     private fun setupSpecialTabs(tabPane: TabPane, tabManager: TabManager<Account, EditorController>) {
@@ -314,12 +301,11 @@ class ManagerController : AbstractController() {
         TabManager.loadTab(addTab!!, EditorController(null))
 
         val tabPaneContent = tabPane.tabs
-        // It's better to just handle this manually
-        val homeTabHandler = ListChangeListener { change: ListChangeListener.Change<out Tab?>? ->
-            while (change!!.next()) {
+        tabPaneContent.addListener(ListChangeListener { change ->
+            while (change.next()) {
                 // Defer tasks to avoid conflicts on the underlying list of tabs
                 when {
-                    change.wasAdded() && !change.getAddedSubList().contains(homeTab) -> Platform.runLater {
+                    change.wasAdded() && !change.addedSubList.contains(homeTab) -> Platform.runLater {
                         tabPaneContent.remove(homeTab)
                     }
                     change.wasRemoved() && tabPaneContent.size <= 1 -> Platform.runLater {
@@ -328,8 +314,7 @@ class ManagerController : AbstractController() {
                     }
                 }
             }
-        }
-        tabPaneContent.addListener(homeTabHandler)
+        })
     }
 
     companion object {
@@ -402,42 +387,35 @@ class ManagerController : AbstractController() {
             langResources.bindTextProperty(editorUsernameLbl!!, "username")
             langResources.bindTextProperty(editorPasswordLbl!!, "password")
 
-            editorSoftware!!.onAction = { _ ->
-                editorUsername!!.requestFocus() // Normally it would select the text, but that's ugly
+            editorSoftware!!.onAction = {
+                editorUsername!!.requestFocus()
                 editorUsername.end()
             }
-            editorUsername!!.onAction = { _ ->
-                editorPassword!!.requestFocus() // Normally it would select the text, but that's ugly
+            editorUsername!!.onAction = {
+                editorPassword!!.requestFocus()
                 editorPassword.end()
             }
-            editorPassword!!.setOnAction { event: ActionEvent? -> this.editorSave(event) }
+            editorPassword!!.setOnAction { editorSave(it) }
 
             editorSaveTimeline = Timeline(
                 KeyFrame(
                     Duration.ZERO,
-                    { _ -> editorSaveBtn!!.style = "-fx-background-color: -fx-color-green" }),
+                    { editorSaveBtn!!.style = "-fx-background-color: -fx-color-green" }),
                 KeyFrame(
                     Duration.seconds(1.0),
-                    { _ -> clearStyle(editorSaveBtn!!) })
+                    { clearStyle(editorSaveBtn!!) })
             )
             editorSaveTimeline!!.cycleCount = 1
 
             // Setup auto-completion for software and username fields
-            softwareAutoCompletion = TextFields.bindAutoCompletion(
-                editorSoftware,
-                getSuggestionProvider(possibleSoftwares!!)
-            )
-            usernameAutoCompletion = TextFields.bindAutoCompletion(
-                editorUsername,
-                getSuggestionProvider(possibleUsernames!!)
-            )
+            bindAutoCompletion()
 
             // Update auto-completion when suggestions change
-            suggestionsUpdateTrigger.addListener(ChangeListener { _, _, _ ->
-                if (this.isErrBound) return@ChangeListener
+            onSuggestionEvent = returnLabel@ {
+                if (this.isErrBound) return@returnLabel
                 unbindAutoCompletion()
                 bindAutoCompletion()
-            })
+            }
 
             // Disable the delete button if this is the add editor
             editorDeleteBtn!!.isVisible = !isAddEditor
@@ -462,8 +440,8 @@ class ManagerController : AbstractController() {
                 )
 
                 IOManager.getInstance().getAccountData(account!!)
-                    .whenComplete(BiConsumer { data: AccountData?, ex: Throwable? ->
-                        Platform.runLater(Runnable {
+                    .whenComplete { data: AccountData?, ex: Throwable? ->
+                        Platform.runLater {
                             LoadingAnimation.stop(
                                 editorSoftware,
                                 editorUsername,
@@ -474,7 +452,7 @@ class ManagerController : AbstractController() {
                             val success = (ex == null && data != null)
                             if (!success) {
                                 applyErrorLoadState()
-                                return@Runnable
+                                return@runLater
                             }
 
                             clearErrorLoadState()
@@ -486,8 +464,8 @@ class ManagerController : AbstractController() {
                             // (not setting the caret would result in the text being selected, which is really weird when editing)
                             editorSoftware.requestFocus()
                             editorSoftware.end()
-                        })
-                    })
+                        }
+                    }
             }
 
             ObservableResourceFactory.getInstance()
@@ -504,43 +482,33 @@ class ManagerController : AbstractController() {
 
         @FXML
         fun editorSave(event: ActionEvent?) {
-            if (checkTextFields(editorSoftware!!, editorUsername!!, editorPassword!!)) {
-                editorSaveTimeline!!.playFromStart()
+            if (!checkTextFields(editorSoftware!!, editorUsername!!, editorPassword!!)) return
+            editorSaveTimeline!!.playFromStart()
 
-                // Reset the delete button state
-                editorDeleteCounter = false
-                clearStyle(editorDeleteBtn!!)
+            editorDeleteCounter = false
+            clearStyle(editorDeleteBtn!!)
 
-                // get the new software, username and password
-                val software = editorSoftware.text.trim()
-                val username = editorUsername.text.trim()
-                val password = editorPassword.text.trim()
-                val data = AccountData(software, username, password)
+            val software = editorSoftware.text.trim()
+            val username = editorUsername.text.trim()
+            val password = editorPassword.text.trim()
+            val data = AccountData(software, username, password)
 
-                // save the new attributes of the account
-                /*
-                  I know that the different reset handling is weird, but let me explain:
-                    if the account is null, it means that the user is creating a new account,
-                    so we just reset the editor, but if the account is not null, it means that
-                    the user is editing an existing account, so we need to edit the account
-                    and then reset the editor only if the edit was successful
-                  This ensures maximum responsiveness when adding, while avoiding really weird
-                  behavior when editing.
-                */
-                if (isAddEditor) {
-                    IOManager.getInstance().addAccount(data)
-                    reset()
-                } else {
-                    editOperationsCounter.incrementAndGet()
-                    LoadingAnimation.start(
-                        editorSoftware,
-                        editorUsername,
-                        editorPassword,
-                        editorSaveBtn!!,
-                        editorDeleteBtn
-                    )
-                    IOManager.getInstance().editAccount(account!!, data)
-                        .whenComplete(BiConsumer { account: Account?, ex: Throwable? ->
+            if (isAddEditor) {
+                IOManager.getInstance().addAccount(data)
+                reset()
+            } else {
+                editOperationsCounter.incrementAndGet()
+                LoadingAnimation.start(
+                    editorSoftware,
+                    editorUsername,
+                    editorPassword,
+                    editorSaveBtn!!,
+                    editorDeleteBtn
+                )
+
+                IOManager.getInstance().editAccount(account!!, data)
+                    .whenComplete { account: Account?, ex: Throwable? ->
+                        Platform.runLater {
                             LoadingAnimation.stop(
                                 editorSoftware,
                                 editorUsername,
@@ -550,24 +518,21 @@ class ManagerController : AbstractController() {
                             )
                             editOperationsCounter.decrementAndGet()
 
-                            val success = (ex == null && account != null)
-                            if (!success) {
+                            if (ex != null || account == null) {
                                 Platform.runLater(this::reset)
-                                return@BiConsumer
+                                return@runLater
                             }
 
-                            // Re-write the fields since the loading animation leaves "Loading..."
                             editorSoftware.text = data.software
                             editorUsername.text = data.username
                             editorPassword.text = data.password
-                        })
-                }
+                        }
+                    }
             }
         }
 
         @FXML
         fun editorDelete(event: ActionEvent?) {
-            // when the deleteCounter is true it means that the user has confirmed the elimination
             if (editorDeleteCounter) {
                 IOManager.getInstance().removeAccount(account!!)
             } else {
@@ -576,77 +541,82 @@ class ManagerController : AbstractController() {
             }
         }
 
-        fun getSuggestionProvider(sourceList: MutableList<String?>): Callback<ISuggestionRequest?, MutableCollection<String?>?> {
+        private fun getSuggestionProvider(sourceList: Collection<String?>): Callback<ISuggestionRequest?, Collection<String?>?> {
             return Callback { request: ISuggestionRequest? ->
-                val userText = request!!.userText
-                if (userText == null || userText.isEmpty()) return@Callback mutableListOf()
+                // Return if the request is null or the user text is null or empty
+                val userText = request?.userText ?: return@Callback emptyList()
+                if (userText.isEmpty()) return@Callback emptyList()
 
                 val defaultLocale = SupportedLocale.DEFAULT.locale
                 val lowerUserText = userText.lowercase(defaultLocale)
-                sourceList.stream()
-                    .filter { s: String? -> s!!.lowercase(defaultLocale).startsWith(lowerUserText) }
-                    .toList()
+                // Filter the list, while also discarding null values from possible suggestions
+                sourceList.filter { it?.lowercase(defaultLocale)?.startsWith(lowerUserText) ?: false }
             }
         }
 
-        fun bindAutoCompletion() {
+        private fun bindAutoCompletion() {
             if (softwareAutoCompletion == null) {
-                softwareAutoCompletion =
-                    TextFields.bindAutoCompletion(editorSoftware, getSuggestionProvider(possibleSoftwares!!))
+                softwareAutoCompletion = TextFields.bindAutoCompletion(
+                    editorSoftware,
+                    getSuggestionProvider(possibleSoftwares!!)
+                )
             }
             if (usernameAutoCompletion == null) {
-                usernameAutoCompletion =
-                    TextFields.bindAutoCompletion(editorUsername, getSuggestionProvider(possibleUsernames!!))
+                usernameAutoCompletion = TextFields.bindAutoCompletion(
+                    editorUsername,
+                    getSuggestionProvider(possibleUsernames!!)
+                )
             }
         }
 
-        fun clearErrorLoadState() {
-            if (!this.isErrBound) return
+        private fun clearErrorLoadState() {
+            if (!isErrBound) return
 
-            editorSoftware!!.textProperty().unbind()
-            editorSoftware.isDisable = false
-            editorUsername!!.textProperty().unbind()
-            editorUsername.isDisable = false
-            editorPassword!!.textProperty().unbind()
-            editorPassword.isDisable = false
-            editorSaveBtn!!.isDisable = false
-            editorDeleteBtn!!.isDisable = false
+            listOf(editorSoftware!!, editorUsername!!, editorPassword!!, editorSaveBtn!!, editorDeleteBtn!!).forEach {
+                when (it) {
+                    is TextInputControl -> {
+                        it.textProperty().unbind()
+                        it.isDisable = false
+                    }
+                    is Button -> it.isDisable = false
+                }
+            }
 
             editorPassword.isReadable = false
-
-            this.isErrBound = false
+            isErrBound = false
             bindAutoCompletion()
         }
 
-        fun applyErrorLoadState() {
+        private fun applyErrorLoadState() {
             clearErrorLoadState()
             unbindAutoCompletion()
-            this.isErrBound = true
+            isErrBound = true
 
-            // Must be done before binding textProperty(): the skin refresh logic calls setText(...)
-            // when readability changes, and that would fail on a bound text property.
             editorPassword!!.isReadable = true
 
             val resFact = ObservableResourceFactory.getInstance()
-            resFact.bindStringProperty(editorSoftware!!.textProperty(), "editor.load_error")
-            editorSoftware.isDisable = true
-            resFact.bindStringProperty(editorUsername!!.textProperty(), "editor.load_error")
-            editorUsername.isDisable = true
-            resFact.bindStringProperty(editorPassword.textProperty(), "editor.load_error")
-            editorPassword.isDisable = true
+            listOf(
+                editorSoftware!!,
+                editorUsername!!,
+                editorPassword
+            ).forEach {
+                resFact.bindStringProperty(it.textProperty(), "editor.load_error")
+                it.isDisable = true
+            }
             editorSaveBtn!!.isDisable = true
             editorDeleteBtn!!.isDisable = true
         }
 
-        fun unbindAutoCompletion() {
-            if (softwareAutoCompletion != null) {
-                softwareAutoCompletion!!.dispose()
-                softwareAutoCompletion = null
+        private fun unbindAutoCompletion() {
+            softwareAutoCompletion?.apply {
+                dispose()
             }
-            if (usernameAutoCompletion != null) {
-                usernameAutoCompletion!!.dispose()
-                usernameAutoCompletion = null
+            softwareAutoCompletion = null
+
+            usernameAutoCompletion?.apply {
+                dispose()
             }
+            usernameAutoCompletion = null
         }
     }
 }

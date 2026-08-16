@@ -24,7 +24,6 @@ import javafx.scene.Scene
 import javafx.scene.control.TextInputControl
 import javafx.scene.image.Image
 import javafx.scene.input.MouseEvent
-import javafx.scene.layout.AnchorPane
 import javafx.stage.Stage
 import password.manager.app.App
 import password.manager.app.Utils
@@ -40,9 +39,9 @@ abstract class AbstractController : Initializable {
     @FXML
     protected fun showEula(event: MouseEvent?) {
         loadEula()
-        eulaStage ?. also {
-            it.show()
-            it.toFront()
+        eulaStage?.apply {
+            show()
+            toFront()
         }
     }
 
@@ -53,13 +52,11 @@ abstract class AbstractController : Initializable {
         private fun loadEula() {
             if (eulaStage != null) return
 
-            eulaStage = Stage() .also {
-                ObservableResourceFactory.getInstance().bindTitleProperty(it, "terms_credits")
-                it.icons.add(Image(App.MAIN_ICON))
-                it.isResizable = false
-
-                val eulaParent = Utils.loadFxml(EulaController())
-                it.scene = Scene(eulaParent, 900.0, 600.0)
+            eulaStage = Stage().apply {
+                ObservableResourceFactory.getInstance().bindTitleProperty(this, "terms_credits")
+                icons.add(Image(App.MAIN_ICON))
+                isResizable = false
+                scene = Scene(Utils.loadFxml(EulaController()), 900.0, 600.0)
             }
         }
 
@@ -71,18 +68,11 @@ abstract class AbstractController : Initializable {
          */
         @JvmStatic
         protected fun checkTextFields(vararg fields: TextInputControl): Boolean {
-            var nonEmpty = true
-
-            for (field in fields) {
-                if (field.text.isBlank()) {
-                    nonEmpty = false
-                    field.style = "-fx-border-color: -fx-color-red"
-                } else {
-                    field.style = "-fx-border-color: -fx-color-grey"
-                }
+            val allNonEmpty = fields.all { it.text.isNotBlank() }
+            fields.forEach { field ->
+                field.style = if (field.text.isNotBlank()) "-fx-border-color: -fx-color-grey" else "-fx-border-color: -fx-color-red"
             }
-
-            return nonEmpty
+            return allNonEmpty
         }
 
         @JvmStatic

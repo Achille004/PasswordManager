@@ -19,8 +19,6 @@ package password.manager.app.controllers
 
 import javafx.animation.KeyFrame
 import javafx.animation.Timeline
-import javafx.beans.value.ChangeListener
-import javafx.beans.value.ObservableValue
 import javafx.event.ActionEvent
 import javafx.fxml.FXML
 import javafx.scene.control.Button
@@ -81,14 +79,15 @@ class MainController : AbstractController() {
             folderButton!!.isVisible = false
         }
 
-        titleAnimation = Timeline()
-        for (i in TITLE_STAGES.indices) {
-            val str: String = TITLE_STAGES[i]
-            titleAnimation!!.keyFrames.add(
-                KeyFrame(
-                    TITLE_ANIM_TIME_UNIT.multiply(i.toDouble()),
-                    { _: ActionEvent? -> psmgTitle!!.text = str })
-            )
+        titleAnimation = Timeline().apply {
+            TITLE_STAGES.forEachIndexed { i, str ->
+                keyFrames.add(
+                    KeyFrame(
+                        TITLE_ANIM_TIME_UNIT.multiply(i.toDouble()),
+                        { psmgTitle!!.text = str }
+                    )
+                )
+            }
         }
 
         managerController = ManagerController()
@@ -137,9 +136,8 @@ class MainController : AbstractController() {
     }
 
     private fun <T : AbstractController?> swapOnMainPane(destinationController: T, destinationPane: Pane) {
-        // Show selected pane
         mainPane!!.centerProperty().set(destinationPane)
-        destinationController!!.reset()
+        destinationController?.reset()
     }
 
     private fun createAutosavePopup() {
@@ -158,16 +156,18 @@ class MainController : AbstractController() {
 
         val resources = ObservableResourceFactory.getInstance()
         IOManager.getInstance().savingProperty()
-            .addListener {_: ObservableValue<out SaveState?>?, _: SaveState?, newValue: SaveState? ->
+            .addListener {_, _, newValue: SaveState? ->
                 val getString = UnaryOperator { i18nKey: String ->
                     val key = "popup.$i18nKey"
-                    return@UnaryOperator try {
+                    try {
+                        // Return the value associated with the key
                         resources.resources.getString(key)
                     } catch (_: Exception) {
-                        // Key missing: return key itself
+                        // Key missing: return key itself as fallback
                         key
                     }
                 }
+
                 when (newValue) {
                     SaveState.SAVING -> {
                         popup.setState(getString.apply("saving"), "-fx-color-element-bg")

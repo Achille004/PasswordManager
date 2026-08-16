@@ -17,8 +17,6 @@
  */
 package password.manager.app.controllers
 
-import javafx.beans.value.ChangeListener
-import javafx.beans.value.ObservableValue
 import javafx.scene.control.Tab
 import javafx.scene.control.TabPane
 import javafx.scene.layout.Pane
@@ -42,10 +40,10 @@ class TabManager<T, U : AbstractController>(
     private val tabsMap = IdentityHashMap<T, Tab>() // Map for two-way association and caching
 
     init {
-        val tabFocusHandler = ChangeListener { _: ObservableValue<out Tab>, _: Tab, newTab: Tab ->
+        tabPane.selectionModel.selectedItemProperty().addListener { _, _, newTab: Tab? ->
+            newTab ?: return@addListener
             getController<U>(newTab).reset()
         }
-        tabPane.selectionModel.selectedItemProperty().addListener(tabFocusHandler)
     }
 
     fun openTab(item: T) = selectTab(
@@ -55,8 +53,8 @@ class TabManager<T, U : AbstractController>(
 
     fun createTab(item: T) = loadTab(
         controllerConstructor.call(item)
-    ) .also {
-        tabInitializer.accept(it, item)
+    ).apply {
+        tabInitializer.accept(this, item)
     }
 
     @JvmOverloads
@@ -100,9 +98,9 @@ class TabManager<T, U : AbstractController>(
          * @param controller the controller to associate with the tab
          */
         @JvmStatic
-        fun <U : AbstractController> loadTab(tab: Tab, controller: U) = tab .also {
-            it.content = Utils.loadFxml(controller) as Pane
-            it.properties["controller"] = controller
+        fun <U : AbstractController> loadTab(tab: Tab, controller: U) = tab.apply {
+            content = Utils.loadFxml(controller) as Pane
+            properties["controller"] = controller
         }
 
         /**

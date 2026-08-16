@@ -68,11 +68,10 @@ class FirstRunController(private val switchToMain: BooleanProperty) : AbstractCo
         langResources.bindTextProperty(firstRunSubmitBtn!!, "lets_go")
         langResources.bindTextProperty(firstRunDisclaimer!!, "first_run.disclaimer")
 
-        firstRunPassword!!.onAction = { _ -> doFirstRun() }
-        firstRunPassword.sceneProperty()
-            .addListener{ _, _, newScene: Scene? ->
-                newScene ?.run { firstRunPassword.requestFocus() }
-            }
+        firstRunPassword!!.onAction = { doFirstRun() }
+        firstRunPassword.sceneProperty().addListener { _, _, newScene: Scene? ->
+            newScene?.run { firstRunPassword.requestFocus() }
+        }
 
         ObservableResourceFactory.getInstance().bindPromptTextProperty(firstRunPassword)
     }

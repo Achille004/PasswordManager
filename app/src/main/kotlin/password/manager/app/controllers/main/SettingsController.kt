@@ -20,14 +20,12 @@ package password.manager.app.controllers.main
 import javafx.beans.binding.Bindings
 import javafx.beans.binding.ObjectBinding
 import javafx.beans.property.ObjectProperty
-import javafx.beans.value.ObservableValue
 import javafx.collections.transformation.SortedList
 import javafx.fxml.FXML
 import javafx.scene.control.ComboBox
 import javafx.scene.control.Label
 import javafx.scene.control.ListCell
 import javafx.scene.image.ImageView
-import javafx.util.Callback
 import javafx.util.StringConverter
 import org.jetbrains.annotations.Contract
 import password.manager.app.Utils
@@ -41,8 +39,7 @@ import password.manager.app.singletons.ObservableResourceFactory
 import password.manager.lib.ReadablePasswordFieldWithStr
 import java.net.URL
 import java.text.Collator
-import java.util.*
-import java.util.concurrent.Callable
+import java.util.ResourceBundle
 import java.util.function.Function
 
 class SettingsController : AbstractController() {
@@ -92,7 +89,7 @@ class SettingsController : AbstractController() {
         setupSortingOrderCB(userPreferences)
 
         // Master password
-        settingsMasterPassword!!.onAction = { _ ->
+        settingsMasterPassword!!.onAction = {
             if (checkTextFields(settingsMasterPassword)) {
                 ioManager.changeMasterPassword(settingsMasterPassword.text.trim())
             }
@@ -113,11 +110,11 @@ class SettingsController : AbstractController() {
         val localeProperty = userPreferences.localeProperty()
 
         val languages = Utils.getFXSortedList(*SupportedLocale.entries.toTypedArray())
-        val locStringConverterMapper = stringConverterMapper { locale: SupportedLocale, item: SupportedLocale ->
+        val locStringConverterMapper = stringConverterMapper { _, item: SupportedLocale ->
             Utils.capitalizeWord(item.locale.displayName)
         }
 
-        settingsLangCB!!.cellFactory = { _ -> FlagListCell() }
+        settingsLangCB!!.cellFactory = { FlagListCell() }
         settingsLangCB.buttonCell = FlagListCell()
 
         settingsLangCB.items = languages
@@ -133,7 +130,7 @@ class SettingsController : AbstractController() {
         val sortingOrderProperty = userPreferences.sortingOrderProperty()
 
         val sortingOrders = Utils.getFXSortedList(*SortingOrder.entries.toTypedArray())
-        val sortOrdStringConverterMapper = stringConverterMapper { locale: SupportedLocale, item: SortingOrder ->
+        val sortOrdStringConverterMapper = stringConverterMapper { _, item: SortingOrder ->
             ObservableResourceFactory.getInstance().getValue(item.i18nKey)
         }
 
@@ -146,12 +143,10 @@ class SettingsController : AbstractController() {
     }
 
     private class FlagListCell : ListCell<SupportedLocale?>() {
-        private val imageView = ImageView()
-
-        init {
-            imageView.fitHeight = FLAG_SIZE
-            imageView.fitWidth = FLAG_SIZE
-            imageView.isPreserveRatio = true
+        private val imageView = ImageView().apply {
+            fitHeight = FLAG_SIZE
+            fitWidth = FLAG_SIZE
+            isPreserveRatio = true
         }
 
         override fun updateItem(item: SupportedLocale?, empty: Boolean) {
@@ -167,8 +162,7 @@ class SettingsController : AbstractController() {
             val displayName = Utils.capitalizeWord(locale.getDisplayName(locale))
             text = displayName
 
-            val flag = item.flagImage
-            imageView.image = flag
+            imageView.image = item.flagImage
             graphic = imageView
         }
 

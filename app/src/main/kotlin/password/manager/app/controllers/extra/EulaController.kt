@@ -36,7 +36,7 @@ class EulaController : AbstractController() {
     fun githubFM(event: ActionEvent?) = browse(FM_LINK)
 
     @FXML
-    fun githubSS(event: ActionEvent?) =  browse(SS_LINK)
+    fun githubSS(event: ActionEvent?) = browse(SS_LINK)
 
     private fun browse(uri: String) = App.getAppHostServices().showDocument(uri)
 
