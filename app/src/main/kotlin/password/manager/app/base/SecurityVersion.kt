@@ -77,7 +77,7 @@ enum class SecurityVersion(
 
     /**
      * Hashes the given password using the embedded hashing function.
-     * 
+     *
      * @param masterPassword The master password to hash.
      * @param salt  The salt used for hashing.
      * @return The hashed master password.
@@ -86,7 +86,7 @@ enum class SecurityVersion(
 
     /**
      * Derives an AES key from the master password using the embedded hashing function.
-     * 
+     *
      * @param masterPassword The master password to derive the key from.
      * @param salt  The salt used for key derivation.
      * @return The derived AES key.

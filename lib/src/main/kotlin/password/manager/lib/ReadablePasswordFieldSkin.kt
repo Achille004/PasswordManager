@@ -49,15 +49,14 @@ open class ReadablePasswordFieldSkin @JvmOverloads constructor(
         actionIcon.toFront()
 
         actionIcon.image = (if (readable.get()) Icons.HIDDEN else Icons.SHOWING).image
-        actionIcon.onMouseClicked = EventHandler { _: MouseEvent -> readable.set(!readable.get()) }
+        actionIcon.onMouseClicked = { readable.set(!readable.get()) }
         children.add(actionIcon)
 
-        readableListener =
-            ChangeListener {_: ObservableValue<out Boolean>, _: Boolean, isReadable: Boolean ->
-                actionIcon.image = (if (isReadable) Icons.HIDDEN else Icons.SHOWING).image
-                control.text = control.text // Get-and-Set to trigger masking. Although not pretty, it's the best way to do it.
-                control.end()
-            }
+        readableListener = {_, _, isReadable: Boolean ->
+            actionIcon.image = (if (isReadable) Icons.HIDDEN else Icons.SHOWING).image
+            control.text = control.text // Get-and-Set to trigger masking. Although not pretty, it's the best way to do it.
+            control.end()
+        }
         readable.addListener(readableListener)
     }
 

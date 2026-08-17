@@ -82,12 +82,12 @@ object LoadingAnimation {
     private fun createTimeline(element: ElementWithDisabler): Timeline? {
         if (!element.canText()) return null
         return Timeline(
-            KeyFrame(Duration.ZERO, { _: ActionEvent? -> element.callText("Loading") }),
-            KeyFrame(LOAD_ANIM_TIME_UNIT, { _: ActionEvent? -> element.callText("Loading.") }),
-            KeyFrame(LOAD_ANIM_TIME_UNIT.multiply(2.0), { _: ActionEvent? -> element.callText("Loading..") }),
-            KeyFrame(LOAD_ANIM_TIME_UNIT.multiply(3.0), { _: ActionEvent? -> element.callText("Loading...") }),
-            KeyFrame(LOAD_ANIM_TIME_UNIT.multiply(4.0), { _: ActionEvent? -> }) // Wait another time unit before restarting
-        ) .also { it.cycleCount = Timeline.INDEFINITE }
+            KeyFrame(Duration.ZERO, { element.callText("Loading") }),
+            KeyFrame(LOAD_ANIM_TIME_UNIT, { element.callText("Loading.") }),
+            KeyFrame(LOAD_ANIM_TIME_UNIT.multiply(2.0), { element.callText("Loading..") }),
+            KeyFrame(LOAD_ANIM_TIME_UNIT.multiply(3.0), { element.callText("Loading...") }),
+            KeyFrame(LOAD_ANIM_TIME_UNIT.multiply(4.0), {}) // Wait another time unit before restarting
+        ) .apply { cycleCount = Timeline.INDEFINITE }
     }
 
     private class ElementWithDisabler (

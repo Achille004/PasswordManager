@@ -51,17 +51,17 @@ class AnimationController<T>(
     private var currentTimeline: Timeline? = null
 
     init {
-        attached.addListener(ChangeListener {_: ObservableValue<out Boolean>, _: Boolean, newValue: Boolean ->
+        attached.addListener { _, _, newValue: Boolean ->
             if (newValue) attach()
             else detach()
-        })
+        }
 
         // Trigger the initial update once the ProgressBar skin is ready
         // This is a workaround for the fact that the skin may not be ready immediately
         destinationControl.skinProperty()
-            .addListener(ChangeListener {_: ObservableValue<out Skin<*>>?, _: Skin<*>?, newSkin: Skin<*>? ->
+            .addListener {
                 if (attached.get()) handleChange(sourceProperty, null, sourceProperty.getValue())
-            })
+            }
 
         attach()
     }

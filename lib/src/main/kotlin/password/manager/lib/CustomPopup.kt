@@ -63,9 +63,9 @@ class CustomPopup private constructor(
 
         // Set position when height is first computed
         content.heightProperty()
-            .addListener(ChangeListener { `_`: ObservableValue<out Number>, oldValue: Number, newValue: Number ->
+            .addListener { _, oldValue: Number, newValue: Number ->
                 // Only listen when height is first set
-                if (oldValue.toDouble() != 0.0 || newValue.toDouble() <= 0) return@ChangeListener
+                if (oldValue.toDouble() != 0.0 || newValue.toDouble() <= 0) return@addListener
 
                 // Get dimensions for position calculations
                 val width: Double = content.getWidth()
@@ -95,28 +95,28 @@ class CustomPopup private constructor(
 
                 // Update position when owner moves or resizes
                 owner.xProperty()
-                    .addListener(ChangeListener { _: ObservableValue<out Number>, _: Number, newX: Number ->
+                    .addListener { _, _, newX: Number ->
                         setX(newX.toDouble(), owner.width)
-                    })
+                    }
                 owner.yProperty()
-                    .addListener(ChangeListener { _: ObservableValue<out Number>, _: Number, newY: Number ->
+                    .addListener { _, _, newY: Number ->
                         setY(newY.toDouble(), owner.height)
-                    })
+                    }
 
                 // Update position when owner resizes
                 owner.widthProperty()
-                    .addListener(ChangeListener { _: ObservableValue<out Number>, _: Number, newWidth: Number ->
+                    .addListener { _, _, newWidth: Number ->
                         setX(owner.x, newWidth.toDouble())
-                    })
+                    }
                 owner.heightProperty()
-                    .addListener(ChangeListener { _: ObservableValue<out Number>, _: Number, newHeight: Number ->
+                    .addListener { _, _, newHeight: Number ->
                         setY(owner.y, newHeight.toDouble())
-                    })
-            })
+                    }
+            }
 
         // Track focused state to prevent unwanted popup visibility changes
         owner.focusedProperty()
-            .addListener(ChangeListener { _: ObservableValue<out Boolean>, _: Boolean, isFocused: Boolean ->
+            .addListener { _, _, isFocused: Boolean ->
                 val isVisible: Boolean = content.isVisible()
                 val shouldShow = disappearTransition?.status == Animation.Status.RUNNING
 
@@ -126,7 +126,7 @@ class CustomPopup private constructor(
                     // Window gained focus while popup is hidden - show it
                     !isVisible && isFocused && shouldShow -> content.setVisible(true)
                 }
-            })
+            }
     }
 
     /**
@@ -159,11 +159,11 @@ class CustomPopup private constructor(
 
     // Used by builder
     private fun setFadingAnimation(fadeDuration: Duration) {
-        disappearTransition = FadeTransition(fadeDuration, content) .also {
-            it.fromValue = 1.0
-            it.toValue = 0.0
-            it.cycleCount = 1
-            it.onFinished = EventHandler { _: ActionEvent -> content.setVisible(false) }
+        disappearTransition = FadeTransition(fadeDuration, content).apply {
+            fromValue = 1.0
+            toValue = 0.0
+            cycleCount = 1
+            onFinished = { content.setVisible(false) }
         }
     }
 
