@@ -53,8 +53,8 @@ class TabManager<T, U : AbstractController>(
 
     fun createTab(item: T) = loadTab(
         controllerConstructor.call(item)
-    ).apply {
-        tabInitializer.accept(this, item)
+    ).also {
+        tabInitializer.accept(it, item)
     }
 
     @JvmOverloads
@@ -74,11 +74,11 @@ class TabManager<T, U : AbstractController>(
     fun closeTab(tab: Tab) = tabPane.tabs.remove(tab)
 
     fun closeTab(item: T) = tabsMap[item]
-        ?.let { closeTab(it) }
+        ?.let(this::closeTab)
         ?: false
 
     fun removeTab(item: T) = tabsMap.remove(item)
-        ?.let { closeTab(it) }
+        ?.let(this::closeTab)
         ?: false
 
     // Utility methods for tab management

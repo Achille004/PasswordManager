@@ -17,8 +17,6 @@
  */
 package password.manager.lib
 
-import javafx.beans.property.BooleanProperty
-
 class ReadablePasswordFieldWithStr : CustomPasswordField(), AnimationAwareControl {
     private val skin: ReadablePasswordFieldWithStrSkin = ReadablePasswordFieldWithStrSkin(this)
 

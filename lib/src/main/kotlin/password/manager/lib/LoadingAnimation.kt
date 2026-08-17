@@ -19,7 +19,6 @@ package password.manager.lib
 
 import javafx.animation.KeyFrame
 import javafx.animation.Timeline
-import javafx.event.ActionEvent
 import javafx.util.Duration
 import java.lang.reflect.Method
 import java.util.*
@@ -52,9 +51,9 @@ object LoadingAnimation {
         elementMap[element] = wrappedElement
 
         // Create and cache the timeline for this element if it has a setText method
-        createTimeline(wrappedElement) ?.let {
-            timelines[wrappedElement] = it
-            it.playFromStart()
+        createTimeline(wrappedElement) ?.apply {
+            timelines[wrappedElement] = this
+            playFromStart()
         }
 
         wrappedElement.callDisable(true)
@@ -87,7 +86,7 @@ object LoadingAnimation {
             KeyFrame(LOAD_ANIM_TIME_UNIT.multiply(2.0), { element.callText("Loading..") }),
             KeyFrame(LOAD_ANIM_TIME_UNIT.multiply(3.0), { element.callText("Loading...") }),
             KeyFrame(LOAD_ANIM_TIME_UNIT.multiply(4.0), {}) // Wait another time unit before restarting
-        ) .apply { cycleCount = Timeline.INDEFINITE }
+        ).apply { cycleCount = Timeline.INDEFINITE }
     }
 
     private class ElementWithDisabler (

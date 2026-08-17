@@ -19,10 +19,6 @@ package password.manager.lib
 
 import javafx.animation.Animation
 import javafx.animation.FadeTransition
-import javafx.beans.value.ChangeListener
-import javafx.beans.value.ObservableValue
-import javafx.event.ActionEvent
-import javafx.event.EventHandler
 import javafx.fxml.FXML
 import javafx.fxml.FXMLLoader
 import javafx.fxml.Initializable

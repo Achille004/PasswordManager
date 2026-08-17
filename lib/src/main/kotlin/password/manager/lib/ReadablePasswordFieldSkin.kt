@@ -20,14 +20,11 @@ package password.manager.lib
 import javafx.beans.property.BooleanProperty
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.value.ChangeListener
-import javafx.beans.value.ObservableValue
-import javafx.event.EventHandler
 import javafx.scene.Cursor
 import javafx.scene.control.PasswordField
 import javafx.scene.control.skin.TextFieldSkin
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
-import javafx.scene.input.MouseEvent
 
 open class ReadablePasswordFieldSkin @JvmOverloads constructor(
     control: CustomPasswordField,

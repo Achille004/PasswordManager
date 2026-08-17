@@ -97,8 +97,8 @@ class ManagerController : AbstractController() {
     private var isMatchWholeWord = false
 
     // Auto-completion data sources
-    private var possibleSoftwares: MutableList<String?>? = null
-    private var possibleUsernames: MutableList<String?>? = null
+    private var possibleSoftwares: List<String?>? = null
+    private var possibleUsernames: List<String?>? = null
     private var onSuggestionEvent: (() -> Unit)? = null
 
     override fun initialize(location: URL, resources: ResourceBundle) {
@@ -608,14 +608,10 @@ class ManagerController : AbstractController() {
         }
 
         private fun unbindAutoCompletion() {
-            softwareAutoCompletion?.apply {
-                dispose()
-            }
+            softwareAutoCompletion?.dispose()
             softwareAutoCompletion = null
 
-            usernameAutoCompletion?.apply {
-                dispose()
-            }
+            usernameAutoCompletion?.dispose()
             usernameAutoCompletion = null
         }
     }

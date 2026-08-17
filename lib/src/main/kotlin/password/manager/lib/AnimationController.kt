@@ -20,14 +20,11 @@ package password.manager.lib
 import javafx.animation.KeyFrame
 import javafx.animation.KeyValue
 import javafx.animation.Timeline
-import javafx.beans.property.BooleanProperty
 import javafx.beans.property.DoubleProperty
 import javafx.beans.property.Property
 import javafx.beans.property.SimpleBooleanProperty
-import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
 import javafx.scene.control.Control
-import javafx.scene.control.Skin
 import javafx.util.Duration
 import password.manager.lib.Utils.doubleEquals
 import kotlin.math.roundToInt
@@ -80,7 +77,7 @@ class AnimationController<T>(
         currentTimeline?.stop()
 
         val timeline: Timeline? = newVal
-            ?.let { progressExtractor(it) }
+            ?.let(progressExtractor)
             ?.let { genTimeline(progressProperty, it, styleFunction) }
 
         currentTimeline = timeline

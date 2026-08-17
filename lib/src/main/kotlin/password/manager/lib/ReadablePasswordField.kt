@@ -17,8 +17,6 @@
  */
 package password.manager.lib
 
-import javafx.beans.property.BooleanProperty
-
 class ReadablePasswordField : CustomPasswordField() {
     private val skin: ReadablePasswordFieldSkin = ReadablePasswordFieldSkin(this)
 

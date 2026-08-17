@@ -39,7 +39,7 @@ abstract class AbstractController : Initializable {
     @FXML
     protected fun showEula(event: MouseEvent?) {
         loadEula()
-        eulaStage?.apply {
+        eulaStage?.run {
             show()
             toFront()
         }
