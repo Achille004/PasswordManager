@@ -144,7 +144,7 @@ class MainController : AbstractController() {
         val spacing = 20.0 // px
 
         val popup = create(
-                App.getAppScenePane().scene.window,
+                App.appScenePane.scene.window,
                 CustomPopup.Alignment.BOTTOM_LEFT,
                 spacing
             )

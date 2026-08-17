@@ -49,12 +49,12 @@ tasks.compileJava {
 }
 
 javafx {
-    version = "26"
+    version = "26.0.2" 
     modules = listOf("javafx.base", "javafx.controls", "javafx.fxml", "javafx.graphics")
 }
 
 testing.suites {
     val test by getting(JvmTestSuite::class) {
-        useJUnitJupiter("6.0.3")
+        useJUnitJupiter("6.1.3")
     }
 }

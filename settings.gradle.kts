@@ -27,7 +27,7 @@ pluginManagement {
         id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 
         // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-        id("org.jetbrains.kotlin.jvm") version "2.3.20"
+        id("org.jetbrains.kotlin.jvm") version "2.4.20-RC"
     }
 }
 

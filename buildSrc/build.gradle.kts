@@ -26,9 +26,9 @@ repositories {
 }
 
 dependencies {
-    implementation("org.panteleyev:jpackage-gradle-plugin:1.7.6")
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.20")
+    implementation("org.panteleyev:jpackage-gradle-plugin:2.1.0")
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.20-RC")
     implementation("org.openjfx:javafx-plugin:0.1.0")
-    implementation("org.gradlex:java-module-dependencies:1.12.1")
+    implementation("org.gradlex:java-module-dependencies:1.13.1")
     implementation("com.adarshr:gradle-test-logger-plugin:4.0.0")
 }
