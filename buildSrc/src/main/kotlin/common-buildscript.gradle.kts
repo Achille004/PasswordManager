@@ -49,7 +49,7 @@ tasks.compileJava {
 }
 
 javafx {
-    version = "26.0.2" 
+    version = "26.0.2"
     modules = listOf("javafx.base", "javafx.controls", "javafx.fxml", "javafx.graphics")
 }
 

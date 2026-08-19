@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,7 +48,15 @@ public class TestTransaction {
     @BeforeEach
     void setUp() {
         executor = Executors.newVirtualThreadPerTaskExecutor();
-        transaction = new Transaction(executor, transactionProgressiveId.incrementAndGet(), "Test Transaction");
+        transaction = new Transaction(transactionProgressiveId.incrementAndGet(), "Test Transaction");
+    }
+
+    /**
+     * Starts an operation, the way {@code TransactionManager} would: a {@link Transaction} only registers
+     * futures that are already running, so these tests own the executor that runs them.
+     */
+    private <T> CompletableFuture<T> submit(Supplier<T> operation) {
+        return CompletableFuture.supplyAsync(operation, executor);
     }
 
     @AfterEach
@@ -70,15 +79,15 @@ public class TestTransaction {
 
         AtomicInteger value = new AtomicInteger(0);
 
-        transaction.addOperation(() -> {
+        transaction.addOperation(submit(() -> {
             value.incrementAndGet();
             return true;
-        }, null);
+        }), null);
 
-        transaction.addOperation(() -> {
+        transaction.addOperation(submit(() -> {
             value.incrementAndGet();
             return true;
-        }, null);
+        }), null);
 
         CompletableFuture<Boolean> result = transaction.commit();
         assertTrue(result.get(5, TimeUnit.SECONDS), "Transaction should commit successfully");
@@ -94,18 +103,18 @@ public class TestTransaction {
         AtomicInteger value = new AtomicInteger(0);
         AtomicBoolean rollbackExecuted = new AtomicBoolean(false);
 
-        transaction.addOperation(() -> {
+        transaction.addOperation(submit(() -> {
             value.incrementAndGet();
             return true;
-        }, () -> {
+        }), () -> {
             value.decrementAndGet();
             rollbackExecuted.set(true);
         });
 
-        transaction.addOperation(() -> {
+        transaction.addOperation(submit(() -> {
             value.incrementAndGet();
             return null; // Simulate failure by returning null
-        }, value::decrementAndGet);
+        }), value::decrementAndGet);
 
         CompletableFuture<Boolean> result = transaction.commit();
         assertFalse(result.get(5, TimeUnit.SECONDS), "Transaction should fail");
@@ -121,9 +130,9 @@ public class TestTransaction {
 
         AtomicBoolean rollbackExecuted = new AtomicBoolean(false);
 
-        transaction.addOperation(() -> {
+        transaction.addOperation(submit(() -> {
             throw new RuntimeException("Simulated failure");
-        }, () -> rollbackExecuted.set(true));
+        }), () -> rollbackExecuted.set(true));
 
         CompletableFuture<Boolean> result = transaction.commit();
         assertFalse(result.get(5, TimeUnit.SECONDS), "Transaction should fail on exception");
@@ -138,9 +147,9 @@ public class TestTransaction {
         AtomicInteger executionOrder = new AtomicInteger(0);
         int[] rollbackOrder = new int[3];
 
-        transaction.addOperation(() -> true, () -> rollbackOrder[0] = executionOrder.incrementAndGet());
-        transaction.addOperation(() -> true, () -> rollbackOrder[1] = executionOrder.incrementAndGet());
-        transaction.addOperation(() -> null, () -> rollbackOrder[2] = executionOrder.incrementAndGet()); // Force rollback
+        transaction.addOperation(submit(() -> true), () -> rollbackOrder[0] = executionOrder.incrementAndGet());
+        transaction.addOperation(submit(() -> true), () -> rollbackOrder[1] = executionOrder.incrementAndGet());
+        transaction.addOperation(submit(() -> null), () -> rollbackOrder[2] = executionOrder.incrementAndGet()); // Force rollback
 
         transaction.commit().get(5, TimeUnit.SECONDS);
 
@@ -156,7 +165,7 @@ public class TestTransaction {
 
         AtomicBoolean rollbackExecuted = new AtomicBoolean(false);
 
-        transaction.addOperation(() -> true, () -> rollbackExecuted.set(true));
+        transaction.addOperation(submit(() -> true), () -> rollbackExecuted.set(true));
 
         transaction.rollback();
 
@@ -170,7 +179,7 @@ public class TestTransaction {
 
         AtomicInteger rollbackCount = new AtomicInteger(0);
 
-        transaction.addOperation(() -> true, rollbackCount::incrementAndGet);
+        transaction.addOperation(submit(() -> true), rollbackCount::incrementAndGet);
 
         transaction.rollback();
         transaction.rollback();
@@ -183,10 +192,12 @@ public class TestTransaction {
     void testAddOperationAfterCommit() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.injectBasePath();
 
-        transaction.addOperation(() -> true, null);
+        transaction.addOperation(submit(() -> true), null);
         transaction.commit().get(5, TimeUnit.SECONDS);
 
-        assertThrows(IllegalStateException.class, () -> transaction.addOperation(() -> true, null),
+        // Already completed, so a registration that is expected to be rejected starts nothing
+        assertThrows(IllegalStateException.class,
+            () -> transaction.addOperation(CompletableFuture.completedFuture(true), null),
             "Should not be able to add operation after commit");
     }
 
@@ -194,10 +205,12 @@ public class TestTransaction {
     void testAddOperationAfterRollback() {
         TestingUtils.injectBasePath();
 
-        transaction.addOperation(() -> true, null);
+        transaction.addOperation(submit(() -> true), null);
         transaction.rollback();
 
-        assertThrows(IllegalStateException.class, () -> transaction.addOperation(() -> true, null),
+        // Already completed, so a registration that is expected to be rejected starts nothing
+        assertThrows(IllegalStateException.class,
+            () -> transaction.addOperation(CompletableFuture.completedFuture(true), null),
             "Should not be able to add operation after rollback");
     }
 
@@ -224,10 +237,10 @@ public class TestTransaction {
 
         AtomicBoolean executed = new AtomicBoolean(false);
 
-        transaction.addOperation(() -> {
+        transaction.addOperation(submit(() -> {
             executed.set(true);
             return true;
-        }, null); // No rollback action
+        }), null); // No rollback action
 
         CompletableFuture<Boolean> result = transaction.commit();
         assertTrue(result.get(5, TimeUnit.SECONDS), "Transaction should commit successfully");
@@ -242,20 +255,20 @@ public class TestTransaction {
         AtomicBoolean rollback1 = new AtomicBoolean(false);
         AtomicBoolean rollback3 = new AtomicBoolean(false);
 
-        transaction.addOperation(() -> {
+        transaction.addOperation(submit(() -> {
             value.incrementAndGet();
             return true;
-        }, () -> rollback1.set(true));
+        }), () -> rollback1.set(true));
 
-        transaction.addOperation(() -> {
+        transaction.addOperation(submit(() -> {
             value.incrementAndGet();
             return true;
-        }, null); // No rollback for this one
+        }), null); // No rollback for this one
 
-        transaction.addOperation(() -> {
+        transaction.addOperation(submit(() -> {
             value.incrementAndGet();
             return null; // Force failure
-        }, () -> rollback3.set(true));
+        }), () -> rollback3.set(true));
 
         CompletableFuture<Boolean> result = transaction.commit();
         assertFalse(result.get(5, TimeUnit.SECONDS), "Transaction should fail");
@@ -271,13 +284,13 @@ public class TestTransaction {
         AtomicBoolean rollback1 = new AtomicBoolean(false);
         AtomicBoolean rollback3 = new AtomicBoolean(false);
 
-        transaction.addOperation(() -> true, () -> rollback1.set(true));
+        transaction.addOperation(submit(() -> true), () -> rollback1.set(true));
 
-        transaction.addOperation(() -> true, () -> {
+        transaction.addOperation(submit(() -> true), () -> {
             throw new RuntimeException("Rollback error");
         });
 
-        transaction.addOperation(() -> true, () -> rollback3.set(true));
+        transaction.addOperation(submit(() -> true), () -> rollback3.set(true));
 
         transaction.rollback();
 
@@ -294,10 +307,10 @@ public class TestTransaction {
         int operationCount = 10;
 
         for (int i = 0; i < operationCount; i++) {
-            transaction.addOperation(() -> {
+            transaction.addOperation(submit(() -> {
                 counter.incrementAndGet();
                 return true;
-            }, null);
+            }), null);
         }
 
         CompletableFuture<Boolean> result = transaction.commit();
@@ -309,7 +322,7 @@ public class TestTransaction {
     void testCommitAfterAlreadyCommitted() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.injectBasePath();
 
-        transaction.addOperation(() -> true, null);
+        transaction.addOperation(submit(() -> true), null);
         transaction.commit().get(5, TimeUnit.SECONDS);
 
         CompletableFuture<Boolean> result = transaction.commit();
@@ -320,7 +333,7 @@ public class TestTransaction {
     void testCommitAfterRollback() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.injectBasePath();
 
-        transaction.addOperation(() -> true, null);
+        transaction.addOperation(submit(() -> true), null);
         transaction.rollback();
 
         CompletableFuture<Boolean> result = transaction.commit();
@@ -333,7 +346,7 @@ public class TestTransaction {
 
         String expectedValue = "test_value";
 
-        CompletableFuture<String> operationFuture = transaction.addOperation(() -> expectedValue, null);
+        CompletableFuture<String> operationFuture = transaction.addOperation(submit(() -> expectedValue), null);
 
         transaction.commit().get(5, TimeUnit.SECONDS);
 
@@ -347,7 +360,7 @@ public class TestTransaction {
 
         AtomicBoolean executed = new AtomicBoolean(false);
 
-        transaction.addOperation(() -> {
+        transaction.addOperation(submit(() -> {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
@@ -355,7 +368,7 @@ public class TestTransaction {
             }
             executed.set(true);
             return true;
-        }, null);
+        }), null);
 
         CompletableFuture<Boolean> result = transaction.commit();
         assertTrue(result.get(5, TimeUnit.SECONDS), "Transaction should wait for operation to complete");

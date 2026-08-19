@@ -33,7 +33,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import password.manager.app.persistence.Transaction;
 import password.manager.app.persistence.TransactionManager;
 import password.manager.app.singletons.Singletons;
 import testing.TestingUtils;
@@ -56,32 +55,23 @@ public class TestTransactionManager {
     }
 
     @Test
-    void testBeginTransaction() {
-        TestingUtils.injectBasePath();
-
-        Transaction transaction = manager.beginTransaction("Test Transaction");
-        assertNotNull(transaction, "Transaction should not be null");
-        assertFalse(transaction.isCommitted(), "New transaction should not be committed");
-        assertFalse(transaction.isRolledBack(), "New transaction should not be rolled back");
-    }
-
-    @Test
     void testExecuteInTransactionSuccess() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.injectBasePath();
 
         AtomicInteger value = new AtomicInteger(0);
 
-        CompletableFuture<Integer> result = manager.executeInTransaction(transaction -> {
-            transaction.addOperation(() -> {
+        CompletableFuture<List<Integer>> result = manager.executeBatchInTransaction(
+            List.of(42),
+            element -> {
                 value.incrementAndGet();
-                return true;
-            }, null);
+                return element;
+            },
+            null,
+            "Test Transaction"
+        );
 
-            return CompletableFuture.completedFuture(42);
-        }, "Test Transaction");
-
-        Integer resultValue = result.get(5, TimeUnit.SECONDS);
-        assertEquals(42, resultValue, "Transaction should return correct value");
+        List<Integer> resultValue = result.get(5, TimeUnit.SECONDS);
+        assertEquals(List.of(42), resultValue, "Transaction should return the operation results");
         assertEquals(1, value.get(), "Operation should have executed");
     }
 
@@ -91,37 +81,41 @@ public class TestTransactionManager {
 
         AtomicBoolean rollbackExecuted = new AtomicBoolean(false);
 
-        CompletableFuture<String> result = manager.executeInTransaction(transaction -> {
-            transaction.addOperation(() -> null, () -> rollbackExecuted.set(true)); // Force failure
-            return CompletableFuture.completedFuture("test");
-        }, "Test Transaction");
+        CompletableFuture<List<String>> result = manager.executeBatchInTransaction(
+            List.of("only"),
+            element -> null, // Force failure
+            element -> () -> rollbackExecuted.set(true),
+            "Test Transaction"
+        );
 
-        String resultValue = result.get(5, TimeUnit.SECONDS);
+        List<String> resultValue = result.get(5, TimeUnit.SECONDS);
         assertNull(resultValue, "Failed transaction should return null");
         assertTrue(rollbackExecuted.get(), "Rollback should have been executed");
     }
 
     @Test
-    void testExecuteInTransactionWithException() throws ExecutionException, InterruptedException, TimeoutException {
+    void testExecuteInTransactionWithException() {
         TestingUtils.injectBasePath();
 
         AtomicBoolean rollbackExecuted = new AtomicBoolean(false);
 
-        CompletableFuture<String> result = manager.executeInTransaction(transaction -> {
-            transaction.addOperation(() -> {
+        CompletableFuture<List<String>> result = manager.executeBatchInTransaction(
+            List.of("only"),
+            element -> {
                 throw new RuntimeException("Test exception");
-            }, () -> rollbackExecuted.set(true));
+            },
+            element -> () -> rollbackExecuted.set(true),
+            "Test Transaction"
+        );
 
-            return CompletableFuture.completedFuture("test");
-        }, "Test Transaction");
-
-        String resultValue = result.get(5, TimeUnit.SECONDS);
-        assertNull(resultValue, "Failed transaction should return null");
+        // The results are the operations' own, so an operation that throws makes the transaction fail
+        assertThrows(ExecutionException.class, () -> result.get(5, TimeUnit.SECONDS),
+            "A throwing operation should fail the transaction");
         assertTrue(rollbackExecuted.get(), "Rollback should have been executed");
     }
 
     @Test
-    void testExecuteInTransactionShorthand() throws ExecutionException, InterruptedException, TimeoutException {
+    void testExecuteSingleOperation() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.injectBasePath();
 
         AtomicInteger value = new AtomicInteger(0);
@@ -137,7 +131,7 @@ public class TestTransactionManager {
     }
 
     @Test
-    void testExecuteInTransactionShorthandWithFailure() throws ExecutionException, InterruptedException, TimeoutException {
+    void testExecuteSingleOperationWithFailure() throws ExecutionException, InterruptedException, TimeoutException {
         TestingUtils.injectBasePath();
 
         AtomicInteger value = new AtomicInteger(0);
@@ -204,15 +198,117 @@ public class TestTransactionManager {
     }
 
     @Test
-    void testTransactionExecutionAfterShutdown() {
+    void testExternalFutureCommits() throws ExecutionException, InterruptedException, TimeoutException {
+        TestingUtils.injectBasePath();
+
+        AtomicBoolean executed = new AtomicBoolean(false);
+
+        // Completed by a scheduler thread, so the manager's executor never sees this operation
+        CompletableFuture<Boolean> external = new CompletableFuture<>();
+        external.completeAsync(
+            () -> {
+                executed.set(true);
+                return true;
+            },
+            CompletableFuture.delayedExecutor(100, TimeUnit.MILLISECONDS)
+        );
+
+        CompletableFuture<Boolean> result = manager.completeInTransaction(() -> external, null, "External operation");
+
+        assertTrue(result.get(5, TimeUnit.SECONDS), "Transaction should commit with the future's result");
+        assertTrue(executed.get(), "The external operation should have run");
+    }
+
+    @Test
+    void testExternalFutureFailureRollsBack() {
+        TestingUtils.injectBasePath();
+
+        AtomicBoolean rollbackExecuted = new AtomicBoolean(false);
+        CompletableFuture<Boolean> external =
+            CompletableFuture.failedFuture(new IllegalArgumentException("Simulated failure"));
+
+        CompletableFuture<Boolean> result =
+            manager.completeInTransaction(() -> external, () -> rollbackExecuted.set(true), "Failing external operation");
+
+        ExecutionException thrown =
+            assertThrows(ExecutionException.class, () -> result.get(5, TimeUnit.SECONDS));
+        assertTrue(rollbackExecuted.get(), "Rollback should have been executed");
+
+        // The transaction reports the operation's own exception, with nothing of its own wrapped around it
+        Throwable cause = thrown.getCause();
+        assertTrue(cause instanceof IllegalArgumentException, "The original failure should be reported as it is");
+        assertEquals("Simulated failure", cause.getMessage(), "The original failure should be unaltered");
+    }
+
+    @Test
+    void testFailureToStartFailsTheTransaction() {
+        TestingUtils.injectBasePath();
+
+        AtomicBoolean rollbackExecuted = new AtomicBoolean(false);
+
+        // Nothing reaches the caller: the operation is started from inside the transaction
+        CompletableFuture<Boolean> result = manager.completeInTransaction(
+            () -> {
+                throw new IllegalStateException("Cannot start");
+            },
+            () -> rollbackExecuted.set(true),
+            "Unstartable operation"
+        );
+
+        ExecutionException thrown =
+            assertThrows(ExecutionException.class, () -> result.get(5, TimeUnit.SECONDS));
+        assertTrue(thrown.getCause() instanceof IllegalStateException,
+            "The transaction should report the failure that prevented the operation from starting");
+        assertFalse(rollbackExecuted.get(), "Nothing ran, so there is nothing to roll back");
+    }
+
+    @Test
+    void testTransactionRefusedAfterShutdown() {
         TestingUtils.injectBasePath();
 
         manager.shutdown();
 
-        // This test verifies that transactions can still be created after shutdown,
-        // but they may not execute properly due to the executor being shut down
-        assertDoesNotThrow(() -> manager.beginTransaction("Test Transaction"),
-            "Should be able to create transaction even after shutdown");
+        AtomicBoolean executed = new AtomicBoolean(false);
+        CompletableFuture<Boolean> result = manager.executeInTransaction(
+            () -> {
+                executed.set(true);
+                return true;
+            },
+            null,
+            "Transaction after shutdown"
+        );
+
+        ExecutionException thrown =
+            assertThrows(ExecutionException.class, () -> result.get(5, TimeUnit.SECONDS));
+        assertTrue(thrown.getCause() instanceof IllegalStateException,
+            "A manager that has been shut down should refuse the transaction");
+        assertFalse(executed.get(), "The operation should not have been started");
+    }
+
+    @Test
+    void testShutdownWaitsForOperationsOutsideExecutor()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        TestingUtils.injectBasePath();
+
+        AtomicBoolean executed = new AtomicBoolean(false);
+
+        // Nothing is ever submitted to the executor here, so only the in-flight registry keeps shutdown waiting
+        CompletableFuture<Boolean> external = new CompletableFuture<>();
+        external.completeAsync(
+            () -> {
+                executed.set(true);
+                return true;
+            },
+            CompletableFuture.delayedExecutor(200, TimeUnit.MILLISECONDS)
+        );
+
+        CompletableFuture<Boolean> result = manager.completeInTransaction(() -> external, null, "External operation");
+
+        manager.shutdown();
+
+        assertTrue(executed.get(), "shutdown() should not return while an operation is still running");
+        assertTrue(result.isDone(), "The transaction should have settled before shutdown() returned");
+        assertTrue(result.get(5, TimeUnit.SECONDS), "The transaction should have committed");
     }
 
     @Test
@@ -222,36 +318,21 @@ public class TestTransactionManager {
         AtomicInteger counter = new AtomicInteger(0);
         List<Integer> executionOrder = new ArrayList<>();
 
-        CompletableFuture<String> result = manager.executeInTransaction(transaction -> {
-            transaction.addOperation(() -> {
+        CompletableFuture<List<Integer>> result = manager.executeBatchInTransaction(
+            List.of(1, 2, 3),
+            element -> {
                 synchronized (executionOrder) {
-                    executionOrder.add(1);
+                    executionOrder.add(element);
                 }
                 counter.incrementAndGet();
-                return true;
-            }, counter::decrementAndGet);
+                return element;
+            },
+            element -> counter::decrementAndGet,
+            "Test Transaction"
+        );
 
-            transaction.addOperation(() -> {
-                synchronized (executionOrder) {
-                    executionOrder.add(2);
-                }
-                counter.incrementAndGet();
-                return true;
-            }, counter::decrementAndGet);
-
-            transaction.addOperation(() -> {
-                synchronized (executionOrder) {
-                    executionOrder.add(3);
-                }
-                counter.incrementAndGet();
-                return true;
-            }, counter::decrementAndGet);
-
-            return CompletableFuture.completedFuture("success");
-        }, "Test Transaction");
-
-        String resultValue = result.get(5, TimeUnit.SECONDS);
-        assertEquals("success", resultValue, "Transaction should succeed");
+        List<Integer> resultValue = result.get(5, TimeUnit.SECONDS);
+        assertEquals(List.of(1, 2, 3), resultValue, "Results should come back in the order of the elements");
         assertEquals(3, counter.get(), "All three operations should have executed");
         assertEquals(3, executionOrder.size(), "All three operations should have been recorded");
     }
@@ -263,41 +344,22 @@ public class TestTransactionManager {
         AtomicInteger counter = new AtomicInteger(0);
         List<Integer> rollbackOrder = new ArrayList<>();
 
-        CompletableFuture<String> result = manager.executeInTransaction(transaction -> {
-            transaction.addOperation(() -> {
+        CompletableFuture<List<Integer>> result = manager.executeBatchInTransaction(
+            List.of(1, 2, 3),
+            element -> {
                 counter.incrementAndGet();
-                return true;
-            }, () -> {
+                return element == 3 ? null : element; // The last one forces a failure
+            },
+            element -> () -> {
                 synchronized (rollbackOrder) {
-                    rollbackOrder.add(1);
+                    rollbackOrder.add(element);
                 }
                 counter.decrementAndGet();
-            });
+            },
+            "Test Transaction"
+        );
 
-            transaction.addOperation(() -> {
-                counter.incrementAndGet();
-                return true;
-            }, () -> {
-                synchronized (rollbackOrder) {
-                    rollbackOrder.add(2);
-                }
-                counter.decrementAndGet();
-            });
-
-            transaction.addOperation(() -> {
-                counter.incrementAndGet();
-                return null; // Force failure
-            }, () -> {
-                synchronized (rollbackOrder) {
-                    rollbackOrder.add(3);
-                }
-                counter.decrementAndGet();
-            });
-
-            return CompletableFuture.completedFuture("success");
-        }, "Test Transaction");
-
-        String resultValue = result.get(5, TimeUnit.SECONDS);
+        List<Integer> resultValue = result.get(5, TimeUnit.SECONDS);
         assertNull(resultValue, "Transaction should fail");
         assertEquals(0, counter.get(), "Counter should be rolled back to 0");
         assertEquals(3, rollbackOrder.size(), "All rollbacks should have executed");
@@ -315,32 +377,23 @@ public class TestTransactionManager {
         AtomicBoolean operation1Complete = new AtomicBoolean(false);
         AtomicBoolean operation2Complete = new AtomicBoolean(false);
 
-        CompletableFuture<String> result = manager.executeInTransaction(transaction -> {
-            transaction.addOperation(() -> {
+        CompletableFuture<List<Boolean>> result = manager.executeBatchInTransaction(
+            List.of(50, 100),
+            delayMillis -> {
                 try {
-                    Thread.sleep(50);
+                    Thread.sleep(delayMillis);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
-                operation1Complete.set(true);
+                (delayMillis == 50 ? operation1Complete : operation2Complete).set(true);
                 return true;
-            }, null);
+            },
+            null,
+            "Test Transaction"
+        );
 
-            transaction.addOperation(() -> {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                operation2Complete.set(true);
-                return true;
-            }, null);
-
-            return CompletableFuture.completedFuture("delayed");
-        }, "Test Transaction");
-
-        String resultValue = result.get(5, TimeUnit.SECONDS);
-        assertEquals("delayed", resultValue, "Transaction should complete");
+        List<Boolean> resultValue = result.get(5, TimeUnit.SECONDS);
+        assertEquals(List.of(true, true), resultValue, "Transaction should wait for every operation");
         assertTrue(operation1Complete.get(), "First operation should complete");
         assertTrue(operation2Complete.get(), "Second operation should complete");
     }
@@ -352,19 +405,18 @@ public class TestTransactionManager {
         AtomicInteger outerCounter = new AtomicInteger(0);
         AtomicInteger innerCounter = new AtomicInteger(0);
 
-        CompletableFuture<String> result = manager.executeInTransaction(outerTransaction -> {
-            outerTransaction.addOperation(() -> {
+        CompletableFuture<List<Boolean>> result = manager.executeBatchInTransaction(
+            List.of("outer"),
+            element -> {
                 outerCounter.incrementAndGet();
 
-                // Execute an inner transaction
-                CompletableFuture<Integer> innerResult = manager.executeInTransaction(innerTransaction -> {
-                    innerTransaction.addOperation(() -> {
-                        innerCounter.incrementAndGet();
-                        return true;
-                    }, null);
-
-                    return CompletableFuture.completedFuture(innerCounter.get());
-                }, "Inner Transaction");
+                // Execute an inner transaction from within an operation of the outer one
+                CompletableFuture<List<Integer>> innerResult = manager.executeBatchInTransaction(
+                    List.of("inner"),
+                    innerElement -> innerCounter.incrementAndGet(),
+                    null,
+                    "Inner Transaction"
+                );
 
                 try {
                     innerResult.get(5, TimeUnit.SECONDS);
@@ -373,13 +425,13 @@ public class TestTransactionManager {
                 }
 
                 return true;
-            }, null);
+            },
+            null,
+            "Outer Transaction"
+        );
 
-            return CompletableFuture.completedFuture("nested");
-        }, "Outer Transaction");
-
-        String resultValue = result.get(5, TimeUnit.SECONDS);
-        assertEquals("nested", resultValue, "Outer transaction should succeed");
+        List<Boolean> resultValue = result.get(5, TimeUnit.SECONDS);
+        assertEquals(List.of(true), resultValue, "Outer transaction should succeed");
         assertEquals(1, outerCounter.get(), "Outer operation should execute");
         assertEquals(1, innerCounter.get(), "Inner operation should execute");
     }

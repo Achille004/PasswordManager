@@ -22,8 +22,8 @@ import static password.manager.app.Utils.runOnFx;
 
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 import org.jetbrains.annotations.NotNull;
@@ -233,8 +233,9 @@ public final class AccountRepository implements AutoCloseable {
             originalIndex = accounts.indexOf(account);
         }
 
-        return transactionManager.executeInTransaction(
-            runOnFx(() -> {
+        return transactionManager.completeInTransaction(
+            // Only scheduled once the transaction has been opened
+            () -> runOnFx(() -> {
                 synchronized (accounts) {
                     return accounts.remove(account);
                 }
@@ -263,40 +264,30 @@ public final class AccountRepository implements AutoCloseable {
      */
     public @NotNull CompletableFuture<Boolean> unlockAll(@Nullable String legacyMasterPassword) {
         List<Account> accountList;
-        List<Account.AccountMemento> originalStates;
         synchronized (accounts) {
             if (accounts.isEmpty()) return CompletableFuture.completedFuture(true); // No accounts to unlock, consider it successful
             accountList = new ArrayList<>(accounts);
-            originalStates = accounts.stream().map(Account::captureState).toList();
         }
 
-        return transactionManager.executeInTransaction(transaction -> {
-            List<CompletableFuture<Boolean>> updateFutures = new ArrayList<>(accountList.size());
-
-            for (int i = 0; i < accountList.size(); i++) {
-                Account account = accountList.get(i);
-                Account.AccountMemento originalState = originalStates.get(i);
-
-                CompletableFuture<Boolean> updateFuture = transaction.addOperation(
-                    () -> {
-                        try {
-                            account.unlock(userPreferences.getDEK(), userPreferences.getLegacyVersion(), legacyMasterPassword);
-                            return true;
-                        } catch (GeneralSecurityException e) {
-                            throw new RuntimeException("Failed to unlock account", e);
-                        }
-                    },
-                    () -> {
-                        // Rollback using captured state
-                        account.restoreState(originalState);
-                    }
-                );
-
-                updateFutures.add(updateFuture);
-            }
-
-            return allSuccessful(updateFutures);
-        }, "Unlocking all accounts");
+        return transactionManager.executeBatchInTransaction(
+            accountList,
+            account -> {
+                try {
+                    account.unlock(userPreferences.getDEK(), userPreferences.getLegacyVersion(), legacyMasterPassword);
+                    return true;
+                } catch (GeneralSecurityException e) {
+                    throw new RuntimeException("Failed to unlock account", e);
+                }
+            },
+            // Capture complete original state for rollback using Account's memento pattern
+            account -> {
+                Account.AccountMemento originalState = account.captureState();
+                return () -> account.restoreState(originalState);
+            },
+            "Unlocking all accounts"
+        )
+            // An operation that returns null is a failed one, so a non-null result means every account was unlocked
+            .thenApply(Objects::nonNull);
     }
 
     /**
@@ -337,18 +328,5 @@ public final class AccountRepository implements AutoCloseable {
     @Override
     public void close() {
         transactionManager.shutdown();
-    }
-
-    /**
-     * Helper method to check if all CompletableFutures in a collection completed successfully with true.
-     * @param futures the collection of CompletableFutures to check
-     * @return a CompletableFuture that completes with true if all futures completed successfully with true, false otherwise
-    */
-    private static CompletableFuture<Boolean> allSuccessful(Collection<CompletableFuture<Boolean>> futures) {
-        if (futures.isEmpty()) return CompletableFuture.completedFuture(true); // Consider empty collection as successful
-        return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new))
-                .thenApply(_ -> futures.stream().allMatch(
-                    f -> (f.isDone() && !f.isCompletedExceptionally() && f.join())
-                ));
     }
 }
