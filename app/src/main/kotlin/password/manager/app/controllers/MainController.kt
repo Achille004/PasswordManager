@@ -27,6 +27,7 @@ import javafx.scene.image.Image
 import javafx.scene.image.ImageView
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.Pane
+import javafx.stage.Window
 import javafx.util.Duration
 import password.manager.app.App
 import password.manager.app.Utils
@@ -143,20 +144,22 @@ class MainController : AbstractController() {
     private fun createAutosavePopup() {
         val spacing = 20.0 // px
 
-        val popup = create(
-                App.appScenePane.scene.window,
+        val popup = App.appScenePane?.scene?.window?.let { window: Window ->
+            create(
+                window,
                 CustomPopup.Alignment.BOTTOM_LEFT,
                 spacing
             )
-            .withStylesheets(App.ROOT_STYLESHEET, App.CUSTOMPOPUP_STYLESHEET)
-            .withFadingAnimation(Duration.seconds(3.0))
-            .build()
+                .withStylesheets(App.ROOT_STYLESHEET, App.CUSTOMPOPUP_STYLESHEET)
+                .withFadingAnimation(Duration.seconds(3.0))
+                .build()
+        } ?: throw IllegalStateException("Window is not available.")
 
         popup.hidden(false) // Start hidden without animation
 
         val resources = ObservableResourceFactory.getInstance()
         IOManager.getInstance().savingProperty()
-            .addListener {_, _, newValue: SaveState? ->
+            .addListener { _, _, newValue: SaveState? ->
                 val getString = UnaryOperator { i18nKey: String ->
                     val key = "popup.$i18nKey"
                     try {

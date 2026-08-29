@@ -77,8 +77,7 @@ class AnimationController<T>(
         currentTimeline?.stop()
 
         val timeline: Timeline? = newVal
-            ?.let(progressExtractor)
-            ?.let { genTimeline(progressProperty, it, styleFunction) }
+            ?.let { genTimeline(progressProperty, progressExtractor(it), styleFunction) }
 
         currentTimeline = timeline
         currentTimeline?.playFromStart()
@@ -98,13 +97,14 @@ class AnimationController<T>(
         * @param property [DoubleProperty] to animate
         * @param destination destination value of `property`
         * @param styleFunction function that generates the style [KeyValue] based on current `property` progress
-        * @return the generated [Timeline], or `null` if no animation is needed
+        * @return the generated [Timeline], or `null` if the `destination` value is less than or equal the current one
         */
         private fun genTimeline(property: DoubleProperty, destination: Double, styleFunction: (Double) -> KeyValue?): Timeline? {
             val start: Double = property.get()
-            if (doubleEquals(start, destination)) return null
+            val gap: Double = destination - start
+            if (doubleEquals(gap, 0.0)) return null
 
-            val step = (destination - start) / ANIM_KEYFRAMES
+            val step = gap / ANIM_KEYFRAMES
             val keyFrames = (1..ANIM_KEYFRAMES).map { i ->
                 val progress = (start + step * i).coerceIn(0.0, 1.0)
                 KeyFrame(

@@ -38,7 +38,7 @@ class EulaController : AbstractController() {
     @FXML
     fun githubSS(event: ActionEvent?) = browse(SS_LINK)
 
-    private fun browse(uri: String) = App.appHostServices.showDocument(uri)
+    private fun browse(uri: String) = App.appHostServices?.showDocument(uri)
 
     companion object {
         const val FM_LINK = "https://github.com/Achille004"

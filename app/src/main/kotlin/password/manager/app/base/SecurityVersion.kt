@@ -82,7 +82,7 @@ enum class SecurityVersion(
      * @param salt  The salt used for hashing.
      * @return The hashed master password.
      */
-    fun hash(masterPassword: String, salt: ByteArray) = hashingFunction.invoke(HASH_BITS, masterPassword, salt)
+    fun hash(masterPassword: String, salt: ByteArray) = hashingFunction(HASH_BITS, masterPassword, salt)
 
     /**
      * Derives an AES key from the master password using the embedded hashing function.
@@ -92,7 +92,7 @@ enum class SecurityVersion(
      * @return The derived AES key.
      */
     fun getKey(masterPassword: String, salt: ByteArray): ByteArray {
-        val keyBytes: ByteArray = hashingFunction.invoke(KEY_BITS, masterPassword, salt)
+        val keyBytes: ByteArray = hashingFunction(KEY_BITS, masterPassword, salt)
         val secretKeySpec = SecretKeySpec(keyBytes, "AES")
         return secretKeySpec.encoded
     }

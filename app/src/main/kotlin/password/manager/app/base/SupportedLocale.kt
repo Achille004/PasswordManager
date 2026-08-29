@@ -19,6 +19,7 @@ package password.manager.app.base
 
 import com.fasterxml.jackson.annotation.JsonValue
 import javafx.scene.image.Image
+import password.manager.app.Utils
 import java.util.Arrays
 import java.util.Locale
 import java.util.Optional
@@ -43,6 +44,15 @@ enum class SupportedLocale(
 
     @Transient
     val flagImage: Image = Image(javaClass.getResourceAsStream(flagResourcePath)!!)
+
+    /**
+     * The endonym of this locale, i.e. the language's own name capitalized with its own
+     * title-casing rules (e.g. `English`, `Italiano`).
+     *
+     * Unlike [Locale.getDisplayName], this does not depend on the JVM default locale.
+     */
+    @Transient
+    val displayName: String = Utils.capitalizeWord(locale.getDisplayName(locale), locale)
 
     companion object {
         private val IS_LOCALE: BiPredicate<SupportedLocale, Locale> = { sl1: SupportedLocale, l2: Locale ->

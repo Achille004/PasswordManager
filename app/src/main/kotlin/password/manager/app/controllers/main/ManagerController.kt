@@ -163,15 +163,15 @@ class ManagerController : AbstractController() {
 
         // Listen for changes in the account list and update suggestions
         accountList.addListener(ListChangeListener {
-            possibleSoftwares = fieldListExtractor.invoke(Account::getSoftware)
-            possibleUsernames = fieldListExtractor.invoke(Account::getUsername)
+            possibleSoftwares = fieldListExtractor(Account::getSoftware)
+            possibleUsernames = fieldListExtractor(Account::getUsername)
             // Trigger update of auto-completion, if the handler is present
             onSuggestionEvent?.invoke()
         })
 
         // Initial population
-        possibleSoftwares = fieldListExtractor.invoke(Account::getSoftware)
-        possibleUsernames = fieldListExtractor.invoke(Account::getSoftware)
+        possibleSoftwares = fieldListExtractor(Account::getSoftware)
+        possibleUsernames = fieldListExtractor(Account::getUsername)
     }
 
     private fun setupSearchFunctionality(filteredAccountList: FilteredList<Account>) {

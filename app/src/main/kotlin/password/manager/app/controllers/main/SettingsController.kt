@@ -111,7 +111,7 @@ class SettingsController : AbstractController() {
 
         val languages = Utils.getFXSortedList(*SupportedLocale.entries.toTypedArray())
         val locStringConverterMapper = stringConverterMapper { _, item: SupportedLocale ->
-            Utils.capitalizeWord(item.locale.displayName)
+            item.displayName
         }
 
         settingsLangCB!!.cellFactory = { FlagListCell() }
@@ -158,9 +158,7 @@ class SettingsController : AbstractController() {
                 return
             }
 
-            val locale = item.locale
-            val displayName = Utils.capitalizeWord(locale.getDisplayName(locale))
-            text = displayName
+            text = item.displayName
 
             imageView.image = item.flagImage
             graphic = imageView
@@ -177,7 +175,7 @@ class SettingsController : AbstractController() {
             locale: SupportedLocale? -> locale ?. let {
                 object : StringConverter<T?>() {
                     override fun fromString(string: String?) = throw UnsupportedOperationException()
-                    override fun toString(obj: T?) = obj ?.let { converter.invoke(locale, obj) }
+                    override fun toString(obj: T?) = obj ?.let { converter(locale, obj) }
                 }
             }
         }
@@ -185,13 +183,13 @@ class SettingsController : AbstractController() {
         @Contract(value = "_ -> new", pure = true)
         private fun <T> notNullBinding(property: ObjectProperty<T?>): ObjectBinding<T?> {
             return object : ObjectBinding<T?>() {
-                private var cachedValue = property.getValue()
+                private var cachedValue: T? = property.value
 
                 init {
                     bind(property)
                 }
 
-                override fun computeValue() = property.getValue()
+                override fun computeValue(): T? = property.value
                     ?.also { cachedValue = it }
                     ?: cachedValue
             }
@@ -203,8 +201,8 @@ class SettingsController : AbstractController() {
         ) = Bindings.createObjectBinding(
              {
                 Comparator.comparing(
-                    { t: T? -> converter.getValue().toString(t) },
-                    Collator.getInstance(locale.getValue()!!.locale)
+                    converter.value::toString,
+                    Collator.getInstance(locale.value!!.locale)
                 )
             },
             locale, converter
