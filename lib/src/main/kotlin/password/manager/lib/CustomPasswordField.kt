@@ -23,11 +23,13 @@ import javafx.scene.control.PasswordField
 abstract class CustomPasswordField : PasswordField() {
     abstract val readableProperty: BooleanProperty
 
-    var isReadable: Boolean = readableProperty.get()
+    // Convenience property transparently delegating to the underlying JavaFX property.
+    var isReadable: Boolean
         get() = readableProperty.get()
         set(value) {
-            // Use XOR to avoid unnecessary updates
-            if (value xor field) readableProperty.set(value)
+            // Use inequality to avoid unnecessary updates
+            // (concurrent updates are not checked, but they only cause a harmless re-assignment)
+            if (value != readableProperty.get()) readableProperty.set(value)
         }
 
     fun toggleReadable() {
