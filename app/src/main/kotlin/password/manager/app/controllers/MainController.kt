@@ -39,7 +39,6 @@ import password.manager.app.singletons.IOManager.SaveState
 import password.manager.app.singletons.Logger
 import password.manager.app.singletons.ObservableResourceFactory
 import password.manager.lib.CustomPopup
-import password.manager.lib.CustomPopup.Builder.Companion.create
 import java.awt.Desktop
 import java.io.IOException
 import java.net.URL
@@ -145,7 +144,7 @@ class MainController : AbstractController() {
         val spacing = 20.0 // px
 
         val popup = App.appScenePane?.scene?.window?.let { window: Window ->
-            create(
+            CustomPopup.Builder.create(
                 window,
                 CustomPopup.Alignment.BOTTOM_LEFT,
                 spacing

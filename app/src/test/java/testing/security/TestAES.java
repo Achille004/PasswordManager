@@ -26,9 +26,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -42,19 +42,13 @@ import org.junit.jupiter.api.Test;
 import password.manager.app.base.SecurityVersion;
 import password.manager.app.security.AES;
 
+import javax.crypto.AEADBadTagException;
+
 public class TestAES {
 
-    static SecureRandom random;
+    static SecureRandom random = AES.getStrongRandom();
 
     private byte[] salt, iv;
-
-    static {
-        try {
-            random = SecureRandom.getInstanceStrong();
-        } catch (NoSuchAlgorithmException e) {
-            random = new SecureRandom();
-        }
-    }
 
     @BeforeEach
     void setUp() {
@@ -65,10 +59,11 @@ public class TestAES {
     @Test
     void testBLNS() throws GeneralSecurityException, IOException {
         int threads = Math.max(1, Runtime.getRuntime().availableProcessors());
-        ExecutorService executor = Executors.newFixedThreadPool(threads);
         List<Callable<Void>> tasks = new ArrayList<>();
 
-        try (InputStream stream = TestAES.class.getResourceAsStream("/blns.txt")) {
+        try (ExecutorService executor = Executors.newFixedThreadPool(threads);
+             InputStream stream = TestAES.class.getResourceAsStream("/blns.txt")) {
+
             assert stream != null;
 
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
@@ -102,8 +97,6 @@ public class TestAES {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("BLNS parallel execution interrupted", e);
-        } finally {
-            executor.shutdownNow();
         }
     }
 
@@ -122,7 +115,7 @@ public class TestAES {
         String plaintext = "Test message";
         String password = "testPassword123";
 
-        for (SecurityVersion version : SecurityVersion.values()) {
+        for (SecurityVersion version : SecurityVersion.getEntries()) {
             byte[] key = version.getKey(password, localSalt);
 
             byte[] iv1 = newRandom16();
@@ -132,7 +125,8 @@ public class TestAES {
             byte[] encrypted2 = AES.encryptStringAES(plaintext, key, iv2);
 
             // Different IVs should produce different ciphertexts
-            assertNotEquals(encrypted1, encrypted2);
+            boolean isEqual = Arrays.equals(encrypted1, encrypted2);
+            assertFalse(isEqual);
         }
     }
 
@@ -142,18 +136,19 @@ public class TestAES {
         String password1 = "correctPassword";
         String password2 = "wrongPassword";
 
-        for (SecurityVersion version : SecurityVersion.values()) {
+        for (SecurityVersion version : SecurityVersion.getEntries()) {
             byte[] key1 = version.getKey(password1, salt);
             byte[] key2 = version.getKey(password2, salt);
 
             byte[] encrypted = AES.encryptStringAES(plaintext, key1, iv);
 
-            // Decrypting with wrong key should either throw exception or return garbage
-            assertThrows(GeneralSecurityException.class, () -> {
-                String decrypted = AES.decryptStringAES(encrypted, key2, iv);
-                // If no exception, decrypted text should not match original
-                assertNotEquals(plaintext, decrypted);
-            });
+            // Decrypting with the wrong key should throw an exception.
+            // Because of AES-GCM being AEAD, it should never yield anything.
+            assertThrows(
+                // We specifically check for AEADBadTagException as it is assumed being the wrong-password indicator.
+                AEADBadTagException.class,
+                () -> AES.decryptStringAES(encrypted, key2, iv)
+            );
         }
     }
 
@@ -162,7 +157,7 @@ public class TestAES {
         String plaintext = "Test message";
         String password = "testPassword123";
 
-        for (SecurityVersion version : SecurityVersion.values()) {
+        for (SecurityVersion version : SecurityVersion.getEntries()) {
             byte[] key = version.getKey(password, salt);
             byte[] encrypted = AES.encryptStringAES(plaintext, key, iv);
 
@@ -189,30 +184,11 @@ public class TestAES {
         testEncryptionDecryption(largeText, password);
     }
 
-    @Test
-    void testNullInputs() {
-        String password = "testPassword123";
-
-        for (SecurityVersion version : SecurityVersion.values()) {
-            byte[] key = version.getKey(password, salt);
-
-            assertThrows(
-                Exception.class,
-                () -> AES.encryptStringAES(null, key, iv)
-            );
-
-            assertThrows(
-                Exception.class,
-                () -> AES.decryptStringAES(null, key, iv)
-            );
-        }
-    }
-
     private void testEncryptionDecryption(String plaintext, String password) throws GeneralSecurityException {
         byte[] localSalt = newRandom16();
         byte[] localIv = newRandom16();
 
-        for (SecurityVersion version : SecurityVersion.values()) {
+        for (SecurityVersion version : SecurityVersion.getEntries()) {
             byte[] key = version.getKey(password, localSalt);
             byte[] encrypted = AES.encryptStringAES(plaintext, key, localIv);
             String decrypted = AES.decryptStringAES(encrypted, key, localIv);

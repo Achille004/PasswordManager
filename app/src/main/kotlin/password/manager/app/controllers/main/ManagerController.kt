@@ -44,8 +44,7 @@ import javafx.util.Duration
 import org.controlsfx.control.textfield.AutoCompletionBinding
 import org.controlsfx.control.textfield.AutoCompletionBinding.ISuggestionRequest
 import org.controlsfx.control.textfield.TextFields
-import password.manager.app.base.SortingOrder
-import password.manager.app.base.SupportedLocale
+import password.manager.app.base.*
 import password.manager.app.controllers.AbstractController
 import password.manager.app.controllers.TabManager
 import password.manager.app.security.Account
@@ -65,7 +64,7 @@ import kotlin.concurrent.Volatile
 
 class ManagerController : AbstractController() {
     @FXML
-    private val accountListView: ListView<Account?>? = null
+    private val accountListView: ListView<Account>? = null
 
     @FXML
     private val accountTabPane: TabPane? = null
@@ -113,7 +112,7 @@ class ManagerController : AbstractController() {
 
         val sortingOrderProperty = ioManager.userPreferences.sortingOrderProperty()
         val tabManager = TabManager(accountTabPane!!, ::EditorController) {
-            tab: Tab, account: Account -> tab.textProperty().bind(account.softwareProperty())
+            tab: Tab, account: Account -> tab.textProperty().bind(account.softwareProperty)
         }
 
         setupAutoCompletion(accountList)
@@ -163,15 +162,15 @@ class ManagerController : AbstractController() {
 
         // Listen for changes in the account list and update suggestions
         accountList.addListener(ListChangeListener {
-            possibleSoftwares = fieldListExtractor(Account::getSoftware)
-            possibleUsernames = fieldListExtractor(Account::getUsername)
-            // Trigger update of auto-completion, if the handler is present
+            possibleSoftwares = fieldListExtractor(Account::software)
+            possibleUsernames = fieldListExtractor(Account::username)
+            // Trigger update of auto-completion if the handler is present
             onSuggestionEvent?.invoke()
         })
 
         // Initial population
-        possibleSoftwares = fieldListExtractor(Account::getSoftware)
-        possibleUsernames = fieldListExtractor(Account::getUsername)
+        possibleSoftwares = fieldListExtractor(Account::software)
+        possibleUsernames = fieldListExtractor(Account::username)
     }
 
     private fun setupSearchFunctionality(filteredAccountList: FilteredList<Account>) {
@@ -245,7 +244,7 @@ class ManagerController : AbstractController() {
 
                     val textBinding = Bindings.createStringBinding(
                         { sortingOrderProperty.get()?.convert(account) },
-                        sortingOrderProperty, account.softwareProperty(), account.usernameProperty()
+                        sortingOrderProperty, account.softwareProperty, account.usernameProperty
                     )
                     textProperty().bind(textBinding)
                 }
@@ -339,7 +338,7 @@ class ManagerController : AbstractController() {
         override val fxmlPath = "/fxml/main/manager/home.fxml"
 
         override fun reset() {
-            // Just focus the top label to keep consistent behavior
+            // Just focus on the top label to keep consistent behavior
             Platform.runLater(homeDescTop!!::requestFocus)
         }
     }
@@ -407,7 +406,7 @@ class ManagerController : AbstractController() {
             )
             editorSaveTimeline!!.cycleCount = 1
 
-            // Setup auto-completion for software and username fields
+            // Set up auto-completion for software and username fields
             bindAutoCompletion()
 
             // Update auto-completion when suggestions change
@@ -549,7 +548,7 @@ class ManagerController : AbstractController() {
 
                 val defaultLocale = SupportedLocale.DEFAULT.locale
                 val lowerUserText = userText.lowercase(defaultLocale)
-                // Filter the list, while also discarding null values from possible suggestions
+                // Filter the list while also discarding null values from possible suggestions
                 sourceList.filter { it?.lowercase(defaultLocale)?.startsWith(lowerUserText) ?: false }
             }
         }

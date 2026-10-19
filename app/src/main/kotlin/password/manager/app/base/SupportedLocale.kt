@@ -25,8 +25,6 @@ import java.util.Locale
 import java.util.Optional
 import java.util.function.BiPredicate
 
-import kotlin.jvm.optionals.getOrNull
-
 /**
  * Lists the supported locales for the application, each associated with
  * a [Locale] and a flag image resource path.
@@ -60,6 +58,10 @@ enum class SupportedLocale(
             l1.language.equals(l2.language)
         }
 
+        /**
+         * The default locale for the application, which is determined by the JVM default locale.
+         * If the JVM default locale is not supported, it falls back to [ENGLISH].
+         */
         @JvmField
         val DEFAULT: SupportedLocale = forLocaleOptional(Locale.getDefault()).orElse(ENGLISH)!!
 
@@ -73,23 +75,23 @@ enum class SupportedLocale(
             .findFirst()
 
         /**
-         * Finds the [SupportedLocale] matching the given [Locale] by language.
-         * @return the matching [SupportedLocale], or `null` if no match is found
+         * Shorthand method for calling [forLocaleOptional] with a default value in case of no match.
+         * @return the matching [SupportedLocale], or [DEFAULT] if no match is found
          */
         @JvmStatic
-        fun forLocale(locale: Locale) = forLocaleOptional(locale).getOrNull()
+        fun forLocale(locale: Locale): SupportedLocale = forLocaleOptional(locale).orElse(DEFAULT)!!
 
         /**
-         * Shorthand for [forLocale], which accepts a language tag [String] instead of a [Locale] object.
+         * Shorthand for converting a [String] language tag to its corresponding [Locale], and then calling [forLocale].
          * @return the matching [SupportedLocale], or [DEFAULT] if no match is found or if the input is invalid
          */
         @JvmStatic
-        fun forLanguageTag(languageTag: String): SupportedLocale? {
+        fun forLanguageTag(languageTag: String): SupportedLocale {
             val loc = try {
                 Locale.forLanguageTag(languageTag)
             } catch (_: IllegalArgumentException) {
                 // If the locale string is invalid, return the default locale
-                return null
+                return DEFAULT
             }
 
             return forLocale(loc)

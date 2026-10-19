@@ -17,17 +17,13 @@
  */
 package password.manager.app.persistence
 
+import password.manager.app.base.TrackedExecutor
 import password.manager.app.singletons.Logger
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionException
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Function
 import java.util.function.Supplier
-import kotlin.concurrent.withLock
 
 /**
  * Manages the lifecycle of transactions and provides a convenient API for transactional operations.
@@ -47,26 +43,19 @@ import kotlin.concurrent.withLock
  */
 class TransactionManager {
     private val transactionProgressiveId = AtomicInteger(0)
-    // Thread-local flag to identify if the current thread is a manager thread
-    private val isManagerThread = ThreadLocal.withInitial { false }
-    // Thread executor with customized virtual thread factory to set the thread-local flag
-    private val executor = Executors.newThreadPerTaskExecutor { task: Runnable ->
-        Thread.ofVirtual().name("transaction-", 0).unstarted {
-            isManagerThread.set(true)
-            task.run()
-        }
-    }
+    private val trackedExecutor = TrackedExecutor("transaction-")
 
-    // Transactions still running, kept as futures that never fail so that awaiting them cannot throw.
-    // The executor alone is not enough to tell whether the manager is idle: an operation handed over as an
-    // already running future is never submitted here, so nothing would keep the executor alive while it runs.
-    private val inFlight: MutableSet<CompletableFuture<Unit>> = ConcurrentHashMap.newKeySet()
-    private val inFlightLock = ReentrantLock()
-
+    /**
+     * Whether this manager has begun to shut down and no longer accepts transactions.
+     */
     val isShutdown: Boolean
-        get() = executor.isShutdown
+        get() = trackedExecutor.isShutdown
+
+    /**
+     * Whether the executor has terminated and every tracked transaction has settled.
+     */
     val isTerminated: Boolean
-        get() = executor.isTerminated
+        get() = trackedExecutor.isTerminated
 
     /**
      * Begins a new transaction.
@@ -78,10 +67,10 @@ class TransactionManager {
         Transaction(transactionProgressiveId.incrementAndGet(), description)
 
     /**
-     * Starts an operation on this manager's executor, so that it can be registered into a transaction.
+     * Starts an operation on this manager's executor so that it can be registered into a transaction.
      *
      * A [Transaction] runs nothing on its own: it awaits futures that are already in flight. This is the
-     * counterpart that puts them in flight, and the only place where the executor is exposed.
+     * counterpart that starts those operations on the manager's executor.
      *
      * @param T the return type of the operation
      * @param operation the operation to start
@@ -89,10 +78,10 @@ class TransactionManager {
      * @throws java.util.concurrent.RejectedExecutionException if this manager has been shut down
      */
     private fun <T> submit(operation: Supplier<T?>): CompletableFuture<T?> =
-        CompletableFuture.supplyAsync(operation, executor)
+        CompletableFuture.supplyAsync(operation, trackedExecutor)
 
     /**
-     * Runs a function against a fresh transaction, and drives that transaction to its outcome.
+     * Runs a function against a fresh transaction and drives that transaction to its outcome.
      *
      * The transaction is automatically committed if the function completes successfully,
      * or rolled back if an exception occurs.
@@ -113,26 +102,16 @@ class TransactionManager {
     private fun <T> withTransaction(
         transactionFunction: Function<Transaction, CompletableFuture<T?>>,
         description: String?
-    ): CompletableFuture<T?> {
-        // Reserved before anything is started, so that a transaction is either refused outright or waited
-        // for: reserving after the work had begun would leave a window in which a shutdown misses it
-        val settled = reserveInFlight()
-            ?: return CompletableFuture.failedFuture(
-                IllegalStateException("Transaction manager is shut down and accepts no new transaction")
-            )
-
+    ): CompletableFuture<T?> = trackedExecutor.track {
         val transaction = beginTransaction(description)
-        val transactionFuture: CompletableFuture<T?>
-
-        try {
-            transactionFuture = transactionFunction.apply(transaction)
+        val transactionFuture = try {
+            transactionFunction.apply(transaction)
         } catch (ex: Throwable) {
             transaction.rollback()
-            settled.complete(Unit)
-            return CompletableFuture.failedFuture(ex)
+            return@track CompletableFuture.failedFuture(ex)
         }
 
-        return transactionFuture
+        transactionFuture
             .thenCompose { result: T? ->
                 transaction.commit().thenApply { success: Boolean -> if (success) result else null }
             }
@@ -143,38 +122,20 @@ class TransactionManager {
                 // Unwrap and rethrow the operation's own failure
                 throw (ex as? CompletionException)?.cause ?: ex
             }
-            .whenComplete { _, _ -> settled.complete(Unit) }
-    }
-
-    /**
-     * Reserves a slot in the in-flight registry for a transaction that is about to start.
-     *
-     * The check and the reservation happen under the same lock [shutdown] snapshots the registry with,
-     * which is what makes them mutually exclusive: a transaction that gets a slot is necessarily in the
-     * snapshot, and one that comes too late gets no slot, and does not start at all.
-     *
-     * @return the future to complete once the transaction has settled, or null if this manager is no
-     *     longer accepting transactions
-     */
-    private fun reserveInFlight(): CompletableFuture<Unit>? = inFlightLock.withLock {
-        if (isShutdown) return@withLock null
-
-        CompletableFuture<Unit>().also { slot ->
-            inFlight.add(slot)
-            slot.thenRun { inFlightLock.withLock { inFlight.remove(slot) } }
-        }
-    }
+    } ?: CompletableFuture.failedFuture(
+        IllegalStateException("Transaction manager is shut down and accepts no new transaction")
+    )
 
     /**
      * Awaits an operation that runs outside this manager, within a transaction.
      *
-     * The operation is started by [operation] itself, which is invoked only once the transaction exists,
-     * so nothing runs for a transaction that could not be opened and a failure to even start the operation
-     * is reported as a failed transaction rather than thrown at the caller.
+     * The operation is started by [operation] itself, which is called only after the transaction has been created.
+     * This ensures that no operation runs if the transaction could not be opened, and any failure to start the
+     * operation is reported as a failed transaction instead of being thrown to the caller.
      *
      * The future it returns is registered as it is, without being wrapped in another task: the pipeline
      * stays asynchronous end to end, and the failure the transaction reports is the one the operation
-     * produced. The transaction is committed if the operation succeeds, and rolled back if it fails or
+     * produced. The transaction is committed if the operation succeeds and rolled back if it fails or
      * completes with null.
      *
      * @param T the return type of the operation
@@ -343,12 +304,12 @@ class TransactionManager {
     /**
      * Initiates an orderly shutdown of the executor service.
      *
-     * From the moment this method is entered no new transaction is accepted: every entry point fails fast
+     * From the moment this method is entered, no new transaction is accepted: every entry point fails fast
      * instead of starting work nobody would wait for. It then blocks until every transaction that did
      * start has settled and all tasks have completed execution, or the thread is interrupted.
      *
      * A shutdown from one of the threads this manager runs its operations on would wait for its own
-     * caller, and is refused. The same wait remains possible from outside, on an operation handed over
+     * caller and is refused. The same wait remains possible from outside, on an operation handed over
      * already running, where detecting it would cost bookkeeping on every transaction: a price that
      * outweighs the benefits. Strong caution is advised when checking for deadlocks caused by this
      * circular wait.
@@ -356,30 +317,11 @@ class TransactionManager {
      * @throws IllegalStateException if called from a thread this manager runs its operations on
      * @throws InterruptedException if the current thread is interrupted while waiting
      */
-    fun shutdown() {
-        // The marker is set by the thread factory, so it only ever covers threads this executor created
-        check(!isManagerThread.get()) {
-            "shutdown() cannot be called from a manager thread, as it would block the executor and deadlock"
-        }
-
-        if (this.isShutdown) return
-
-        // Ask for shutdown first, so that no new operation is accepted while we wait for the current ones
-        executor.shutdown()
+    fun shutdown() =
         try {
-            // Taken under the lock, so that no transaction can be reserving a slot while it is read:
-            // everything that started before this point is in here, and nothing new can start after it
-            val pending = inFlightLock.withLock { inFlight.toTypedArray() }
-
-            // Transactions whose operations run outside this executor are only visible here
-            CompletableFuture.allOf(*pending).join()
-
-            // Wait without a timer (maximum time possible)
-            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)
-        } catch (e: InterruptedException) {
-            Logger.getInstance().addError(e)
-            executor.shutdownNow()
-            throw e
+            trackedExecutor.shutdown()
+        } catch (ex: InterruptedException) {
+            Logger.getInstance().addError(ex)
+            throw ex
         }
-    }
 }

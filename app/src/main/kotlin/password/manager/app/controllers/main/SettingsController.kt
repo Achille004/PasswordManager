@@ -29,8 +29,7 @@ import javafx.scene.image.ImageView
 import javafx.util.StringConverter
 import org.jetbrains.annotations.Contract
 import password.manager.app.Utils
-import password.manager.app.base.SortingOrder
-import password.manager.app.base.SupportedLocale
+import password.manager.app.base.*
 import password.manager.app.controllers.AbstractController
 import password.manager.app.security.UserPreferences
 import password.manager.app.singletons.IOManager
@@ -44,10 +43,10 @@ import java.util.function.Function
 
 class SettingsController : AbstractController() {
     @FXML
-    private val settingsLangCB: ComboBox<SupportedLocale?>? = null
+    private val settingsLangCB: ComboBox<SupportedLocale>? = null
 
     @FXML
-    private val settingsOrderCB: ComboBox<SortingOrder?>? = null
+    private val settingsOrderCB: ComboBox<SortingOrder>? = null
 
     @FXML
     private val settingsMasterPassword: ReadablePasswordFieldWithStr? = null
@@ -110,8 +109,8 @@ class SettingsController : AbstractController() {
         val localeProperty = userPreferences.localeProperty()
 
         val languages = Utils.getFXSortedList(*SupportedLocale.entries.toTypedArray())
-        val locStringConverterMapper = stringConverterMapper { _, item: SupportedLocale ->
-            item.displayName
+        val locStringConverterMapper = stringConverterMapper {
+            _, item: SupportedLocale -> item.displayName
         }
 
         settingsLangCB!!.cellFactory = { FlagListCell() }
@@ -130,8 +129,8 @@ class SettingsController : AbstractController() {
         val sortingOrderProperty = userPreferences.sortingOrderProperty()
 
         val sortingOrders = Utils.getFXSortedList(*SortingOrder.entries.toTypedArray())
-        val sortOrdStringConverterMapper = stringConverterMapper { _, item: SortingOrder ->
-            ObservableResourceFactory.getInstance().getValue(item.i18nKey)
+        val sortOrdStringConverterMapper = stringConverterMapper {
+            _, item: SortingOrder -> ObservableResourceFactory.getInstance().getValue(item.i18nKey)
         }
 
         settingsOrderCB!!.items = sortingOrders
@@ -171,18 +170,17 @@ class SettingsController : AbstractController() {
 
     companion object {
         @Contract(value = "_ -> new", pure = true)
-        private fun <T> stringConverterMapper(converter: Function2<SupportedLocale, T, String>) = {
-            locale: SupportedLocale? -> locale ?. let {
-                object : StringConverter<T?>() {
-                    override fun fromString(string: String?) = throw UnsupportedOperationException()
-                    override fun toString(obj: T?) = obj ?.let { converter(locale, obj) }
-                }
+        private fun <T> stringConverterMapper(converter: Function2<SupportedLocale, T, String>):
+                Function<SupportedLocale, StringConverter<T>> = {
+            locale: SupportedLocale -> object : StringConverter<T>() {
+                override fun fromString(string: String?) = throw UnsupportedOperationException()
+                override fun toString(obj: T) = converter(locale, obj)
             }
         }
 
         @Contract(value = "_ -> new", pure = true)
-        private fun <T> notNullBinding(property: ObjectProperty<T?>): ObjectBinding<T?> {
-            return object : ObjectBinding<T?>() {
+        private fun <T> notNullBinding(property: ObjectProperty<T?>): ObjectBinding<T?> =
+            object : ObjectBinding<T?>() {
                 private var cachedValue: T? = property.value
 
                 init {
@@ -193,31 +191,30 @@ class SettingsController : AbstractController() {
                     ?.also { cachedValue = it }
                     ?: cachedValue
             }
-        }
 
         private fun <T> comparatorBinding(
-            locale: ObjectProperty<SupportedLocale?>,
-            converter: ObjectProperty<out StringConverter<T?>?>
+            locale: ObjectProperty<SupportedLocale>,
+            converter: ObjectProperty<out StringConverter<T>>
         ) = Bindings.createObjectBinding(
-             {
+            {
                 Comparator.comparing(
                     converter.value::toString,
-                    Collator.getInstance(locale.value!!.locale)
+                    Collator.getInstance(locale.value.locale)
                 )
             },
             locale, converter
         )
 
         private fun <T> bindValueConverter(
-            comboBox: ComboBox<T?>,
-            locale: ObjectProperty<SupportedLocale?>,
-            mapper: Function<SupportedLocale?, StringConverter<T?>?>
+            comboBox: ComboBox<T>,
+            locale: ObjectProperty<SupportedLocale>,
+            mapper: Function<SupportedLocale, StringConverter<T>>
         ) = comboBox.converterProperty().bind(locale.map(mapper))
 
         private fun <T> bindValueComparator(
-            sortedList: SortedList<T?>,
-            locale: ObjectProperty<SupportedLocale?>,
-            comboBox: ComboBox<T?>
+            sortedList: SortedList<T>,
+            locale: ObjectProperty<SupportedLocale>,
+            comboBox: ComboBox<T>
         ) = sortedList.comparatorProperty().bind(comparatorBinding(locale, comboBox.converterProperty()))
     }
 }

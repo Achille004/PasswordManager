@@ -83,7 +83,6 @@ class TabManager<T, U : AbstractController>(
 
     // Utility methods for tab management
     companion object {
-
         /**
          * Load a new tab with the given controller.
          * @param U the type of the controller

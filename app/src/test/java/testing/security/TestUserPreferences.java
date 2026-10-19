@@ -27,9 +27,7 @@ import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
 
-import password.manager.app.base.SecurityVersion;
-import password.manager.app.base.SortingOrder;
-import password.manager.app.base.SupportedLocale;
+import password.manager.app.base.*;
 import password.manager.app.security.AES;
 import password.manager.app.security.UserPreferences;
 import tools.jackson.databind.ObjectMapper;
@@ -37,7 +35,6 @@ import tools.jackson.databind.ObjectMapper;
 public class TestUserPreferences {
 
     // #region DEK tests
-
     @Test
     void testGeneratedDEKHasCipherKeyLength() {
         UserPreferences prefs = UserPreferences.of("testPassword123");
@@ -67,7 +64,7 @@ public class TestUserPreferences {
         byte[] dek1 = invokeGetDEK(prefs);
         byte[] dek2 = invokeGetDEK(prefs);
 
-        assertSame(dek1, dek2, "getDEK() now returns the in-memory DEK reference");
+        assertSame(dek1, dek2, "getDEK() returns the in-memory DEK reference");
         assertArrayEquals(dek1, dek2, "Both copies must contain the same bytes");
     }
 
@@ -253,13 +250,12 @@ public class TestUserPreferences {
     // #region Legacy hash-based migration tests (non-DEK)
 
     @Test
-    @SuppressWarnings("deprecation")
     void testLegacyPBKDF2ExplicitUpgradesToDEK() throws Exception {
         String password = "legacyPBKDF2Password";
         UserPreferences prefs = fromLegacyHashJson(password, SecurityVersion.PBKDF2, true);
 
         assertEquals(SecurityVersion.PBKDF2, prefs.getSecurityVersion());
-        assertEquals(SecurityVersion.PBKDF2, invokeGetLegacyVersion(prefs));
+        assertEquals(SecurityVersion.PBKDF2, prefs.getLegacyVersion());
         assertThrows(IllegalStateException.class, () -> invokeGetDEK(prefs),
             "Legacy hash format should not expose DEK before verification");
 
@@ -273,14 +269,13 @@ public class TestUserPreferences {
     }
 
     @Test
-    @SuppressWarnings("deprecation")
     void testLegacyPBKDF2WithoutVersionFallsBackToPBKDF2ThenUpgrades() throws Exception {
         String password = "legacyFallbackPassword";
         UserPreferences prefs = fromLegacyHashJson(password, SecurityVersion.PBKDF2, false);
 
         assertEquals(SecurityVersion.PBKDF2, prefs.getSecurityVersion(),
                 "Missing securityVersion in legacy JSON should fallback to PBKDF2");
-        assertNull(invokeGetLegacyVersion(prefs),
+        assertNull(prefs.getLegacyVersion(),
                 "Legacy version metadata should be null when field is absent in JSON");
         assertThrows(IllegalStateException.class, () -> invokeGetDEK(prefs));
 
@@ -295,7 +290,7 @@ public class TestUserPreferences {
         UserPreferences prefs = fromLegacyHashJson(password, SecurityVersion.ARGON2, true);
 
         assertEquals(SecurityVersion.ARGON2, prefs.getSecurityVersion());
-        assertEquals(SecurityVersion.ARGON2, invokeGetLegacyVersion(prefs));
+        assertEquals(SecurityVersion.ARGON2, prefs.getLegacyVersion());
         assertThrows(IllegalStateException.class, () -> invokeGetDEK(prefs));
 
         assertTrue(prefs.verifyPassword(password));
@@ -354,20 +349,6 @@ public class TestUserPreferences {
             Method method = UserPreferences.class.getDeclaredMethod("getDEK");
             method.setAccessible(true);
             return (byte[]) method.invoke(prefs);
-        } catch (InvocationTargetException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof RuntimeException runtimeException) throw runtimeException;
-            throw new RuntimeException(cause);
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static SecurityVersion invokeGetLegacyVersion(UserPreferences prefs) {
-        try {
-            Method method = UserPreferences.class.getDeclaredMethod("getLegacyVersion");
-            method.setAccessible(true);
-            return (SecurityVersion) method.invoke(prefs);
         } catch (InvocationTargetException e) {
             Throwable cause = e.getCause();
             if (cause instanceof RuntimeException runtimeException) throw runtimeException;

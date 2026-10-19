@@ -101,11 +101,13 @@ public class TestAccount {
 
     @Test
     void testNullValues() {
+        // Account is written in Kotlin: its parameters are non-nullable, so null arguments coming from Java are
+        // rejected by the generated intrinsic null checks, which throw a NullPointerException.
         byte[] DEK = "masterPass".getBytes(StandardCharsets.UTF_8);
-        assertThrows(IllegalArgumentException.class, () -> Account.of(null, DEK));
+        assertThrows(NullPointerException.class, () -> Account.of(null, DEK));
 
         AccountData data = new AccountData("software", "user", "password");
-        assertThrows(IllegalArgumentException.class, () -> Account.of(data, null));
+        assertThrows(NullPointerException.class, () -> Account.of(data, null));
     }
 
     @Test
@@ -199,7 +201,8 @@ public class TestAccount {
         byte[] DEK = "masterPass456".getBytes(StandardCharsets.UTF_8);
         Account account = Account.of(new AccountData("GitHub", "user", "password"), DEK);
 
-        assertThrows(IllegalArgumentException.class, () -> invokeRestoreState(account, null));
+        // See testNullValues: the Kotlin intrinsic null check throws a NullPointerException
+        assertThrows(NullPointerException.class, () -> invokeRestoreState(account, null));
     }
 
     private static void invokeSetData(Account account, AccountData data, byte[] DEK) {

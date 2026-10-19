@@ -26,6 +26,7 @@ import javafx.scene.control.Alert
 import javafx.scene.control.Alert.AlertType
 import javafx.scene.control.Button
 import javafx.scene.control.ButtonType
+import javafx.scene.control.DialogPane
 import javafx.scene.layout.Pane
 import password.manager.app.controllers.AbstractController
 import password.manager.app.singletons.Logger
@@ -111,7 +112,7 @@ object Utils {
         val uiElementPath = path.replace("/fxml/", "").replace(".fxml", "")
         logger.addDebug("Loading [%s] pane...", uiElementPath)
 
-        val parent: Parent? = 
+        val parent: Parent? =
             try {
                 val path = requireNotNull(Utils::class.java.getResource(path)) { "Missing FXML resource: $path" }
                 FXMLLoader(path)
@@ -171,7 +172,7 @@ object Utils {
             try {
                 Platform.runLater(wrappedAction)
             } catch (_: IllegalStateException) {
-                // JavaFX toolkit not initialized (test environment) — run synchronously
+                // JavaFX toolkit isn't initialized (test environment) — run synchronously
                 wrappedAction.run()
             }
         }

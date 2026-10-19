@@ -19,7 +19,6 @@ package password.manager.app.base
 
 import password.manager.app.security.Account
 import java.util.function.BinaryOperator
-import java.util.function.Function
 import kotlin.Comparator
 import kotlin.plus
 
@@ -51,11 +50,11 @@ enum class SortingOrder(
      */
     private object CachedComparators {
         val SOFTWARE_COMPARATOR: Comparator<Account> = Comparator.comparing(
-            Account::getSoftware ,
+            Account::software,
             String.CASE_INSENSITIVE_ORDER
         )
         val USERNAME_COMPARATOR: Comparator<Account> = Comparator.comparing(
-            Account::getUsername,
+            Account::username,
             String.CASE_INSENSITIVE_ORDER
         )
     }

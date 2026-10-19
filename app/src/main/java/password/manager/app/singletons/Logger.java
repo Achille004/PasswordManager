@@ -51,7 +51,7 @@ public final class Logger extends Singleton {
 
                                     %s
 
-                    --- Debug          >>> Info          !!! Error
+                      --- Debug          >>> Info          !!! Error
 
                     WARNING: Debug entries may contain sensitive data!
 
