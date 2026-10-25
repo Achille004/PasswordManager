@@ -24,7 +24,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import lombok.Getter;
 
@@ -228,6 +233,58 @@ public class TestSingletons {
     }
 
     @Test
+    public void testOverlappingShutdownClosesEachInstanceAtMostOnce() throws Exception {
+        BlockingCloseResource.closeCalls.set(0);
+        BlockingCloseResource.closeStarted = new CountDownLatch(1);
+        BlockingCloseResource.allowClose = new CountDownLatch(1);
+        Singletons.get(BlockingCloseResource.class);
+
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<?> firstShutdown = executor.submit(Singletons::shutdownAll);
+            assertTrue(BlockingCloseResource.closeStarted.await(5, TimeUnit.SECONDS),
+                    "The first shutdown should enter close()");
+
+            Future<?> overlappingShutdown = executor.submit(Singletons::shutdownAll);
+            overlappingShutdown.get(5, TimeUnit.SECONDS);
+            assertEquals(1, BlockingCloseResource.closeCalls.get(),
+                    "The overlapping shutdown must not close the drained instance again");
+
+            BlockingCloseResource.allowClose.countDown();
+            firstShutdown.get(5, TimeUnit.SECONDS);
+            assertEquals(1, BlockingCloseResource.closeCalls.get());
+        } finally {
+            BlockingCloseResource.allowClose.countDown();
+            executor.shutdownNow();
+            assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS));
+        }
+    }
+
+    @Test
+    public void testCloseCanLookUpSingletonWithoutDeadlocking() throws Exception {
+        DelayedLookupDependency.constructorEntered = new CountDownLatch(1);
+        DelayedLookupDependency.allowConstructorToFinish = new CountDownLatch(1);
+        LookupDuringCloseResource.failure.set(null);
+        Singletons.get(LookupDuringCloseResource.class);
+
+        ExecutorService executor = Executors.newSingleThreadExecutor(task -> {
+            Thread thread = new Thread(task, "SingletonShutdownTest");
+            thread.setDaemon(true);
+            return thread;
+        });
+        try {
+            Future<?> shutdown = executor.submit(Singletons::shutdownAll);
+            shutdown.get(5, TimeUnit.SECONDS);
+            assertNull(LookupDuringCloseResource.failure.get(),
+                    "close() should finish its dependency lookup without errors");
+        } finally {
+            DelayedLookupDependency.allowConstructorToFinish.countDown();
+            executor.shutdownNow();
+            assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS));
+        }
+    }
+
+    @Test
     public void testRecreateAfterShutdown() {
         TestResource resource1 = Singletons.get(TestResource.class);
         Singletons.shutdownAll();
@@ -293,6 +350,70 @@ public class TestSingletons {
         public void close() {
             OrderedResource.closeOrder.add("OrderedResource3");
         }
+    }
+
+    private static class BlockingCloseResource extends Singleton {
+        static final AtomicInteger closeCalls = new AtomicInteger();
+        static CountDownLatch closeStarted;
+        static CountDownLatch allowClose;
+
+        @Override
+        public void close() {
+            closeCalls.incrementAndGet();
+            closeStarted.countDown();
+            try {
+                allowClose.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    private static class LookupDuringCloseResource extends Singleton {
+        static final AtomicReference<Throwable> failure = new AtomicReference<>();
+
+        @Override
+        public void close() {
+            Thread concurrentLookup = new Thread(
+                    () -> Singletons.get(DelayedLookupDependency.class), "SingletonDependencyLookup");
+            concurrentLookup.setDaemon(true);
+            concurrentLookup.start();
+
+            try {
+                if (!DelayedLookupDependency.constructorEntered.await(5, TimeUnit.SECONDS)) {
+                    throw new AssertionError("Dependency construction did not start");
+                }
+
+                // Let the other thread finish construction and attempt registry insertion while
+                // this close() also requests that same singleton.
+                DelayedLookupDependency.allowConstructorToFinish.countDown();
+                assertNotNull(Singletons.get(DelayedLookupDependency.class));
+                concurrentLookup.join(TimeUnit.SECONDS.toMillis(5));
+                if (concurrentLookup.isAlive()) {
+                    throw new AssertionError("Concurrent dependency lookup did not finish");
+                }
+            } catch (Throwable e) {
+                failure.set(e);
+            }
+        }
+    }
+
+    private static class DelayedLookupDependency extends Singleton {
+        static CountDownLatch constructorEntered;
+        static CountDownLatch allowConstructorToFinish;
+
+        public DelayedLookupDependency() {
+            constructorEntered.countDown();
+            try {
+                allowConstructorToFinish.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public void close() {}
     }
 
     // Test resource that truly has NO no-arg constructor (not even private)

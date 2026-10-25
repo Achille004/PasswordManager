@@ -81,8 +81,12 @@ public final class IOManager extends Singleton {
     private final UserPreferences USER_PREFERENCES;
     private final AccountRepository ACCOUNT_REPOSITORY;
 
-    private volatile String masterPassword;
-    private @Getter boolean isFirstRun, isAuthenticated;
+    // Volatile fields publish the authentication state to readers on other threads.
+    private volatile String masterPassword = null;
+    private volatile @Getter boolean isAuthenticated = false;
+
+    // Assume first run until data is loaded
+    private volatile @Getter boolean isFirstRun = true;
 
     private final AtomicBoolean HAS_CHANGED;
     private final Lock LOADING_LOCK;
@@ -99,13 +103,8 @@ public final class IOManager extends Singleton {
         Logger.getInstance().addDebug("BACKUP_FILE: '" + BACKUP_FILE + "'");
         Logger.getInstance().addDebug("PRESERVED_PATH: '" + PRESERVED_PATH + "'");
 
-        masterPassword = null;
-
         USER_PREFERENCES = UserPreferences.empty();
         ACCOUNT_REPOSITORY = new AccountRepository(USER_PREFERENCES);
-
-        isFirstRun = true; // Assume first run until data is loaded
-        isAuthenticated = false;
 
         HAS_CHANGED = new AtomicBoolean(false);
         LOADING_LOCK = new ReentrantLock();
@@ -321,15 +320,24 @@ public final class IOManager extends Singleton {
     // #endregion
 
     // #region UserPreferences methods
+    /**
+     * Verifies the password and unlocks the accounts.
+     *
+     * @implNote This method is not thread-safe. Calls must be serialized with password changes.
+     *
+     * @param masterPassword the master password to authenticate
+     * @return {@code true} if the password is valid and the user was not already authenticated;
+     *         {@code false} if already authenticated or the password is invalid
+     */
     public boolean authenticate(String masterPassword) {
         // If already authenticated, no need to re-authenticate
         if (isAuthenticated) return false;
         Logger.getInstance().addInfo("Attempting user authentication...");
 
-        isAuthenticated = USER_PREFERENCES.verifyPassword(masterPassword);
-        if (!isAuthenticated) return false;
+        if (!USER_PREFERENCES.verifyPassword(masterPassword)) return false;
 
         this.masterPassword = masterPassword;
+        this.isAuthenticated = true;
         Logger.getInstance().addInfo("User authenticated");
 
         ACCOUNT_REPOSITORY.unlockAll(masterPassword)
@@ -344,6 +352,17 @@ public final class IOManager extends Singleton {
         return true;
     }
 
+    /**
+     * Sets or changes the master password. The password is stored before the authenticated flag is
+     * published.
+     *
+     * @implNote This method is not thread-safe. Calls must be serialized with authentication and
+     *           other password changes.
+     *
+     * @param newMasterPassword the new master password to set
+     * @return {@code true} if the password was set or changed successfully; {@code false} if the
+     *         current password could not be verified
+     */
     public boolean changeMasterPassword(@NotNull String newMasterPassword) {
         if (newMasterPassword == null || newMasterPassword.isEmpty()) {
             throw new IllegalArgumentException("New master password cannot be null or empty [changeMasterPassword]");

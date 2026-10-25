@@ -125,34 +125,42 @@ public final class Singletons {
      * Shuts down all registered singletons in reverse order of registration,
      * thus enabling simple linear dependencies between singletons.
      * <p>
-     * This method is idempotent and can be called multiple times safely.
-     * After calling this method, all singletons are unregistered.
+     * The registry is drained while holding its write lock, then instances are closed after
+     * releasing the lock. This lets {@code close()} look up dependencies without running under the
+     * registry lock. Each instance in that drained snapshot is closed at most once, including when
+     * shutdown calls overlap. A singleton registered by a concurrent {@link #get(Class)} after the
+     * drain belongs to the next registry lifecycle and is not part of this shutdown pass.
      */
     public static void shutdownAll() {
+        final List<Singleton> instances = new ArrayList<>();
+
         INSTANCES_LOCK.writeLock().lock();
         try {
             // Get classes in reverse order of registration
             List<Class<? extends Singleton>> classes = new ArrayList<>(INSTANCES.keySet());
             Collections.reverse(classes);
 
-            // Close each singleton in reverse order
+            // Remove all instances while holding the registry lock, then close them after releasing
+            // it. A close() implementation may itself look up another singleton; doing that while
+            // holding the registry lock can otherwise block concurrent initialization.
             for (Class<? extends Singleton> cls : classes) {
-                try {
-                    Singleton inst = INSTANCES.get(cls);
-                    if (inst != null) {
-                        inst.close();
-                    }
-                } catch (Exception e) {
-                    // Log error but continue closing others
-                    System.err.println("Failed to close instance of " + cls.getName() + ": " + e.getMessage());
-                    e.printStackTrace();
-                }
+                Singleton inst = INSTANCES.remove(cls);
+                if (inst != null) instances.add(inst);
             }
-
-            // Clear all instances after shutdown
-            INSTANCES.clear();
         } finally {
             INSTANCES_LOCK.writeLock().unlock();
+        }
+
+        // Close each singleton in reverse order of registration. Draining the registry first also
+        // ensures concurrent shutdownAll() calls cannot close the same instance twice.
+        for (Singleton inst : instances) {
+            try {
+                inst.close();
+            } catch (Exception e) {
+                // Log error but continue closing others
+                System.err.println("Failed to close instance of " + inst.getClass().getName() + ": " + e.getMessage());
+                e.printStackTrace();
+            }
         }
     }
 }
