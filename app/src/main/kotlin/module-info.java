@@ -40,7 +40,7 @@ module password.manager.app {
 
     requires org.jetbrains.annotations;
 
-    requires password.manager.lib;
+    requires password.manager.lib; requires gradle.api;
 
     ///// EXPORTS /////
 

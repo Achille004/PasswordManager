@@ -22,6 +22,7 @@ import javafx.collections.ObservableList
 import password.manager.app.Utils.runOnFx
 import password.manager.app.persistence.TransactionManager
 import password.manager.app.security.Account.AccountData
+import password.manager.app.singletons.Logger
 import java.lang.AutoCloseable
 import java.security.GeneralSecurityException
 import java.util.*
@@ -256,9 +257,10 @@ class AccountRepository(private val userPreferences: UserPreferences) : AutoClos
      * to decrypt the password, ensuring consistency.
      *
      * @param account the account whose password to retrieve
-     * @return a CompletableFuture that completes with the decrypted password, or null if decryption fails
+     * @return a CompletableFuture that completes with the decrypted account data; if decryption fails, the future
+     * completes exceptionally with a [RuntimeException]. Failures are logged and remain exceptional.
      */
-    fun getData(account: Account): CompletableFuture<AccountData?> =
+    fun getData(account: Account): CompletableFuture<AccountData> =
         // Wait for any ongoing master password or security version changes to complete
         CompletableFuture.supplyAsync {
             try {
@@ -266,6 +268,8 @@ class AccountRepository(private val userPreferences: UserPreferences) : AutoClos
             } catch (e: GeneralSecurityException) {
                 throw RuntimeException("Failed to decrypt account data", e)
             }
+        }.whenComplete { _, error ->
+            if (error != null) Logger.addError(error)
         }
 
     /**

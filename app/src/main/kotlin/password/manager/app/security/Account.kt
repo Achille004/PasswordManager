@@ -332,7 +332,7 @@ class Account {
     @Throws(GeneralSecurityException::class)
     fun setData(data: AccountData, dek: ByteArray) {
         // Generate a unique KDF salt and per-field IVs for this rewrite.
-        val newKdfSalt = ByteArray(SALT_LENGTH).also { AES.strongRandom.nextBytes(it) }
+        val newKdfSalt = ByteArray(SALT_LENGTH).also(AES.strongRandom::nextBytes)
         val newSIv = ByteArray(IV_LENGTH)
         val newUIv = ByteArray(IV_LENGTH)
         val newPIv = ByteArray(IV_LENGTH)

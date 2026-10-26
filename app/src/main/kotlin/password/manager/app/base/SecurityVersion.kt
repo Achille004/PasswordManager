@@ -42,7 +42,7 @@ enum class SecurityVersion(
         try {
             keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512")
         } catch (e: NoSuchAlgorithmException) {
-            Logger.getInstance().addError(e)
+            Logger.addError(e)
             throw RuntimeException(e)
         }
 
@@ -51,7 +51,7 @@ enum class SecurityVersion(
             val secretKey = keyFactory.generateSecret(spec)
             secretKey.encoded
         } catch (e: InvalidKeySpecException) {
-            Logger.getInstance().addError(e)
+            Logger.addError(e)
             throw RuntimeException(e)
         }
     }),

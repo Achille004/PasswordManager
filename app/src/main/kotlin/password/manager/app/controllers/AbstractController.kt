@@ -53,7 +53,7 @@ abstract class AbstractController : Initializable {
             if (eulaStage != null) return
 
             eulaStage = Stage().apply {
-                ObservableResourceFactory.getInstance().bindTitleProperty(this, "terms_credits")
+                ObservableResourceFactory.bindTitleProperty(this, "terms_credits")
                 icons.add(Image(App.MAIN_ICON))
                 isResizable = false
                 scene = Scene(Utils.loadFxml(EulaController()), 900.0, 600.0)

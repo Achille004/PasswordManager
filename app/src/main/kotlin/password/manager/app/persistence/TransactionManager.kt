@@ -321,7 +321,7 @@ class TransactionManager {
         try {
             trackedExecutor.shutdown()
         } catch (ex: InterruptedException) {
-            Logger.getInstance().addError(ex)
+            Logger.addError(ex)
             throw ex
         }
 }

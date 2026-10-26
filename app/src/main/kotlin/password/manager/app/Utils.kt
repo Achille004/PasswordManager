@@ -79,24 +79,24 @@ object Utils {
      * Gets a FileWriter for the specified path.
      * @param path The path to the file.
      * @param append Whether to append to the file.
-     * @return A FileWriter instance or null if an error occurs.
+     * @return A FileWriter instance.
      */
     @JvmStatic
-    fun getFileWriter(path: Path, append: Boolean): FileWriter? =
+    fun getFileWriter(path: Path, append: Boolean): FileWriter =
         getFileWriter(path.toFile(), append)
 
     /**
      * Gets a FileWriter for the specified file.
      * @param file The file to write to.
      * @param append Whether to append to the file.
-     * @return A FileWriter instance or null if an error occurs.
+     * @return A FileWriter instance.
      */
     @JvmStatic
-    fun getFileWriter(file: File, append: Boolean): FileWriter? =
+    fun getFileWriter(file: File, append: Boolean): FileWriter =
         try {
             FileWriter(file, append)
-        } catch (_: IOException) {
-            null
+        } catch (e: IOException) {
+            throw RuntimeException("Could not create file writer", e)
         }
 
     /**
@@ -106,7 +106,7 @@ object Utils {
      */
     @JvmStatic
     fun loadFxml(controller: AbstractController): Parent {
-        val logger = Logger.getInstance()
+        val logger = Logger
         val path = controller.fxmlPath
 
         val uiElementPath = path.replace("/fxml/", "").replace(".fxml", "")
@@ -129,7 +129,7 @@ object Utils {
         if (parent != null) return parent
 
         // Since it's a one-time error, just create it during the error process
-        val errMsg = ObservableResourceFactory.getInstance().getValue("ui_error")
+        val errMsg = ObservableResourceFactory.getValue("ui_error")
         val alert = Alert(AlertType.ERROR, errMsg, ButtonType.YES, ButtonType.NO)
         setDefaultButton(alert, ButtonType.NO)
 

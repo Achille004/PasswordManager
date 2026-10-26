@@ -34,11 +34,11 @@ enum class SortingOrder(
     val comparator: Comparator<Account?>
 ) {
     SOFTWARE(
-        "software", BinaryOperator { software: String?, username: String? -> software + "\n" + username },
+        "software", BinaryOperator { software: String?, username: String? -> "$software\n$username" },
         CachedComparators.SOFTWARE_COMPARATOR.thenComparing(CachedComparators.USERNAME_COMPARATOR)
     ),
     USERNAME(
-        "username", BinaryOperator { software: String?, username: String? -> username + "\n" + software },
+        "username", BinaryOperator { software: String?, username: String? -> "$username\n$software" },
         CachedComparators.USERNAME_COMPARATOR.thenComparing(CachedComparators.SOFTWARE_COMPARATOR)
     );
 

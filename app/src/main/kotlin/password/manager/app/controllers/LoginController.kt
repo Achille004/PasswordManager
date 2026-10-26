@@ -54,9 +54,9 @@ class LoginController(private val switchToMain: BooleanProperty) : AbstractContr
     )
 
     override fun initialize(location: URL, resources: ResourceBundle) {
-        Logger.getInstance().addDebug("Initializing %s", javaClass.getSimpleName())
+        Logger.addDebug("Initializing %s", javaClass.getSimpleName())
 
-        val langResources = ObservableResourceFactory.getInstance()
+        val langResources = ObservableResourceFactory
         langResources.bindTextProperty(loginTitle!!, "login.title")
         langResources.bindTextProperty(loginSubmitBtn!!, "lets_go")
         // Adding a whole method override just for line would be overkill, so just pass the property
@@ -64,7 +64,7 @@ class LoginController(private val switchToMain: BooleanProperty) : AbstractContr
 
         loginPassword.onAction = { doLogin() }
         loginPassword.sceneProperty().addListener { _, _, newScene: Scene? ->
-            newScene?.run { loginPassword.requestFocus() }
+            if (newScene != null) loginPassword.requestFocus()
         }
     }
 
@@ -77,9 +77,9 @@ class LoginController(private val switchToMain: BooleanProperty) : AbstractContr
         if (!checkTextFields(loginPassword!!)) return
 
         wrongPasswordTimeline.stop()
-        IOManager.getInstance().authenticate(loginPassword.text.trim())
+        IOManager.authenticate(loginPassword.text.trim())
 
-        if (IOManager.getInstance().isAuthenticated) {
+        if (IOManager.isAuthenticated) {
             switchToMain.set(true)
         } else {
             wrongPasswordTimeline.playFromStart()

@@ -35,7 +35,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import password.manager.app.persistence.Transaction;
-import password.manager.app.singletons.Singletons;
 import testing.TestingUtils;
 
 public class TestTransaction {
@@ -70,7 +69,6 @@ public class TestTransaction {
                 Thread.currentThread().interrupt();
             }
         }
-        Singletons.shutdownAll();
     }
 
     @Test

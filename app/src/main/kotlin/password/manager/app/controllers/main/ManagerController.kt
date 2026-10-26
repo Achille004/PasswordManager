@@ -101,16 +101,14 @@ class ManagerController : AbstractController() {
     private var onSuggestionEvent: (() -> Unit)? = null
 
     override fun initialize(location: URL, resources: ResourceBundle) {
-        Logger.getInstance().addDebug("Initializing %s", javaClass.getSimpleName())
-
-        val ioManager = IOManager.getInstance()
+        Logger.addDebug("Initializing %s", javaClass.getSimpleName())
 
         // Wrapper scheme: ((( source_list ) sorted_wrapper ) filtered_wrapper )
-        val accountList = ioManager.accountList
+        val accountList = IOManager.accountList
         val sortedAccountList = SortedList(accountList)
         val filteredAccountList = FilteredList(sortedAccountList)
 
-        val sortingOrderProperty = ioManager.userPreferences.sortingOrderProperty()
+        val sortingOrderProperty = IOManager.userPreferences.sortingOrderProperty()
         val tabManager = TabManager(accountTabPane!!, ::EditorController) {
             tab: Tab, account: Account -> tab.textProperty().bind(account.softwareProperty)
         }
@@ -218,7 +216,7 @@ class ManagerController : AbstractController() {
             while (change.next()) {
                 if (change.wasRemoved() && !change.wasAdded()) {
                     // This is a true removal
-                    change.getRemoved().forEach { tabManager.removeTab(it) }
+                    change.getRemoved().forEach(tabManager::removeTab)
                 }
             }
         }
@@ -328,9 +326,9 @@ class ManagerController : AbstractController() {
         private val homeDescBtm: Label? = null
 
         override fun initialize(location: URL, resources: ResourceBundle) {
-            Logger.getInstance().addDebug("Initializing %s", javaClass.getSimpleName())
+            Logger.addDebug("Initializing %s", javaClass.getSimpleName())
 
-            val langResources = ObservableResourceFactory.getInstance()
+            val langResources = ObservableResourceFactory
             langResources.bindTextProperty(homeDescTop!!, "home_desc.top")
             langResources.bindTextProperty(homeDescBtm!!, "home_desc.btm")
         }
@@ -379,9 +377,9 @@ class ManagerController : AbstractController() {
         private var isErrBound = false
 
         override fun initialize(location: URL, resources: ResourceBundle) {
-            Logger.getInstance().addDebug("Initializing %s", javaClass.getSimpleName())
+            Logger.addDebug("Initializing %s", javaClass.getSimpleName())
 
-            val langResources = ObservableResourceFactory.getInstance()
+            val langResources = ObservableResourceFactory
             langResources.bindTextProperty(editorSoftwareLbl!!, "software")
             langResources.bindTextProperty(editorUsernameLbl!!, "username")
             langResources.bindTextProperty(editorPasswordLbl!!, "password")
@@ -394,7 +392,7 @@ class ManagerController : AbstractController() {
                 editorPassword!!.requestFocus()
                 editorPassword.end()
             }
-            editorPassword!!.setOnAction { editorSave(it) }
+            editorPassword!!.setOnAction(this::editorSave)
 
             editorSaveTimeline = Timeline(
                 KeyFrame(
@@ -438,8 +436,8 @@ class ManagerController : AbstractController() {
                     editorDeleteBtn!!
                 )
 
-                IOManager.getInstance().getAccountData(account!!)
-                    .whenComplete { data: AccountData?, ex: Throwable? ->
+                IOManager.getAccountData(account!!)
+                    .whenComplete { data, ex: Throwable? ->
                         Platform.runLater {
                             LoadingAnimation.stop(
                                 editorSoftware,
@@ -448,8 +446,8 @@ class ManagerController : AbstractController() {
                                 editorSaveBtn,
                                 editorDeleteBtn
                             )
-                            val success = (ex == null && data != null)
-                            if (!success) {
+
+                            if (ex != null) {
                                 applyErrorLoadState()
                                 return@runLater
                             }
@@ -467,7 +465,7 @@ class ManagerController : AbstractController() {
                     }
             }
 
-            ObservableResourceFactory.getInstance()
+            ObservableResourceFactory
                 .bindPromptTextProperty(editorSoftware, editorUsername, editorPassword)
 
             editorDeleteCounter = false
@@ -493,7 +491,7 @@ class ManagerController : AbstractController() {
             val data = AccountData(software, username, password)
 
             if (isAddEditor) {
-                IOManager.getInstance().addAccount(data)
+                IOManager.addAccount(data)
                 reset()
             } else {
                 editOperationsCounter.incrementAndGet()
@@ -505,7 +503,7 @@ class ManagerController : AbstractController() {
                     editorDeleteBtn
                 )
 
-                IOManager.getInstance().editAccount(account!!, data)
+                IOManager.editAccount(account!!, data)
                     .whenComplete { account: Account?, ex: Throwable? ->
                         Platform.runLater {
                             LoadingAnimation.stop(
@@ -533,7 +531,7 @@ class ManagerController : AbstractController() {
         @FXML
         fun editorDelete(event: ActionEvent?) {
             if (editorDeleteCounter) {
-                IOManager.getInstance().removeAccount(account!!)
+                IOManager.removeAccount(account!!)
             } else {
                 editorDeleteBtn!!.style = "-fx-background-color: -fx-color-red"
                 editorDeleteCounter = true
@@ -593,7 +591,7 @@ class ManagerController : AbstractController() {
 
             editorPassword!!.isReadable = true
 
-            val resFact = ObservableResourceFactory.getInstance()
+            val resFact = ObservableResourceFactory
             listOf(
                 editorSoftware!!,
                 editorUsername!!,

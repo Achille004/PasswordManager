@@ -70,11 +70,9 @@ class SettingsController : AbstractController() {
     private val wip: Label? = null
 
     override fun initialize(location: URL?, resources: ResourceBundle?) {
-        Logger.getInstance().addDebug("Initializing %s", javaClass.getSimpleName())
+        Logger.addDebug("Initializing %s", javaClass.getSimpleName())
 
-        val ioManager = IOManager.getInstance()
-        val langResources = ObservableResourceFactory.getInstance()
-
+        val langResources = ObservableResourceFactory
         langResources.bindTextProperty(settingsLangLbl!!, "settings.language")
         langResources.bindTextProperty(settingsSortingOrderLbl!!, "settings.sorting_ord")
         langResources.bindTextProperty(settingsMasterPasswordLbl!!, "settings.master_pas")
@@ -83,14 +81,14 @@ class SettingsController : AbstractController() {
         langResources.bindTextProperty(wip!!, "settings.wip")
 
         // Combo boxes
-        val userPreferences = ioManager.userPreferences
+        val userPreferences = IOManager.userPreferences
         setupLanguageCB(userPreferences)
         setupSortingOrderCB(userPreferences)
 
         // Master password
         settingsMasterPassword!!.onAction = {
             if (checkTextFields(settingsMasterPassword)) {
-                ioManager.changeMasterPassword(settingsMasterPassword.text.trim())
+                IOManager.changeMasterPassword(settingsMasterPassword.text.trim())
             }
         }
     }
@@ -99,9 +97,9 @@ class SettingsController : AbstractController() {
 
     override fun reset() {
         clearStyle(settingsMasterPassword!!)
-        ObservableResourceFactory.getInstance().bindPromptTextProperty(settingsMasterPassword)
+        ObservableResourceFactory.bindPromptTextProperty(settingsMasterPassword)
 
-        IOManager.getInstance().displayMasterPassword(settingsMasterPassword)
+        IOManager.displayMasterPassword(settingsMasterPassword)
         settingsMasterPassword.isReadable = false
     }
 
@@ -130,7 +128,7 @@ class SettingsController : AbstractController() {
 
         val sortingOrders = Utils.getFXSortedList(*SortingOrder.entries.toTypedArray())
         val sortOrdStringConverterMapper = stringConverterMapper {
-            _, item: SortingOrder -> ObservableResourceFactory.getInstance().getValue(item.i18nKey)
+            _, item: SortingOrder -> ObservableResourceFactory.getValue(item.i18nKey)
         }
 
         settingsOrderCB!!.items = sortingOrders

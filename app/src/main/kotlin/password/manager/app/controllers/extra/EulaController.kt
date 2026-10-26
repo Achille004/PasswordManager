@@ -26,7 +26,7 @@ import java.net.URL
 import java.util.*
 
 class EulaController : AbstractController() {
-    override fun initialize(location: URL, resources: ResourceBundle) = Logger.getInstance().addDebug("Initializing %s", javaClass.getSimpleName())
+    override fun initialize(location: URL, resources: ResourceBundle) = Logger.addDebug("Initializing %s", javaClass.getSimpleName())
 
     override val fxmlPath = "/fxml/extra/eula.fxml"
 
@@ -38,7 +38,7 @@ class EulaController : AbstractController() {
     @FXML
     fun githubSS(event: ActionEvent?) = browse(SS_LINK)
 
-    private fun browse(uri: String) = App.appHostServices?.showDocument(uri)
+    private fun browse(uri: String) = App.appHostServices.showDocument(uri)
 
     companion object {
         const val FM_LINK = "https://github.com/Achille004"

@@ -112,7 +112,7 @@ class Transaction
         val wasActive = state.compareAndSet(State.ACTIVE, State.COMMITTING)
         if (!wasActive) return CompletableFuture.completedFuture(false)
 
-        Logger.getInstance().addDebug("Attempting to commit transaction %d (%s)", transactionId, description)
+        Logger.addDebug("Attempting to commit transaction %d (%s)", transactionId, description)
         return CompletableFuture.allOf(*operations.map(Operation::future).toTypedArray())
             .thenApply {
                 // Succeeds only if every operation completed with a non-null result
@@ -133,7 +133,7 @@ class Transaction
                     noneFailed == true -> "rolled back concurrently while committing"
                     else -> "rolled back: some operation failed during commit"
                 }
-                Logger.getInstance().addDebug("Transaction %d (%s) %s", transactionId, description, outcome)
+                Logger.addDebug("Transaction %d (%s) %s", transactionId, description, outcome)
 
                 success
             }
@@ -162,7 +162,7 @@ class Transaction
                 operations[i].rollback?.run()
             } catch (e: Exception) {
                 // Log but continue with remaining rollbacks
-                Logger.getInstance().addError(e)
+                Logger.addError(e)
             }
         }
     }

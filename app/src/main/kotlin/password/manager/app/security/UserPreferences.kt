@@ -245,7 +245,7 @@ class UserPreferences {
         } catch (_: AEADBadTagException) {
             return false
         } catch (e: GeneralSecurityException) {
-            Logger.getInstance().addError(e)
+            Logger.addError(e)
             throw RuntimeException("Failed to decrypt DEK", e)
         }
     }
@@ -289,7 +289,7 @@ class UserPreferences {
             System.arraycopy(pwEncDek, 0, this.pwEncDek, 0, ENC_DEK_LENGTH)
             this.isPasswordSet = true
         } catch (e: GeneralSecurityException) {
-            Logger.getInstance().addError(e)
+            Logger.addError(e)
             throw RuntimeException("Failed to encrypt DEK", e)
         }
     }

@@ -30,10 +30,10 @@ import javafx.scene.layout.Pane
 import javafx.stage.Window
 import javafx.util.Duration
 import password.manager.app.App
+import password.manager.app.AppConfig
 import password.manager.app.Utils
 import password.manager.app.controllers.main.ManagerController
 import password.manager.app.controllers.main.SettingsController
-import password.manager.app.singletons.AppConfig
 import password.manager.app.singletons.IOManager
 import password.manager.app.singletons.IOManager.SaveState
 import password.manager.app.singletons.Logger
@@ -72,10 +72,10 @@ class MainController : AbstractController() {
     private var settingsController: AbstractController? = null
 
     override fun initialize(location: URL, resources: ResourceBundle) {
-        Logger.getInstance().addDebug("Initializing %s", javaClass.getSimpleName())
+        Logger.addDebug("Initializing %s", javaClass.getSimpleName())
 
         if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
-            Logger.getInstance().addInfo("Unsupported action: Desktop.Action.OPEN")
+            Logger.addInfo("Unsupported action: Desktop.Action.OPEN")
             folderButton!!.isVisible = false
         }
 
@@ -110,9 +110,9 @@ class MainController : AbstractController() {
     private fun folderNavBarAction(event: ActionEvent?) {
         Thread.startVirtualThread {
             try {
-                Desktop.getDesktop().open(AppConfig.getInstance().basePath.toFile())
+                Desktop.getDesktop().open(AppConfig.basePath.toFile())
             } catch (e: IOException) {
-                Logger.getInstance().addError(e)
+                Logger.addError(e)
             }
         }
     }
@@ -143,7 +143,7 @@ class MainController : AbstractController() {
     private fun createAutosavePopup() {
         val spacing = 20.0 // px
 
-        val popup = App.appScenePane?.scene?.window?.let { window: Window ->
+        val popup = App.appScenePane.scene?.window?.let { window: Window ->
             CustomPopup.Builder.create(
                 window,
                 CustomPopup.Alignment.BOTTOM_LEFT,
@@ -156,8 +156,8 @@ class MainController : AbstractController() {
 
         popup.hidden(false) // Start hidden without animation
 
-        val resources = ObservableResourceFactory.getInstance()
-        IOManager.getInstance().savingProperty()
+        val resources = ObservableResourceFactory
+        IOManager.savingProperty()
             .addListener { _, _, newValue: SaveState? ->
                 val getString = UnaryOperator { i18nKey: String ->
                     val key = "popup.$i18nKey"

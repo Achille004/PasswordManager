@@ -57,9 +57,9 @@ class FirstRunController(private val switchToMain: BooleanProperty) : AbstractCo
     private val firstRunSubmitBtn: Button? = null
 
     override fun initialize(location: URL, resources: ResourceBundle) {
-        Logger.getInstance().addDebug("Initializing %s", javaClass.getSimpleName())
+        Logger.addDebug("Initializing %s", javaClass.getSimpleName())
 
-        val langResources = ObservableResourceFactory.getInstance()
+        val langResources = ObservableResourceFactory
         langResources.bindTextProperty(firstRunTitle!!, "first_run.title")
         langResources.bindTextProperty(firstRunDescTop!!, "first_run.desc.top")
         langResources.bindTextProperty(firstRunDescBtm!!, "first_run.desc.btm")
@@ -70,10 +70,10 @@ class FirstRunController(private val switchToMain: BooleanProperty) : AbstractCo
 
         firstRunPassword!!.onAction = { doFirstRun() }
         firstRunPassword.sceneProperty().addListener { _, _, newScene: Scene? ->
-            newScene?.run { firstRunPassword.requestFocus() }
+            if (newScene != null) firstRunPassword.requestFocus()
         }
 
-        ObservableResourceFactory.getInstance().bindPromptTextProperty(firstRunPassword)
+        ObservableResourceFactory.bindPromptTextProperty(firstRunPassword)
     }
 
     override val fxmlPath =  "/fxml/first_run.fxml"
@@ -83,7 +83,7 @@ class FirstRunController(private val switchToMain: BooleanProperty) : AbstractCo
     @FXML
     fun doFirstRun() {
         if (checkTextFields(firstRunPassword!!) && firstRunCheckBox!!.isSelected) {
-            IOManager.getInstance().changeMasterPassword(firstRunPassword.text.trim())
+            IOManager.changeMasterPassword(firstRunPassword.text.trim())
             switchToMain.set(true)
         }
     }

@@ -38,7 +38,6 @@ import password.manager.app.security.Account;
 import password.manager.app.security.Account.AccountData;
 import password.manager.app.security.AccountRepository;
 import password.manager.app.security.UserPreferences;
-import password.manager.app.singletons.Singletons;
 import testing.TestingUtils;
 
 public class TestAccountRepository {
@@ -58,7 +57,6 @@ public class TestAccountRepository {
     @AfterEach
     void tearDown() {
         repository.close();
-        Singletons.shutdownAll();
     }
 
     @Test
@@ -179,6 +177,26 @@ public class TestAccountRepository {
                 .get(5, TimeUnit.SECONDS);
 
         assertEquals(data.password(), decryptedData.password(), "Decrypted password should match original");
+    }
+
+    @Test
+    void testGetDataCompletesExceptionallyWhenDecryptionFails()
+            throws GeneralSecurityException, InterruptedException, TimeoutException {
+        TestingUtils.injectBasePath();
+
+        AccountData data = new AccountData("TestSoftware", "TestUser", "SecurePassword123!");
+        // The repository's preferences contain a randomly generated 32-byte DEK; this account is
+        // encrypted with the master password bytes instead, so authentication/decryption cannot match.
+        Account account = Account.of(data, DEFAULT_DEK);
+
+        CompletableFuture<AccountData> future = repository.getData(account);
+        ExecutionException error = assertThrows(
+                ExecutionException.class,
+                () -> future.get(5, TimeUnit.SECONDS),
+                "A decryption failure must remain exceptional instead of completing with null");
+
+        assertInstanceOf(RuntimeException.class, error.getCause());
+        assertEquals("Failed to decrypt account data", error.getCause().getMessage());
     }
 
     @Test

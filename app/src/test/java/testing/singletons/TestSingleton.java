@@ -20,35 +20,42 @@ package testing.singletons;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import password.manager.app.singletons.Singleton;
-import password.manager.app.singletons.Singletons;
+import password.manager.app.singletons.SingletonRegistry;
 
 public class TestSingleton {
+    private final SingletonRegistry registry = new SingletonRegistry();
 
-    @Test
-    public void testImplementing() {
-        assertNotNull(ImplementingClass.getInstance());
+    @AfterEach
+    public void cleanup() {
+        registry.shutdownAll();
     }
 
     @Test
-    public void testNonImplementing() {
-        assertThrows(UnsupportedOperationException.class, NonImplementingClass::getInstance);
+    public void testShutdownContinuesWhenCloseThrows() {
+        FailingResource failing = new FailingResource();
+        ClosingResource closing = new ClosingResource();
+        registry.register(failing);
+        registry.register(closing);
+
+        assertDoesNotThrow(registry::shutdownAll);
+        assertEquals(1, failing.closeCalls);
+        assertEquals(1, closing.closeCalls);
     }
 
-    private static class ImplementingClass extends Singleton {
-        @Override
-        public void close() {}
-
-        public static @NotNull ImplementingClass getInstance() {
-            return Singletons.get(ImplementingClass.class);
+    private static final class FailingResource extends Singleton {
+        private int closeCalls;
+        @Override public void close() {
+            closeCalls++;
+            throw new IllegalStateException("expected test failure");
         }
     }
 
-    private static class NonImplementingClass extends Singleton {
-        @Override
-        public void close() {}
+    private static final class ClosingResource extends Singleton {
+        private int closeCalls;
+        @Override public void close() { closeCalls++; }
     }
 }
