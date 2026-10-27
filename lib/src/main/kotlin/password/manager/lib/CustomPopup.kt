@@ -131,7 +131,7 @@ class CustomPopup private constructor(
      */
     @JvmOverloads
     fun visible(stopAnimation: Boolean = true) {
-        if (stopAnimation && disappearTransition != null) disappearTransition!!.stop()
+        if (stopAnimation) disappearTransition?.stop()
         content.setVisible(owner.isFocused)
         content.setOpacity(1.0)
     }
@@ -142,7 +142,7 @@ class CustomPopup private constructor(
      */
     @JvmOverloads
     fun hidden(playAnimation: Boolean = true) {
-        if (playAnimation && disappearTransition != null) disappearTransition!!.playFromStart()
+        if (playAnimation) disappearTransition?.playFromStart()
         else content.setVisible(false)
     }
 
@@ -295,7 +295,7 @@ class CustomPopup private constructor(
         }
 
         init {
-            val fxmlLoader = FXMLLoader(requireNotNull(javaClass.getResource("/customPopup/index.fxml")))
+            val fxmlLoader = FXMLLoader(Utils.getResourceUrl("/customPopup/index.fxml"))
             fxmlLoader.setRoot(this)
             fxmlLoader.setController(this)
             fxmlLoader.classLoader = javaClass.classLoader

@@ -59,15 +59,15 @@ class FirstRunController(private val switchToMain: BooleanProperty) : AbstractCo
         Logger.addDebug("Initializing %s", javaClass.getSimpleName())
 
         val langResources = ObservableResourceFactory
-        langResources.bindTextProperty(firstRunTitle!!, "first_run.title")
-        langResources.bindTextProperty(firstRunDescTop!!, "first_run.desc.top")
-        langResources.bindTextProperty(firstRunDescBtm!!, "first_run.desc.btm")
-        langResources.bindTextProperty(firstRunCheckBox!!, "first_run.check_box")
-        langResources.bindTextProperty(firstRunTermsCred!!, "terms_credits")
-        langResources.bindTextProperty(firstRunSubmitBtn!!, "lets_go")
-        langResources.bindTextProperty(firstRunDisclaimer!!, "first_run.disclaimer")
+        langResources.bindTextProperty(firstRunTitle, "first_run.title")
+        langResources.bindTextProperty(firstRunDescTop, "first_run.desc.top")
+        langResources.bindTextProperty(firstRunDescBtm, "first_run.desc.btm")
+        langResources.bindTextProperty(firstRunCheckBox, "first_run.check_box")
+        langResources.bindTextProperty(firstRunTermsCred, "terms_credits")
+        langResources.bindTextProperty(firstRunSubmitBtn, "lets_go")
+        langResources.bindTextProperty(firstRunDisclaimer, "first_run.disclaimer")
 
-        firstRunPassword!!.onAction = { doFirstRun() }
+        firstRunPassword.onAction = { doFirstRun() }
         firstRunPassword.sceneProperty().addListener { _, _, newScene: Scene? ->
             if (newScene != null) firstRunPassword.requestFocus()
         }
@@ -81,7 +81,7 @@ class FirstRunController(private val switchToMain: BooleanProperty) : AbstractCo
 
     @FXML
     fun doFirstRun() {
-        if (checkTextFields(firstRunPassword!!) && firstRunCheckBox!!.isSelected) {
+        if (checkTextFields(firstRunPassword) && firstRunCheckBox.isSelected) {
             IOManager.changeMasterPassword(firstRunPassword.text.trim())
             switchToMain.set(true)
         }

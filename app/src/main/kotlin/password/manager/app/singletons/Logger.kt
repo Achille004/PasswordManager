@@ -28,8 +28,6 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.function.ToLongFunction
-import java.util.stream.Stream
 
 // Let only package classes instantiate this
 object Logger : Singleton() {
@@ -160,11 +158,9 @@ object Logger : Singleton() {
         val limit: Int = logDirs.size - MAX_LOG_FILES + 1
         if (limit <= 0) return
 
-        Stream.of<File?>(*logDirs)
-            .sorted(Comparator.comparingLong(ToLongFunction { obj: File? -> obj!!.lastModified() }))
-            .limit(limit.toLong())
-            .map { obj: File? -> obj!!.toPath() }
-            .forEach { path: Path? -> this.deleteDirectory(path!!) }
+        logDirs.sortedBy(File::lastModified)
+            .take(limit)
+            .forEach { directory -> deleteDirectory(directory.toPath()) }
     }
 
     private fun deleteDirectory(path: Path) =

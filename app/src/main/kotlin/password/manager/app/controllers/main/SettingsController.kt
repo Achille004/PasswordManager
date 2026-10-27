@@ -73,12 +73,12 @@ class SettingsController : AbstractController() {
         Logger.addDebug("Initializing %s", javaClass.getSimpleName())
 
         val langResources = ObservableResourceFactory
-        langResources.bindTextProperty(settingsLangLbl!!, "settings.language")
-        langResources.bindTextProperty(settingsSortingOrderLbl!!, "settings.sorting_ord")
-        langResources.bindTextProperty(settingsMasterPasswordLbl!!, "settings.master_pas")
-        langResources.bindTextProperty(settingsMasterPasswordDesc!!, "settings.master_pas.desc")
-        langResources.bindTextProperty(settingsDriveConnLbl!!, "settings.drive_con")
-        langResources.bindTextProperty(wip!!, "settings.wip")
+        langResources.bindTextProperty(settingsLangLbl, "settings.language")
+        langResources.bindTextProperty(settingsSortingOrderLbl, "settings.sorting_ord")
+        langResources.bindTextProperty(settingsMasterPasswordLbl, "settings.master_pas")
+        langResources.bindTextProperty(settingsMasterPasswordDesc, "settings.master_pas.desc")
+        langResources.bindTextProperty(settingsDriveConnLbl, "settings.drive_con")
+        langResources.bindTextProperty(wip, "settings.wip")
 
         // Combo boxes
         val userPreferences = IOManager.userPreferences
@@ -86,7 +86,7 @@ class SettingsController : AbstractController() {
         setupSortingOrderCB(userPreferences)
 
         // Master password
-        settingsMasterPassword!!.onAction = {
+        settingsMasterPassword.onAction = {
             if (checkTextFields(settingsMasterPassword)) {
                 IOManager.changeMasterPassword(settingsMasterPassword.text.trim())
             }
@@ -96,7 +96,7 @@ class SettingsController : AbstractController() {
     override val fxmlPath = "/fxml/main/settings.fxml"
 
     override fun reset() {
-        clearStyle(settingsMasterPassword!!)
+        clearStyle(settingsMasterPassword)
         ObservableResourceFactory.bindPromptTextProperty(settingsMasterPassword)
 
         IOManager.displayMasterPassword(settingsMasterPassword)
@@ -111,7 +111,7 @@ class SettingsController : AbstractController() {
             _, item: SupportedLocale -> item.displayName
         }
 
-        settingsLangCB!!.cellFactory = { FlagListCell() }
+        settingsLangCB.cellFactory = { FlagListCell() }
         settingsLangCB.buttonCell = FlagListCell()
 
         settingsLangCB.items = languages
@@ -131,7 +131,7 @@ class SettingsController : AbstractController() {
             _, item: SortingOrder -> ObservableResourceFactory.getValue(item.i18nKey)
         }
 
-        settingsOrderCB!!.items = sortingOrders
+        settingsOrderCB.items = sortingOrders
         settingsOrderCB.getSelectionModel().select(sortingOrderProperty.get())
         bindValueConverter(settingsOrderCB, localeProperty, sortOrdStringConverterMapper)
         bindValueComparator(sortingOrders, localeProperty, settingsOrderCB)

@@ -42,6 +42,15 @@ import java.util.concurrent.CompletableFuture
 
 object Utils {
     /**
+     * Gets a classpath resource URL, failing with the missing resource path if it does not exist.
+     * @param path The absolute classpath path, starting with `/`.
+     * @return The URL for the required resource.
+     */
+    @JvmStatic
+    fun getResourceUrl(path: String) =
+        checkNotNull(Utils::class.java.getResource(path)) { "Missing classpath resource: $path" }
+
+    /**
      * Wraps the given items in a no-comparator JavaFX [SortedList].
      * @param T The type of the items.
      * @param items The items to include in the SortedList.
@@ -114,8 +123,7 @@ object Utils {
 
         val parent: Parent? =
             try {
-                val path = requireNotNull(Utils::class.java.getResource(path)) { "Missing FXML resource: $path" }
-                FXMLLoader(path)
+                FXMLLoader(getResourceUrl(path))
                     .apply { setController(controller) }
                     .load()
             } catch (e: IOException) {

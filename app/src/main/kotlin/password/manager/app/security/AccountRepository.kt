@@ -238,8 +238,9 @@ class AccountRepository(private val userPreferences: UserPreferences) : AutoClos
                 }
             },  // Capture complete original state for rollback using Account's memento pattern
             { account: Account? ->
-                val originalState = account!!.captureState()
-                Runnable { account.restoreState(originalState) }
+                val existingAccount = checkNotNull(account) { "Cannot capture state for a missing account" }
+                val originalState = existingAccount.captureState()
+                Runnable { existingAccount.restoreState(originalState) }
             },
             "Unlocking all accounts"
         )

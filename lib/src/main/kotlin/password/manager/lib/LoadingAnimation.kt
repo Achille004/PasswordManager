@@ -67,7 +67,9 @@ object LoadingAnimation {
     @Synchronized
     @JvmStatic
     fun stop(element: Any) {
-        val wrappedElement: ElementWithDisabler = elementMap.remove(element)!!
+        val wrappedElement: ElementWithDisabler = checkNotNull(elementMap.remove(element)) {
+            "Cannot stop loading animation for an element that was not started"
+        }
 
         // Retrieve and remove the timeline associated with the element, if it exists, and stop it
         timelines.remove(wrappedElement)?.stop()

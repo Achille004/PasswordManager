@@ -191,9 +191,8 @@ class UserPreferences {
          * @throws IllegalStateException if the DEK is not available (i.e. the password has not been verified yet).
          */
         @JvmName("getDEK") @JvmSynthetic @Synchronized @JsonIgnore
-        get() {
-            checkNotNull(dekLocal) { "DEK is not available until the password has been verified" }
-            return dekLocal!!
+        get() = checkNotNull(dekLocal) {
+            "DEK is not available until the password has been verified"
         }
     // #endregion
 
@@ -223,7 +222,8 @@ class UserPreferences {
         val legacyFieldsEmpty = (legacyHashedPassword == null) || (legacySalt == null)
         if (dekLocal == null && !legacyFieldsEmpty) {
             // Legacy mode: verify by comparing hashes
-            val hashedInput = this.securityVersion.hash(passwordToVerify, legacySalt!!)
+            val salt = checkNotNull(legacySalt) { "Legacy password salt is missing" }
+            val hashedInput = this.securityVersion.hash(passwordToVerify, salt)
             val match = MessageDigest.isEqual(legacyHashedPassword, hashedInput)
 
             if (match) {
@@ -284,8 +284,8 @@ class UserPreferences {
         this.securityVersion = SecurityVersion.LATEST
 
         try {
-            val pwEncDek: ByteArray =
-                encryptDEK(SecurityVersion.LATEST, password, this.dekLocal!!, this.pwSalt, this.pwIv)
+            val dek = checkNotNull(this.dekLocal) { "DEK was not initialized before password encryption" }
+            val pwEncDek: ByteArray = encryptDEK(SecurityVersion.LATEST, password, dek, this.pwSalt, this.pwIv)
             System.arraycopy(pwEncDek, 0, this.pwEncDek, 0, ENC_DEK_LENGTH)
             this.isPasswordSet = true
         } catch (e: GeneralSecurityException) {

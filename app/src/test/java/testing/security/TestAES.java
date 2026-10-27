@@ -27,14 +27,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,11 +51,7 @@ public class TestAES {
 
     @Test
     void testBLNS() throws GeneralSecurityException, IOException {
-        int threads = Math.max(1, Runtime.getRuntime().availableProcessors());
-        List<Callable<Void>> tasks = new ArrayList<>();
-
-        try (ExecutorService executor = Executors.newFixedThreadPool(threads);
-             InputStream stream = TestAES.class.getResourceAsStream("/blns.txt")) {
+        try (InputStream stream = TestAES.class.getResourceAsStream("/blns.txt")) {
 
             assert stream != null;
 
@@ -72,31 +61,9 @@ public class TestAES {
                 while ((masterPass = readBlnsLine(reader)) != null && (pass = readBlnsLine(reader)) != null) {
                     String currentMasterPass = masterPass;
                     String currentPass = pass;
-                    tasks.add(() -> {
-                        testEncryptionDecryption(currentPass, currentMasterPass);
-                        return null;
-                    });
+                    testEncryptionDecryption(currentPass, currentMasterPass);
                 }
             }
-
-            List<Future<Void>> results = executor.invokeAll(tasks);
-            for (Future<Void> result : results) {
-                try {
-                    result.get();
-                } catch (ExecutionException e) {
-                    Throwable cause = e.getCause();
-                    if (cause instanceof GeneralSecurityException securityException) {
-                        throw securityException;
-                    }
-                    if (cause instanceof RuntimeException runtimeException) {
-                        throw runtimeException;
-                    }
-                    throw new RuntimeException(cause);
-                }
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("BLNS parallel execution interrupted", e);
         }
     }
 

@@ -47,11 +47,11 @@ import java.util.ResourceBundle
 import java.util.function.UnaryOperator
 
 class MainController : AbstractController() {
-    private val settingsImage = Image(javaClass.getResourceAsStream("/images/icons/navbar/settings.png")!!)
-    private val backImage = Image(javaClass.getResourceAsStream("/images/icons/navbar/back.png")!!)
+    private val settingsImage = Image(Utils.getResourceUrl("/images/icons/navbar/settings.png").toExternalForm())
+    private val backImage = Image(Utils.getResourceUrl("/images/icons/navbar/back.png").toExternalForm())
 
     private var isSettingsOpen = false
-    private var titleAnimation: Timeline? = null
+    private lateinit var titleAnimation: Timeline
 
     @FXML
     private lateinit var mainPane: BorderPane
@@ -66,17 +66,17 @@ class MainController : AbstractController() {
     private lateinit var folderButton: Button
 
     // Keep views cached once they are loaded
-    private var managerPane: Pane? = null
-    private var settingsPane: Pane? = null
-    private var managerController: AbstractController? = null
-    private var settingsController: AbstractController? = null
+    private lateinit var managerPane: Pane
+    private lateinit var settingsPane: Pane
+    private lateinit var managerController: AbstractController
+    private lateinit var settingsController: AbstractController
 
     override fun initialize(location: URL?, resources: ResourceBundle?) {
         Logger.addDebug("Initializing %s", javaClass.getSimpleName())
 
         if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
             Logger.addInfo("Unsupported action: Desktop.Action.OPEN")
-            folderButton!!.isVisible = false
+            folderButton.isVisible = false
         }
 
         titleAnimation = Timeline().apply {
@@ -84,17 +84,18 @@ class MainController : AbstractController() {
                 keyFrames.add(
                     KeyFrame(
                         TITLE_ANIM_TIME_UNIT.multiply(i.toDouble()),
-                        { psmgTitle!!.text = str }
+                        { psmgTitle.text = str }
                     )
                 )
             }
         }
 
-        managerController = ManagerController()
-        managerPane = Utils.loadFxml(managerController!!) as Pane
+        val controller = ManagerController()
+        managerPane = Utils.loadFxml(controller) as Pane
+        managerController = controller
 
         createAutosavePopup()
-        swapOnMainPane(managerController, managerPane!!)
+        swapOnMainPane(managerController, managerPane)
     }
 
     override val fxmlPath = "/fxml/main.fxml"
@@ -102,8 +103,8 @@ class MainController : AbstractController() {
     override fun reset() {} // Not needed, will never reset
 
     fun mainTitleAnimation() {
-        psmgTitle!!.text = ""
-        titleAnimation!!.play()
+        psmgTitle.text = ""
+        titleAnimation.play()
     }
 
     @FXML
@@ -119,24 +120,26 @@ class MainController : AbstractController() {
 
     @FXML
     fun settingsNavBarAction(event: ActionEvent?) {
-        // Load lazily
-        if (settingsPane == null || settingsController == null) {
-            settingsController = SettingsController()
-            settingsPane = Utils.loadFxml(settingsController!!) as Pane
+        // Load lazily: `lateinit` properties can be checked before access with `::property.isInitialized`
+        if (!::settingsPane.isInitialized || !::settingsController.isInitialized) {
+            val controller = SettingsController()
+            val pane = Utils.loadFxml(controller) as Pane
+            settingsController = controller
+            settingsPane = pane
         }
 
         isSettingsOpen = !isSettingsOpen
         if (isSettingsOpen) {
-            swapOnMainPane(settingsController, settingsPane!!)
-            settingsButtonImageView!!.image = backImage
+            swapOnMainPane(settingsController, settingsPane)
+            settingsButtonImageView.image = backImage
         } else {
-            swapOnMainPane(managerController, managerPane!!)
-            settingsButtonImageView!!.image = settingsImage
+            swapOnMainPane(managerController, managerPane)
+            settingsButtonImageView.image = settingsImage
         }
     }
 
     private fun <T : AbstractController?> swapOnMainPane(destinationController: T, destinationPane: Pane) {
-        mainPane!!.centerProperty().set(destinationPane)
+        mainPane.centerProperty().set(destinationPane)
         destinationController?.reset()
     }
 

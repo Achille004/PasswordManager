@@ -318,7 +318,10 @@ object IOManager : Singleton() {
                 result
             }
             .exceptionally { e: Throwable? ->
-                Logger.addError(e!!)
+                val cause = checkNotNull(e) {
+                    "Future completed exceptionally without a cause"
+                }
+                Logger.addError(cause)
                 null
             }
     // #endregion

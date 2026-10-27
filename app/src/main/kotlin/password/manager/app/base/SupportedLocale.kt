@@ -40,8 +40,10 @@ enum class SupportedLocale(
     ENGLISH(Locale.ENGLISH, "/images/flags/en.png"),
     ITALIAN(Locale.ITALIAN, "/images/flags/it.png");
 
-    @Transient
-    val flagImage: Image = Image(javaClass.getResourceAsStream(flagResourcePath)!!)
+    @delegate:Transient
+    val flagImage: Image by lazy {
+        Image(Utils.getResourceUrl(flagResourcePath).toExternalForm())
+    }
 
     /**
      * The endonym of this locale, i.e. the language's own name capitalized with its own
@@ -63,7 +65,7 @@ enum class SupportedLocale(
          * If the JVM default locale is not supported, it falls back to [ENGLISH].
          */
         @JvmField
-        val DEFAULT: SupportedLocale = forLocaleOptional(Locale.getDefault()).orElse(ENGLISH)!!
+        val DEFAULT: SupportedLocale = forLocaleOptional(Locale.getDefault()).orElse(ENGLISH)
 
         /**
          * Finds the [SupportedLocale] matching the given [Locale] by language.
@@ -79,7 +81,7 @@ enum class SupportedLocale(
          * @return the matching [SupportedLocale], or [DEFAULT] if no match is found
          */
         @JvmStatic
-        fun forLocale(locale: Locale): SupportedLocale = forLocaleOptional(locale).orElse(DEFAULT)!!
+        fun forLocale(locale: Locale): SupportedLocale = forLocaleOptional(locale).orElse(DEFAULT)
 
         /**
          * Shorthand for converting a [String] language tag to its corresponding [Locale], and then calling [forLocale].

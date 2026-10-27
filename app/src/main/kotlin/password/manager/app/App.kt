@@ -28,7 +28,6 @@ import javafx.scene.image.Image
 import javafx.scene.layout.AnchorPane
 import javafx.scene.layout.Pane
 import javafx.stage.Stage
-import password.manager.app.controllers.AbstractController
 import password.manager.app.controllers.FirstRunController
 import password.manager.app.controllers.LoginController
 import password.manager.app.controllers.MainController
@@ -114,7 +113,7 @@ class App : Application() {
             }
         }
 
-    private fun setFullyResizable(child: Node?) {
+    private fun setFullyResizable(child: Node) {
         AnchorPane.setTopAnchor(child, 0.0)
         AnchorPane.setBottomAnchor(child, 0.0)
         AnchorPane.setLeftAnchor(child, 0.0)
@@ -124,20 +123,17 @@ class App : Application() {
     override fun stop() = SingletonRegistry.global.shutdownAll()
 
     companion object {
-        @JvmStatic
-        val THIS_CLASS: Class<App> = App::class.java
-
         @JvmField
         val APP_NAME: String = System.getProperty("app.name", "Password Manager")
         @JvmField
         val APP_VERSION: String = System.getProperty("app.version", "3.1.2")
 
-        val ROOT_STYLESHEET: String = THIS_CLASS.getResource("/fxml/css/root.css")!!.toExternalForm()
-        val AUTOCOMPLETION_STYLESHEET: String = THIS_CLASS.getResource("/fxml/css/auto-completion.css")!!.toExternalForm()
-        val CUSTOMPOPUP_STYLESHEET: String = THIS_CLASS.getResource("/fxml/css/custom-popup.css")!!.toExternalForm()
+        val ROOT_STYLESHEET: String = Utils.getResourceUrl("/fxml/css/root.css").toExternalForm()
+        val AUTOCOMPLETION_STYLESHEET: String = Utils.getResourceUrl("/fxml/css/auto-completion.css").toExternalForm()
+        val CUSTOMPOPUP_STYLESHEET: String = Utils.getResourceUrl("/fxml/css/custom-popup.css").toExternalForm()
 
         // Keep as String to prevent crashing when JavaFX is not available (e.g., during build processes)
-        val MAIN_ICON: String = THIS_CLASS.getResource("/icon.png")!!.toExternalForm()
+        val MAIN_ICON: String = Utils.getResourceUrl("/icon.png").toExternalForm()
 
         private const val MIN_WIDTH = 900
         private const val MIN_HEIGHT = 600

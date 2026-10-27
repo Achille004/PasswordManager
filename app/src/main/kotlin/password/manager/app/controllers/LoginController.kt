@@ -44,12 +44,12 @@ class LoginController(private val switchToMain: BooleanProperty) : AbstractContr
 
     private val wrongPasswordTimeline = Timeline(
         KeyFrame(Duration.ZERO,  {
-            loginSubmitBtn!!.isDisable = true
-            loginSubmitBtn!!.style = "-fx-border-color: -fx-color-red"
+            loginSubmitBtn.isDisable = true
+            loginSubmitBtn.style = "-fx-border-color: -fx-color-red"
         }),
         KeyFrame(Duration.seconds(1.0),  {
-            loginSubmitBtn!!.isDisable = false
-            clearStyle(loginSubmitBtn!!)
+            loginSubmitBtn.isDisable = false
+            clearStyle(loginSubmitBtn)
         })
     )
 
@@ -57,10 +57,10 @@ class LoginController(private val switchToMain: BooleanProperty) : AbstractContr
         Logger.addDebug("Initializing %s", javaClass.getSimpleName())
 
         val langResources = ObservableResourceFactory
-        langResources.bindTextProperty(loginTitle!!, "login.title")
-        langResources.bindTextProperty(loginSubmitBtn!!, "lets_go")
+        langResources.bindTextProperty(loginTitle, "login.title")
+        langResources.bindTextProperty(loginSubmitBtn, "lets_go")
         // Adding a whole method override just for line would be overkill, so just pass the property
-        langResources.bindStringProperty(loginPassword!!.promptTextProperty(), "login.password")
+        langResources.bindStringProperty(loginPassword.promptTextProperty(), "login.password")
 
         loginPassword.onAction = { doLogin() }
         loginPassword.sceneProperty().addListener { _, _, newScene: Scene? ->
@@ -74,7 +74,7 @@ class LoginController(private val switchToMain: BooleanProperty) : AbstractContr
 
     @FXML
     fun doLogin() {
-        if (!checkTextFields(loginPassword!!)) return
+        if (!checkTextFields(loginPassword)) return
 
         wrongPasswordTimeline.stop()
         IOManager.authenticate(loginPassword.text.trim())

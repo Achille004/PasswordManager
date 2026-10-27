@@ -94,7 +94,7 @@ open class ReadablePasswordFieldSkin @JvmOverloads constructor(
         SHOWING("/icons/open-eye.png"),
         HIDDEN("/icons/closed-eye.png");
 
-        val image: Image = Image(javaClass.getResourceAsStream(path)!!)
+        val image: Image = Image(Utils.getResourceUrl(path).toExternalForm())
     }
 
     ///// CUSTOM PASSWORD FIELD METHODS //////

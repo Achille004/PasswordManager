@@ -20,6 +20,7 @@ package password.manager.lib
 import javafx.scene.paint.Color
 import me.gosimple.nbvcxz.Nbvcxz
 import me.gosimple.nbvcxz.resources.ConfigurationBuilder
+import java.net.URL
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.ulp
@@ -35,6 +36,15 @@ object Utils {
 
         NBVCXZ = Nbvcxz(config)
     }
+
+    /**
+     * Gets a classpath resource URL, failing with the missing resource path if it does not exist.
+     * @param path The absolute classpath path, starting with `/`.
+     * @return The URL for the required resource.
+     */
+    @JvmStatic
+    fun getResourceUrl(path: String): URL =
+        checkNotNull(Utils::class.java.getResource(path)) { "Missing classpath resource: $path" }
 
     /**
      * Calculates the strength of a given password using the NBVCXZ library.
