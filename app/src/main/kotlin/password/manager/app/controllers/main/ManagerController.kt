@@ -64,25 +64,25 @@ import kotlin.concurrent.Volatile
 
 class ManagerController : AbstractController() {
     @FXML
-    private val accountListView: ListView<Account>? = null
+    private lateinit var accountListView: ListView<Account>
 
     @FXML
-    private val accountTabPane: TabPane? = null
+    private lateinit var accountTabPane: TabPane
 
     @FXML
-    private val addTab: Tab? = null
+    private lateinit var addTab: Tab
 
     @FXML
-    private val homeTab: Tab? = null
+    private lateinit var homeTab: Tab
 
     @FXML
-    private val searchField: TextField? = null
+    private lateinit var searchField: TextField
 
     @FXML
-    private val matchCaseButton: Button? = null
+    private lateinit var matchCaseButton: Button
 
     @FXML
-    private val matchWholeWordButton: Button? = null
+    private lateinit var matchWholeWordButton: Button
 
     private var searchTimeline: Timeline? = null
 
@@ -100,7 +100,7 @@ class ManagerController : AbstractController() {
     private var possibleUsernames: List<String?>? = null
     private var onSuggestionEvent: (() -> Unit)? = null
 
-    override fun initialize(location: URL, resources: ResourceBundle) {
+    override fun initialize(location: URL?, resources: ResourceBundle?) {
         Logger.addDebug("Initializing %s", javaClass.getSimpleName())
 
         // Wrapper scheme: ((( source_list ) sorted_wrapper ) filtered_wrapper )
@@ -320,12 +320,12 @@ class ManagerController : AbstractController() {
 
     internal class HomeController : AbstractController() {
         @FXML
-        private val homeDescTop: Label? = null
+        private lateinit var homeDescTop: Label
 
         @FXML
-        private val homeDescBtm: Label? = null
+        private lateinit var homeDescBtm: Label
 
-        override fun initialize(location: URL, resources: ResourceBundle) {
+        override fun initialize(location: URL?, resources: ResourceBundle?) {
             Logger.addDebug("Initializing %s", javaClass.getSimpleName())
 
             val langResources = ObservableResourceFactory
@@ -343,29 +343,29 @@ class ManagerController : AbstractController() {
 
     private inner class EditorController(private val account: Account?) : AbstractController() {
         @FXML
-        private val editorSoftware: TextField? = null
+        private lateinit var editorSoftware: TextField
 
         @FXML
-        private val editorUsername: TextField? = null
+        private lateinit var editorUsername: TextField
 
         @FXML
-        private val editorPassword: ReadablePasswordFieldWithStr? = null
+        private lateinit var editorPassword: ReadablePasswordFieldWithStr
 
         @FXML
-        private val editorSaveBtn: Button? = null
+        private lateinit var editorSaveBtn: Button
 
         @FXML
-        private val editorDeleteBtn: Button? = null
+        private lateinit var editorDeleteBtn: Button
         private var editorDeleteCounter = false
 
         @FXML
-        private val editorSoftwareLbl: Label? = null
+        private lateinit var editorSoftwareLbl: Label
 
         @FXML
-        private val editorUsernameLbl: Label? = null
+        private lateinit var editorUsernameLbl: Label
 
         @FXML
-        private val editorPasswordLbl: Label? = null
+        private lateinit var editorPasswordLbl: Label
 
         val isAddEditor: Boolean = (account == null)
 
@@ -376,7 +376,7 @@ class ManagerController : AbstractController() {
         @Volatile
         private var isErrBound = false
 
-        override fun initialize(location: URL, resources: ResourceBundle) {
+        override fun initialize(location: URL?, resources: ResourceBundle?) {
             Logger.addDebug("Initializing %s", javaClass.getSimpleName())
 
             val langResources = ObservableResourceFactory

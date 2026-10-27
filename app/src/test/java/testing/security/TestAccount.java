@@ -48,9 +48,9 @@ public class TestAccount {
         Account account = Account.of(expectedData, DEK);
 
         AccountData actualData = account.getData(DEK);
-        assertEquals(expectedData.software(), actualData.software());
-        assertEquals(expectedData.username(), actualData.username());
-        assertEquals(expectedData.password(), actualData.password());
+        assertEquals(expectedData.software, actualData.software);
+        assertEquals(expectedData.username, actualData.username);
+        assertEquals(expectedData.password, actualData.password);
     }
 
     @Test
@@ -71,9 +71,9 @@ public class TestAccount {
                     Account account = Account.of(data, DEK);
 
                     AccountData actualData = account.getData(DEK);
-                    assertEquals(data.software(), actualData.software());
-                    assertEquals(data.username(), actualData.username());
-                    assertEquals(data.password(), actualData.password());
+                    assertEquals(data.software, actualData.software);
+                    assertEquals(data.username, actualData.username);
+                    assertEquals(data.password, actualData.password);
                 }
             }
         }
@@ -121,9 +121,9 @@ public class TestAccount {
         Account account = Account.of(expectedData, DEK);
 
         AccountData actualData = account.getData(DEK);
-        assertEquals(expectedData.software(), actualData.software());
-        assertEquals(expectedData.username(), actualData.username());
-        assertEquals(expectedData.password(), actualData.password());
+        assertEquals(expectedData.software, actualData.software);
+        assertEquals(expectedData.username, actualData.username);
+        assertEquals(expectedData.password, actualData.password);
     }
 
     @Test
@@ -142,9 +142,9 @@ public class TestAccount {
         Account account = Account.of(expectedData, DEK);
 
         AccountData actualData = account.getData(DEK);
-        assertEquals(expectedData.software(), actualData.software());
-        assertEquals(expectedData.username(), actualData.username());
-        assertEquals(expectedData.password(), actualData.password());
+        assertEquals(expectedData.software, actualData.software);
+        assertEquals(expectedData.username, actualData.username);
+        assertEquals(expectedData.password, actualData.password);
     }
 
     @Test
@@ -158,9 +158,9 @@ public class TestAccount {
         Account account = Account.of(expectedData, DEK);
 
         AccountData actualData = account.getData(DEK);
-        assertEquals(expectedData.software(), actualData.software());
-        assertEquals(expectedData.username(), actualData.username());
-        assertEquals(expectedData.password(), actualData.password());
+        assertEquals(expectedData.software, actualData.software);
+        assertEquals(expectedData.username, actualData.username);
+        assertEquals(expectedData.password, actualData.password);
     }
 
     @Test
@@ -174,9 +174,9 @@ public class TestAccount {
         invokeSetData(account, newData, DEK);
 
         AccountData actualData = account.getData(DEK);
-        assertEquals(newData.software(), actualData.software());
-        assertEquals(newData.username(), actualData.username());
-        assertEquals(newData.password(), actualData.password());
+        assertEquals(newData.software, actualData.software);
+        assertEquals(newData.username, actualData.username);
+        assertEquals(newData.password, actualData.password);
     }
 
     @Test

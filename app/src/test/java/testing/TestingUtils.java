@@ -24,7 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
-import password.manager.app.singletons.AppConfig;
+import password.manager.app.AppConfig;
 
 public class TestingUtils {
 

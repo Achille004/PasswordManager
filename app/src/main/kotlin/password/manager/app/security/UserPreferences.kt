@@ -321,10 +321,12 @@ class UserPreferences {
                 null
 
             if (node.has("hashedPassword")) {
+                // Legacy hash-based format
                 val hashedPassword = node.get("hashedPassword").binaryValue()
                 val salt = node.get("salt").binaryValue()
                 return UserPreferences(locale, sortingOrder, securityVersion, hashedPassword, salt)
             } else {
+                // Current DEK-based format
                 requireNotNull(securityVersion) { "Missing securityVersion for DEK-based format" }
                 val pwEncDek = node.get("pwEncDek").binaryValue()
                 val pwSalt = node.get("pwSalt").binaryValue()

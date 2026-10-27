@@ -34,13 +34,13 @@ import java.util.*
 
 class LoginController(private val switchToMain: BooleanProperty) : AbstractController() {
     @FXML
-    private val loginTitle: Label? = null
+    private lateinit var loginTitle: Label
 
     @FXML
-    private val loginPassword: ReadablePasswordField? = null
+    private lateinit var loginPassword: ReadablePasswordField
 
     @FXML
-    private var loginSubmitBtn: Button? = null
+    private lateinit var loginSubmitBtn: Button
 
     private val wrongPasswordTimeline = Timeline(
         KeyFrame(Duration.ZERO,  {
@@ -53,7 +53,7 @@ class LoginController(private val switchToMain: BooleanProperty) : AbstractContr
         })
     )
 
-    override fun initialize(location: URL, resources: ResourceBundle) {
+    override fun initialize(location: URL?, resources: ResourceBundle?) {
         Logger.addDebug("Initializing %s", javaClass.getSimpleName())
 
         val langResources = ObservableResourceFactory

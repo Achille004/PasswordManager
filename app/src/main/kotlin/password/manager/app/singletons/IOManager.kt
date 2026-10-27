@@ -17,6 +17,7 @@
  */
 package password.manager.app.singletons
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import javafx.application.Platform
 import javafx.beans.property.ReadOnlyObjectProperty
 import javafx.beans.property.ReadOnlyObjectWrapper
@@ -304,8 +305,8 @@ object IOManager : Singleton() {
     private fun <T> handleFuture(
         future: CompletableFuture<T?>,
         successCheck: Predicate<T?>,
-        successMsg: String?,
-        failureMsg: String?
+        successMsg: String,
+        failureMsg: String
     ): CompletableFuture<T?> =
         future
             .thenApply { result: T? ->
@@ -432,7 +433,12 @@ object IOManager : Singleton() {
     }
 
     // Wrapper class for application data
-    private class AppData(val userPreferences: UserPreferences, val accountList: MutableList<Account>)
+    private class AppData(
+        @JsonProperty("userPreferences") val userPreferences: UserPreferences, 
+        @JsonProperty("accountList") val accountList: MutableList<Account>
+    ) {
+        constructor() : this(UserPreferences.empty(), mutableListOf())
+    }
 
     override fun close() {
         Logger.addInfo("Shutdown requested")

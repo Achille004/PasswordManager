@@ -21,23 +21,10 @@ plugins {
 
     // Apply the signing
     id("signing")
-
-    // TODO REMOVE
-    id("io.franzbecker.gradle-lombok") version "5.0.0"
 }
 
 dependencies {
     implementation(project(":lib"))
-}
-
-mainModuleInfo {
-    // TODO REMOVE
-    annotationProcessor("lombok")
-}
-
-testModuleInfo {
-    // TODO REMOVE
-    annotationProcessor("lombok")
 }
 
 // #region Common configuration and utilities

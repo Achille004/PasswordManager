@@ -104,18 +104,18 @@ object LoadingAnimation {
             methodCache.setReadableMethod
         )
 
-        fun canDisable() = setDisableMethod != null
+        fun canDisable() = (setDisableMethod != null)
         fun callDisable(disable: Boolean) = tryInvoke(setDisableMethod, disable)
 
-        fun canText() = setTextMethod != null
+        fun canText() = (setTextMethod != null)
         fun callText(text: String) = tryInvoke(setTextMethod, text)
 
-        fun canReadable() = setReadableMethod != null
+        fun canReadable() = (setReadableMethod != null)
         fun callReadable(readable: Boolean) = tryInvoke(setReadableMethod, readable)
 
         private fun tryInvoke(method: Method?, vararg args: Any): Any? =
             try {
-                method?.invoke(element, args)
+                method?.invoke(element, *args)
             } catch (e: Exception) {
                 throw IllegalStateException("Failed to invoke method", e)
             }
@@ -126,7 +126,9 @@ object LoadingAnimation {
             val setTextMethod: Method?,
             val setReadableMethod: Method?
         ) {
-            fun hasAnyMethod() = setDisableMethod != null || setTextMethod != null || setReadableMethod != null
+            fun hasAnyMethod() = (setDisableMethod != null) ||
+                                 (setTextMethod != null) ||
+                                 (setReadableMethod != null)
         }
 
         companion object {

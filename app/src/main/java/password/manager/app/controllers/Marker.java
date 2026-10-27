@@ -16,4 +16,14 @@
     along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html.
  */
 
-package password.manager.lib;
+package password.manager.app.controllers;
+
+/**
+ * Marker class to ensure JPMS recognizes the password.manager.app.controllers package.
+ * This file allows the module-info.java to export the package that is otherwise
+ * only defined in Kotlin sources.
+ */
+final class Marker {
+    private Marker() {
+    }
+}

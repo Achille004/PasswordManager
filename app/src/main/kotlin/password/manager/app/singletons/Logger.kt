@@ -27,6 +27,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.ToLongFunction
 import java.util.stream.Stream
 
@@ -58,6 +59,7 @@ object Logger : Singleton() {
     val loggingPath: Path
     private val logWriter: FileWriter
     private val stacktraceWriter: FileWriter
+    private val errCounter: AtomicInteger = AtomicInteger(0)
 
     init {
         val filePath: Path = AppConfig.basePath.resolve("logs")
@@ -79,37 +81,39 @@ object Logger : Singleton() {
         registerSingleton()
     }
 
-    fun addDebug(str: String, vararg args: Any?): Unit = addDebug(String.format(str, *args))
+    fun addDebug(str: String, vararg args: Any?) {
+        val formattedStr = String.format(Locale.ROOT, str, *args)
 
-    fun addDebug(str: String?) {
         val logStrBuilder = StringBuilder()
         logStrBuilder
             .append(MSG_DTF.format(LocalDateTime.now()))
             .append(" --- ")
-            .append(str)
+            .append(formattedStr)
             .append("\n")
 
         write(logWriter, logStrBuilder)
     }
 
-    fun addInfo(str: String, vararg args: Any?): Unit = addInfo(String.format(str, *args))
+    fun addInfo(str: String, vararg args: Any?) {
+        val formattedStr = String.format(Locale.ROOT, str, *args)
 
-    fun addInfo(str: String?) {
         val logStrBuilder = StringBuilder()
         logStrBuilder
             .append(MSG_DTF.format(LocalDateTime.now()))
             .append(" >>> ")
-            .append(str)
+            .append(formattedStr)
             .append("\n")
 
         write(logWriter, logStrBuilder)
     }
 
     fun addError(e: Throwable) {
+        val currentErrCount = errCounter.incrementAndGet()
+
         val logStrBuilder = StringBuilder()
         logStrBuilder
             .append(MSG_DTF.format(LocalDateTime.now()))
-            .append(" !!! An exception has been thrown. See '")
+            .append(" !!! An exception has been thrown, id=$currentErrCount. See '")
             .append(STACKTRACE_FILE_NAME)
             .append("' for details.\n")
 
@@ -117,7 +121,7 @@ object Logger : Singleton() {
         val stacktraceStrBuilder = StringBuilder()
         stacktraceStrBuilder
             .append(MSG_DTF.format(LocalDateTime.now()))
-            .append(" => Exception thrown while executing '")
+            .append(" => Exception id=$currentErrCount thrown while executing '")
             .append(getCurrentMethodName(1))
             .append("', follows error and full stack trace:\n")
 
@@ -137,11 +141,13 @@ object Logger : Singleton() {
     // #region Private methods
     @Synchronized
     private fun write(writer: FileWriter, buffer: StringBuilder) =
-        try {
-            writer.write(buffer.toString())
-            writer.flush()
-        } catch (e: IOException) {
-            e.printStackTrace()
+        synchronized(writer) {
+            try {
+                writer.write(buffer.toString())
+                writer.flush()
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
         }
 
     private fun rotateLogs(filePath: Path) {

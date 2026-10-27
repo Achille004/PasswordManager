@@ -176,7 +176,7 @@ public class TestAccountRepository {
                 .getData(account)
                 .get(5, TimeUnit.SECONDS);
 
-        assertEquals(data.password(), decryptedData.password(), "Decrypted password should match original");
+        assertEquals(data.password, decryptedData.password, "Decrypted password should match original");
     }
 
     @Test

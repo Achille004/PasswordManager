@@ -26,7 +26,7 @@ import java.net.URL
 import java.util.*
 
 class EulaController : AbstractController() {
-    override fun initialize(location: URL, resources: ResourceBundle) = Logger.addDebug("Initializing %s", javaClass.getSimpleName())
+    override fun initialize(location: URL?, resources: ResourceBundle?) = Logger.addDebug("Initializing %s", javaClass.getSimpleName())
 
     override val fxmlPath = "/fxml/extra/eula.fxml"
 

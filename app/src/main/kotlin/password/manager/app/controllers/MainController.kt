@@ -54,16 +54,16 @@ class MainController : AbstractController() {
     private var titleAnimation: Timeline? = null
 
     @FXML
-    private var mainPane: BorderPane? = null
+    private lateinit var mainPane: BorderPane
 
     @FXML
-    private var psmgTitle: Label? = null
+    private lateinit var psmgTitle: Label
 
     @FXML
-    private var settingsButtonImageView: ImageView? = null
+    private lateinit var settingsButtonImageView: ImageView
 
     @FXML
-    private var folderButton: Button? = null
+    private lateinit var folderButton: Button
 
     // Keep views cached once they are loaded
     private var managerPane: Pane? = null
@@ -71,7 +71,7 @@ class MainController : AbstractController() {
     private var managerController: AbstractController? = null
     private var settingsController: AbstractController? = null
 
-    override fun initialize(location: URL, resources: ResourceBundle) {
+    override fun initialize(location: URL?, resources: ResourceBundle?) {
         Logger.addDebug("Initializing %s", javaClass.getSimpleName())
 
         if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {

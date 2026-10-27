@@ -7,7 +7,6 @@ javafx-graphics = "26.0.2"
 # javafx-media = "26.0.2"
 # javafx-web = "26.0.2"
 kotlin-stdlib = "2.4.20-RC"
-lombok = "1.18.46" # https://mvnrepository.com/artifact/org.projectlombok/lombok
 me-gosimple-nbvcxz = "1.5.1" # https://github.com/GoSimpleLLC/nbvcxz
 org-bouncycastle-provider = "1.85.2"
 org-controlsfx-controls = "11.2.4" # https://mvnrepository.com/artifact/org.controlsfx/controlsfx

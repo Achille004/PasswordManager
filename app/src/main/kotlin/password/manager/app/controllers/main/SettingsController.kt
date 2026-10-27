@@ -43,31 +43,31 @@ import java.util.function.Function
 
 class SettingsController : AbstractController() {
     @FXML
-    private val settingsLangCB: ComboBox<SupportedLocale>? = null
+    private lateinit var settingsLangCB: ComboBox<SupportedLocale>
 
     @FXML
-    private val settingsOrderCB: ComboBox<SortingOrder>? = null
+    private lateinit var settingsOrderCB: ComboBox<SortingOrder>
 
     @FXML
-    private val settingsMasterPassword: ReadablePasswordFieldWithStr? = null
+    private lateinit var settingsMasterPassword: ReadablePasswordFieldWithStr
 
     @FXML
-    private val settingsLangLbl: Label? = null
+    private lateinit var settingsLangLbl: Label
 
     @FXML
-    private val settingsSortingOrderLbl: Label? = null
+    private lateinit var settingsSortingOrderLbl: Label
 
     @FXML
-    private val settingsMasterPasswordLbl: Label? = null
+    private lateinit var settingsMasterPasswordLbl: Label
 
     @FXML
-    private val settingsMasterPasswordDesc: Label? = null
+    private lateinit var settingsMasterPasswordDesc: Label
 
     @FXML
-    private val settingsDriveConnLbl: Label? = null
+    private lateinit var settingsDriveConnLbl: Label
 
     @FXML
-    private val wip: Label? = null
+    private lateinit var wip: Label
 
     override fun initialize(location: URL?, resources: ResourceBundle?) {
         Logger.addDebug("Initializing %s", javaClass.getSimpleName())

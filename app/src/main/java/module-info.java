@@ -34,13 +34,11 @@ module password.manager.app {
     requires tools.jackson.core;
     requires tools.jackson.databind;
 
-    requires static lombok;
-
     requires org.bouncycastle.provider;
 
     requires org.jetbrains.annotations;
 
-    requires password.manager.lib; requires gradle.api;
+    requires password.manager.lib;
 
     ///// EXPORTS /////
 

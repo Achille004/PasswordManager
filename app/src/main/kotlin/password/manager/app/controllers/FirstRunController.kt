@@ -32,31 +32,30 @@ import java.util.ResourceBundle
 
 class FirstRunController(private val switchToMain: BooleanProperty) : AbstractController() {
     @FXML
-    private val firstRunTitle: Label? = null
+    private lateinit var firstRunTitle: Label
 
     @FXML
-    private val firstRunDescTop: Label? = null
+    private lateinit var firstRunDescTop: Label
 
     @FXML
-    private val firstRunDescBtm: Label? = null
+    private lateinit var firstRunDescBtm: Label
 
     @FXML
-    private val firstRunTermsCred: Label? = null
+    private lateinit var firstRunTermsCred: Label
 
     @FXML
-    private val firstRunDisclaimer: Label? = null
+    private lateinit var firstRunDisclaimer: Label
 
     @FXML
-    private val firstRunPassword: ReadablePasswordFieldWithStr? = null
-
-
-    @FXML
-    private val firstRunCheckBox: CheckBox? = null
+    private lateinit var firstRunPassword: ReadablePasswordFieldWithStr
 
     @FXML
-    private val firstRunSubmitBtn: Button? = null
+    private lateinit var firstRunCheckBox: CheckBox
 
-    override fun initialize(location: URL, resources: ResourceBundle) {
+    @FXML
+    private lateinit var firstRunSubmitBtn: Button
+
+    override fun initialize(location: URL?, resources: ResourceBundle?) {
         Logger.addDebug("Initializing %s", javaClass.getSimpleName())
 
         val langResources = ObservableResourceFactory
