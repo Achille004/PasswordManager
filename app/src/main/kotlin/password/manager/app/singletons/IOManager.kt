@@ -437,7 +437,7 @@ object IOManager : Singleton() {
 
     // Wrapper class for application data
     private class AppData(
-        @JsonProperty("userPreferences") val userPreferences: UserPreferences, 
+        @JsonProperty("userPreferences") val userPreferences: UserPreferences,
         @JsonProperty("accountList") val accountList: MutableList<Account>
     ) {
         constructor() : this(UserPreferences.empty(), mutableListOf())

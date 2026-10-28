@@ -38,21 +38,14 @@ abstract class AbstractController : Initializable {
 
     @FXML
     protected fun showEula(event: MouseEvent?) {
-        loadEula()
-        eulaStage?.run {
-            show()
-            toFront()
-        }
+        eulaStage.show()
+        eulaStage.toFront()
     }
 
     companion object {
         // Store EULA stage as singleton to avoid multiple instances
-        private var eulaStage: Stage? = null
-
-        private fun loadEula() {
-            if (eulaStage != null) return
-
-            eulaStage = Stage().apply {
+        private val eulaStage: Stage by lazy {
+            Stage().apply {
                 ObservableResourceFactory.bindTitleProperty(this, "terms_credits")
                 icons.add(Image(App.MAIN_ICON))
                 isResizable = false

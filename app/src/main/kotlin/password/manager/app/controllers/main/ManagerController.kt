@@ -103,6 +103,7 @@ class ManagerController : AbstractController() {
         val sortedAccountList = SortedList(accountList)
         val filteredAccountList = FilteredList(sortedAccountList)
 
+        val localeProperty = IOManager.userPreferences.localeProperty()
         val sortingOrderProperty = IOManager.userPreferences.sortingOrderProperty()
         val tabManager = TabManager(accountTabPane, ::EditorController) {
             tab: Tab, account: Account -> tab.textProperty().bind(account.softwareProperty)
@@ -110,7 +111,7 @@ class ManagerController : AbstractController() {
 
         setupAutoCompletion(accountList)
         setupSearchFunctionality(filteredAccountList)
-        setupAccountListView(sortingOrderProperty, sortedAccountList, filteredAccountList, tabManager)
+        setupAccountListView(localeProperty, sortingOrderProperty, sortedAccountList, filteredAccountList, tabManager)
         setupKeyboardShortcuts(tabManager)
         setupSpecialTabs(accountTabPane, tabManager)
     }
@@ -204,8 +205,9 @@ class ManagerController : AbstractController() {
     }
 
     private fun setupAccountListView(
-        sortingOrderProperty: ObjectProperty<SortingOrder>, sortedAccountList: SortedList<Account>,
-        filteredAccountList: FilteredList<Account>, tabManager: TabManager<Account, EditorController>
+        localeProperty: ObjectProperty<SupportedLocale>, sortingOrderProperty: ObjectProperty<SortingOrder>,
+        sortedAccountList: SortedList<Account>, filteredAccountList: FilteredList<Account>,
+        tabManager: TabManager<Account, EditorController>
     ) {
         // #region Sorted Account List setup
         val accountListChangeHandler = ListChangeListener { change: ListChangeListener.Change<out Account> ->
@@ -219,10 +221,15 @@ class ManagerController : AbstractController() {
         }
 
         sortedAccountList.comparatorProperty().bind(
-            sortingOrderProperty.map { order: SortingOrder? -> order?.comparator }
+            Bindings.createObjectBinding(
+                {
+                    sortingOrderProperty.value
+                        .comparator(localeProperty.value)
+                },
+                localeProperty, sortingOrderProperty
+            )
         )
         sortedAccountList.addListener(accountListChangeHandler)
-
         // #endregion
 
         // #region Account ListView setup
@@ -440,7 +447,7 @@ class ManagerController : AbstractController() {
                 val accNotNull = checkNotNull(account) {
                     "Existing account editor has no account"
                 }
-                
+
                 clearErrorLoadState()
                 // Do operations HERE, if needed
                 LoadingAnimation.start(
@@ -452,7 +459,7 @@ class ManagerController : AbstractController() {
                 )
 
                 IOManager.getAccountData(accNotNull)
-                    .whenComplete { data, ex: Throwable? ->
+                    .whenComplete { data: AccountData?, ex: Throwable? ->
                         Platform.runLater {
                             LoadingAnimation.stop(
                                 editorSoftware,
@@ -462,7 +469,8 @@ class ManagerController : AbstractController() {
                                 editorDeleteBtn
                             )
 
-                            if (ex != null) {
+                            val success = (ex == null) && (data != null)
+                            if (!success) {
                                 applyErrorLoadState()
                                 return@runLater
                             }
@@ -534,7 +542,8 @@ class ManagerController : AbstractController() {
                             )
                             editOperationsCounter.decrementAndGet()
 
-                            if (ex != null || account == null) {
+                            val success = (ex == null) && (account != null)
+                            if (!success) {
                                 Platform.runLater(this::reset)
                                 return@runLater
                             }

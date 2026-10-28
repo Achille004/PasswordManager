@@ -18,9 +18,9 @@
 package password.manager.app.base
 
 import password.manager.app.security.Account
+import java.text.Collator
 import java.util.function.BinaryOperator
 import kotlin.Comparator
-import kotlin.plus
 
 /**
  * Enum representing the sorting order of accounts.
@@ -31,31 +31,47 @@ import kotlin.plus
 enum class SortingOrder(
     val i18nKey: String,
     val converter: BinaryOperator<String>,
-    val comparator: Comparator<Account?>
+    val comparator: Function1<SupportedLocale, Comparator<Account>>
 ) {
     SOFTWARE(
-        "software", BinaryOperator { software: String?, username: String? -> "$software\n$username" },
-        CachedComparators.SOFTWARE_COMPARATOR.thenComparing(CachedComparators.USERNAME_COMPARATOR)
+        "software",
+        { software: String, username: String -> "$software\n$username" },
+        AccountComparatorFactory::softwareFirstComparator
     ),
     USERNAME(
-        "username", BinaryOperator { software: String?, username: String? -> "$username\n$software" },
-        CachedComparators.USERNAME_COMPARATOR.thenComparing(CachedComparators.SOFTWARE_COMPARATOR)
+        "username",
+        { software: String, username: String -> "$username\n$software" },
+        AccountComparatorFactory::usernameFirstComparator
     );
 
     fun convert(software: String, username: String) = converter.apply(software, username)
     fun convert(acc: Account) = convert(acc.software, acc.username)
 
     /**
-     * Inner class to hold comparators to avoid creating them multiple times.
+     * Creates locale-aware, case-insensitive comparators for accounts.
      */
-    private object CachedComparators {
-        val SOFTWARE_COMPARATOR: Comparator<Account> = Comparator.comparing(
-            Account::software,
-            String.CASE_INSENSITIVE_ORDER
-        )
-        val USERNAME_COMPARATOR: Comparator<Account> = Comparator.comparing(
-            Account::username,
-            String.CASE_INSENSITIVE_ORDER
-        )
+    private object AccountComparatorFactory {
+        /**
+         * Creates a case-insensitive collator for the given locale.
+         */
+        private fun caseInsensitiveCollator(suppLoc: SupportedLocale): Collator =
+            Collator.getInstance(suppLoc.locale).apply {
+                // Case-insensitive
+                strength = Collator.SECONDARY
+            }
+
+        fun softwareFirstComparator(locale: SupportedLocale): Comparator<Account> {
+            val collator = caseInsensitiveCollator(locale)
+            return Comparator
+                .comparing(Account::software, collator)
+                .thenComparing(Account::username, collator)
+        }
+        fun usernameFirstComparator(locale: SupportedLocale): Comparator<Account> {
+            val collator = caseInsensitiveCollator(locale)
+            return Comparator
+                .comparing(Account::username, collator)
+                .thenComparing(Account::software, collator)
+        }
+
     }
 }

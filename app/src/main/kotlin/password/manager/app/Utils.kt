@@ -51,14 +51,14 @@ object Utils {
         checkNotNull(Utils::class.java.getResource(path)) { "Missing classpath resource: $path" }
 
     /**
-     * Wraps the given items in a no-comparator JavaFX [SortedList].
+     * Copies the given list in a no-comparator JavaFX [SortedList].
      * @param T The type of the items.
-     * @param items The items to include in the SortedList.
-     * @return A SortedList containing the given items.
+     * @param col The collection to copy from.
+     * @return A SortedList containing a copy of the collection.
      */
     @JvmStatic
-    fun <T> getFXSortedList(vararg items: T): SortedList<T> =
-        FXCollections.observableArrayList(*items).sorted(null)
+    fun <T> getFXSortedList(col: Collection<T>): SortedList<T> =
+        FXCollections.observableArrayList(col).sorted(null)
 
     /**
      * Capitalizes the first letter of the given word, leaving the rest of it untouched.

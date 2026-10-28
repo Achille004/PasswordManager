@@ -36,19 +36,20 @@ object Logger : Singleton() {
     private const val STACKTRACE_FILE_NAME = "stacktrace.log"
     private const val MAX_LOG_FILES = 5
 
-    private val INITIAL_MESSAGE = String.format(
+    private val INITIAL_MESSAGE = String.format(Locale.ENGLISH,
         """
-            =========== %s %s by Francesco Marras ===========
+        =========== %s %s by Francesco Marras ===========
 
-                                    %s
+                                %s
 
-                      --- Debug          >>> Info          !!! Error
+                  --- Debug          >>> Info          !!! Error
 
-                    WARNING: Debug entries may contain sensitive data!
+                WARNING: Debug entries may contain sensitive data!
 
-            ==================================================================
+        ==================================================================
 
-            """.trimIndent(), App.APP_NAME, App.APP_VERSION, "%s"
+        """.trimIndent(),
+        App.APP_NAME, App.APP_VERSION, "%s"
     )
 
     private val FILE_DTF: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")
@@ -69,7 +70,7 @@ object Logger : Singleton() {
         logWriter = Utils.getFileWriter(loggingPath.resolve(LOG_FILE_NAME), false)
         stacktraceWriter = Utils.getFileWriter(loggingPath.resolve(STACKTRACE_FILE_NAME), false)
 
-        val msg: String = String.format(INITIAL_MESSAGE, MSG_DTF.format(LocalDateTime.now())) + "\n"
+        val msg: String = String.format(Locale.ENGLISH, INITIAL_MESSAGE, MSG_DTF.format(LocalDateTime.now())) + "\n"
         write(logWriter, StringBuilder(msg))
 
         // Log here since doing it in AppConfig would result in circular dependency
@@ -80,7 +81,7 @@ object Logger : Singleton() {
     }
 
     fun addDebug(str: String, vararg args: Any?) {
-        val formattedStr = String.format(Locale.ROOT, str, *args)
+        val formattedStr = String.format(Locale.ENGLISH, str, *args)
 
         val logStrBuilder = StringBuilder()
         logStrBuilder
@@ -93,7 +94,7 @@ object Logger : Singleton() {
     }
 
     fun addInfo(str: String, vararg args: Any?) {
-        val formattedStr = String.format(Locale.ROOT, str, *args)
+        val formattedStr = String.format(Locale.ENGLISH, str, *args)
 
         val logStrBuilder = StringBuilder()
         logStrBuilder

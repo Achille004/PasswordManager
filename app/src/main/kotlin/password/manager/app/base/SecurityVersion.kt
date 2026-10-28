@@ -38,9 +38,8 @@ enum class SecurityVersion(
 ) {
     @Deprecated("Older security version, not used anymore.")
     PBKDF2({ bits: Int, field: String, salt: ByteArray ->
-        val keyFactory: SecretKeyFactory?
-        try {
-            keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512")
+        val keyFactory: SecretKeyFactory = try {
+            SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512")
         } catch (e: NoSuchAlgorithmException) {
             Logger.addError(e)
             throw RuntimeException(e)

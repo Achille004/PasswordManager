@@ -85,10 +85,9 @@ object ObservableResourceFactory : Singleton() {
 
     fun bindLocaleProperty(localeProperty: ObjectProperty<SupportedLocale>) =
         this.resourcesInternal.bind(
-            Bindings.createObjectBinding(
-                { ResourceBundle.getBundle(LANG_BUNDLE_RESOURCE, localeProperty.get().locale) },
-                localeProperty
-            )
+            localeProperty.map { supLoc: SupportedLocale ->
+                ResourceBundle.getBundle(LANG_BUNDLE_RESOURCE, supLoc.locale)
+            }
         )
 
     fun getStringBinding(key: String) =
